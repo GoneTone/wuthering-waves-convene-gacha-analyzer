@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// 把 authkey / authkey_ver / sign_type / game_biz 等敏感 query value 改成 `***`,
 /// 其餘 query 保留。malformed URL 回 `<malformed url>`。
 String sanitizeUrl(String raw) {
@@ -58,4 +60,39 @@ String sanitizeFsPath(String raw) {
     }
   }
   return raw;
+}
+
+/// 把攔到的喚取 body JSON 脫敏後輸出，供 log 使用。
+///
+/// playerId 走 [sanitizeUid]；recordId / serverId / cardPoolId 等 hash 走前 4 後 4
+/// 遮罩；languageCode / cardPoolType 等非敏感欄位原樣保留。非 JSON 物件時回
+/// `<malformed credential>`，避免原文（含 playerId）漏進 log。
+String sanitizeCredential(String bodyJson) {
+  final Object? decoded;
+  try {
+    decoded = jsonDecode(bodyJson);
+  } catch (_) {
+    return '<malformed credential>';
+  }
+  if (decoded is! Map<String, dynamic>) {
+    return '<malformed credential>';
+  }
+  const hashKeys = {'recordId', 'serverId', 'cardPoolId'};
+  final out = <String, dynamic>{};
+  decoded.forEach((key, value) {
+    if (key == 'playerId' && value is String) {
+      out[key] = sanitizeUid(value);
+    } else if (hashKeys.contains(key) && value is String) {
+      out[key] = _maskHash(value);
+    } else {
+      out[key] = value;
+    }
+  });
+  return jsonEncode(out);
+}
+
+/// hash 字串遮罩：保留前 4 後 4，中段以 `****` 取代；長度 < 9 全遮 `***`。
+String _maskHash(String raw) {
+  if (raw.length < 9) return '***';
+  return '${raw.substring(0, 4)}****${raw.substring(raw.length - 4)}';
 }

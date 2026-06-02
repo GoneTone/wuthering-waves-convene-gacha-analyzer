@@ -792,6 +792,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "gacha_capture_core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "chrono",
+ "flutter_rust_bridge",
+ "hex",
+ "http-body-util",
+ "hudsucker",
+ "hyper-rustls",
+ "once_cell",
+ "pem",
+ "rcgen",
+ "sha1 0.11.0",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "windows",
+ "x509-parser",
+]
+
+[[package]]
 name = "generator"
 version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -814,28 +838,6 @@ checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
  "typenum",
  "version_check",
-]
-
-[[package]]
-name = "genshin_capture_core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "flutter_rust_bridge",
- "hex",
- "hudsucker",
- "hyper-rustls",
- "once_cell",
- "pem",
- "rcgen",
- "sha1 0.11.0",
- "tempfile",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "windows",
- "x509-parser",
 ]
 
 [[package]]

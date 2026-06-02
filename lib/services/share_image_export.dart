@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
 /// 分享圖匯出流程的 logger（命名空間 share.image）。
 final _log = Logger('share.image');
@@ -68,14 +68,18 @@ Future<bool> Function(Uint8List png) shareClipboardWriter =
 /// 檔案寫入 seam，讓 flutter test 不碰真實 FS。
 @visibleForTesting
 Future<void> Function(String path, Uint8List png) shareFileWriter =
-    (path, png) => File(path).writeAsBytes(png);
+    _defaultFileWriter;
+
+/// 預設檔案寫入實作：直接寫入磁碟。
+Future<void> _defaultFileWriter(String path, Uint8List png) =>
+    File(path).writeAsBytes(png);
 
 /// 將所有 seam 重設為預設實作，供 tearDown 使用。
 @visibleForTesting
 void resetShareImageExportSeams() {
   shareSaveLocationPicker = _defaultSaveLocationPicker;
   shareClipboardWriter = _defaultClipboardWriter;
-  shareFileWriter = (path, png) => File(path).writeAsBytes(png);
+  shareFileWriter = _defaultFileWriter;
 }
 
 /// 先寫剪貼簿（失敗不致命），再讓使用者選位置存檔（取消則只剩剪貼簿）。

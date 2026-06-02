@@ -37,14 +37,8 @@ class _AppLinkState extends State<AppLink> {
   bool _hovering = false;
 
   /// 解析並開啟 [widget.url]；URL 無效時記錄 warning。
-  Future<void> _handleTap() async {
-    final uri = Uri.tryParse(widget.url);
-    if (uri == null) {
-      Logger('ui.link').warning('AppLink: invalid url "${widget.url}"');
-      return;
-    }
-    await openExternalUrl(uri);
-  }
+  Future<void> _handleTap() =>
+      openExternalUrlString(widget.url, context: 'AppLink');
 
   @override
   Widget build(BuildContext context) {
@@ -74,4 +68,18 @@ Future<void> openExternalUrl(Uri uri) async {
     return;
   }
   await launchUrl(uri, mode: LaunchMode.externalApplication);
+}
+
+/// 解析 [url] 字串後以系統瀏覽器開啟；URL 無效時以 [context] 作為前綴記錄
+/// warning。各連結元件共用此入口，避免各自重寫「tryParse → warning → 開啟」。
+Future<void> openExternalUrlString(
+  String url, {
+  String context = 'link',
+}) async {
+  final uri = Uri.tryParse(url);
+  if (uri == null) {
+    Logger('ui.link').warning('$context: invalid url "$url"');
+    return;
+  }
+  await openExternalUrl(uri);
 }

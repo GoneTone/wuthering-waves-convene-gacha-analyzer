@@ -1,20 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/data/gacha_types.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 
 /// 五星一覽聚合的 logger。
 final _log = Logger('gacha.fiveStar');
-
-/// 頌願（odes）卡池 gachaType 集合；五星一覽一律排除頌願——頌願物品沒有
-/// HoYoWiki icon（會渲染成空圈），且本功能範圍明確不含頌願。以 [gachaTypes]
-/// 靜態資料為單一來源，避免在多處硬編 `{'2000','1000'}`。
-final Set<String> _odesGachaTypes = {
-  for (final t in gachaTypes)
-    if (t.category == GachaCategory.odes) t.gachaType,
-};
 
 /// 五星一覽的單一條目：一個不重複的五星物品 + 其累計抽到次數。
 @immutable
@@ -28,7 +18,7 @@ class FiveStarCollectionItem {
   /// 該物品最近一次被抽到的紀錄；決定 icon 查找與 tooltip 顯示名稱。
   final GachaRecord representative;
 
-  /// 該物品（同合併鍵）在來源中被抽到的總次數。
+  /// 該物品（同 resourceId）在來源中被抽到的總次數。
   final int count;
 }
 
@@ -44,21 +34,18 @@ class _Bucket {
   int count;
 }
 
-/// 計算合併鍵：優先用 HoYoWiki id（可跨語系合併），lookup miss 時退化以名稱為鍵。
-String _mergeKey(GachaRecord r, HoYoWikiIndex index) =>
-    index.lookupId(name: r.name, lang: r.lang) ?? r.name;
+/// 計算合併鍵：以 [GachaRecord.resourceId] 為鍵（語言無關，跨語系自然合併）。
+int _mergeKey(GachaRecord r) => r.resourceId;
 
-/// 由單一 records 來源建構五星一覽：取 5★（排除頌願卡池），依合併鍵去重計數，
-/// 依「次數降冪 → 最近抽到時間降冪」排序。
+/// 由單一 records 來源建構五星一覽：取所有 5★，依 resourceId 去重計數，
+/// 依「次數降冪 → 最近抽到時間降冪」排序。鳴潮 8 池皆納入（無 odes 排除）。
 List<FiveStarCollectionItem> buildFiveStarCollection(
-  List<GachaRecord> records, {
-  required HoYoWikiIndex index,
-}) {
-  final buckets = <String, _Bucket>{};
+  List<GachaRecord> records,
+) {
+  final buckets = <int, _Bucket>{};
   for (final r in records) {
-    if (r.rankType != 5) continue;
-    if (_odesGachaTypes.contains(r.gachaType)) continue;
-    final b = buckets.putIfAbsent(_mergeKey(r, index), () => _Bucket(r));
+    if (r.qualityLevel != 5) continue;
+    final b = buckets.putIfAbsent(_mergeKey(r), () => _Bucket(r));
     b.count++;
     if (r.time.isAfter(b.representative.time)) {
       b.representative = r;
@@ -84,11 +71,10 @@ List<FiveStarCollectionItem> buildFiveStarCollection(
 }
 
 /// 跨卡池版：攤平所有卡池 records 後委派給 [buildFiveStarCollection]，
-/// 同合併鍵跨卡池累加。
+/// 同 resourceId 跨卡池累加。
 List<FiveStarCollectionItem> buildFiveStarCollectionAcrossBanners(
-  Map<String, List<GachaRecord>> banners, {
-  required HoYoWikiIndex index,
-}) {
+  Map<String, List<GachaRecord>> banners,
+) {
   final all = banners.values.expand((r) => r).toList(growable: false);
-  return buildFiveStarCollection(all, index: index);
+  return buildFiveStarCollection(all);
 }

@@ -1,6 +1,6 @@
 # scripts/build_installer/build_release.ps1
 #
-# Genshin Impact Wish Gacha Analyzer — Windows 一鍵打包腳本
+# Wuthering Waves Convene Gacha Analyzer — Windows 一鍵打包腳本
 #
 # 流程：
 #   1. 從 pubspec.yaml 讀版本號
@@ -109,6 +109,19 @@ else {
     Write-Host "==> Skip app exe signing (no cert configured)" -ForegroundColor DarkGray
 }
 
+# --- 3b. WebView2 Evergreen Bootstrapper（安裝檔隨附，缺 Runtime 時靜默安裝）-----
+# 喚取立繪功能依賴 WebView2。多數 Win10/11 已內建 Runtime；少數缺的機器由安裝程式
+# 偵測後靜默補裝（見 installer.iss 的 WebView2NotInstalled / [Run]）。此處於編譯安裝檔
+# 前把官方 Bootstrapper 下載到 installer.iss 同目錄供其嵌入。
+$WebView2Setup = Join-Path $PSScriptRoot 'MicrosoftEdgeWebview2Setup.exe'
+if (-not (Test-Path $WebView2Setup)) {
+    Write-Host ""
+    Write-Host "==> Downloading WebView2 Evergreen Bootstrapper" -ForegroundColor Green
+    Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' `
+        -OutFile $WebView2Setup -UseBasicParsing
+}
+Write-Host "WebView2 Bootstrapper: $WebView2Setup" -ForegroundColor Cyan
+
 # --- 4. 編譯安裝檔 ----------------------------------------------------------
 $InstallerDir = Join-Path $ProjectRoot 'build\installer'
 New-Item -ItemType Directory -Force $InstallerDir | Out-Null
@@ -132,7 +145,7 @@ else {
 }
 
 # --- 5. 報告產物 -------------------------------------------------------------
-$Output = Join-Path $InstallerDir "Genshin_Impact_Wish_Gacha_Analyzer-Setup-$Version.exe"
+$Output = Join-Path $InstallerDir "Wuthering_Waves_Convene_Gacha_Analyzer-Setup-$Version.exe"
 Write-Host ""
 Write-Host "Done! Output:" -ForegroundColor Green
 Write-Host "  $Output" -ForegroundColor Cyan

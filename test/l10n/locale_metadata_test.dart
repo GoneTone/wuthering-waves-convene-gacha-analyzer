@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/localization_metadata.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/localization_metadata.dart';
 
 void main() {
   group('filterReleasedLocales', () {
@@ -65,20 +65,6 @@ void main() {
       expect(ja.localeNativeName, '日本語');
     });
 
-    test('已釋出的 Portuguese 變體（pt 或 pt_BR）母語名都像葡萄牙文', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      final metadata = container.read(localeMetadataProvider);
-      final pt = metadata.entries.where((e) => e.key.startsWith('pt')).toList();
-      expect(pt, isNotEmpty, reason: '應有某個 Portuguese 變體釋出');
-      expect(
-        pt.every((e) => e.value.nativeName.toLowerCase().contains('portugu')),
-        isTrue,
-        reason: '所有已釋出的 Portuguese 變體 nativeName 都應像葡萄牙文',
-      );
-    });
-
     test('裸 zh 提供全部 contributors keys（模板必填）', () async {
       final l = await AppLocalizations.delegate.load(const Locale('zh'));
       expect(l.navContributors, isNotEmpty);
@@ -93,7 +79,7 @@ void main() {
       expect(l.contributorsProjectLicense, isNotEmpty);
     });
 
-    test('supportedLocales 包含 zh / zh-Hans / en / ja / pt，且不含 zh-Hant', () {
+    test('supportedLocales 包含 zh / zh-Hans / en / ja，且不含 zh-Hant', () {
       final tags = AppLocalizations.supportedLocales
           .map((l) => l.toLanguageTag())
           .toSet();
@@ -102,7 +88,6 @@ void main() {
       expect(tags, isNot(contains('zh-Hant')));
       expect(tags, contains('en'));
       expect(tags, contains('ja'));
-      expect(tags, contains('pt'));
     });
 
     test(
@@ -168,7 +153,7 @@ void main() {
 
       expect(tags, containsAll(<String>['zh', 'zh-Hans']));
       expect(tags, isNot(contains('zh-Hant')));
-      expect(tags, containsAll(<String>['en', 'ja', 'es', 'fr', 'th', 'vi']));
+      expect(tags, containsAll(<String>['en', 'ja']));
     });
 
     test('每個保留的 locale 都有非空的 nativeName', () {

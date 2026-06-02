@@ -3,28 +3,20 @@ sealed class UpdateError {
   const UpdateError();
 }
 
-/// 認證已過期（需重新捕獲 URL）。
-class UpdateErrorAuthExpired extends UpdateError {
-  /// 建立 [UpdateErrorAuthExpired]。
-  const UpdateErrorAuthExpired();
+/// 喚取記錄 API 回傳 `code != 0`（整併前身版本 AuthExpired/RateLimited/ApiError）。
+/// 由於無法區分 recordId 過期 vs 其他錯誤，UI 一律以通用措辭提示重開喚取記錄頁。
+class UpdateErrorGachaFailed extends UpdateError {
+  /// 建立 [UpdateErrorGachaFailed]，[code] / [message] 來自 API 回應。
+  const UpdateErrorGachaFailed(this.code, this.message);
+
+  /// API 回傳的 `code`（0 以外）。
+  final int code;
+
+  /// API 回傳的 `message`（簡體中文，僅供日誌；UI 不直接顯示）。
+  final String message;
 }
 
-/// 觸發 API rate limit。
-class UpdateErrorRateLimited extends UpdateError {
-  /// 建立 [UpdateErrorRateLimited]。
-  const UpdateErrorRateLimited();
-}
-
-/// API 伺服器回傳錯誤。
-class UpdateErrorServer extends UpdateError {
-  /// 建立 [UpdateErrorServer]，[details] 為伺服器回傳的錯誤訊息。
-  const UpdateErrorServer(this.details);
-
-  /// 伺服器回傳的錯誤訊息。
-  final String details;
-}
-
-/// 帳號無任何祈願紀錄。
+/// 帳號無任何喚取紀錄。
 class UpdateErrorNoRecords extends UpdateError {
   /// 建立 [UpdateErrorNoRecords]。
   const UpdateErrorNoRecords();
@@ -39,11 +31,11 @@ class UpdateErrorOther extends UpdateError {
   final String message;
 }
 
-/// 強制重抓 HoYoWiki 圖片時，清空 index 或 cache 目錄階段失敗。
+/// 強制重抓物品圖片時，清空 index 或 cache 目錄階段失敗。
 /// 通常是檔案被其他 process 鎖住（防毒掃描中等）。
-class UpdateErrorWipeHoYoWikiCache extends UpdateError {
-  /// 建立 [UpdateErrorWipeHoYoWikiCache]，[detail] 為例外訊息（已脫敏路徑）。
-  const UpdateErrorWipeHoYoWikiCache(this.detail);
+class UpdateErrorWipeItemImageCache extends UpdateError {
+  /// 建立 [UpdateErrorWipeItemImageCache]，[detail] 為例外訊息（已脫敏路徑）。
+  const UpdateErrorWipeItemImageCache(this.detail);
 
   /// 例外訊息；絕對路徑應在外層 emit 前以 `sanitizeFsPath` 處理。
   final String detail;

@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:pub_semver/pub_semver.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/data/app_repo.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/app_repo.dart';
 
 /// 單筆 GitHub Release 的資料。
 class AppRelease {
@@ -168,7 +168,7 @@ Future<List<AppRelease>> fetchNewerReleases({
   final decoded = await _githubGet(uri, client: client);
   if (decoded is! List) throw const ReleaseCheckFormat();
 
-  final out = <AppRelease>[];
+  final out = <(Version, AppRelease)>[];
   for (final raw in decoded) {
     if (raw is! Map) continue;
     if (raw['draft'] == true) continue;
@@ -180,7 +180,8 @@ Future<List<AppRelease>> fetchNewerReleases({
     if (parsed <= current) continue;
     final published = DateTime.tryParse(raw['published_at']?.toString() ?? '');
     if (published == null) continue;
-    out.add(
+    out.add((
+      parsed,
       AppRelease(
         tagName: tag,
         version: parsed.toString(),
@@ -189,13 +190,12 @@ Future<List<AppRelease>> fetchNewerReleases({
         htmlUrl: (raw['html_url'] as String?) ?? '',
         publishedAt: published,
       ),
-    );
+    ));
   }
 
-  out.sort(
-    (a, b) => Version.parse(b.version).compareTo(Version.parse(a.version)),
-  );
-  return out;
+  // 以迴圈內已解析的 Version 排序（desc），免去比較器內每次重新 Version.parse。
+  out.sort((a, b) => b.$1.compareTo(a.$1));
+  return out.map((e) => e.$2).toList();
 }
 
 /// 抓指定 [version] 對應的單一 GitHub Release。

@@ -9,14 +9,14 @@ use tracing::{debug, warn};
 
 /// root CA 的 subject CommonName / Organization。
 /// generate 與 load 分支共用，避免兩處字串漂移。
-pub const EXPECTED_CN: &str = "Genshin Impact Wish Gacha Analyzer Root CA";
+pub const EXPECTED_CN: &str = "Wuthering Waves Convene Gacha Analyzer Root CA";
 pub const EXPECTED_ORG: &str = "GoneTone";
 
-/// Returns `%APPDATA%\genshin_impact_wish_gacha_analyzer\ca\`, creating it if missing.
+/// Returns `%APPDATA%\wuthering_waves_convene_gacha_analyzer\ca\`, creating it if missing.
 pub fn ca_dir() -> Result<PathBuf> {
     let appdata = std::env::var("APPDATA").context("APPDATA environment variable not set")?;
     let dir = PathBuf::from(appdata)
-        .join("genshin_impact_wish_gacha_analyzer")
+        .join("wuthering_waves_convene_gacha_analyzer")
         .join("ca");
     fs::create_dir_all(&dir)
         .with_context(|| format!("Failed to create CA directory: {}", dir.display()))?;
@@ -211,18 +211,18 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         std::env::set_var("APPDATA", dir.path());
 
-        // 預先寫入帶舊 PoC DN 的 CA
+        // 預先寫入一張帶舊／不符 DN 的 CA（用於觸發 identity stale 重生）
         let ca_path_dir = dir
             .path()
-            .join("genshin_impact_wish_gacha_analyzer")
+            .join("wuthering_waves_convene_gacha_analyzer")
             .join("ca");
         std::fs::create_dir_all(&ca_path_dir).unwrap();
 
         let mut params = CertificateParams::new(Vec::new()).unwrap();
         params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
         let mut dn = DistinguishedName::new();
-        dn.push(DnType::CommonName, "GIWA PoC Root CA");
-        dn.push(DnType::OrganizationName, "GIWA PoC");
+        dn.push(DnType::CommonName, "Stale Legacy Root CA");
+        dn.push(DnType::OrganizationName, "Stale Org");
         params.distinguished_name = dn;
         let kp = KeyPair::generate().unwrap();
         let old = params.self_signed(&kp).unwrap();

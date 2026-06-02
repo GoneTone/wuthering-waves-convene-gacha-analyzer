@@ -1,23 +1,19 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/data/gacha_types.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/timeline_entries.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/banner_colors.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/distribution_legend.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_node.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_legend.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 
 /// 每個時間軸欄的固定寬度。
 const double _colWidth = 90;
-
-/// 節點內圓直徑。
-const double _nodeSize = 14;
-
-/// 節點外圍 halo（觸控熱區）直徑。
-const double _haloSize = 22;
 
 /// 邊緣漸隱遮罩的寬度。
 const double _edgeFadeWidth = 32;
@@ -50,10 +46,10 @@ List<DistributionEntry> bannerDistributionEntries(
   return [
     for (final type in gachaTypes)
       DistributionEntry(
-        color: colors.colorFor(type.gachaType),
+        color: colors.colorFor(type.key),
         name: type.resolveName(l),
-        count: countByGachaType[type.gachaType] ?? 0,
-        rate: total == 0 ? 0 : (countByGachaType[type.gachaType] ?? 0) / total,
+        count: countByGachaType[type.key] ?? 0,
+        rate: total == 0 ? 0 : (countByGachaType[type.key] ?? 0) / total,
       ),
   ];
 }
@@ -281,12 +277,6 @@ class _EntryColumn extends StatelessWidget {
   /// 主題 token。
   final GachaTokens tokens;
 
-  /// 將 [DateTime] 格式化為 `MM/dd` 字串。
-  static String _formatShortDate(DateTime t) {
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(t.month)}/${two(t.day)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final accent = colors.colorFor(entry.gachaType);
@@ -337,17 +327,17 @@ class _EntryColumn extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: AppSpacing.xs),
-            _Node(color: accent, tokens: tokens),
+            TimelineNode(color: accent, tokens: tokens),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              '${_formatShortDate(entry.time)} · ${l.timelineSinceLast(entry.pullsSincePrev)}',
+              '${formatShortMonthDay(entry.time)} · ${l.timelineSinceLast(entry.pullsSincePrev)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: tokens.textMuted,
                 fontSize: 10,
-                fontFeatures: const [FontFeature.tabularFigures()],
+                fontFeatures: kTabularFigures,
               ),
             ),
           ],
@@ -387,7 +377,11 @@ class _NowColumn extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          _Node(color: tokens.accentPrimary, tokens: tokens, hollow: true),
+          TimelineNode(
+            color: tokens.accentPrimary,
+            tokens: tokens,
+            hollow: true,
+          ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             l.timelineNowPulls(nowPulls),
@@ -396,46 +390,10 @@ class _NowColumn extends StatelessWidget {
             style: TextStyle(
               color: tokens.textMuted,
               fontSize: 10,
-              fontFeatures: const [FontFeature.tabularFigures()],
+              fontFeatures: kTabularFigures,
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// 節點圓:外圍 halo + 內圓。`hollow=true` 時內圓填容器底色看起來只剩 border。
-class _Node extends StatelessWidget {
-  const _Node({required this.color, required this.tokens, this.hollow = false});
-
-  /// 節點與 halo 的主色。
-  final Color color;
-
-  /// 主題 token，用於取得 [GachaTokens.surfaceCard]（hollow 填色）。
-  final GachaTokens tokens;
-
-  /// true 時內圓填 surfaceCard 使節點看起來只有邊框，用於「現在」節點。
-  final bool hollow;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _haloSize,
-      height: _haloSize,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.25),
-      ),
-      child: Container(
-        width: _nodeSize,
-        height: _nodeSize,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: hollow ? tokens.surfaceCard : color,
-          border: Border.all(color: color, width: 2),
-        ),
       ),
     );
   }

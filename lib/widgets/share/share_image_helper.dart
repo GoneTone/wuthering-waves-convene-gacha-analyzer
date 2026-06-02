@@ -5,17 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/share_image_options.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/share_image_export.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/share_image_renderer.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/share_image_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/share/preloaded_hoyowiki_images.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/share/share_card.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/share_image_options.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/share_image_export.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/share_image_renderer.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/share_image_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/preloaded_item_images.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
 
 /// 分享圖流程的 logger（命名空間 share.image）。
 final _log = Logger('share.image');
@@ -103,7 +103,7 @@ Widget buildShareRenderTree({
 /// 跑完整分享圖流程。[buildCard] 收已載入的 icon、選項，回傳 ShareCard。
 /// 分享圖寬固定為 [kShareCardWidth]、高隨內容自適應（底部不留白、不裁切）；
 /// [suggestedName] 完整建議檔名（含時間戳）。
-/// [recordsForPreload] 用於 sync pipeline 前預解碼 hoyowiki icon。
+/// [recordsForPreload] 用於 sync pipeline 前預解碼物品圖片 icon。
 /// overview 與 banner 兩頁共用，避免重複骨架。
 Future<void> generateAndShareImage({
   required BuildContext context,
@@ -122,18 +122,18 @@ Future<void> generateAndShareImage({
   if (!context.mounted) return;
 
   final container = ProviderScope.containerOf(context);
-  final hoyowikiIndex = container.read(hoyowikiIndexProvider);
-  final cacheDir = container.read(hoyowikiCacheDirProvider);
+  final itemImageIndex = container.read(itemImageIndexProvider);
+  final cacheDir = container.read(itemImageCacheDirProvider);
   final icon = await loadAppIconImage();
-  final preloaded = await preloadHoYoWikiImages(
-    index: hoyowikiIndex,
+  final preloaded = await preloadItemImages(
+    index: itemImageIndex,
     cacheDir: cacheDir,
     records: recordsForPreload,
   );
   try {
     final png = await renderWidgetToPng(
       buildShareRenderTree(
-        card: PreloadedHoYoWikiImages(
+        card: PreloadedItemImages(
           images: preloaded,
           child: buildCard(icon, options),
         ),
@@ -162,6 +162,6 @@ Future<void> generateAndShareImage({
     );
   } finally {
     icon.dispose();
-    disposePreloadedHoYoWikiImages(preloaded);
+    disposePreloadedItemImages(preloaded);
   }
 }

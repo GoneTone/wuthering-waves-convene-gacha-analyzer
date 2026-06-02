@@ -7,17 +7,14 @@ class TeamInfo {
   const TeamInfo._();
 
   /// 團隊顯示名稱。
-  static const String name = '原神資訊站 Genshin Impact Info';
+  static const String name = '旋風之音 GoneTone';
 
   /// 官方網站 URL。
-  static const String websiteUrl = 'https://genshininfo.reh.tw/';
+  static const String websiteUrl = 'https://blog.reh.tw/';
 
   /// Facebook 粉絲頁 URL。
-  static const String facebookUrl = 'https://genshininfo.reh.tw/facebook';
+  static const String facebookUrl = 'https://blog.reh.tw/facebook';
 
   /// Discord 伺服器 URL。
-  static const String discordUrl = 'https://genshininfo.reh.tw/discord';
-
-  /// LINE 社群 URL。
-  static const String lineUrl = 'https://genshininfo.reh.tw/line';
+  static const String discordUrl = 'https://blog.reh.tw/discord';
 }

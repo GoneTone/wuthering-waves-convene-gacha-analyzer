@@ -19,9 +19,6 @@ abstract class AppSpacing {
 
   /// 32dp。
   static const double xxl = 32;
-
-  /// 48dp。
-  static const double xxxl = 48;
 }
 
 /// 圓角常數（single-source）。
@@ -31,9 +28,6 @@ abstract class AppRadius {
 
   /// 中圓角，用於卡片、按鈕等。
   static const double md = 10;
-
-  /// 大圓角，用於 dialog、bottom sheet 等。
-  static const double lg = 14;
 }
 
 /// 字級語意（搭配 ThemeData.textTheme 對應 M3 名稱）。
@@ -54,6 +48,9 @@ abstract class AppFontSize {
   static const double label = 11;
 }
 
+/// 等寬數字 [FontFeature]（tabular figures），讓數字欄位等寬對齊、更新時不跳動。
+const List<FontFeature> kTabularFigures = [FontFeature.tabularFigures()];
+
 /// 應用層級的色 token。透過 ThemeExtension 注入。
 ///
 /// 卡池配色不放在這裡（見 [BannerColors]）— 那組顏色刻意跟稀有度脫鉤，
@@ -73,8 +70,6 @@ class GachaTokens extends ThemeExtension<GachaTokens> {
     required this.fiveStar,
     required this.fourStar,
     required this.threeStar,
-    required this.twoStar,
-    required this.oneStar,
     required this.accentPrimary,
     required this.stateDanger,
     required this.stateSuccess,
@@ -114,12 +109,6 @@ class GachaTokens extends ThemeExtension<GachaTokens> {
   /// 三星稀有度色。
   final Color threeStar;
 
-  /// 二星稀有度色。
-  final Color twoStar;
-
-  /// 一星稀有度色。
-  final Color oneStar;
-
   /// 品牌主色（按鈕、強調色）。
   final Color accentPrimary;
 
@@ -145,8 +134,6 @@ class GachaTokens extends ThemeExtension<GachaTokens> {
     fiveStar: Color(0xFFD6A268),
     fourStar: Color(0xFFB594C5),
     threeStar: Color(0xFF73A8C5),
-    twoStar: Color(0xFF6DAD8A),
-    oneStar: Color(0xFFA3A2A3),
     accentPrimary: Color(0xFFD6A268),
     stateDanger: Color(0xFFE6736B),
     stateSuccess: Color(0xFF46B07A),
@@ -166,8 +153,6 @@ class GachaTokens extends ThemeExtension<GachaTokens> {
     fiveStar: Color(0xFFAD6F2E),
     fourStar: Color(0xFF7E589A),
     threeStar: Color(0xFF437897),
-    twoStar: Color(0xFF467B62),
-    oneStar: Color(0xFF686769),
     accentPrimary: Color(0xFFAD6F2E),
     stateDanger: Color(0xFFC62828),
     stateSuccess: Color(0xFF2E7D32),
@@ -187,8 +172,6 @@ class GachaTokens extends ThemeExtension<GachaTokens> {
     Color? fiveStar,
     Color? fourStar,
     Color? threeStar,
-    Color? twoStar,
-    Color? oneStar,
     Color? accentPrimary,
     Color? stateDanger,
     Color? stateSuccess,
@@ -205,8 +188,6 @@ class GachaTokens extends ThemeExtension<GachaTokens> {
     fiveStar: fiveStar ?? this.fiveStar,
     fourStar: fourStar ?? this.fourStar,
     threeStar: threeStar ?? this.threeStar,
-    twoStar: twoStar ?? this.twoStar,
-    oneStar: oneStar ?? this.oneStar,
     accentPrimary: accentPrimary ?? this.accentPrimary,
     stateDanger: stateDanger ?? this.stateDanger,
     stateSuccess: stateSuccess ?? this.stateSuccess,
@@ -232,8 +213,6 @@ class GachaTokens extends ThemeExtension<GachaTokens> {
       fiveStar: Color.lerp(fiveStar, other.fiveStar, t)!,
       fourStar: Color.lerp(fourStar, other.fourStar, t)!,
       threeStar: Color.lerp(threeStar, other.threeStar, t)!,
-      twoStar: Color.lerp(twoStar, other.twoStar, t)!,
-      oneStar: Color.lerp(oneStar, other.oneStar, t)!,
       accentPrimary: Color.lerp(accentPrimary, other.accentPrimary, t)!,
       stateDanger: Color.lerp(stateDanger, other.stateDanger, t)!,
       stateSuccess: Color.lerp(stateSuccess, other.stateSuccess, t)!,
@@ -247,3 +226,13 @@ extension GachaTokensX on ThemeData {
   /// 取出 [GachaTokens] 主題延伸；未注入時拋出 [Null] error。
   GachaTokens get gacha => extension<GachaTokens>()!;
 }
+
+/// 大數字展示用的 [TextStyle]（[AppFontSize.display] 字級、w800、主要文字色、
+/// 等寬數字）。StatCard／PityCard 等大數值卡片共用。
+TextStyle displayNumberStyle(GachaTokens t) => TextStyle(
+  fontSize: AppFontSize.display,
+  fontWeight: FontWeight.w800,
+  color: t.textPrimary,
+  fontFeatures: kTabularFigures,
+  height: 1.1,
+);

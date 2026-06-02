@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/data/team_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/team_info.dart';
 
 void main() {
   group('TeamInfo constants', () {
@@ -21,12 +21,6 @@ void main() {
 
     test('discordUrl 是 https URL', () {
       final uri = Uri.parse(TeamInfo.discordUrl);
-      expect(uri.scheme, 'https');
-      expect(uri.host, isNotEmpty);
-    });
-
-    test('lineUrl 是 https URL', () {
-      final uri = Uri.parse(TeamInfo.lineUrl);
       expect(uri.scheme, 'https');
       expect(uri.host, isNotEmpty);
     });

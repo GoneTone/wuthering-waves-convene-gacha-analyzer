@@ -6,9 +6,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/app_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/app_release.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 http.Response _ok(List<Map<String, dynamic>> body) =>
     http.Response(jsonEncode(body), 200);

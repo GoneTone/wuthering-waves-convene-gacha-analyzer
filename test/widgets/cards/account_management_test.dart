@@ -7,16 +7,16 @@ import 'package:http/testing.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/cancellable_http_client.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/settings_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/settings.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_capture.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_repository.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/account_management.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/account_management.dart';
 
 class _NullCapture implements GachaCapture {
   @override
@@ -77,27 +77,35 @@ void main() {
     await tester.runAsync(() async {
       await storage.save(
         BannerStorage(
-          uid: '100000001',
+          playerId: '100000001',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 1, 1),
           banners: const {
-            '301': [],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '1': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );
       await storage.save(
         BannerStorage(
-          uid: '100000002',
+          playerId: '100000002',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 5, 9),
           banners: const {
-            '301': [],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '1': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );
@@ -130,27 +138,35 @@ void main() {
     await tester.runAsync(() async {
       await storage.save(
         BannerStorage(
-          uid: '100000001',
+          playerId: '100000001',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 5, 9),
           banners: const {
-            '301': [],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '1': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );
       await storage.save(
         BannerStorage(
-          uid: '100000002',
+          playerId: '100000002',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 1, 1),
           banners: const {
-            '301': [],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '1': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );
@@ -183,14 +199,18 @@ void main() {
     await tester.runAsync(() async {
       await storage.save(
         BannerStorage(
-          uid: '100000001',
+          playerId: '100000001',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 5, 9),
           banners: const {
-            '301': [],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '1': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );
@@ -221,14 +241,18 @@ void main() {
     await tester.runAsync(() async {
       await storage.save(
         BannerStorage(
-          uid: '100000001',
+          playerId: '100000001',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 5, 9),
           banners: const {
-            '301': [],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '1': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );
@@ -268,7 +292,8 @@ void main() {
       await tester.runAsync(() async {
         await storage.save(
           BannerStorage(
-            uid: uid,
+            playerId: uid,
+            languageCode: 'zh-Hant',
             lastUpdated: DateTime.utc(2026, 5, 9),
             banners: const {
               '301': [],

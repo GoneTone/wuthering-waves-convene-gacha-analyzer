@@ -3,14 +3,14 @@ import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/uid_ordering.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/settings.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_repository.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/utils/uid_display.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/relative_time_text.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/uid_display.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_text.dart';
 
 /// 帳號管理卡片：顯示所有已知 UID 的清單，支援排序、切換、重命名與刪除。
 class AccountManagement extends ConsumerWidget {
@@ -132,7 +132,7 @@ class _Row extends StatefulWidget {
   /// 在 [ReorderableListView] 中的排序位置，用於拖拉 handle。
   final int index;
 
-  /// 最後一次更新祈願資料的時間。
+  /// 最後一次更新喚取資料的時間。
   final DateTime lastUpdated;
 
   /// 是否為當前啟用的帳號。
@@ -232,7 +232,7 @@ class _RowState extends State<_Row> {
                       style: TextStyle(
                         color: tokens.textPrimary,
                         fontWeight: FontWeight.w600,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: kTabularFigures,
                       ),
                     ),
                     if (widget.isActive) ...[

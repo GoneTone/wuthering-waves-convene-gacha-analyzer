@@ -1,9 +1,11 @@
 use crate::api::capture::CapturedRequest;
 use crate::frb_generated::StreamSink;
 use anyhow::{Context, Result};
+use bytes::Bytes;
+use http_body_util::BodyExt;
 use hudsucker::{
     certificate_authority::RcgenAuthority,
-    hyper::{Request, Response, Uri},
+    hyper::{Method, Request, Response, Uri},
     rcgen::{Issuer, KeyPair},
     rustls::{crypto::aws_lc_rs, ClientConfig},
     Body, HttpContext, HttpHandler, Proxy, RequestOrResponse,
@@ -13,6 +15,12 @@ use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::sync::oneshot;
+
+/// 鳴潮國際服喚取記錄 API 的 host（精確等值；YAGNI：不預留國服）。
+const TARGET_HOST: &str = "gmserver-api.aki-game2.net";
+
+/// 鳴潮喚取記錄查詢 API 的 path（精確等值，非 ends_with）。
+const TARGET_PATH: &str = "/gacha/record/query";
 
 pub struct MitmServerGuard {
     shutdown_tx: Option<oneshot::Sender<()>>,
@@ -30,14 +38,28 @@ impl Drop for MitmServerGuard {
     }
 }
 
-fn is_target(uri: &Uri) -> bool {
-    let host_ok = uri
-        .host()
-        .map(|h| h == "hoyoverse.com" || h.ends_with(".hoyoverse.com"))
-        .unwrap_or(false);
-    let path = uri.path();
-    let path_ok = path.ends_with("/getGachaLog") || path.ends_with("/getBeyondGachaLog");
-    host_ok && path_ok
+/// 是否為要攔截的鳴潮喚取記錄查詢請求：POST + 精確 host + 精確 path。
+///
+/// 與前身版本差異：改用精確等值（非 `ends_with`），並加驗 method == POST，
+/// 避免攔到同端點的預檢 OPTIONS 或子網域偽冒（如 `evil.gmserver-api.aki-game2.net`）。
+fn is_target(method: &Method, uri: &Uri) -> bool {
+    let host_ok = uri.host().map(|h| h == TARGET_HOST).unwrap_or(false);
+    let path_ok = uri.path() == TARGET_PATH;
+    method == Method::POST && host_ok && path_ok
+}
+
+/// 把 hudsucker `Body`（streaming）整段收齊，回 `(body 字串, 收齊的 bytes)`。
+///
+/// 呼叫端用回傳的 bytes 重建 `Body` 放行（漏了重建＝上游收到空 body，遊戲端載入失敗）。
+/// 失敗（連線中斷等）回 `Err`，呼叫端據此放行原請求、不送事件、不 panic。
+async fn read_body_string(body: Body) -> Result<(String, Bytes)> {
+    let bytes = body
+        .collect()
+        .await
+        .context("collect request body failed")?
+        .to_bytes();
+    let text = String::from_utf8_lossy(&bytes).into_owned();
+    Ok((text, bytes))
 }
 
 #[derive(Clone)]
@@ -59,7 +81,7 @@ impl HttpHandler for LogHandler {
     ) -> RequestOrResponse {
         let (parts, body) = req.into_parts();
 
-        if !is_target(&parts.uri) {
+        if !is_target(&parts.method, &parts.uri) {
             return Request::from_parts(parts, body).into();
         }
 
@@ -67,24 +89,45 @@ impl HttpHandler for LogHandler {
             return Request::from_parts(parts, body).into();
         }
 
+        // 命中：讀 body（含查詢憑證）。collect 失敗則放行原請求、不送事件、不 panic。
+        let (body_text, bytes) = match read_body_string(body).await {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::warn!(target: "mitm", "read body failed, passthrough without capture: {e}");
+                // 已 swap fired=true 但讀失敗：此請求放行（用空 body 重建已不可能取回原 bytes），
+                // 不送 CapturedRequest；玩家重開喚取記錄頁會再觸發一次命中。
+                // 不重設 fired：避免同一次 session 反覆嘗試讀同一條失敗連線。
+                return Request::from_parts(parts, Body::empty()).into();
+            }
+        };
+
         let method = parts.method.to_string();
         let url = parts.uri.to_string();
         let host = parts.uri.host().unwrap_or("").to_string();
         let timestamp_ms = chrono::Utc::now().timestamp_millis();
 
-        tracing::info!(target: "mitm", "hit gacha endpoint: {} {}", method, url);
+        // 只印命中事實 + body 長度，不印 body 原文（含 playerId）。
+        tracing::info!(
+            target: "mitm",
+            "hit convene endpoint: {} {} body_len={}",
+            method,
+            url,
+            bytes.len()
+        );
 
         let _ = self.sink.add(CapturedRequest {
             method,
             url,
             host,
             timestamp_ms,
+            body: body_text,
         });
 
         // 暫不 spawn stop_capture：要等 response 從上游回來，避免 hudsucker 太早 shutdown 切斷 connection。
         self.pending_stop.store(true, Ordering::SeqCst);
 
-        Request::from_parts(parts, body).into()
+        // 用收齊的 bytes 重建 body 放行（漏了＝上游收到空 body，遊戲端載入失敗）。
+        Request::from_parts(parts, Body::from(bytes)).into()
     }
 
     async fn handle_response(&mut self, _ctx: &HttpContext, res: Response<Body>) -> Response<Body> {
@@ -169,4 +212,81 @@ pub fn start(
         shutdown_tx: Some(shutdown_tx),
         handle: Some(handle),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use hudsucker::hyper::{Method, Uri};
+
+    /// 命中：POST + 精確 host + 精確 path。
+    #[test]
+    fn matches_wuwa_convene_post() {
+        let uri: Uri = "https://gmserver-api.aki-game2.net/gacha/record/query"
+            .parse()
+            .unwrap();
+        assert!(is_target(&Method::POST, &uri));
+    }
+
+    /// method 非 POST → 不命中（避免攔到同端點的預檢 OPTIONS / 其他 verb）。
+    #[test]
+    fn rejects_non_post_method() {
+        let uri: Uri = "https://gmserver-api.aki-game2.net/gacha/record/query"
+            .parse()
+            .unwrap();
+        assert!(!is_target(&Method::GET, &uri));
+        assert!(!is_target(&Method::OPTIONS, &uri));
+    }
+
+    /// host 不符（含國服 host、子網域）→ 不命中（YAGNI：只支援國際服）。
+    #[test]
+    fn rejects_wrong_host() {
+        for url in [
+            "https://gmserver-api.aki-game.net/gacha/record/query", // 國服，不支援
+            "https://evil.gmserver-api.aki-game2.net/gacha/record/query",
+            "https://gmserver-api.aki-game2.net.evil.com/gacha/record/query",
+        ] {
+            let uri: Uri = url.parse().unwrap();
+            assert!(!is_target(&Method::POST, &uri), "should reject {url}");
+        }
+    }
+
+    /// path 不符（前後綴、別的 path）→ 不命中（精確等值，非 ends_with）。
+    #[test]
+    fn rejects_wrong_path() {
+        for url in [
+            "https://gmserver-api.aki-game2.net/gacha/record/query/extra",
+            "https://gmserver-api.aki-game2.net/x/gacha/record/query",
+            "https://gmserver-api.aki-game2.net/gacha/record",
+            "https://gmserver-api.aki-game2.net/",
+        ] {
+            let uri: Uri = url.parse().unwrap();
+            assert!(!is_target(&Method::POST, &uri), "should reject {url}");
+        }
+    }
+
+    /// 無 host（相對 URI）→ 不 panic、回 false。
+    #[test]
+    fn rejects_uri_without_host() {
+        let uri: Uri = "/gacha/record/query".parse().unwrap();
+        assert!(!is_target(&Method::POST, &uri));
+    }
+
+    /// read_body_string：把 Body 收齊成字串並回傳同等 bytes 供重建。
+    #[tokio::test]
+    async fn read_body_string_collects_full_body() {
+        let json = r#"{"playerId":"701","cardPoolType":1}"#;
+        let body = Body::from(json.to_string());
+        let (text, bytes) = read_body_string(body).await.unwrap();
+        assert_eq!(text, json);
+        assert_eq!(bytes.as_ref(), json.as_bytes());
+    }
+
+    /// 空 body 不報錯，回空字串。
+    #[tokio::test]
+    async fn read_body_string_handles_empty() {
+        let (text, bytes) = read_body_string(Body::empty()).await.unwrap();
+        assert_eq!(text, "");
+        assert!(bytes.is_empty());
+    }
 }

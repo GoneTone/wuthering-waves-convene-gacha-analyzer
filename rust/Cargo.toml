@@ -1,5 +1,5 @@
 [package]
-name = "genshin_capture_core"
+name = "gacha_capture_core"
 version = "0.1.0"
 edition = "2021"
 publish = false
@@ -17,6 +17,11 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "net"] }
 hudsucker = { version = "0.24", default-features = false, features = ["decoder", "rcgen-ca", "rustls-client", "http2"] }
 hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "http2", "tls12", "webpki-tokio"] }
+# 讀取攔到的 POST body 需要：BodyExt::collect（http-body-util）與 Bytes（bytes）。
+# hudsucker 0.24 未 re-export 這兩者；版本對齊既有 Cargo.lock（http-body-util 0.1.3 / bytes 1.11.1），
+# 與 hudsucker 共用同一份 hyper 1，無版本衝突。
+http-body-util = "0.1"
+bytes = "1"
 rcgen = "0.14"
 pem = "3.0.6"
 sha1 = "0.11"
@@ -29,9 +34,11 @@ tempfile = "3.27.0"
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.62", features = [
     "Win32_Security_Cryptography",
-    "Win32_Networking_WinInet",
-    "Win32_System_Registry",
     "Win32_Foundation",
+    "Win32_System_Registry",
+    "Win32_System_Threading",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
 ] }
 
 [lints.rust]

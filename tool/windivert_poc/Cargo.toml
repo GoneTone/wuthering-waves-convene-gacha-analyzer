@@ -1,0 +1,19 @@
+[package]
+name = "windivert_poc"
+version = "0.1.0"
+edition = "2021"
+
+# 最小 WinDivert 可行性 PoC（sniff 模式，非侵入）。
+# 與主專案 rust/ crate 完全獨立，純驗證用、不進產品建置。
+
+[dependencies]
+# windivert 0.5.x 的 API：WinDivert::network(filter, priority, flags) + recv(Some(&mut buf))
+# + WinDivertFlags::new().set_sniff().set_recv_only()。
+# 建置需 WinDivert 函式庫檔（見 README）：設環境變數 WINDIVERT_PATH 指向含
+# WinDivert.dll / WinDivert.lib / WinDivert64.sys 的資料夾。
+windivert = "0.5.3"
+
+# 把連線的本機埠對應到擁有它的行程（PID），再查行程 exe 名 —— 用來辨識「是哪個 app
+# 在發喚取/gmserver 請求」（鳴潮 WebView 可能是另一個行程）。
+netstat2 = "0.11"
+sysinfo = "0.33"

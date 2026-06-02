@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/app_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/relative_time_text.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_text.dart';
 
 /// 帳號挑選對話框中單一帳號的資料模型。
 class AccountPickerEntry {
@@ -22,10 +22,10 @@ class AccountPickerEntry {
   /// 使用者自訂別名；null 表示未設定。
   final String? alias;
 
-  /// 最後一次更新祈願資料的時間。
+  /// 最後一次更新喚取資料的時間。
   final DateTime lastUpdated;
 
-  /// 該帳號的祈願紀錄總筆數。
+  /// 該帳號的喚取紀錄總筆數。
   final int recordCount;
 
   /// 可選的紅色警示徽章文字（如「有新資料」提示）。

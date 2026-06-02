@@ -4,271 +4,144 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:logging/logging.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_url.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_fetcher.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
 
-const _baseUrl =
-    'https://public-operation-hk4e-sg.hoyoverse.com/gacha_info/api/getGachaLog'
-    '?authkey=AAAA&lang=zh-tw&region=os_asia&gacha_type=301&page=1&size=20&end_id=0';
+GachaCredential _cred() => GachaCredential(
+  playerId: '701000000',
+  cardPoolId: '2e23deadbeef2768',
+  serverId: '86d5deadbeef9650',
+  recordId: '0632deadbeef8550',
+  languageCode: 'zh-Hant',
+);
 
-Map<String, dynamic> _record({required String id, required String type}) => {
-  'uid': '801057625',
-  'gacha_type': type,
-  'item_id': '',
-  'count': '1',
-  'time': '2025-09-23 21:27:37',
-  'name': 'x',
-  'lang': 'zh-tw',
-  'item_type': '武器',
-  'rank_type': '3',
-  'id': id,
+Uri get _endpoint =>
+    Uri.parse('https://gmserver-api.aki-game2.net/gacha/record/query');
+
+http.Response _ok(List<Map<String, dynamic>> data) => http.Response(
+  jsonEncode({'code': 0, 'message': 'success', 'data': data}),
+  200,
+  headers: {'content-type': 'application/json'},
+);
+
+http.Response _fail(int code, String message) => http.Response(
+  jsonEncode({'code': code, 'message': message, 'data': <dynamic>[]}),
+  200,
+  headers: {'content-type': 'application/json'},
+);
+
+Map<String, dynamic> _row({
+  required int resourceId,
+  required int quality,
+  required String type,
+  required String name,
+  required String time,
+}) => {
+  'cardPoolType': '1',
+  'resourceId': resourceId,
+  'qualityLevel': quality,
+  'resourceType': type,
+  'name': name,
+  'count': 1,
+  'time': time,
 };
 
-http.Response _ok(List<Map<String, dynamic>> list) => http.Response(
-  jsonEncode({
-    'retcode': 0,
-    'message': 'OK',
-    'data': {'list': list, 'page': '1', 'size': '20', 'total': '0'},
-  }),
-  200,
-  headers: {'content-type': 'application/json'},
-);
-
-http.Response _err(int retcode) => http.Response(
-  jsonEncode({'retcode': retcode, 'message': 'fail', 'data': null}),
-  200,
-  headers: {'content-type': 'application/json'},
-);
-
 void main() {
-  group('GachaFetcher.fetchPage', () {
-    test('retcode=0 解析 list', () async {
-      final mock = MockClient(
-        (req) async => _ok([_record(id: '1', type: '301')]),
-      );
-      final fetcher = GachaFetcher(rateLimit: Duration.zero);
-      final page = await fetcher.fetchPage(
-        GachaUrl.parse(
-          _baseUrl,
-        ).build(gachaType: '301', endId: '0', endpoint: GachaEndpoint.gacha),
-        mock,
-      );
-      expect(page.records, hasLength(1));
-      expect(page.records.first.id, '1');
-    });
-
-    test('retcode=-101 throw AuthExpiredException', () async {
-      final mock = MockClient((req) async => _err(-101));
-      final fetcher = GachaFetcher(rateLimit: Duration.zero);
-      expect(
-        () => fetcher.fetchPage(
-          GachaUrl.parse(
-            _baseUrl,
-          ).build(gachaType: '301', endId: '0', endpoint: GachaEndpoint.gacha),
-          mock,
-        ),
-        throwsA(isA<AuthExpiredException>()),
-      );
-    });
-
-    test('頌願回傳無 lang 時，以 URL 的 lang 補上', () async {
-      final mock = MockClient(
-        (req) async => _ok([
-          {
-            'uid': '801057625',
-            'op_gacha_type': '20021',
-            'item_id': '265044',
-            'count': '1',
-            'time': '2025-10-24 01:51:25',
-            'item_name': 'x',
-            'item_type': '裝扮套裝',
-            'rank_type': '5',
-            'id': '99',
-          },
-        ]),
-      );
-      final fetcher = GachaFetcher(rateLimit: Duration.zero);
-      final page = await fetcher.fetchPage(
-        GachaUrl.parse(
-          _baseUrl,
-        ).build(gachaType: '2000', endId: '0', endpoint: GachaEndpoint.odes),
-        mock,
-      );
-      expect(page.records.first.lang, 'zh-tw');
-    });
-
-    test('retcode=-110 退避後 throw RateLimitedException', () async {
-      var hits = 0;
+  group('GachaFetcher.fetchPool', () {
+    test('POSTs JSON body and parses code==0 data list', () async {
+      String? capturedBody;
+      String? capturedContentType;
       final mock = MockClient((req) async {
-        hits++;
-        return _err(-110);
+        capturedBody = req.body;
+        capturedContentType = req.headers['content-type'];
+        expect(req.method, 'POST');
+        expect(req.url, _endpoint);
+        return _ok([
+          _row(
+            resourceId: 1211,
+            quality: 5,
+            type: '角色',
+            name: '達妮婭',
+            time: '2026-05-21 10:39:03',
+          ),
+        ]);
       });
-      final fetcher = GachaFetcher(
-        rateLimit: Duration.zero,
-        retryBackoff: Duration.zero,
+      final fetcher = GachaFetcher(rateLimit: Duration.zero);
+      final result = await fetcher.fetchPool(
+        endpoint: _endpoint,
+        cred: _cred(),
+        cardPoolType: 1,
+        client: mock,
       );
+      expect(result.records, hasLength(1));
+      expect(result.records.first.resourceId, 1211);
+      expect(result.records.first.cardPoolType, '1');
+      // request body carries the credential + cardPoolType (int)
+      final sent = jsonDecode(capturedBody!) as Map<String, dynamic>;
+      expect(sent['playerId'], '701000000');
+      expect(sent['cardPoolType'], 1);
+      expect(capturedContentType, contains('application/json'));
+    });
+
+    test(
+      'empty data on code==0 is a successful empty pool (not an error)',
+      () async {
+        final mock = MockClient((req) async => _ok(const []));
+        final fetcher = GachaFetcher(rateLimit: Duration.zero);
+        final result = await fetcher.fetchPool(
+          endpoint: _endpoint,
+          cred: _cred(),
+          cardPoolType: 9,
+          client: mock,
+        );
+        expect(result.records, isEmpty);
+      },
+    );
+
+    test('code!=0 throws GachaApiException with code+message', () async {
+      final mock = MockClient((req) async => _fail(-1, '请求游戏获取日志异常!'));
+      final fetcher = GachaFetcher(rateLimit: Duration.zero);
       await expectLater(
-        () => fetcher.fetchPage(
-          GachaUrl.parse(
-            _baseUrl,
-          ).build(gachaType: '301', endId: '0', endpoint: GachaEndpoint.gacha),
-          mock,
+        () => fetcher.fetchPool(
+          endpoint: _endpoint,
+          cred: _cred(),
+          cardPoolType: 1,
+          client: mock,
         ),
-        throwsA(isA<RateLimitedException>()),
-      );
-      expect(hits, greaterThan(1));
-    });
-  });
-
-  group('GachaFetcher.fetchBannerWithMerge', () {
-    test('endpoint=gacha 走 getGachaLog', () async {
-      final paths = <String>[];
-      final client = MockClient((req) async {
-        paths.add(req.url.path);
-        return _ok(const []);
-      });
-      final fetcher = GachaFetcher(rateLimit: Duration.zero);
-      await fetcher.fetchBannerWithMerge(
-        url: GachaUrl.parse(_baseUrl),
-        gachaType: '301',
-        endpoint: GachaEndpoint.gacha,
-        existing: const [],
-        primer: null,
-        onProgress: (_) {},
-        client: client,
-      );
-      expect(paths, isNotEmpty);
-      expect(paths.every((p) => p.endsWith('/getGachaLog')), isTrue);
-    });
-
-    test('endpoint=odes 走 getBeyondGachaLog', () async {
-      final paths = <String>[];
-      final client = MockClient((req) async {
-        paths.add(req.url.path);
-        return _ok(const []);
-      });
-      final fetcher = GachaFetcher(rateLimit: Duration.zero);
-      await fetcher.fetchBannerWithMerge(
-        url: GachaUrl.parse(_baseUrl),
-        gachaType: '2000',
-        endpoint: GachaEndpoint.odes,
-        existing: const [],
-        primer: null,
-        onProgress: (_) {},
-        client: client,
-      );
-      expect(paths, isNotEmpty);
-      expect(paths.every((p) => p.endsWith('/getBeyondGachaLog')), isTrue);
-    });
-
-    test('既有空 lang 記錄回填為 URL 的 lang', () async {
-      final client = MockClient((req) async => _ok(const []));
-      final fetcher = GachaFetcher(rateLimit: Duration.zero);
-      final existing = [
-        GachaRecord(
-          id: '50',
-          uid: '801057625',
-          gachaType: '2000',
-          name: 'x',
-          itemType: '裝扮套裝',
-          rankType: 5,
-          time: DateTime(2025, 10, 24, 1, 51, 25),
-          lang: '',
+        throwsA(
+          isA<GachaApiException>()
+              .having((e) => e.code, 'code', -1)
+              .having((e) => e.message, 'message', '请求游戏获取日志异常!'),
         ),
-      ];
-      final merged = await fetcher.fetchBannerWithMerge(
-        url: GachaUrl.parse(_baseUrl),
-        gachaType: '2000',
-        endpoint: GachaEndpoint.odes,
-        existing: existing,
-        primer: null,
-        onProgress: (_) {},
-        client: client,
       );
-      expect(merged, hasLength(1));
-      expect(merged.first.lang, 'zh-tw');
-    });
-
-    test('URL 無 lang 時不動既有記錄', () async {
-      final client = MockClient((req) async => _ok(const []));
-      final fetcher = GachaFetcher(rateLimit: Duration.zero);
-      final existing = [
-        GachaRecord(
-          id: '50',
-          uid: '801057625',
-          gachaType: '2000',
-          name: 'x',
-          itemType: '裝扮套裝',
-          rankType: 5,
-          time: DateTime(2025, 10, 24, 1, 51, 25),
-          lang: '',
-        ),
-      ];
-      final merged = await fetcher.fetchBannerWithMerge(
-        url: GachaUrl.parse(
-          'https://example.com/gacha_info/api/getBeyondGachaLog'
-          '?authkey=AAA&gacha_type=2000&end_id=0',
-        ),
-        gachaType: '2000',
-        endpoint: GachaEndpoint.odes,
-        existing: existing,
-        primer: null,
-        onProgress: (_) {},
-        client: client,
-      );
-      expect(merged.first.lang, '');
     });
   });
 
   group('logging instrumentation', () {
-    setUp(() {
-      Logger.root.level = Level.ALL;
-    });
+    setUp(() => Logger.root.level = Level.ALL);
+    tearDown(() => Logger.root.clearListeners());
 
-    tearDown(() {
-      Logger.root.clearListeners();
-    });
-
-    test('emits WARNING when retcode=-110 triggers backoff', () async {
+    test('emits SEVERE when code!=0', () async {
       final records = <LogRecord>[];
       final sub = Logger.root.onRecord.listen(records.add);
       addTearDown(sub.cancel);
 
-      var hits = 0;
-      final client = MockClient((req) async {
-        hits++;
-        if (hits == 1) {
-          return http.Response(
-            jsonEncode({'retcode': -110, 'data': null, 'message': 'rate'}),
-            200,
-          );
-        }
-        return http.Response(
-          jsonEncode({
-            'retcode': 0,
-            'data': {'list': []},
-          }),
-          200,
-        );
-      });
-
-      final fetcher = GachaFetcher(
-        retryBackoff: const Duration(milliseconds: 1),
-      );
-      await fetcher.fetchPage(
-        Uri.parse('https://x.example/y?gacha_type=301'),
-        client,
-      );
-
-      final warning = records.firstWhere(
-        (r) => r.level == Level.WARNING && r.loggerName == 'gacha.fetcher',
-        orElse: () => throw StateError(
-          'no WARNING from gacha.fetcher; got '
-          '${records.map((r) => "${r.level.name}:${r.loggerName}:${r.message}").toList()}',
+      final mock = MockClient((req) async => _fail(-1, 'boom'));
+      final fetcher = GachaFetcher(rateLimit: Duration.zero);
+      await expectLater(
+        () => fetcher.fetchPool(
+          endpoint: _endpoint,
+          cred: _cred(),
+          cardPoolType: 1,
+          client: mock,
         ),
+        throwsA(isA<GachaApiException>()),
       );
-      expect(warning.message, contains('rate-limited'));
+      final severe = records.firstWhere(
+        (r) => r.level == Level.SEVERE && r.loggerName == 'gacha.fetcher',
+        orElse: () => throw StateError('no SEVERE from gacha.fetcher'),
+      );
+      expect(severe.message, contains('code=-1'));
     });
   });
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 
 /// 用在頁面內、不在卡片裡的區塊標題（titleLarge + 前置 icon）。
 /// 視覺與 [SectionCard]、[ChartCard] 的標題列一致。

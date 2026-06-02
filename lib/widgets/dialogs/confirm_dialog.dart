@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 
 /// 顯示一個要求使用者打字確認的 dialog。
 /// 回傳值：true = 確認 / false = 取消 / null = 系統 dismiss。

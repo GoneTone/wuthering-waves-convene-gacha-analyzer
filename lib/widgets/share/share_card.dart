@@ -3,27 +3,27 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/data/app_repo.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/share_image_options.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_pity.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_stats.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/five_star_collection.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/overview_sections.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/share_uid_mask.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/timeline_entries.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/banner_colors.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/stat_card.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/timeline_vertical.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/distribution_legend.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/item_type_pie.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/rank_palette.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/rarity_pie.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/five_star_overview.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/share/left_driven_equal_height.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/app_repo.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/share_image_options.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_pity.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_stats.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/five_star_collection.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/overview_sections.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/share_uid_mask.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/stat_format.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_legend.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/item_type_pie.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rank_palette.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rarity_pie.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/five_star_overview.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/left_driven_equal_height.dart';
 
 /// 分享圖固定寬度（邏輯像素）。
 const double kShareCardWidth = 1200;
@@ -54,7 +54,7 @@ class _Section {
     this.fiveStar = const [],
   });
 
-  /// 段落標題文字（例如祈願段名稱或卡池名稱）。
+  /// 段落標題文字（例如喚取段名稱或卡池名稱）。
   final String title;
 
   /// 此段合計統計資料。
@@ -76,7 +76,7 @@ class _Section {
   final List<(String label, String value, String? sub, _StatAccent accent)>
   statLines;
 
-  /// 此段尾端的五星一覽清單（祈願段才有；頌願段為空 → 不顯示）。
+  /// 此段尾端的五星一覽清單；為空時不顯示。
   final List<FiveStarCollectionItem> fiveStar;
 }
 
@@ -106,9 +106,8 @@ class ShareCard extends StatelessWidget {
     required String title,
     required List<GachaRecord> records,
     required int targetRank,
-    required HoYoWikiIndex index,
   }) {
-    final stats = computeGachaStats(records, index: index);
+    final stats = computeGachaStats(records);
     // threshold: 0 — 此處只取 averageInterval，不需 pity progress/distance
     // （與 gacha_pity.dart 的 averageIntervalAcrossBanners 同一慣例）。
     final fiveAvg = computePity(records, threshold: 0, rank: 5).averageInterval;
@@ -133,23 +132,23 @@ class ShareCard extends StatelessWidget {
             (
               l.statsRankCount(l.rarityStar(5)),
               '${stats.fiveStarCount}',
-              _rateAvg(l, stats.fiveStarRate, fiveAvg),
+              formatRateWithAvg(l, stats.fiveStarRate, fiveAvg),
               _StatAccent.rank5,
             ),
             (
               l.statsRankCount(l.rarityStar(4)),
               '${stats.fourStarCount}',
-              _rateAvg(l, stats.fourStarRate, fourAvg),
+              formatRateWithAvg(l, stats.fourStarRate, fourAvg),
               _StatAccent.rank4,
             ),
           ],
-          fiveStar: buildFiveStarCollection(records, index: index),
+          fiveStar: buildFiveStarCollection(records),
         ),
       ],
     );
   }
 
-  /// 綜合頁分享（祈願 + 頌願兩段）。
+  /// 綜合頁分享（8 卡池聚合單段）。
   factory ShareCard.overview({
     required AppLocalizations l,
     required String appVersion,
@@ -158,15 +157,8 @@ class ShareCard extends StatelessWidget {
     required String uid,
     required DateTime updatedAt,
     required Map<String, List<GachaRecord>> banners,
-    required HoYoWikiIndex index,
   }) {
-    final s = buildOverviewSections(banners, index: index);
-    final g = s.gacha;
-    final o = s.odes;
-    // '2000'/'1000' 必定存在：o.types 來自 lib/data/gacha_types.dart 的靜態常數，
-    // 頌願活動/常駐卡池為固定資料，故 firstWhere 無需 orElse。
-    final odesEventType = o.types.firstWhere((t) => t.gachaType == '2000');
-    final odesStdType = o.types.firstWhere((t) => t.gachaType == '1000');
+    final s = buildOverviewSections(banners);
     return ShareCard._(
       l: l,
       appVersion: appVersion,
@@ -177,53 +169,27 @@ class ShareCard extends StatelessWidget {
       sections: [
         _Section(
           title: l.pageOverviewGachaSection,
-          stats: g.stats,
-          timeline: g.timeline,
-          timelineRank: g.timelineRank,
-          timelineNowPulls: g.timelineNowPulls,
+          stats: s.stats,
+          timeline: s.timeline,
+          timelineRank: s.timelineRank,
+          timelineNowPulls: s.timelineNowPulls,
           isAcrossBanners: true,
           statLines: [
-            (l.statsTotal, '${g.stats.total}', null, _StatAccent.primary),
+            (l.statsTotal, '${s.stats.total}', null, _StatAccent.primary),
             (
               l.statsRankCount(l.rarityStar(5)),
-              '${g.stats.fiveStarCount}',
-              _rateAvg(l, g.stats.fiveStarRate, g.fiveStarAvg),
+              '${s.stats.fiveStarCount}',
+              formatRateWithAvg(l, s.stats.fiveStarRate, s.fiveStarAvg),
               _StatAccent.rank5,
             ),
             (
               l.statsRankCount(l.rarityStar(4)),
-              '${g.stats.fourStarCount}',
-              _rateAvg(l, g.stats.fourStarRate, g.fourStarAvg),
+              '${s.stats.fourStarCount}',
+              formatRateWithAvg(l, s.stats.fourStarRate, s.fourStarAvg),
               _StatAccent.rank4,
             ),
           ],
-          fiveStar: buildFiveStarCollectionAcrossBanners(
-            s.gacha.banners,
-            index: index,
-          ),
-        ),
-        _Section(
-          title: l.pageOverviewOdesSection,
-          stats: o.stats,
-          timeline: o.timeline,
-          timelineRank: o.timelineRank,
-          timelineNowPulls: o.timelineNowPulls,
-          isAcrossBanners: true,
-          statLines: [
-            (l.statsTotal, '${o.stats.total}', null, _StatAccent.primary),
-            (
-              '${odesEventType.resolveName(l)} ${l.rarityStar(5)}',
-              '${o.eventFiveCount}',
-              null,
-              _StatAccent.rank5,
-            ),
-            (
-              '${odesStdType.resolveName(l)} ${l.rarityStar(4)}',
-              '${o.standardFourCount}',
-              null,
-              _StatAccent.rank4,
-            ),
-          ],
+          fiveStar: buildFiveStarCollectionAcrossBanners(s.banners),
         ),
       ],
     );
@@ -247,15 +213,8 @@ class ShareCard extends StatelessWidget {
   /// 資料最後更新時間，顯示於 header 右側。
   final DateTime updatedAt;
 
-  /// 各段內容（卡池模式 1 段；綜合模式 2 段）。
+  /// 各段內容（卡池模式 1 段；綜合模式 1 段聚合）。
   final List<_Section> _sections;
-
-  /// 格式化「佔比 · 平均間隔」副標題字串；avg 為 null 時只回傳佔比。
-  static String? _rateAvg(AppLocalizations l, double rate, double? avg) {
-    final pct = l.statsShareOfTotal((rate * 100).toStringAsFixed(2));
-    if (avg == null) return pct;
-    return '$pct · ${l.pityAverageInterval(avg.toStringAsFixed(2))}';
-  }
 
   /// 依 [options] 決定顯示完整或遮蔽後的 UID。
   String get _uidText => options.showFullUid ? uid : maskUidForShare(uid);
@@ -386,7 +345,7 @@ class _ShareHeader extends StatelessWidget {
   }
 }
 
-/// 一段祈願/頌願內容的版面：標題 + StatCard 橫排 + 左圓餅/右時間軸。
+/// 一段喚取內容的版面：標題 + StatCard 橫排 + 左圓餅/右時間軸。
 class _SectionView extends StatelessWidget {
   const _SectionView({
     required this.l,
@@ -517,8 +476,8 @@ class _SectionView extends StatelessWidget {
             _timeline(),
           ],
         ),
-        // 五星一覽掛在該段尾端（祈願段才有；頌願段為空 → 不顯示），
-        // 確保綜合分享圖的五星落在祈願區底下、而非整張圖最末的頌願區後。
+        // 五星一覽掛在該段尾端，清單為空時不顯示。
+        // （前身雙段版面殘留說明）鳴潮為單段喚取，五星直接落在該段底下。
         if (section.fiveStar.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.l),
           Text(

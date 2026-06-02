@@ -7,18 +7,18 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/app_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/pages/settings_page.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/cancellable_http_client.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_capture.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_repository.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_cache_usage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/settings.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/pages/settings_page.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 
 /// 空 [GachaCapture] 替身，避免測試啟動真實 MITM session。
 class _NullCapture implements GachaCapture {
@@ -42,17 +42,17 @@ Future<ProviderContainer> _setupContainer({
           cancel: () {},
         ),
       ),
-      hoyowikiIndexStorageProvider.overrideWithValue(
-        HoYoWikiIndexStorage(tempDir),
+      itemImageIndexStorageProvider.overrideWithValue(
+        ItemImageIndexStorage(tempDir),
       ),
-      hoyowikiCacheDirProvider.overrideWithValue(tempDir),
+      itemImageCacheDirProvider.overrideWithValue(tempDir),
       appVersionProvider.overrideWithValue('0.0.0-test'),
     ],
   );
   await container.read(settingsProvider.notifier).waitForLoad();
   container.read(gachaRepositoryProvider);
-  // hoyowikiCacheUsageProvider 在 container 內預熱，讓 widget 訂閱時已有快取值。
-  await container.read(hoyowikiCacheUsageProvider.future);
+  // itemImageCacheUsageProvider 在 container 內預熱，讓 widget 訂閱時已有快取值。
+  await container.read(itemImageCacheUsageProvider.future);
   await Future<void>.delayed(const Duration(milliseconds: 50));
   return container;
 }
@@ -98,10 +98,10 @@ void main() {
 
     // 全部 I/O 放 runAsync 跳出 FakeAsync，包含 pumpWidget 與等待 provider。
     await tester.runAsync(() async {
-      // 100 KB icon 檔
-      await touch('a_icon.png', 1024 * 100);
-      // 2 MB gallery 檔
-      await touch('a_gallery_xxxxxxxxxxxx.png', 1024 * 1024 * 2);
+      // 100 KB icon 檔（檔名含 '_icon.' 才計入 iconBytes）
+      await touch('1001_icon.png', 1024 * 100);
+      // 2 MB illustration 檔（檔名含 '_illustration.' 才計入 illustrationBytes）
+      await touch('1001_illustration.png', 1024 * 1024 * 2);
       container = await _setupContainer(
         storage: GachaStorage(tempDir),
         tempDir: tempDir,
@@ -110,7 +110,7 @@ void main() {
 
       await tester.pumpWidget(_wrap(container));
       // 等 widget 訂閱後 provider 完成（已在 setupContainer 預熱，應立即 resolve）。
-      await container.read(hoyowikiCacheUsageProvider.future);
+      await container.read(itemImageCacheUsageProvider.future);
       await tester.pump();
     });
 
@@ -130,7 +130,7 @@ void main() {
     expect(find.text('2.1 MB'), findsOneWidget);
   });
 
-  testWidgets('無資料時強制重抓按鈕 disabled，詳情圖快取空時清除按鈕 disabled', (tester) async {
+  testWidgets('無資料時強制重抓按鈕 disabled', (tester) async {
     SharedPreferences.setMockInitialValues({});
     late ProviderContainer container;
 
@@ -142,7 +142,7 @@ void main() {
       addTearDown(container.dispose);
 
       await tester.pumpWidget(_wrap(container));
-      await container.read(hoyowikiCacheUsageProvider.future);
+      await container.read(itemImageCacheUsageProvider.future);
       await tester.pump();
     });
 
@@ -151,42 +151,7 @@ void main() {
     expect(
       tester.widget<FilledButton>(refetchBtn).onPressed,
       isNull,
-      reason: '無祈願紀錄時強制重抓按鈕應 disabled',
-    );
-
-    final clearBtn = find.widgetWithText(FilledButton, '清除詳情圖快取');
-    expect(clearBtn, findsOneWidget);
-    expect(
-      tester.widget<FilledButton>(clearBtn).onPressed,
-      isNull,
-      reason: '詳情圖快取為空（galleryBytes == 0）時清除按鈕應 disabled',
-    );
-  });
-
-  testWidgets('詳情圖有快取時清除按鈕 enabled', (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    late ProviderContainer container;
-
-    await tester.runAsync(() async {
-      // 放一個 gallery 檔案使 galleryBytes > 0（路徑需含 '_gallery_' 才被計入）
-      await touch('item_gallery_xxxxxxxxxxxx.png', 1024 * 512);
-      container = await _setupContainer(
-        storage: GachaStorage(tempDir),
-        tempDir: tempDir,
-      );
-      addTearDown(container.dispose);
-
-      await tester.pumpWidget(_wrap(container));
-      await container.read(hoyowikiCacheUsageProvider.future);
-      await tester.pump();
-    });
-
-    final clearBtn = find.widgetWithText(FilledButton, '清除詳情圖快取');
-    expect(clearBtn, findsOneWidget);
-    expect(
-      tester.widget<FilledButton>(clearBtn).onPressed,
-      isNotNull,
-      reason: '詳情圖有快取時清除按鈕應 enabled',
+      reason: '無喚取紀錄時強制重抓按鈕應 disabled',
     );
   });
 }

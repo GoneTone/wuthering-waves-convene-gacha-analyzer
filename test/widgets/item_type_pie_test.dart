@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_stats.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/item_type_pie.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_stats.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/item_type_pie.dart';
 
 Future<AppLocalizations> _loadL10n() async {
   return AppLocalizations.delegate.load(const Locale('zh', 'Hant'));
@@ -17,7 +18,6 @@ void main() {
         fiveStarCount: 0,
         fourStarCount: 0,
         threeStarCount: 0,
-        twoStarCount: 0,
         byItemType: {'角色': 38, '武器': 62},
       );
       final entries = itemTypeDistributionEntries(stats, Brightness.dark, l);
@@ -39,7 +39,6 @@ void main() {
         fiveStarCount: 0,
         fourStarCount: 0,
         threeStarCount: 0,
-        twoStarCount: 0,
         byItemType: {'角色': 4, '武器': 5, '': 1},
       );
       final entries = itemTypeDistributionEntries(stats, Brightness.dark, l);
@@ -57,7 +56,6 @@ void main() {
         fiveStarCount: 0,
         fourStarCount: 0,
         threeStarCount: 0,
-        twoStarCount: 0,
         byItemType: {},
       );
       final entries = itemTypeDistributionEntries(stats, Brightness.dark, l);
@@ -72,7 +70,6 @@ void main() {
         fiveStarCount: 0,
         fourStarCount: 0,
         threeStarCount: 0,
-        twoStarCount: 0,
         byItemType: {'a': 7, 'b': 6, 'c': 5, 'd': 4, 'e': 3, 'f': 2, 'g': 1},
       );
       final entries = itemTypeDistributionEntries(stats, Brightness.dark, l);
@@ -88,12 +85,35 @@ void main() {
         fiveStarCount: 0,
         fourStarCount: 0,
         threeStarCount: 0,
-        twoStarCount: 0,
         byItemType: {'角色': 2},
       );
       final dark = itemTypeDistributionEntries(stats, Brightness.dark, l);
       final light = itemTypeDistributionEntries(stats, Brightness.light, l);
       expect(dark.first.color, isNot(equals(light.first.color)));
+    });
+
+    test('三類型（角色/武器/道具）→ 3 個 entry，第三個 name == l.kindItem，三色互異', () async {
+      final l = await _loadL10n();
+      const stats = GachaStats(
+        total: 6,
+        fiveStarCount: 0,
+        fourStarCount: 0,
+        threeStarCount: 0,
+        byItemType: {
+          kItemKindCharacter: 3,
+          kItemKindWeapon: 2,
+          kItemKindItem: 1,
+        },
+      );
+      final entries = itemTypeDistributionEntries(stats, Brightness.dark, l);
+      expect(entries, hasLength(3));
+      // 排序 desc by count: 角色(3)、武器(2)、道具(1)
+      expect(entries[0].name, l.kindCharacter);
+      expect(entries[1].name, l.kindWeapon);
+      expect(entries[2].name, l.kindItem);
+      // 三色互異
+      final colors = entries.map((e) => e.color).toSet();
+      expect(colors, hasLength(3));
     });
   });
 }

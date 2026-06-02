@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/stat_format.dart';
 
 /// Pie 圖例或色票說明的單一條目資料。
 class DistributionEntry {
@@ -49,8 +50,6 @@ class DistributionLegend extends StatelessWidget {
         ? entries
         : entries.where((e) => e.count > 0).toList(growable: false);
 
-    final tabular = const [FontFeature.tabularFigures()];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -84,7 +83,7 @@ class DistributionLegend extends StatelessWidget {
                     textAlign: TextAlign.right,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: tokens.textPrimary,
-                      fontFeatures: tabular,
+                      fontFeatures: kTabularFigures,
                     ),
                   ),
                 ),
@@ -92,11 +91,11 @@ class DistributionLegend extends StatelessWidget {
                 SizedBox(
                   width: 70,
                   child: Text(
-                    '${(e.rate * 100).toStringAsFixed(2)}%',
+                    '${formatPercent(e.rate)}%',
                     textAlign: TextAlign.right,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: tokens.textMuted,
-                      fontFeatures: tabular,
+                      fontFeatures: kTabularFigures,
                     ),
                   ),
                 ),

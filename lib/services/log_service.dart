@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
@@ -10,9 +9,8 @@ import 'package:logging/logging.dart';
 /// 應用層 log pipeline。在 `main()` 透過 [bootstrap] 啟動,
 /// 訂閱 `Logger.root.onRecord` 並把每條紀錄分發到:
 /// 1. `dart:developer.log()`(IDE / DevTools);
-/// 2. 記憶體 ring buffer(設定頁即時 stream 用);
-/// 3. `<applicationSupport>/logs/YYYY-MM-DD.log`(UTC 日期,append);
-/// 4. `kDebugMode` 下額外 `debugPrint` 給 `flutter run` console。
+/// 2. `<applicationSupport>/logs/YYYY-MM-DD.log`(UTC 日期,append);
+/// 3. `kDebugMode` 下額外 `debugPrint` 給 `flutter run` console。
 class LogService {
   /// 私有建構；透過 [bootstrap] 初始化。
   LogService._(this.logsDir);
@@ -22,16 +20,6 @@ class LogService {
 
   /// log 檔保留天數。
   static const int _retentionDays = 7;
-
-  /// ring buffer 最大容量（條數）。
-  static const int _ringBufferCapacity = 2000;
-
-  /// 最近 [_ringBufferCapacity] 條格式化 log 的記憶體環形緩衝。
-  final Queue<String> _ringBuffer = Queue<String>();
-
-  /// 設定頁即時預覽用的 broadcast stream controller。
-  final StreamController<String> _liveController =
-      StreamController<String>.broadcast();
 
   /// 當前寫入中的 log 檔 sink。
   IOSink? _todaySink;
@@ -76,12 +64,6 @@ class LogService {
       if (kDebugMode) {
         debugPrint(line);
       }
-
-      _ringBuffer.addLast(line);
-      while (_ringBuffer.length > _ringBufferCapacity) {
-        _ringBuffer.removeFirst();
-      }
-      if (!_liveController.isClosed) _liveController.add(line);
 
       _appendToFile(line, r);
     } catch (e, st) {
@@ -221,7 +203,7 @@ class LogService {
           ..sort((a, b) => a.path.compareTo(b.path));
 
     final buf = StringBuffer()
-      ..writeln('=== Genshin Gacha Gacha Analyzer log bundle ===')
+      ..writeln('=== Wuthering Waves Convene Gacha Analyzer log bundle ===')
       ..writeln('exported_at: ${DateTime.now().toUtc().toIso8601String()}')
       ..writeln('app_version: $appVersion')
       ..writeln('os: $osDescription')
@@ -260,18 +242,11 @@ class LogService {
     await _openTodaySink();
   }
 
-  /// 設定頁即時預覽用:目前 ring buffer 的快照。
-  List<String> snapshot() => _ringBuffer.toList(growable: false);
-
-  /// 新進 log 的 broadcast stream。
-  Stream<String> get live => _liveController.stream;
-
-  /// 取消 root logger 訂閱，flush 並關閉 sink 與 live stream。
+  /// 取消 root logger 訂閱，flush 並關閉 sink。
   Future<void> dispose() async {
     await _rootSubscription?.cancel();
     await _todaySink?.flush();
     await _todaySink?.close();
-    await _liveController.close();
   }
 
   /// Flush pending writes to disk. For tests / "before export" use.

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/utils/format_bytes.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/format_bytes.dart';
 
 void main() {
   group('formatBytes', () {

@@ -1,14 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_filter.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/item_type_kind.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/record_filter.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/record_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 
-/// 祈願記錄的搜尋與篩選列，包含文字搜尋、稀有度與物品類型 dropdown。
+/// 喚取記錄的搜尋與篩選列，包含文字搜尋、稀有度與物品類型 dropdown。
 class SearchFilterBar extends StatefulWidget {
   /// 建立 [SearchFilterBar]。
   const SearchFilterBar({

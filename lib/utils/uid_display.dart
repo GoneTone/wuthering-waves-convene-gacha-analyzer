@@ -1,4 +1,4 @@
-import 'package:genshin_impact_wish_gacha_analyzer/services/share_uid_mask.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/share_uid_mask.dart';
 
 /// UID 介面顯示工具：依介面隱私設定回傳遮蔽後或原樣 UID。
 ///

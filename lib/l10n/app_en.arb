@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
   "localeNativeName": "English",
-  "localeTranslator": "Zanah_68, pan93412, Lemon7777, <a href=\"https://claude.com/claude-code\">Claude Code</a>",
+  "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "Translator: {translator}",
   "@localeNativeName": {
     "description": "Native name of this locale, shown in language picker."
@@ -17,7 +17,7 @@
       }
     }
   },
-  "appName": "Genshin Impact Wish Gacha Analyzer",
+  "appName": "Wuthering Waves Convene Gacha Analyzer",
   "actionUpdate": "Update",
   "actionCancel": "Cancel",
   "actionClose": "Close",
@@ -25,24 +25,25 @@
   "actionNextPage": "Next",
   "actionOpenFolder": "Open Folder",
   "navOverview": "Overview",
-  "navCharacter": "Character",
-  "navWeapon": "Weapon",
-  "navChronicled": "Chronicled",
-  "navStandard": "Standard",
-  "navBeginner": "Novice",
   "navSettings": "Settings",
   "navContributors": "Contributors",
-  "gachaTypeCharacter": "Character Event Wish",
-  "gachaTypeWeapon": "Weapon Event Wish",
-  "gachaTypeChronicled": "Chronicled Wish",
-  "gachaTypeStandard": "Standard Wish",
-  "gachaTypeBeginner": "Novice Wishes",
-  "gachaTypeOdesEvent": "Event Ode",
-  "gachaTypeOdesStandard": "Standard Ode",
-  "navOdesEvent": "Event",
-  "navOdesStandard": "Standard",
-  "navSectionGacha": "Wish",
-  "navSectionOdes": "Odes",
+  "gachaTypeCharacter": "Featured Resonator Convene",
+  "gachaTypeWeapon": "Featured Weapon Convene",
+  "gachaTypeStandardCharacter": "Standard Resonator Convene",
+  "gachaTypeStandardWeapon": "Standard Weapon Convene",
+  "gachaTypeBeginner": "Beginner Convene",
+  "gachaTypeBeginnerChoice": "Beginner's Choice Convene",
+  "gachaTypeNewVoyageCharacter": "New Voyage Resonator Convene",
+  "gachaTypeNewVoyageWeapon": "New Voyage Weapon Convene",
+  "gachaTypeCharacterShort": "Featured Resonator",
+  "gachaTypeWeaponShort": "Featured Weapon",
+  "gachaTypeStandardCharacterShort": "Standard Resonator",
+  "gachaTypeStandardWeaponShort": "Standard Weapon",
+  "gachaTypeBeginnerShort": "Beginner",
+  "gachaTypeBeginnerChoiceShort": "Beginner's Choice",
+  "gachaTypeNewVoyageCharacterShort": "New Voyage Resonator",
+  "gachaTypeNewVoyageWeaponShort": "New Voyage Weapon",
+  "navSectionGacha": "Convene",
   "footerNotSynced": "Not synced",
   "footerLastUpdated": "Last updated: {time}",
   "@footerLastUpdated": {
@@ -108,8 +109,7 @@
   "emptyNoSyncMessage": "Click \"Update\" in the top right to start",
   "emptyNoRecords": "No records for this banner",
   "emptyNoFilterMatch": "No records match the current filter",
-  "emptyNoOdesRecords": "No Odes records yet",
-  "emptyNoGachaRecords": "No Wish records yet",
+  "emptyNoGachaRecords": "No Convene records yet",
   "statsTotal": "Total pulls",
   "statsRankCount": "{star} Count",
   "@statsRankCount": {
@@ -133,6 +133,7 @@
   "kindUnknown": "Unknown",
   "kindCharacter": "Character",
   "kindWeapon": "Weapon",
+  "kindItem": "Item",
   "tableTime": "Time",
   "tableName": "Name",
   "tableKind": "Type",
@@ -164,8 +165,8 @@
   "progressFetching": "Fetching…",
   "progressDone": "Update complete",
   "progressFailed": "Failed",
-  "progressOpenGameHint": "Open Genshin → Wishes → History",
-  "progressFallbackHint": "(Previous auth expired, re-capture needed)",
+  "progressOpenGameHint": "Open Wuthering Waves → Convene → Convene History",
+  "progressFallbackHint": "(The previous capture expired. Please reopen the Convene History page.)",
   "progressFetchingBanner": "Fetching: {name}",
   "@progressFetchingBanner": {
     "placeholders": {
@@ -174,10 +175,13 @@
       }
     }
   },
-  "progressPageStatus": "Page {page}, {count} new records so far",
-  "@progressPageStatus": {
+  "progressPoolStatus": "Pool {index} / {total}, {count} new",
+  "@progressPoolStatus": {
     "placeholders": {
-      "page": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
         "type": "int"
       },
       "count": {
@@ -195,7 +199,7 @@
   },
   "progressDoneImagesSummary": "{count, plural, =1{Downloaded {count} item image} other{Downloaded {count} item images}}",
   "@progressDoneImagesSummary": {
-    "description": "Completion summary additional line: how many HoYoWiki item images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
     "placeholders": {
       "count": {
         "type": "int"
@@ -231,8 +235,8 @@
       }
     }
   },
-  "updateProgressHoyoWikiSearching": "Searching item data {done}/{total}",
-  "@updateProgressHoyoWikiSearching": {
+  "updateProgressItemDownloading": "Downloading item images {done}/{total}",
+  "@updateProgressItemDownloading": {
     "placeholders": {
       "done": {
         "type": "int"
@@ -242,8 +246,8 @@
       }
     }
   },
-  "updateProgressHoyoWikiFetchingEntries": "Fetching item details {done}/{total}",
-  "@updateProgressHoyoWikiFetchingEntries": {
+  "updateProgressItemFetchingData": "Fetching item data {done}/{total}",
+  "@updateProgressItemFetchingData": {
     "placeholders": {
       "done": {
         "type": "int"
@@ -253,31 +257,10 @@
       }
     }
   },
-  "updateProgressHoyoWikiDownloading": "Downloading item images {done}/{total}",
-  "@updateProgressHoyoWikiDownloading": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "errorAuthExpired": "Auth keeps expiring; please log in to the game again",
-  "errorRateLimited": "Too many requests; please retry later",
-  "errorServer": "Server error: {message}",
-  "@errorServer": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "errorNoRecords": "This account has no Wish records yet",
+  "errorGachaFailed": "Still couldn't fetch records after re-capturing. The server may be temporarily unavailable — please try again later.",
+  "errorNoRecords": "This account has no Convene records yet",
   "pageOverviewTitle": "Overview (all banners)",
-  "pageOverviewGachaSection": "Wish Overview",
-  "pageOverviewOdesSection": "Odes Overview",
+  "pageOverviewGachaSection": "Convene Overview",
   "pageBannerRecordList": "Record list",
   "rarityOverviewTitle": "{star} Overview",
   "@rarityOverviewTitle": {
@@ -362,7 +345,6 @@
       }
     }
   },
-  "pityBeginnerEnded": "Ended",
   "pityAverageInterval": "Avg {n} pulls",
   "@pityAverageInterval": {
     "placeholders": {
@@ -455,24 +437,24 @@
   "pagerLast": "Last",
   "settingsClearActive": "Clear current account data",
   "settingsClearAll": "Clear all data",
-  "settingsRefetchHoyoWikiImagesTitle": "Force re-fetch item images",
-  "@settingsRefetchHoyoWikiImagesTitle": {
-    "description": "Settings → Data management → button: forcibly clears all cached HoYoWiki item images (icon + header) and re-fetches them from scratch."
+  "settingsRefetchItemImagesTitle": "Force re-fetch item images",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached item images (icon + header) and re-fetches them from scratch."
   },
-  "settingsRefetchHoyoWikiImagesEmpty": "No gacha records yet, nothing to re-fetch",
-  "@settingsRefetchHoyoWikiImagesEmpty": {
+  "settingsRefetchItemImagesEmpty": "No gacha records yet, nothing to re-fetch",
+  "@settingsRefetchItemImagesEmpty": {
     "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
   },
-  "confirmRefetchHoyoWikiTitle": "Force re-fetch item images",
-  "@confirmRefetchHoyoWikiTitle": {
+  "confirmRefetchItemImagesTitle": "Force re-fetch item images",
+  "@confirmRefetchItemImagesTitle": {
     "description": "Title of the AlertDialog confirming the refetch action."
   },
-  "confirmRefetchHoyoWikiBody": "This will clear all local item image cache and re-download icons from HoYoWiki. Item detail images will be downloaded on demand next time you open the item. Depending on item count, this may take several minutes of bandwidth and time.",
-  "@confirmRefetchHoyoWikiBody": {
+  "confirmRefetchItemImagesBody": "This will clear all local item image cache and re-download character icons. Detail images will be downloaded on demand next time you open the item detail. Depending on item count, this may take a few minutes of bandwidth and time.",
+  "@confirmRefetchItemImagesBody": {
     "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
   },
-  "confirmRefetchHoyoWikiConfirm": "Start re-fetching",
-  "@confirmRefetchHoyoWikiConfirm": {
+  "confirmRefetchItemImagesConfirm": "Start re-fetching",
+  "@confirmRefetchItemImagesConfirm": {
     "description": "Confirm button label in the refetch AlertDialog."
   },
   "settingsImageCache": "Image cache",
@@ -485,11 +467,11 @@
   },
   "settingsImageCacheIcons": "Icons",
   "@settingsImageCacheIcons": {
-    "description": "Label for icon cache size (small thumbnails shown in wish list)."
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
   },
   "settingsImageCacheGallery": "Detail images",
   "@settingsImageCacheGallery": {
-    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+    "description": "Label for outfit cache size (large character art shown in item dialog)."
   },
   "settingsImageCacheCalculating": "Calculating…",
   "@settingsImageCacheCalculating": {
@@ -500,16 +482,9 @@
     "description": "Shown when scanning cache size fails (e.g. permission denied)."
   },
   "settingsImageCacheClearGallery": "Clear detail images",
-  "@settingsImageCacheClearGallery": {
-    "description": "Button label: clear gallery cache (keeps icons)."
-  },
   "confirmClearGalleryCacheTitle": "Clear detail images?",
-  "@confirmClearGalleryCacheTitle": {
-    "description": "Confirmation dialog title for clearing gallery cache."
-  },
   "confirmClearGalleryCacheBody": "About {size} of item detail images will be deleted; icon cache is kept. They will re-download next time you open the item detail.",
   "@confirmClearGalleryCacheBody": {
-    "description": "Confirmation dialog body for clearing gallery cache; {size} is formatted bytes string (e.g. '123.4 MB').",
     "placeholders": {
       "size": {
         "type": "String"
@@ -517,9 +492,7 @@
     }
   },
   "confirmClearGalleryCacheConfirm": "Clear",
-  "@confirmClearGalleryCacheConfirm": {
-    "description": "Confirm button label for clearing gallery cache."
-  },
+  "settingsImageCacheClearGalleryFailed": "Failed to clear detail images",
   "settingsExportData": "Export data",
   "settingsImportData": "Import data",
   "shareImageButton": "Generate share image",
@@ -597,31 +570,6 @@
     }
   },
   "settingsImportConfirmWarning": "This action cannot be undone. Type IMPORT to confirm.",
-  "settingsImportSuccess": "Successfully imported {accounts} accounts ({records} records)",
-  "@settingsImportSuccess": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportPartial": "Imported {success}/{total} accounts; failed: {failedUids}",
-  "@settingsImportPartial": {
-    "placeholders": {
-      "success": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      },
-      "failedUids": {
-        "type": "String"
-      }
-    }
-  },
   "settingsImportFailed": "Import failed: {reason}",
   "@settingsImportFailed": {
     "placeholders": {
@@ -643,7 +591,7 @@
     }
   },
   "confirmTitle": "Confirm",
-  "confirmClearActiveBody": "This will permanently delete all Wish records for UID {uid}. Type the UID to confirm:",
+  "confirmClearActiveBody": "This will permanently delete all Convene records for UID {uid}. Type the UID to confirm:",
   "@confirmClearActiveBody": {
     "placeholders": {
       "uid": {
@@ -651,7 +599,7 @@
       }
     }
   },
-  "confirmClearAllBody": "This will permanently delete every account's Wish records. Type DELETE to confirm:",
+  "confirmClearAllBody": "This will permanently delete every account's Convene records. Type DELETE to confirm:",
   "confirmDelete": "Delete",
   "confirmImport": "Import",
   "confirmExport": "Export",
@@ -763,9 +711,9 @@
   "@aboutViewReleaseNotes": {
     "description": "Settings > About: button next to the version label that opens the current-release dialog."
   },
-  "updateErrorWipeHoyoWikiCache": "Failed to clear item-image cache: {detail}",
-  "@updateErrorWipeHoyoWikiCache": {
-    "description": "Force-refetch flow: failed to clear hoyowiki_index.json or hoyowiki_cache/ directory. {detail} is the sanitized exception message.",
+  "updateErrorWipeItemImageCache": "Failed to clear item-image cache: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
     "placeholders": {
       "detail": {
         "type": "String"
@@ -801,17 +749,17 @@
     }
   },
   "settingsLogsClearConfirmBody": "This will permanently delete all files in logs/. Export them first if you need them for bug reports. Type CLEAR to confirm.",
-  "galleryCardLabel": "Card",
-  "@galleryCardLabel": {
-    "description": "Item detail dialog gallery: chip label for the card (pic) page. Maps to hoyowiki entry_page gallery_character.pic; not the item's own name."
+  "galleryIllustrationLabel": "Outfit",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
+  "galleryLuckdrawLabel": "Convene",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
   },
   "galleryIconLabel": "Icon",
   "@galleryIconLabel": {
     "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
-  },
-  "actionViewOnHoYoWiki": "View on HoYoWiki",
-  "@actionViewOnHoYoWiki": {
-    "description": "Item detail dialog actions: button label that opens the HoYoLAB Wiki entry page for the current item in the default browser."
   },
   "galleryLazyLoadFailed": "Image failed to load",
   "@galleryLazyLoadFailed": {
@@ -824,5 +772,10 @@
   "actionCloseImagePreview": "Close image preview",
   "@actionCloseImagePreview": {
     "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
+
+  "actionViewOnEncore": "View on encore.moe",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
   }
 }

@@ -1,38 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/app_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/data/gacha_types.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/five_star_collection.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_stats.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/overview_sections.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/timeline_entries.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_repository.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/utils/relative_time.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/banner_colors.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/banner_top_rarity_bars.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/chart_card.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/stat_card.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/five_star_overview.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/timeline_vertical.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/distribution_legend.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/empty_state.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/inline_section_title.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/item_type_pie.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/loading_state.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/page_header.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/rank_palette.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/rarity_pie.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/share/share_action_button.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/share/share_card.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/share/share_image_helper.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/five_star_collection.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_stats.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/overview_sections.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/stat_format.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/banner_top_rarity_bars.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/chart_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/five_star_overview.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/empty_state.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/inline_section_title.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/item_type_pie.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/loading_state.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/page_header.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rarity_pie.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_action_button.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_image_helper.dart';
 
-/// 總覽頁，將 gacha 與 odes 分兩段各自呈現統計、圖表、timeline。
+/// 總覽頁，聚合所有 8 池的統計、圖表與 timeline。
 class OverviewPage extends ConsumerWidget {
   /// 建立 [OverviewPage]。
   const OverviewPage({super.key});
@@ -51,70 +49,26 @@ class OverviewPage extends ConsumerWidget {
       return EmptyState.noSync(context);
     }
 
-    final sections = buildOverviewSections(
-      activeData.banners,
-      index: ref.watch(hoyowikiIndexProvider),
-    );
-    final gachaSec = sections.gacha;
-    final odesSec = sections.odes;
+    final sec = buildOverviewSections(activeData.banners);
     final bannerColors = BannerColors.of(Theme.of(context).brightness);
 
-    String shareWithAvg(String shareText, double? avg) {
-      if (avg == null) return shareText;
-      return '$shareText · ${l.pityAverageInterval(avg.toStringAsFixed(2))}';
-    }
-
-    final gachaStatCards = <Widget>[
+    final statCards = <Widget>[
       StatCard(
         label: l.statsTotal,
-        value: '${gachaSec.stats.total}',
+        value: '${sec.stats.total}',
         accent: tokens.accentPrimary,
       ),
       StatCard(
         label: l.statsRankCount(l.rarityStar(5)),
-        value: '${gachaSec.stats.fiveStarCount}',
+        value: '${sec.stats.fiveStarCount}',
         accent: tokens.fiveStar,
-        subtitle: shareWithAvg(
-          l.statsShareOfTotal(
-            (gachaSec.stats.fiveStarRate * 100).toStringAsFixed(2),
-          ),
-          gachaSec.fiveStarAvg,
-        ),
+        subtitle: formatRateWithAvg(l, sec.stats.fiveStarRate, sec.fiveStarAvg),
       ),
       StatCard(
         label: l.statsRankCount(l.rarityStar(4)),
-        value: '${gachaSec.stats.fourStarCount}',
+        value: '${sec.stats.fourStarCount}',
         accent: tokens.fourStar,
-        subtitle: shareWithAvg(
-          l.statsShareOfTotal(
-            (gachaSec.stats.fourStarRate * 100).toStringAsFixed(2),
-          ),
-          gachaSec.fourStarAvg,
-        ),
-      ),
-    ];
-
-    final odesEventType = odesSec.types.firstWhere(
-      (t) => t.gachaType == '2000',
-    );
-    final odesStandardType = odesSec.types.firstWhere(
-      (t) => t.gachaType == '1000',
-    );
-    final odesStatCards = <Widget>[
-      StatCard(
-        label: l.statsTotal,
-        value: '${odesSec.stats.total}',
-        accent: tokens.accentPrimary,
-      ),
-      StatCard(
-        label: '${odesEventType.resolveName(l)} ${l.rarityStar(5)}',
-        value: '${odesSec.eventFiveCount}',
-        accent: accentForRank(5, tokens),
-      ),
-      StatCard(
-        label: '${odesStandardType.resolveName(l)} ${l.rarityStar(4)}',
-        value: '${odesSec.standardFourCount}',
-        accent: accentForRank(4, tokens),
+        subtitle: formatRateWithAvg(l, sec.stats.fourStarRate, sec.fourStarAvg),
       ),
     ];
 
@@ -140,38 +94,16 @@ class OverviewPage extends ConsumerWidget {
           ),
           _OverviewSection(
             title: l.pageOverviewGachaSection,
-            types: gachaSec.types,
-            banners: gachaSec.banners,
-            stats: gachaSec.stats,
+            types: sec.types,
+            banners: sec.banners,
+            stats: sec.stats,
             bannerColors: bannerColors,
-            statCards: gachaStatCards,
+            statCards: statCards,
             emptyTitle: l.emptyNoGachaRecords,
-            timeline: gachaSec.timeline,
-            timelineNowPulls: gachaSec.timelineNowPulls,
-            timelineRank: gachaSec.timelineRank,
-            fiveStarItems: buildFiveStarCollectionAcrossBanners(
-              gachaSec.banners,
-              index: ref.watch(hoyowikiIndexProvider),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxxl),
-          Divider(
-            color: Theme.of(context).gacha.borderEmphasis,
-            height: 1,
-            thickness: 1,
-          ),
-          const SizedBox(height: AppSpacing.xxxl),
-          _OverviewSection(
-            title: l.pageOverviewOdesSection,
-            types: odesSec.types,
-            banners: odesSec.banners,
-            stats: odesSec.stats,
-            bannerColors: bannerColors,
-            statCards: odesStatCards,
-            emptyTitle: l.emptyNoOdesRecords,
-            timeline: odesSec.timeline,
-            timelineNowPulls: odesSec.timelineNowPulls,
-            timelineRank: odesSec.timelineRank,
+            timeline: sec.timeline,
+            timelineNowPulls: sec.timelineNowPulls,
+            timelineRank: sec.timelineRank,
+            fiveStarItems: buildFiveStarCollectionAcrossBanners(sec.banners),
           ),
         ],
       ),
@@ -189,23 +121,22 @@ class OverviewPage extends ConsumerWidget {
     await generateAndShareImage(
       context: context,
       l: l,
-      suggestedName: 'genshin_gacha_share_overview_${fileTimestamp()}.png',
+      suggestedName: 'wuwa_convene_share_overview_${fileTimestamp()}.png',
       recordsForPreload: activeData.banners.values.expand((records) => records),
       buildCard: (icon, options) => ShareCard.overview(
         l: l,
         appVersion: appVersion,
         appIcon: icon,
         options: options,
-        uid: activeData.uid,
+        uid: activeData.playerId,
         updatedAt: activeData.lastUpdated.toLocal(),
         banners: activeData.banners,
-        index: ref.read(hoyowikiIndexProvider),
       ),
     );
   }
 }
 
-/// 總覽頁中 gacha 或 odes 的單一段落，包含 stat 卡、圖表與 timeline。
+/// 總覽頁的聚合段落，包含 stat 卡、圖表與 timeline。
 class _OverviewSection extends StatelessWidget {
   const _OverviewSection({
     required this.title,
@@ -227,7 +158,7 @@ class _OverviewSection extends StatelessWidget {
   /// 此段落包含的 [GachaType] 清單。
   final List<GachaType> types;
 
-  /// 各卡池的祈願記錄 map。
+  /// 各卡池的喚取記錄 map。
   final Map<String, List<GachaRecord>> banners;
 
   /// 此段落的聚合統計。
@@ -251,13 +182,12 @@ class _OverviewSection extends StatelessWidget {
   /// timeline 目標稀有度。
   final int timelineRank;
 
-  /// 此段的五星一覽清單；空清單時不顯示該區塊（頌願段一律空）。
+  /// 此段的五星一覽清單；空清單時不顯示該區塊（8 池聚合段一律有五星一覽）。
   final List<FiveStarCollectionItem> fiveStarItems;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final tokens = Theme.of(context).gacha;
     final hasData = banners.values.any((r) => r.isNotEmpty);
 
     if (!hasData) {
@@ -336,26 +266,8 @@ class _OverviewSection extends StatelessWidget {
             final wide = c.maxWidth >= 1024;
             final mid = c.maxWidth >= 800 && c.maxWidth < 1024;
 
-            final rarityCard = ChartCard(
-              title: l.statsRarityDistribution,
-              icon: Icons.pie_chart_outline,
-              chart: RarityPie(stats: stats),
-              legend: DistributionLegend(
-                entries: rarityDistributionEntries(stats, tokens, l),
-              ),
-            );
-            final itemTypeCard = ChartCard(
-              title: l.statsItemTypeDistribution,
-              icon: Icons.donut_small_outlined,
-              chart: ItemTypePie(stats: stats),
-              legend: DistributionLegend(
-                entries: itemTypeDistributionEntries(
-                  stats,
-                  Theme.of(context).brightness,
-                  l,
-                ),
-              ),
-            );
+            final rarityCard = RarityChartCard(stats: stats);
+            final itemTypeCard = ItemTypeChartCard(stats: stats);
 
             if (wide) {
               // 對齊 Stat row（flex 6/3/3 + 兩個 m gap）：

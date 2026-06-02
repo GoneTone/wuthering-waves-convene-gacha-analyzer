@@ -3,10 +3,13 @@ import 'dart:io';
 
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
-/// 負責祈願資料與已擷取 URL 的本地 JSON 讀寫。
+/// 負責喚取資料與已擷取憑證（credential body）的本地 JSON 讀寫。
+///
+/// 檔名規則改用顯式副檔名（spec D3）：記錄檔 `<playerId>.records.json`、憑證檔
+/// `<playerId>.cred.json`，playerId 一律當不透明字串（不靠數字 regex 篩選）。
 class GachaStorage {
   /// 建立 [GachaStorage]，需指定資料根目錄 [baseDir]。
   GachaStorage(this.baseDir);
@@ -14,98 +17,115 @@ class GachaStorage {
   /// Logger 實例（gacha 儲存）。
   static final _log = Logger('gacha.storage');
 
-  /// Genshin UID 模式：純數字。
-  static final _uidPattern = RegExp(r'^\d+$');
+  /// 記錄檔副檔名。
+  static const _recordsSuffix = '.records.json';
 
-  /// `<applicationSupportDirectory>/gacha_data/`，main.dart 創建後傳入
+  /// 憑證檔副檔名。
+  static const _credSuffix = '.cred.json';
+
+  /// `<applicationSupportDirectory>/gacha_data/`，main.dart 創建後傳入。
   final Directory baseDir;
 
-  /// 回傳 [uid] 對應的資料檔路徑。
-  File _dataFile(String uid) => File('${baseDir.path}/$uid.json');
+  /// 回傳 [playerId] 對應的記錄檔路徑。
+  File _recordsFile(String playerId) =>
+      File('${baseDir.path}/$playerId$_recordsSuffix');
 
-  /// 回傳 [uid] 對應的已擷取 URL 檔路徑。
-  File _urlFile(String uid) => File('${baseDir.path}/$uid.url.json');
+  /// 回傳 [playerId] 對應的憑證檔路徑。
+  File _credFile(String playerId) =>
+      File('${baseDir.path}/$playerId$_credSuffix');
 
-  /// 讀取 [uid] 的祈願資料；檔案不存在時回傳 null。
-  Future<BannerStorage?> load(String uid) async {
-    final f = _dataFile(uid);
+  /// 讀取 [playerId] 的喚取資料；不存在回 null。
+  ///
+  /// 舊檔辨識標記（§C）：鳴潮新 schema 每筆 record 必含 `resource_id`（整數），不相容
+  /// 的舊版 schema 則無（其鍵為 `id`/`gacha_type`/`item_type`/`rank_type`/`lang`）。
+  /// 因此本 `load` 以「`GachaRecord.fromStorageJson` 解析時缺 `resource_id` 而拋例外」
+  /// 作為舊檔偵測依據——不另在 `BannerStorage.toJson` 加版本欄位，缺 `resource_id`
+  /// 即足以區分。遇此情形時跳過該檔並 log warning、回 null，**不可 rethrow**（否則
+  /// 殘留舊檔會讓整個 App 開不起來，spec D2）。
+  Future<BannerStorage?> load(String playerId) async {
+    final f = _recordsFile(playerId);
     if (!await f.exists()) return null;
     try {
       final text = await f.readAsString();
       final json = jsonDecode(text) as Map<String, dynamic>;
       return BannerStorage.fromJson(json);
     } catch (e, st) {
-      _log.severe('load failed for uid=${sanitizeUid(uid)}', e, st);
-      rethrow;
+      _log.warning(
+        'skip unparseable records file (legacy/incompatible schema) for '
+        'playerId=${sanitizeUid(playerId)}',
+        e,
+        st,
+      );
+      return null;
     }
   }
 
   /// 將 [data] 寫回磁碟。
   Future<void> save(BannerStorage data) async {
     try {
-      await _atomicWrite(_dataFile(data.uid), jsonEncode(data.toJson()));
+      await _atomicWrite(
+        _recordsFile(data.playerId),
+        jsonEncode(data.toJson()),
+      );
       final total = data.banners.values.fold<int>(0, (a, b) => a + b.length);
-      _log.fine('saved uid=${sanitizeUid(data.uid)} records=$total');
+      _log.fine('saved playerId=${sanitizeUid(data.playerId)} records=$total');
     } catch (e, st) {
-      _log.severe('save failed for uid=${sanitizeUid(data.uid)}', e, st);
+      _log.severe(
+        'save failed for playerId=${sanitizeUid(data.playerId)}',
+        e,
+        st,
+      );
       rethrow;
     }
   }
 
-  /// 回傳 [baseDir] 中所有已有資料的 UID 列表。
+  /// 回傳 [baseDir] 中所有已有記錄檔的 playerId 列表。
+  ///
+  /// 以 `.records.json` 副檔名辨識（spec D3），metadata（如 item_image 索引）與
+  /// 憑證檔因副檔名不同而自然排除，不需數字 regex。
   Future<List<String>> listKnownUids() async {
     if (!await baseDir.exists()) return const [];
     final entries = await baseDir.list().toList();
-    final uids = <String>[];
-    for (final e in entries) {
-      if (e is! File) continue;
-      final name = e.uri.pathSegments.last;
-      // 必須是 <uid>.json，但不是 <uid>.url.json
-      if (name.endsWith('.url.json')) continue;
-      if (!name.endsWith('.json')) continue;
-      final uid = name.substring(0, name.length - '.json'.length);
-      // UID 一律全數字（Genshin server-generated）；非數字檔名忽略，
-      // 避免把 hoyowiki_index.json 之類的 metadata 誤當成 UID 載入。
-      if (!_uidPattern.hasMatch(uid)) continue;
-      uids.add(uid);
-    }
-    return uids;
+    return entries
+        .whereType<File>()
+        .map((e) => e.uri.pathSegments.last)
+        .where((name) => name.endsWith(_recordsSuffix))
+        .map((name) => name.substring(0, name.length - _recordsSuffix.length))
+        .toList();
   }
 
-  /// 讀取 [uid] 的已擷取 URL；不存在時回傳 null。
-  Future<String?> loadCapturedUrl(String uid) async {
-    final f = _urlFile(uid);
+  /// 讀取 [playerId] 的已擷取憑證 body（整份 JSON 字串）；不存在回 null。
+  Future<String?> loadCapturedCredential(String playerId) async {
+    final f = _credFile(playerId);
     if (!await f.exists()) return null;
-    final json = jsonDecode(await f.readAsString()) as Map<String, dynamic>;
-    return json['url'] as String?;
+    return f.readAsString();
   }
 
-  /// 將 [url] 寫入 [uid] 的 URL 檔。
-  Future<void> saveCapturedUrl(String uid, String url) async {
-    final json = {
-      'uid': uid,
-      'url': url,
-      'captured_at': DateTime.now().toUtc().toIso8601String(),
-    };
-    await _atomicWrite(_urlFile(uid), jsonEncode(json));
-    _log.fine('saved captured url for uid=${sanitizeUid(uid)}');
+  /// 將攔到的憑證 [bodyJson]（整份 body）寫入 [playerId] 的憑證檔。
+  Future<void> saveCapturedCredential(String playerId, String bodyJson) async {
+    await _atomicWrite(_credFile(playerId), bodyJson);
+    _log.fine(
+      'saved captured credential for playerId=${sanitizeUid(playerId)}',
+    );
   }
 
-  /// 刪除 [uid] 的 URL 檔（若存在）。
-  Future<void> deleteCapturedUrl(String uid) async {
-    final f = _urlFile(uid);
+  /// 刪除 [playerId] 的憑證檔（若存在）。
+  Future<void> deleteCapturedCredential(String playerId) async {
+    final f = _credFile(playerId);
     if (await f.exists()) {
       await f.delete();
-      _log.fine('deleted captured url for uid=${sanitizeUid(uid)}');
+      _log.fine(
+        'deleted captured credential for playerId=${sanitizeUid(playerId)}',
+      );
     }
   }
 
-  /// 刪除 [uid] 的所有本地資料（資料檔 + URL 檔）。
-  Future<void> delete(String uid) async {
-    final f = _dataFile(uid);
+  /// 刪除 [playerId] 的所有本地資料（記錄檔 + 憑證檔）。
+  Future<void> delete(String playerId) async {
+    final f = _recordsFile(playerId);
     if (await f.exists()) await f.delete();
-    await deleteCapturedUrl(uid);
-    _log.info('delete uid=${sanitizeUid(uid)}');
+    await deleteCapturedCredential(playerId);
+    _log.info('delete playerId=${sanitizeUid(playerId)}');
   }
 
   /// 清除 [baseDir] 內所有 `.json` 檔案。

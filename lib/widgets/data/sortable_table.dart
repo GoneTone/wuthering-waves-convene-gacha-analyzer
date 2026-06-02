@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_filter.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_row.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/item_type_kind.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/utils/relative_time.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/data/pager.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_row.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/pager.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 
-/// 可排序的祈願記錄表格，含分頁功能。
+/// 可排序的喚取記錄表格，含分頁功能。
 class SortableTable extends StatefulWidget {
   /// 建立 [SortableTable]。
   const SortableTable({
@@ -27,7 +27,7 @@ class SortableTable extends StatefulWidget {
   /// 當前排序設定；`null` 表示未排序。
   final TableSort? sort;
 
-  /// 該卡池的主稀有度 rank（卡池預設 5、常駐頌願 4），用於「保底內」欄
+  /// 該卡池的主稀有度 rank（依卡池而定，多為 5），用於「保底內」欄
   /// 標題與 tooltip 中的 N★。
   final int mainRank;
 
@@ -326,7 +326,7 @@ class _HeaderCell extends StatelessWidget {
   }
 }
 
-/// 單筆祈願記錄的資料列。
+/// 單筆喚取記錄的資料列。
 class _Row extends StatelessWidget {
   /// 建立 [_Row]。
   const _Row({
@@ -337,7 +337,7 @@ class _Row extends StatelessWidget {
     required this.l,
   });
 
-  /// 祈願記錄資料。
+  /// 喚取記錄資料。
   final RecordRow row;
 
   /// 是否為斑馬紋的深色列。
@@ -355,7 +355,7 @@ class _Row extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final record = row.record;
-    final accent = switch (record.rankType) {
+    final accent = switch (record.qualityLevel) {
       5 => tokens.fiveStar,
       4 => tokens.fourStar,
       _ => null,
@@ -365,7 +365,7 @@ class _Row extends StatelessWidget {
         : TextStyle(color: accent, fontWeight: FontWeight.bold);
     final mutedNum = TextStyle(
       color: tokens.textMuted,
-      fontFeatures: const [FontFeature.tabularFigures()],
+      fontFeatures: kTabularFigures,
     );
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -415,8 +415,8 @@ class _Row extends StatelessWidget {
           Expanded(
             flex: 2,
             child: accent != null
-                ? _Pill(rank: record.rankType, color: accent, l: l)
-                : Text(l.rarityStar(record.rankType)),
+                ? _Pill(rank: record.qualityLevel, color: accent, l: l)
+                : Text(l.rarityStar(record.qualityLevel)),
           ),
           Expanded(
             flex: 2,

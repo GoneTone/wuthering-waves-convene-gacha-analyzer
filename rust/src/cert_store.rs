@@ -4,33 +4,24 @@ use tracing::debug;
 use windows::core::w;
 use windows::Win32::Security::Cryptography::{
     CertAddEncodedCertificateToStore, CertCloseStore, CertDeleteCertificateFromStore,
-    CertFindCertificateInStore, CertFreeCertificateContext, CertOpenStore, CERT_FIND_SHA1_HASH,
-    CERT_OPEN_STORE_FLAGS, CERT_QUERY_ENCODING_TYPE, CERT_STORE_ADD_NEW, CERT_STORE_PROV_SYSTEM_W,
-    CERT_SYSTEM_STORE_CURRENT_USER, CRYPT_INTEGER_BLOB, X509_ASN_ENCODING,
+    CertFindCertificateInStore, CertFreeCertificateContext, CertOpenStore, CERT_CONTEXT,
+    CERT_FIND_SHA1_HASH, CERT_OPEN_STORE_FLAGS, CERT_QUERY_ENCODING_TYPE, CERT_STORE_ADD_NEW,
+    CERT_STORE_PROV_SYSTEM_W, CERT_SYSTEM_STORE_CURRENT_USER, CRYPT_INTEGER_BLOB, HCERTSTORE,
+    X509_ASN_ENCODING,
 };
 
-/// 將 DER 編碼的 CA 憑證安裝到當前使用者的「根」憑證存放區。
+/// 開啟 CurrentUser\Root 存放區並以 SHA-1 指紋 [hash] 查詢憑證，回傳 `(store, existing)`。
 ///
-/// 以 SHA-1 指紋（thumbprint）比對是否已安裝相同憑證：
-/// - 已存在 → 跳過，不觸發 Windows 確認對話框。
-/// - 不存在 → 呼叫 `CertAddEncodedCertificateToStore`（使用者只有首次安裝時看到對話框）。
-pub fn install_to_current_user_root(cert_der: &[u8]) -> anyhow::Result<()> {
-    // 計算 cert_der 的 SHA-1 指紋（20 bytes）
-    let mut hash: [u8; 20] = Sha1::digest(cert_der).into();
-    debug!(target: "cert_store", sha1 = %hex::encode(hash), "looking up cert by thumbprint");
-
-    // SAFETY:
-    // - store handle 僅在 CertOpenStore 成功後至 CertCloseStore 之間使用。
-    // - `hash` 陣列存活至函式結束，`blob.pbData` 在整段 unsafe 區塊內始終有效。
-    // - `pvfindpara` 指向 `blob`（CRYPT_HASH_BLOB），而 `blob.pbData` 指向同一 stack frame
-    //   上的 `hash`，CertFindCertificateInStore 呼叫完成前二者均不會被釋放或移動。
-    // - `Some(w!("Root").as_ptr() as _)` 指向靜態 UTF-16 字串，生命週期為整個程式執行期間。
-    // - found 路徑中，`existing` 由 CertFindCertificateInStore 取得（refcount +1），必須以
-    //   CertFreeCertificateContext 釋放後再 CertCloseStore 返回，之後不再使用 `existing`。
-    // - not-found 路徑中 `existing` 為 null，不需（也不可）呼叫 CertFreeCertificateContext。
+/// `existing` 為 null 表示查無；**非 null 時其 refcount 已 +1，釋放責任在呼叫端**
+/// （found 路徑用 `CertFreeCertificateContext`，或 `CertDeleteCertificateFromStore`），
+/// `store` 亦由呼叫端 `CertCloseStore`。本函式不釋放任何資源（`CertOpenStore` 失敗除外，
+/// 此時直接回傳 `Err`）。
+fn open_root_and_find(hash: &mut [u8; 20]) -> anyhow::Result<(HCERTSTORE, *mut CERT_CONTEXT)> {
+    // `w!("Root")` 指向靜態 UTF-16 字串，生命週期為整個程式執行期間。
+    let store_name = w!("Root");
+    // SAFETY: blob.pbData 指向 `hash`，CertFindCertificateInStore 呼叫完成前 hash 不會被
+    // 釋放或移動；回傳的 store / existing 由呼叫端依上方契約釋放。
     unsafe {
-        // 開啟 CurrentUser\Root 憑證存放區
-        let store_name = w!("Root");
         let store = CertOpenStore(
             CERT_STORE_PROV_SYSTEM_W,
             CERT_QUERY_ENCODING_TYPE(0),
@@ -40,7 +31,6 @@ pub fn install_to_current_user_root(cert_der: &[u8]) -> anyhow::Result<()> {
         )
         .context("CertOpenStore Root 失敗")?;
 
-        // 以 SHA-1 指紋查詢存放區是否已有相同憑證（canonical thumbprint dedup）
         let blob = CRYPT_INTEGER_BLOB {
             cbData: hash.len() as u32,
             pbData: hash.as_mut_ptr(),
@@ -53,7 +43,27 @@ pub fn install_to_current_user_root(cert_der: &[u8]) -> anyhow::Result<()> {
             Some(&blob as *const CRYPT_INTEGER_BLOB as *const core::ffi::c_void),
             None,
         );
+        Ok((store, existing))
+    }
+}
 
+/// 將 DER 編碼的 CA 憑證安裝到當前使用者的「根」憑證存放區。
+///
+/// 以 SHA-1 指紋（thumbprint）比對是否已安裝相同憑證：
+/// - 已存在 → 跳過，不觸發 Windows 確認對話框。
+/// - 不存在 → 呼叫 `CertAddEncodedCertificateToStore`（使用者只有首次安裝時看到對話框）。
+pub fn install_to_current_user_root(cert_der: &[u8]) -> anyhow::Result<()> {
+    // 計算 cert_der 的 SHA-1 指紋（20 bytes）
+    let mut hash: [u8; 20] = Sha1::digest(cert_der).into();
+    debug!(target: "cert_store", sha1 = %hex::encode(hash), "looking up cert by thumbprint");
+
+    // SAFETY:
+    // - `hash` 存活至函式結束；open_root_and_find 內 blob 借用其指標僅在 find 呼叫期間有效。
+    // - found 路徑：`existing`（refcount +1）以 CertFreeCertificateContext 釋放後再
+    //   CertCloseStore 返回，之後不再使用 `existing`。
+    // - not-found 路徑：`existing` 為 null，不需（也不可）呼叫 CertFreeCertificateContext。
+    unsafe {
+        let (store, existing) = open_root_and_find(&mut hash)?;
         let found = !existing.is_null();
         debug!(target: "cert_store", found, "find result");
 
@@ -91,35 +101,11 @@ pub fn remove_from_current_user_root(cert_der: &[u8]) -> anyhow::Result<()> {
     debug!(target: "cert_store", sha1 = %hex::encode(hash), "removing cert by thumbprint");
 
     // SAFETY:
-    // - store handle 僅在 CertOpenStore 成功後至 CertCloseStore 之間使用。
-    // - `hash` 陣列存活至函式結束，`blob.pbData` 在整段 unsafe 區塊內始終有效。
-    // - `existing` 由 CertFindCertificateInStore 取得；CertDeleteCertificateFromStore
-    //   會釋放此 context，之後不得再使用 `existing`，亦不另呼叫 CertFreeCertificateContext。
-    // - `w!("Root")` 指向靜態 UTF-16 字串，生命週期為整個程式執行期間。
+    // - `hash` 存活至函式結束；open_root_and_find 內 blob 借用其指標僅在 find 呼叫期間有效。
+    // - `existing` 由 find 取得；CertDeleteCertificateFromStore 會釋放此 context，之後不得再
+    //   使用 `existing`，亦不另呼叫 CertFreeCertificateContext。
     unsafe {
-        let store_name = w!("Root");
-        let store = CertOpenStore(
-            CERT_STORE_PROV_SYSTEM_W,
-            CERT_QUERY_ENCODING_TYPE(0),
-            None,
-            CERT_OPEN_STORE_FLAGS(CERT_SYSTEM_STORE_CURRENT_USER),
-            Some(store_name.as_ptr() as *const core::ffi::c_void),
-        )
-        .context("CertOpenStore Root 失敗")?;
-
-        let blob = CRYPT_INTEGER_BLOB {
-            cbData: hash.len() as u32,
-            pbData: hash.as_mut_ptr(),
-        };
-        let existing = CertFindCertificateInStore(
-            store,
-            X509_ASN_ENCODING,
-            0,
-            CERT_FIND_SHA1_HASH,
-            Some(&blob as *const CRYPT_INTEGER_BLOB as *const core::ffi::c_void),
-            None,
-        );
-
+        let (store, existing) = open_root_and_find(&mut hash)?;
         if existing.is_null() {
             debug!(target: "cert_store", "cert not in store, nothing to remove");
             let _ = CertCloseStore(Some(store), 0);

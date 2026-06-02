@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/clock_tick.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/utils/relative_time.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/clock_tick.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
 
 /// 顯示「<前綴><相對時間><後綴>」格式的 localized 字串,並只對相對時間
 /// 那段套 Tooltip(滑鼠 hover 顯示絕對時間)。

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/app_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/data/gacha_types.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/app_release.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_repository.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/new_version_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/relative_time_text.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/team_links_bar.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/uid_indicator.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/update_progress_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/new_version_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_type_icons.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_text.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/uid_indicator.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/update_progress_dialog.dart';
 
 /// 頂層 shell，包含 AppBar、側欄 rail、底部狀態列。
 ///
@@ -185,7 +186,7 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   /// 依 [path] 計算當前選中的 rail 索引。
   ///
-  /// 設定頁與貢獻者頁回傳 [_RailSelection.none]，其餘路徑對應 gacha/odes 索引。
+  /// 設定頁與貢獻者頁回傳 [_RailSelection.none]，其餘路徑對應喚取卡池索引。
   _RailSelection _resolveRailSelection(
     String path, {
     required bool isSettings,
@@ -195,16 +196,8 @@ class _AppShellState extends ConsumerState<AppShell> {
     if (path == '/') return const _RailSelection(topIndex: 0);
     if (path.startsWith('/banner/')) {
       final type = path.substring('/banner/'.length);
-      final gachaList = gachaTypes
-          .where((t) => t.category == GachaCategory.gacha)
-          .toList(growable: false);
-      final wi = gachaList.indexWhere((t) => t.gachaType == type);
+      final wi = gachaTypes.indexWhere((t) => t.key == type);
       if (wi >= 0) return _RailSelection(gachaIndex: wi);
-      final odesTypes = gachaTypes
-          .where((t) => t.category == GachaCategory.odes)
-          .toList(growable: false);
-      final oi = odesTypes.indexWhere((t) => t.gachaType == type);
-      if (oi >= 0) return _RailSelection(odesIndex: oi);
     }
     return const _RailSelection(topIndex: 0);
   }
@@ -212,24 +205,21 @@ class _AppShellState extends ConsumerState<AppShell> {
 
 /// 描述側欄目前選中項目的索引。
 ///
-/// 三個索引互斥，最多一個非 null；全 null 表示無選中項（設定／貢獻者頁）。
+/// 兩個索引互斥，最多一個非 null；全 null 表示無選中項（設定／貢獻者頁）。
 class _RailSelection {
-  const _RailSelection({this.topIndex, this.gachaIndex, this.odesIndex});
+  const _RailSelection({this.topIndex, this.gachaIndex});
 
   /// Overview 頁的索引（固定 0）。
   final int? topIndex;
 
-  /// gacha 分類在 rail 清單中的索引。
+  /// 喚取卡池在 rail 清單中的索引。
   final int? gachaIndex;
-
-  /// odes 分類在 rail 清單中的索引。
-  final int? odesIndex;
 
   /// 無選中項（設定 / 貢獻者頁使用）。
   static const none = _RailSelection();
 }
 
-/// 左側導覽 rail，包含所有 gacha/odes 分類及底部設定、貢獻者入口。
+/// 左側導覽 rail，包含所有喚取卡池及底部設定、貢獻者入口。
 class _Rail extends StatelessWidget {
   const _Rail({
     required this.selection,
@@ -260,13 +250,6 @@ class _Rail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gachaList = gachaTypes
-        .where((t) => t.category == GachaCategory.gacha)
-        .toList(growable: false);
-    final odesTypes = gachaTypes
-        .where((t) => t.category == GachaCategory.odes)
-        .toList(growable: false);
-
     // 對齊 NavigationRail 預設寬度：collapsed 72dp，extended 256dp。
     final railWidth = extended ? 256.0 : 72.0;
 
@@ -295,30 +278,13 @@ class _Rail extends StatelessWidget {
                     extended: extended,
                     hideLabel: collapsedNoLabel,
                   ),
-                  for (var i = 0; i < gachaList.length; i++)
+                  for (var i = 0; i < gachaTypes.length; i++)
                     _RailDestinationTile(
-                      iconInactive: _railIconInactive(gachaList[i].nameKey),
-                      iconActive: _railIconActive(gachaList[i].nameKey),
-                      label: _railLabel(gachaList[i].nameKey, l),
+                      iconInactive: _railIconInactive(gachaTypes[i].nameKey),
+                      iconActive: _railIconActive(gachaTypes[i].nameKey),
+                      label: _railLabel(gachaTypes[i].nameKey, l),
                       selected: selection.gachaIndex == i,
-                      onTap: () =>
-                          context.go('/banner/${gachaList[i].gachaType}'),
-                      extended: extended,
-                      hideLabel: collapsedNoLabel,
-                    ),
-                  _SectionLabel(
-                    label: l.navSectionOdes,
-                    extended: extended,
-                    hideLabel: collapsedNoLabel,
-                  ),
-                  for (var i = 0; i < odesTypes.length; i++)
-                    _RailDestinationTile(
-                      iconInactive: _railIconInactive(odesTypes[i].nameKey),
-                      iconActive: _railIconActive(odesTypes[i].nameKey),
-                      label: _railLabel(odesTypes[i].nameKey, l),
-                      selected: selection.odesIndex == i,
-                      onTap: () =>
-                          context.go('/banner/${odesTypes[i].gachaType}'),
+                      onTap: () => context.go('/banner/${gachaTypes[i].key}'),
                       extended: extended,
                       hideLabel: collapsedNoLabel,
                     ),
@@ -529,39 +495,36 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-/// 將 [nameKey] 對應至 i18n rail 標籤文字。
+/// 將 [nameKey] 對應至側欄 rail 的短標籤。
+///
+/// 側欄已在區段標題顯示「喚取」，項目再帶「喚取」後綴顯得冗餘且占空間，故用
+/// 去後綴的短名（`gachaType*Short`）；完整卡池名仍由 `gachaType*` 用於分頁標題、
+/// 更新進度等處。
 String _railLabel(String nameKey, AppLocalizations l) => switch (nameKey) {
-  'gachaTypeCharacter' => l.navCharacter,
-  'gachaTypeWeapon' => l.navWeapon,
-  'gachaTypeChronicled' => l.navChronicled,
-  'gachaTypeStandard' => l.navStandard,
-  'gachaTypeBeginner' => l.navBeginner,
-  'gachaTypeOdesEvent' => l.navOdesEvent,
-  'gachaTypeOdesStandard' => l.navOdesStandard,
+  'gachaTypeCharacter' => l.gachaTypeCharacterShort,
+  'gachaTypeWeapon' => l.gachaTypeWeaponShort,
+  'gachaTypeStandardCharacter' => l.gachaTypeStandardCharacterShort,
+  'gachaTypeStandardWeapon' => l.gachaTypeStandardWeaponShort,
+  'gachaTypeBeginner' => l.gachaTypeBeginnerShort,
+  'gachaTypeBeginnerChoice' => l.gachaTypeBeginnerChoiceShort,
+  'gachaTypeNewVoyageCharacter' => l.gachaTypeNewVoyageCharacterShort,
+  'gachaTypeNewVoyageWeapon' => l.gachaTypeNewVoyageWeaponShort,
   _ => nameKey,
 };
 
-/// 將 [nameKey] 對應至未選中狀態的 rail 圖示。
-IconData _railIconInactive(String nameKey) => switch (nameKey) {
-  'gachaTypeCharacter' => Icons.person_outline,
-  'gachaTypeWeapon' => Icons.shield_outlined,
-  'gachaTypeChronicled' => Icons.collections_bookmark_outlined,
-  'gachaTypeStandard' => Icons.history,
-  'gachaTypeBeginner' => Icons.school_outlined,
-  'gachaTypeOdesEvent' => Icons.auto_awesome_outlined,
-  'gachaTypeOdesStandard' => Icons.auto_awesome_motion_outlined,
-  _ => Icons.casino_outlined,
-};
+/// 將 [nameKey] 對應至未選中狀態的 rail 圖示（與分頁標題圖示共用同一對照）。
+IconData _railIconInactive(String nameKey) => gachaTypeOutlinedIcon(nameKey);
 
 /// 將 [nameKey] 對應至選中狀態的 rail 圖示。
 IconData _railIconActive(String nameKey) => switch (nameKey) {
   'gachaTypeCharacter' => Icons.person,
   'gachaTypeWeapon' => Icons.shield,
-  'gachaTypeChronicled' => Icons.collections_bookmark,
-  'gachaTypeStandard' => Icons.history_toggle_off,
+  'gachaTypeStandardCharacter' => Icons.person_pin,
+  'gachaTypeStandardWeapon' => Icons.gpp_good,
   'gachaTypeBeginner' => Icons.school,
-  'gachaTypeOdesEvent' => Icons.auto_awesome,
-  'gachaTypeOdesStandard' => Icons.auto_awesome_motion,
+  'gachaTypeBeginnerChoice' => Icons.checklist,
+  'gachaTypeNewVoyageCharacter' => Icons.sailing,
+  'gachaTypeNewVoyageWeapon' => Icons.explore,
   _ => Icons.casino,
 };
 

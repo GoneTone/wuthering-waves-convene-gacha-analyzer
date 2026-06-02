@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/share_uid_mask.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/utils/uid_display.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/share_uid_mask.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/uid_display.dart';
 
 void main() {
   group('displayUid', () {

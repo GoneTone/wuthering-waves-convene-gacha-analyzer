@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "tw.reh" "\0"
-            VALUE "FileDescription", "genshin_impact_wish_gacha_analyzer" "\0"
+            VALUE "FileDescription", "wuthering_waves_convene_gacha_analyzer" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "genshin_impact_wish_gacha_analyzer" "\0"
+            VALUE "InternalName", "wuthering_waves_convene_gacha_analyzer" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 GoneTone. All rights reserved." "\0"
-            VALUE "OriginalFilename", "genshin_impact_wish_gacha_analyzer.exe" "\0"
-            VALUE "ProductName", "genshin_impact_wish_gacha_analyzer" "\0"
+            VALUE "OriginalFilename", "wuthering_waves_convene_gacha_analyzer.exe" "\0"
+            VALUE "ProductName", "wuthering_waves_convene_gacha_analyzer" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

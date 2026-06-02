@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/concurrent_pool.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/concurrent_pool.dart';
 
 void main() {
   group('runConcurrent', () {

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_repository.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 
-/// 顯示祈願資料更新進度的 dialog，包含 [LinearProgressIndicator] 與各狀態文字。
+/// 顯示喚取資料更新進度的 dialog，包含 [LinearProgressIndicator] 與各狀態文字。
 class UpdateProgressDialog extends ConsumerWidget {
   /// 建立 [UpdateProgressDialog]。
   const UpdateProgressDialog({super.key});
@@ -64,7 +64,7 @@ class UpdateProgressDialog extends ConsumerWidget {
         ),
       ],
       FetchingBanner() => const <Widget>[],
-      FetchingHoYoWiki() => const <Widget>[],
+      FetchingItemImages() => const <Widget>[],
       UpdateCompleted() || UpdateFailed() => [
         TextButton.icon(
           onPressed: r.clearProgress,
@@ -109,7 +109,7 @@ class _Title extends StatelessWidget {
         tokens.textPrimary,
         l.progressFetching,
       ),
-      FetchingHoYoWiki() => (
+      FetchingItemImages() => (
         Icons.image_outlined,
         tokens.textPrimary,
         l.progressFetching,
@@ -151,11 +151,12 @@ class _Body extends StatelessWidget {
     String resolveBannerName(String key) => switch (key) {
       'gachaTypeCharacter' => l.gachaTypeCharacter,
       'gachaTypeWeapon' => l.gachaTypeWeapon,
-      'gachaTypeChronicled' => l.gachaTypeChronicled,
-      'gachaTypeStandard' => l.gachaTypeStandard,
+      'gachaTypeStandardCharacter' => l.gachaTypeStandardCharacter,
+      'gachaTypeStandardWeapon' => l.gachaTypeStandardWeapon,
       'gachaTypeBeginner' => l.gachaTypeBeginner,
-      'gachaTypeOdesEvent' => l.gachaTypeOdesEvent,
-      'gachaTypeOdesStandard' => l.gachaTypeOdesStandard,
+      'gachaTypeBeginnerChoice' => l.gachaTypeBeginnerChoice,
+      'gachaTypeNewVoyageCharacter' => l.gachaTypeNewVoyageCharacter,
+      'gachaTypeNewVoyageWeapon' => l.gachaTypeNewVoyageWeapon,
       _ => key,
     };
 
@@ -182,7 +183,8 @@ class _Body extends StatelessWidget {
       ),
       FetchingBanner(
         :final displayName,
-        :final pageIndex,
+        :final poolIndex,
+        :final poolCount,
         :final newRecordsSoFar,
       ) =>
         Column(
@@ -193,12 +195,12 @@ class _Body extends StatelessWidget {
             Text(l.progressFetchingBanner(resolveBannerName(displayName))),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              l.progressPageStatus(pageIndex, newRecordsSoFar),
+              l.progressPoolStatus(poolIndex, poolCount, newRecordsSoFar),
               style: theme.textTheme.bodySmall,
             ),
           ],
         ),
-      FetchingHoYoWiki(:final phase, :final doneCount, :final totalCount) =>
+      FetchingItemImages(:final phase, :final doneCount, :final totalCount) =>
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -207,13 +209,11 @@ class _Body extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.l),
             Text(switch (phase) {
-              HoYoWikiPhase.searching => l.updateProgressHoyoWikiSearching(
+              ItemImagePhase.checking => l.updateProgressItemFetchingData(
                 doneCount,
                 totalCount,
               ),
-              HoYoWikiPhase.fetchingEntries =>
-                l.updateProgressHoyoWikiFetchingEntries(doneCount, totalCount),
-              HoYoWikiPhase.downloading => l.updateProgressHoyoWikiDownloading(
+              ItemImagePhase.downloading => l.updateProgressItemDownloading(
                 doneCount,
                 totalCount,
               ),
@@ -223,7 +223,7 @@ class _Body extends StatelessWidget {
       UpdateCompleted(
         :final totalNewRecords,
         :final failedBanners,
-        :final hoYoWikiImagesDownloaded,
+        :final itemImagesDownloaded,
         :final importSummary,
       ) =>
         Column(
@@ -240,7 +240,7 @@ class _Body extends StatelessWidget {
             else
               Text(l.progressDoneSummary(totalNewRecords)),
             const SizedBox(height: AppSpacing.xs),
-            Text(l.progressDoneImagesSummary(hoYoWikiImagesDownloaded)),
+            Text(l.progressDoneImagesSummary(itemImagesDownloaded)),
             if (failedBanners.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.s),
               Text(
@@ -270,12 +270,10 @@ class _Body extends StatelessWidget {
   /// 將 [UpdateError] 轉為對應的本地化錯誤訊息。
   String _resolveError(UpdateError error, AppLocalizations l) =>
       switch (error) {
-        UpdateErrorAuthExpired() => l.errorAuthExpired,
-        UpdateErrorRateLimited() => l.errorRateLimited,
-        UpdateErrorServer(:final details) => l.errorServer(details),
+        UpdateErrorGachaFailed() => l.errorGachaFailed,
         UpdateErrorNoRecords() => l.errorNoRecords,
         UpdateErrorOther(:final message) => message,
-        UpdateErrorWipeHoYoWikiCache(:final detail) =>
-          l.updateErrorWipeHoyoWikiCache(detail),
+        UpdateErrorWipeItemImageCache(:final detail) =>
+          l.updateErrorWipeItemImageCache(detail),
       };
 }

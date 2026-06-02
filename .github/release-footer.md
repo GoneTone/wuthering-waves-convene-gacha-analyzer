@@ -3,7 +3,7 @@
 
 Please help us translate this software!
 
-<https://crowdin.com/project/genshin-impact-wish-gacha-analyzer>
+<https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer>
 
 ## 注意 Notice
 **_軟體在安裝或執行時有可能會被防毒軟體阻擋，如果無法正常執行，請嘗試關閉防毒軟體後再執行看看，本軟體保證無毒。_**

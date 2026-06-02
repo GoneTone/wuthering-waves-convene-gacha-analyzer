@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/inline_section_title.dart';
 
 /// 帶標題的通用區塊卡片容器。
 class SectionCard extends StatelessWidget {
@@ -37,18 +38,9 @@ class SectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (icon == null)
-            titleText
-          else
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(icon, size: 20, color: tokens.textPrimary),
-                const SizedBox(width: AppSpacing.s),
-                Flexible(child: titleText),
-              ],
-            ),
+          icon == null
+              ? titleText
+              : InlineSectionTitle(icon: icon!, title: title),
           const SizedBox(height: AppSpacing.m),
           child,
         ],

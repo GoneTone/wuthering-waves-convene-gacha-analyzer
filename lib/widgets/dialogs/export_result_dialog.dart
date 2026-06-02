@@ -2,9 +2,9 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/file_reveal.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_reveal.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 
 /// 匯出結果統一彈窗：取代原本的 SnackBar + 自動開檔案總管。
 ///

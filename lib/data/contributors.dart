@@ -21,10 +21,7 @@ const testers = <Contributor>[
     name: '世界へいわ',
     url: 'https://home.gamer.com.tw/homeindex.php?owner=XMoiswnX',
   ),
-  Contributor(
-    name: 'Zhi',
-    url: 'https://www.hoyolab.com/genshin/accountCenter/gameRecord?id=8094152',
-  ),
+  Contributor(name: '阿祐'),
 ];
 
 /// 翻譯審核人員清單。
@@ -33,18 +30,16 @@ const translationReviewers = <Contributor>[
     name: '世界へいわ',
     url: 'https://home.gamer.com.tw/homeindex.php?owner=XMoiswnX',
   ),
-  Contributor(name: 'pan93412'),
-  Contributor(name: 'Lemon7777'),
 ];
 
 /// GitHub 貢獻者圖表頁面 URL。
 const githubContributorsUrl =
-    'https://github.com/GoneTone/genshin-impact-wish-gacha-analyzer/graphs/contributors';
+    'https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/graphs/contributors';
 
 /// Crowdin 翻譯專案 URL。
 const translationCrowdinUrl =
-    'https://crowdin.com/project/genshin-impact-wish-gacha-analyzer';
+    'https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer';
 
 /// 授權條款 URL。
 const licenseUrl =
-    'https://github.com/GoneTone/genshin-impact-wish-gacha-analyzer/blob/master/LICENSE';
+    'https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/blob/master/LICENSE';

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/models/accounts_bundle.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 
 /// Logger 實例（帳號匯入/匯出）。
 final _log = Logger('accounts.io');

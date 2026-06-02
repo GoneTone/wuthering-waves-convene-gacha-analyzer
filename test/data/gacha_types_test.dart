@@ -1,88 +1,69 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 
 void main() {
   group('gachaTypes registry', () {
-    test('每個 type 至少有一條 pity rule', () {
+    test('共 8 個 type，cardPoolType 為 [1,2,3,4,5,6,8,9]（無 7）', () {
+      expect(gachaTypes.length, 8);
+      expect(gachaTypes.map((t) => t.cardPoolType).toList(), [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+      ]);
+    });
+
+    test('key getter = cardPoolType.toString()', () {
       for (final t in gachaTypes) {
-        expect(t.pities, isNotEmpty, reason: t.gachaType);
+        expect(t.key, t.cardPoolType.toString());
+      }
+      expect(gachaTypes.firstWhere((t) => t.cardPoolType == 8).key, '8');
+    });
+
+    test('每個 type 都有 5★ 與 4★ 兩條 pity', () {
+      for (final t in gachaTypes) {
+        expect(t.pities, hasLength(2), reason: t.key);
+        expect(t.primaryPity.rank, 5);
+        expect(t.secondaryPity!.rank, 4);
       }
     });
 
-    test('primaryPity 是 pities[0]', () {
+    test('primaryPity 是 pities[0]、secondaryPity 是 pities[1]', () {
       for (final t in gachaTypes) {
         expect(t.primaryPity, same(t.pities.first));
+        expect(t.secondaryPity, same(t.pities[1]));
       }
     });
 
-    test('secondaryPity 在 pities 有第二筆時非 null', () {
-      for (final t in gachaTypes) {
-        if (t.pities.length >= 2) {
-          expect(t.secondaryPity, same(t.pities[1]));
-        } else {
-          expect(t.secondaryPity, isNull);
-        }
+    test('type 1/2/3/4/6/8/9 → 5★80 / 4★10', () {
+      for (final cpt in [1, 2, 3, 4, 6, 8, 9]) {
+        final t = gachaTypes.firstWhere((g) => g.cardPoolType == cpt);
+        expect(t.primaryPity.threshold, 80, reason: 'type $cpt 5star');
+        expect(t.secondaryPity!.threshold, 10, reason: 'type $cpt 4star');
       }
     });
 
-    test('5 個卡池 type 都是 gacha category', () {
-      const gachaTypeIds = {'301', '302', '500', '200', '100'};
-      for (final t in gachaTypes) {
-        if (gachaTypeIds.contains(t.gachaType)) {
-          expect(t.category, GachaCategory.gacha);
-        }
-      }
-    });
-
-    test('既有保底值保留', () {
-      final character = gachaTypes.firstWhere((t) => t.gachaType == '301');
-      expect(character.primaryPity.rank, 5);
-      expect(character.primaryPity.threshold, 90);
-      expect(character.secondaryPity!.rank, 4);
-      expect(character.secondaryPity!.threshold, 10);
-
-      final weapon = gachaTypes.firstWhere((t) => t.gachaType == '302');
-      expect(weapon.primaryPity.threshold, 80);
-
-      final beginner = gachaTypes.firstWhere((t) => t.gachaType == '100');
-      expect(beginner.primaryPity.threshold, 20);
-    });
-
-    test('2 個頌願 type 是 odes category', () {
-      const odesTypes = {'2000', '1000'};
-      for (final t in gachaTypes) {
-        if (odesTypes.contains(t.gachaType)) {
-          expect(t.category, GachaCategory.odes);
-        }
-      }
-    });
-
-    test('活動頌願 (2000): 5★ 70 / 4★ 10', () {
-      final t = gachaTypes.firstWhere((g) => g.gachaType == '2000');
-      expect(t.primaryPity.rank, 5);
-      expect(t.primaryPity.threshold, 70);
-      expect(t.secondaryPity!.rank, 4);
+    test('type 5（新手喚取）→ 5★50 / 4★10', () {
+      final t = gachaTypes.firstWhere((g) => g.cardPoolType == 5);
+      expect(t.primaryPity.threshold, 50);
       expect(t.secondaryPity!.threshold, 10);
     });
 
-    test('常駐頌願 (1000): 4★ 70 / 3★ 5（無 5★）', () {
-      final t = gachaTypes.firstWhere((g) => g.gachaType == '1000');
-      expect(t.primaryPity.rank, 4);
-      expect(t.primaryPity.threshold, 70);
-      expect(t.secondaryPity!.rank, 3);
-      expect(t.secondaryPity!.threshold, 5);
-    });
-
-    test('總共 7 個 type (5 gacha + 2 odes)', () {
-      expect(gachaTypes.length, 7);
-      expect(
-        gachaTypes.where((t) => t.category == GachaCategory.gacha).length,
-        5,
-      );
-      expect(
-        gachaTypes.where((t) => t.category == GachaCategory.odes).length,
-        2,
-      );
+    test('nameKey 對齊 8 個鳴潮卡池 key', () {
+      expect(gachaTypes.map((t) => t.nameKey).toList(), [
+        'gachaTypeCharacter',
+        'gachaTypeWeapon',
+        'gachaTypeStandardCharacter',
+        'gachaTypeStandardWeapon',
+        'gachaTypeBeginner',
+        'gachaTypeBeginnerChoice',
+        'gachaTypeNewVoyageCharacter',
+        'gachaTypeNewVoyageWeapon',
+      ]);
     });
   });
 }

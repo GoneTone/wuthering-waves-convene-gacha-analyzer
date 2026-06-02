@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 
 void main() {
   late Directory tempDir;
@@ -20,105 +20,115 @@ void main() {
     }
   });
 
-  GachaRecord makeRecord(String id) => GachaRecord(
-    id: id,
-    uid: '801057625',
-    gachaType: '301',
-    name: 'x',
-    itemType: '角色',
-    rankType: 5,
-    time: DateTime(2025, 1, 1),
-    lang: 'zh-tw',
+  GachaRecord makeRecord(int id) => GachaRecord(
+    resourceId: id,
+    qualityLevel: 5,
+    resourceType: '角色',
+    cardPoolType: '1',
+    name: '達妮婭',
+    count: 1,
+    time: DateTime(2026, 5, 21, 10, 39, 3),
   );
 
-  test('save → load roundtrip', () async {
-    final original = BannerStorage(
-      uid: '801057625',
-      lastUpdated: DateTime.utc(2026, 5, 9),
-      banners: {
-        '301': [makeRecord('1')],
-        '302': [],
-        '500': [],
-        '200': [],
-        '100': [],
-      },
-    );
-    await storage.save(original);
+  BannerStorage makeStorage(String playerId) => BannerStorage(
+    playerId: playerId,
+    languageCode: 'zh-Hant',
+    lastUpdated: DateTime.utc(2026, 5, 21),
+    banners: {
+      '1': [makeRecord(1211)],
+      '8': [],
+    },
+  );
 
-    final loaded = await storage.load('801057625');
-    expect(loaded, isNotNull);
-    expect(loaded!.uid, '801057625');
-    expect(loaded.banners['301']!.first.id, '1');
+  test('save → 檔名為 <playerId>.records.json', () async {
+    await storage.save(makeStorage('701000000'));
+    expect(
+      await File('${tempDir.path}/701000000.records.json').exists(),
+      isTrue,
+    );
   });
 
-  test('load 不存在的 UID → null', () async {
+  test('save → load roundtrip', () async {
+    await storage.save(makeStorage('701000000'));
+    final loaded = await storage.load('701000000');
+    expect(loaded, isNotNull);
+    expect(loaded!.playerId, '701000000');
+    expect(loaded.languageCode, 'zh-Hant');
+    expect(loaded.banners['1']!.single.resourceId, 1211);
+  });
+
+  test('load 不存在的 playerId → null', () async {
     expect(await storage.load('not_exist'), isNull);
   });
 
-  test('listKnownUids 只列出純數字 <uid>.json，忽略 .url.json 與非數字檔', () async {
-    await File('${tempDir.path}/123.json').writeAsString('{}');
-    await File('${tempDir.path}/456.json').writeAsString('{}');
-    await File('${tempDir.path}/123.url.json').writeAsString('{}');
-    await File('${tempDir.path}/hoyowiki_index.json').writeAsString('{}');
+  test('load 遇不相容舊版格式（缺 resource_id）→ 跳過回 null + 不 rethrow', () async {
+    // 模擬殘留的不相容舊版 schema 檔（手動以 .records.json 命名）
+    await File('${tempDir.path}/legacy.records.json').writeAsString(
+      '{"player_id":"legacy","language_code":"zh-tw",'
+      '"last_updated":"2026-01-01T00:00:00.000Z",'
+      '"banners":{"301":[{"id":"1","uid":"legacy","gacha_type":"301",'
+      '"name":"x","item_type":"角色","rank_type":5,'
+      '"time":"2025-01-01 00:00:00","lang":"zh-tw"}]}}',
+    );
+    final loaded = await storage.load('legacy');
+    expect(loaded, isNull);
+  });
+
+  test('listKnownUids 只列 <playerId>.records.json，忽略 cred 與 metadata', () async {
+    await File('${tempDir.path}/701.records.json').writeAsString('{}');
+    await File('${tempDir.path}/abc.records.json').writeAsString('{}');
+    await File('${tempDir.path}/701.cred.json').writeAsString('{}');
+    await File('${tempDir.path}/item_image_index.json').writeAsString('{}');
     await File('${tempDir.path}/garbage.txt').writeAsString('');
 
     final uids = await storage.listKnownUids();
-    expect(uids.toSet(), {'123', '456'});
+    expect(uids.toSet(), {'701', 'abc'});
   });
 
-  test('saveCapturedUrl / loadCapturedUrl / deleteCapturedUrl', () async {
-    await storage.saveCapturedUrl('801057625', 'https://example.com/gacha');
-    expect(
-      await storage.loadCapturedUrl('801057625'),
-      'https://example.com/gacha',
-    );
+  test(
+    'saveCapturedCredential / loadCapturedCredential / deleteCapturedCredential',
+    () async {
+      const body =
+          '{"playerId":"701","cardPoolId":"x","serverId":"y",'
+          '"languageCode":"zh-Hant","recordId":"z"}';
+      await storage.saveCapturedCredential('701', body);
+      expect(await storage.loadCapturedCredential('701'), body);
 
-    await storage.deleteCapturedUrl('801057625');
-    expect(await storage.loadCapturedUrl('801057625'), isNull);
+      await storage.deleteCapturedCredential('701');
+      expect(await storage.loadCapturedCredential('701'), isNull);
+    },
+  );
+
+  test('cred 檔名為 <playerId>.cred.json', () async {
+    await storage.saveCapturedCredential('701', '{"playerId":"701"}');
+    expect(await File('${tempDir.path}/701.cred.json').exists(), isTrue);
   });
 
-  test('save 用 atomic rename：失敗不破壞舊檔', () async {
-    final v1 = BannerStorage(
-      uid: '1',
-      lastUpdated: DateTime.utc(2026),
-      banners: {'301': [], '302': [], '500': [], '200': [], '100': []},
-    );
-    await storage.save(v1);
-
-    // 驗證 .tmp 不殘留（save 成功後即移除）
-    final tmp = File('${tempDir.path}/1.json.tmp');
-    expect(await tmp.exists(), isFalse);
+  test('save 用 atomic rename：.tmp 不殘留', () async {
+    await storage.save(makeStorage('1'));
+    expect(await File('${tempDir.path}/1.records.json.tmp').exists(), isFalse);
   });
 
-  test('save 同一 UID 兩次 → 第二份覆蓋第一份', () async {
-    final v1 = BannerStorage(
-      uid: '999',
-      lastUpdated: DateTime.utc(2026, 5, 8),
+  test('save 同一 playerId 兩次 → 第二份覆蓋第一份', () async {
+    await storage.save(makeStorage('999'));
+    final v2 = makeStorage('999').copyWith(
+      lastUpdated: DateTime.utc(2026, 6, 1),
       banners: {
-        '301': [makeRecord('1')],
-        '302': [],
-        '500': [],
-        '200': [],
-        '100': [],
+        '1': [makeRecord(9999)],
+        '8': [],
       },
     );
-    final v2 = BannerStorage(
-      uid: '999',
-      lastUpdated: DateTime.utc(2026, 5, 9),
-      banners: {
-        '301': [makeRecord('2')],
-        '302': [],
-        '500': [],
-        '200': [],
-        '100': [],
-      },
-    );
-    await storage.save(v1);
     await storage.save(v2);
     final loaded = await storage.load('999');
-    expect(loaded, isNotNull);
-    expect(loaded!.banners['301']!.first.id, '2');
-    expect(loaded.lastUpdated, DateTime.utc(2026, 5, 9));
-    expect(await File('${tempDir.path}/999.json.tmp').exists(), isFalse);
+    expect(loaded!.banners['1']!.single.resourceId, 9999);
+    expect(loaded.lastUpdated, DateTime.utc(2026, 6, 1));
+  });
+
+  test('delete 移除 records 與 cred 檔', () async {
+    await storage.save(makeStorage('701'));
+    await storage.saveCapturedCredential('701', '{"playerId":"701"}');
+    await storage.delete('701');
+    expect(await File('${tempDir.path}/701.records.json').exists(), isFalse);
+    expect(await File('${tempDir.path}/701.cred.json').exists(), isFalse);
   });
 }

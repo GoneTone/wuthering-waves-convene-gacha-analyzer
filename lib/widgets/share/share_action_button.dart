@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
 /// 觸發分享圖生成的圖示按鈕（OverviewPage / BannerPage 共用）。
 /// 生成中顯示 spinner，禁止重入。

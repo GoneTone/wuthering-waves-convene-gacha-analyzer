@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/app_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 
 /// 把 localeTranslator 字串拆成可渲染段落。
 ///

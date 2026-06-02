@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/data/gacha_types.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/timeline_entries.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/banner_colors.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_node.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 
 /// 左側月份標籤欄的固定寬度。
 const double _monthColumnWidth = 80;
-
-/// 節點內圓直徑。
-const double _nodeSize = 14;
 
 /// 節點外圍 halo（觸控熱區）直徑。
 const double _haloSize = 22;
@@ -66,7 +65,7 @@ class TimelineVertical extends StatefulWidget {
   final bool fillHeight;
 
   /// 主要顯示稀有度（5 或 4）。用於「暫無 N★ 紀錄」、「距上次 N★ X 抽」等文案。
-  /// 跨卡池且 banner 各自主稀有度不同（頌願綜合）時，傳入「最具代表性的那個」
+  /// 跨卡池且 banner 各自主稀有度不同（綜合）時，傳入「最具代表性的那個」
   /// （目前以 types.first.primaryPity.rank 為準）。
   final int targetRank;
 
@@ -341,22 +340,15 @@ class _EntryRow extends StatelessWidget {
     ],
   );
 
-  /// 將 [DateTime] 格式化為 `MM/dd` 字串。
-  static String _formatShortDate(DateTime t) {
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(t.month)}/${two(t.day)}';
-  }
-
-  /// 依 [gachaType] 查詢對應的在地化卡池名稱；查無時回傳 [gachaType] 本身。
-  String _bannerName(String gachaType, AppLocalizations l) => gachaTypes
+  /// 依 [cardPoolType] 查詢對應的在地化卡池名稱；查無時回傳 [cardPoolType] 本身。
+  String _bannerName(String cardPoolType, AppLocalizations l) => gachaTypes
       .firstWhere(
-        (t) => t.gachaType == gachaType,
+        (t) => t.key == cardPoolType,
         orElse: () => GachaType(
-          gachaType: gachaType,
-          nameKey: gachaType,
-          category: GachaCategory.gacha,
+          cardPoolType: int.tryParse(cardPoolType) ?? 0,
+          nameKey: cardPoolType,
           pities: const [
-            PityRule(rank: 5, threshold: 90),
+            PityRule(rank: 5, threshold: 80),
             PityRule(rank: 4, threshold: 10),
           ],
         ),
@@ -393,7 +385,7 @@ class _EntryRow extends StatelessWidget {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.6,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: kTabularFigures,
                       ),
                     ),
                   )
@@ -407,7 +399,7 @@ class _EntryRow extends StatelessWidget {
             child: SizedBox(
               width: _haloSize,
               child: Center(
-                child: _Node(color: accent, tokens: tokens),
+                child: TimelineNode(color: accent, tokens: tokens),
               ),
             ),
           ),
@@ -438,11 +430,11 @@ class _EntryRow extends StatelessWidget {
                     preferBelow: false,
                     waitDuration: const Duration(milliseconds: 100),
                     child: Text(
-                      '${_formatShortDate(entry.time)} · ${_bannerName(entry.gachaType, l)} · ${l.timelineSinceLast(entry.pullsSincePrev)}',
+                      '${formatShortMonthDay(entry.time)} · ${_bannerName(entry.gachaType, l)} · ${l.timelineSinceLast(entry.pullsSincePrev)}',
                       style: TextStyle(
                         color: tokens.textMuted,
                         fontSize: 12,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: kTabularFigures,
                       ),
                     ),
                   ),
@@ -492,7 +484,7 @@ class _NowRow extends StatelessWidget {
           SizedBox(
             width: _haloSize,
             child: Center(
-              child: _Node(
+              child: TimelineNode(
                 color: tokens.accentPrimary,
                 tokens: tokens,
                 hollow: true,
@@ -520,7 +512,7 @@ class _NowRow extends StatelessWidget {
                     style: TextStyle(
                       color: tokens.textMuted,
                       fontSize: 12,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                      fontFeatures: kTabularFigures,
                     ),
                   ),
                 ],
@@ -528,42 +520,6 @@ class _NowRow extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// 節點圓:外圍 halo + 內圓。`hollow=true` 時內圓填容器底色看起來只剩 border。
-class _Node extends StatelessWidget {
-  const _Node({required this.color, required this.tokens, this.hollow = false});
-
-  /// 節點與 halo 的主色。
-  final Color color;
-
-  /// 主題 token，用於取得 [GachaTokens.surfaceCard]（hollow 填色）。
-  final GachaTokens tokens;
-
-  /// true 時內圓填 surfaceCard 使節點看起來只有邊框，用於「現在」節點。
-  final bool hollow;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _haloSize,
-      height: _haloSize,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.25),
-      ),
-      child: Container(
-        width: _nodeSize,
-        height: _nodeSize,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: hollow ? tokens.surfaceCard : color,
-          border: Border.all(color: color, width: 2),
-        ),
       ),
     );
   }

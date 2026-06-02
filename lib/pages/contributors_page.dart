@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/data/contributors.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/localization_metadata.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/app_link.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/section_card.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/page_header.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/translator_text.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/contributors.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/localization_metadata.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/section_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/page_header.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/translator_text.dart';
 
 /// 貢獻者清單頁，列出專案領導、測試者、翻譯者等資訊。
 class ContributorsPage extends StatelessWidget {

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_service.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_service.dart';
 
 void main() {
   late Directory tempDir;
@@ -54,28 +54,6 @@ void main() {
     final content = await file.readAsString();
     expect(content, isNot(contains('should-not-appear')));
     expect(content, contains('should-appear'));
-  });
-
-  test('ring buffer caps at capacity', () async {
-    svc = await LogService.bootstrap(tempDir);
-    for (var i = 0; i < 3000; i++) {
-      Logger('test').info('line $i');
-    }
-    final snap = svc.snapshot();
-    expect(snap.length, equals(2000));
-    expect(snap.first, contains('line 1000'));
-    expect(snap.last, contains('line 2999'));
-  });
-
-  test('live stream emits new records', () async {
-    svc = await LogService.bootstrap(tempDir);
-    final received = <String>[];
-    final sub = svc.live.listen(received.add);
-    Logger('test').info('streamed');
-    await svc.flush();
-    await sub.cancel();
-    expect(received, hasLength(1));
-    expect(received.first, contains('streamed'));
   });
 
   test('clearAll deletes all .log files and reopens sink', () async {
@@ -136,7 +114,10 @@ void main() {
       localeTag: 'zh',
       themeMode: 'dark',
     );
-    expect(bundle, contains('Genshin Gacha Gacha Analyzer log bundle'));
+    expect(
+      bundle,
+      contains('Wuthering Waves Convene Gacha Analyzer log bundle'),
+    );
     expect(bundle, contains('app_version: 9.9.9'));
     expect(bundle, contains('os: TestOS'));
     expect(bundle, contains('locale: zh'));

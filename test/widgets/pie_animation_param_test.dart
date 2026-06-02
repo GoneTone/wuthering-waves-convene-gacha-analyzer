@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_stats.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/rarity_pie.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/item_type_pie.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_stats.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rarity_pie.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/item_type_pie.dart';
 
 const _stats = GachaStats(
   total: 10,
   fiveStarCount: 1,
   fourStarCount: 3,
   threeStarCount: 6,
-  twoStarCount: 0,
   byItemType: {'角色': 4, '武器': 6},
 );
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 
 /// 分頁導覽列，含首頁 / 上一頁 / 頁碼 dropdown / 下一頁 / 末頁按鈕。
 class Pager extends StatelessWidget {

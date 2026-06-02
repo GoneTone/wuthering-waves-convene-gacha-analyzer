@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// 卡池配色表，給 Timeline 系列 widget 共用。
 ///
-/// 配色刻意跟稀有度 token（5★ 金、4★ 紫、3★ 藍、2★ 灰）保持距離，避免使用者
-/// 看到時間軸節點的顏色誤判為稀有度。每個 banner 一個獨特色相，dark / light
+/// 配色刻意跟稀有度 token（5★ 金、4★ 紫、3★ 藍）保持距離，避免使用者看到
+/// 時間軸節點的顏色誤判為稀有度。每個 cardPoolType 一個獨特色相，dark / light
 /// 各一組對應飽和度。
 @immutable
 class BannerColors {
@@ -11,11 +11,12 @@ class BannerColors {
   const BannerColors({
     required this.character,
     required this.weapon,
-    required this.chronicled,
-    required this.standard,
+    required this.standardCharacter,
+    required this.standardWeapon,
     required this.beginner,
-    required this.odesEvent,
-    required this.odesStandard,
+    required this.beginnerChoice,
+    required this.newVoyageCharacter,
+    required this.newVoyageWeapon,
     required this.fallback,
   });
 
@@ -27,11 +28,12 @@ class BannerColors {
   static const _dark = BannerColors(
     character: Color(0xFF46B07A), // 森林綠
     weapon: Color(0xFFE6736B), // 珊瑚紅
-    chronicled: Color(0xFFFF9F40), // 鮮橘
-    standard: Color(0xFF26A69A), // 青綠
+    standardCharacter: Color(0xFF26A69A), // 青綠
+    standardWeapon: Color(0xFFEFA94A), // 鮮橘
     beginner: Color(0xFF7A8AAD), // 灰藍
-    odesEvent: Color(0xFFEC4899), // 桃紅
-    odesStandard: Color(0xFFB59574), // 棕褐
+    beginnerChoice: Color(0xFFB59FE5), // 薰衣草紫
+    newVoyageCharacter: Color(0xFF5AB6E0), // 天藍
+    newVoyageWeapon: Color(0xFFD98AC4), // 紫粉
     fallback: Color(0xFF8A92A6), // 中性
   );
 
@@ -39,47 +41,52 @@ class BannerColors {
   static const _light = BannerColors(
     character: Color(0xFF2E7D32),
     weapon: Color(0xFFC62828),
-    chronicled: Color(0xFFE07B22),
-    standard: Color(0xFF00897B),
+    standardCharacter: Color(0xFF00897B),
+    standardWeapon: Color(0xFFB8651B),
     beginner: Color(0xFF5A6680),
-    odesEvent: Color(0xFFC2185B),
-    odesStandard: Color(0xFF7A5F40),
+    beginnerChoice: Color(0xFF6E5BAB),
+    newVoyageCharacter: Color(0xFF1E6AA8),
+    newVoyageWeapon: Color(0xFFA53D8C),
     fallback: Color(0xFF6A7080),
   );
 
-  /// 角色活動祈願配色。
+  /// 角色活動喚取配色（cardPoolType 1）。
   final Color character;
 
-  /// 武器活動祈願配色。
+  /// 武器活動喚取配色（cardPoolType 2）。
   final Color weapon;
 
-  /// 集錄祈願配色。
-  final Color chronicled;
+  /// 角色常駐喚取配色（cardPoolType 3）。
+  final Color standardCharacter;
 
-  /// 常駐祈願配色。
-  final Color standard;
+  /// 武器常駐喚取配色（cardPoolType 4）。
+  final Color standardWeapon;
 
-  /// 新手祈願配色。
+  /// 新手喚取配色（cardPoolType 5）。
   final Color beginner;
 
-  /// 歐差事件祈願配色。
-  final Color odesEvent;
+  /// 新手自選喚取配色（cardPoolType 6）。
+  final Color beginnerChoice;
 
-  /// 歐差常駐祈願配色。
-  final Color odesStandard;
+  /// 角色新旅喚取配色（cardPoolType 8）。
+  final Color newVoyageCharacter;
 
-  /// 未知 gachaType 的備用配色。
+  /// 武器新旅喚取配色（cardPoolType 9）。
+  final Color newVoyageWeapon;
+
+  /// 未知 cardPoolType 的備用配色。
   final Color fallback;
 
-  /// 依 [gachaType] 字串（如 `'301'`）回傳對應色；未知 type 回傳 [fallback]。
-  Color colorFor(String gachaType) => switch (gachaType) {
-    '301' => character,
-    '302' => weapon,
-    '500' => chronicled,
-    '200' => standard,
-    '100' => beginner,
-    '2000' => odesEvent,
-    '1000' => odesStandard,
+  /// 依 [cardPoolType] 字串（如 `'1'`）回傳對應色；未知 type 回傳 [fallback]。
+  Color colorFor(String cardPoolType) => switch (cardPoolType) {
+    '1' => character,
+    '2' => weapon,
+    '3' => standardCharacter,
+    '4' => standardWeapon,
+    '5' => beginner,
+    '6' => beginnerChoice,
+    '8' => newVoyageCharacter,
+    '9' => newVoyageWeapon,
     _ => fallback,
   };
 }

@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
 /// 把 [t] 轉成相對時間字串(「3 分鐘前」「現在」…)。
 ///
@@ -45,6 +45,10 @@ String formatAbsoluteDateTime(DateTime t) =>
 /// `yyyy-MM-dd` 轉 local。用於新版本對話框「發布於」。
 String formatAbsoluteDate(DateTime t) =>
     DateFormat('yyyy-MM-dd').format(t.toLocal());
+
+/// `MM/dd` 月／日短標。沿用時間軸既有慣例「不轉時區」，直接取 [t] 的月／日
+/// 欄位（與舊版手寫補零版逐位等價）。
+String formatShortMonthDay(DateTime t) => DateFormat('MM/dd').format(t);
 
 /// 適合檔名的時間戳：yyyy-MM-dd_HHmmss（本地時間）。
 String fileTimestamp([DateTime? now]) =>

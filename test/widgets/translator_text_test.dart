@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/app_link.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/translator_text.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/translator_text.dart';
 
 void main() {
   group('parseTranslatorMarkup', () {
@@ -13,7 +13,7 @@ void main() {
       expect((segs.first as TextSegment).text, 'Alice, Bob');
     });
 
-    test('日文 ARB 實例：jj、<a>世界へいわ</a>', () {
+    test('前綴文字 + 連結 → [Text, Link]', () {
       const raw =
           'jj、<a href="https://home.gamer.com.tw/homeindex.php?owner=XMoiswnX">世界へいわ</a>';
       final segs = parseTranslatorMarkup(raw);

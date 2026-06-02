@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/timeline_entries.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/banner_colors.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/timeline_vertical.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 
 TimelineEntry _e(String name, String gachaType, int pulls, DateTime time) =>
     TimelineEntry(
@@ -602,37 +602,35 @@ void main() {
     });
     final container = ProviderContainer(
       overrides: [
-        hoyowikiIndexStorageProvider.overrideWithValue(
-          HoYoWikiIndexStorage(tempDir),
+        itemImageIndexStorageProvider.overrideWithValue(
+          ItemImageIndexStorage(tempDir),
         ),
-        hoyowikiCacheDirProvider.overrideWithValue(tempDir),
+        itemImageCacheDirProvider.overrideWithValue(tempDir),
       ],
     );
     addTearDown(container.dispose);
     await tester.runAsync(
-      () => container.read(hoyowikiIndexProvider.notifier).waitForLoad(),
+      () => container.read(itemImageIndexProvider.notifier).waitForLoad(),
     );
 
     final records = [
       GachaRecord(
-        id: '1',
-        uid: '100000001',
-        gachaType: '301',
+        resourceId: 1001,
+        qualityLevel: 5,
+        resourceType: '角色',
+        cardPoolType: '1',
         name: '夜蘭',
-        itemType: '角色',
-        rankType: 5,
+        count: 1,
         time: DateTime(2025, 4, 1),
-        lang: 'zh-tw',
       ),
       GachaRecord(
-        id: '2',
-        uid: '100000001',
-        gachaType: '301',
+        resourceId: 1002,
+        qualityLevel: 5,
+        resourceType: '角色',
+        cardPoolType: '1',
         name: '納西妲',
-        itemType: '角色',
-        rankType: 5,
+        count: 1,
         time: DateTime(2025, 3, 1),
-        lang: 'zh-tw',
       ),
     ];
     final entries = buildTimelineEntries(records, targetRank: 5);
@@ -681,27 +679,26 @@ void main() {
       });
       final container = ProviderContainer(
         overrides: [
-          hoyowikiIndexStorageProvider.overrideWithValue(
-            HoYoWikiIndexStorage(tempDir),
+          itemImageIndexStorageProvider.overrideWithValue(
+            ItemImageIndexStorage(tempDir),
           ),
-          hoyowikiCacheDirProvider.overrideWithValue(tempDir),
+          itemImageCacheDirProvider.overrideWithValue(tempDir),
         ],
       );
       addTearDown(container.dispose);
       await tester.runAsync(
-        () => container.read(hoyowikiIndexProvider.notifier).waitForLoad(),
+        () => container.read(itemImageIndexProvider.notifier).waitForLoad(),
       );
 
       final records = [
         GachaRecord(
-          id: '1',
-          uid: '100000001',
-          gachaType: '301',
+          resourceId: 1001,
+          qualityLevel: 5,
+          resourceType: '角色',
+          cardPoolType: '1',
           name: '夜蘭',
-          itemType: '角色',
-          rankType: 5,
+          count: 1,
           time: DateTime(2025, 4, 1),
-          lang: 'zh-tw',
         ),
       ];
       final entries = buildTimelineEntries(records, targetRank: 5);

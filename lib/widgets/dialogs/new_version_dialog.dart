@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/app_release.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/app_link.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/app_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/release_notes_content.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/release_notes_content.dart';
 
 /// 新版本通知 dialog，列出自上次版本以來的所有 release notes。
 class NewVersionDialog extends ConsumerWidget {

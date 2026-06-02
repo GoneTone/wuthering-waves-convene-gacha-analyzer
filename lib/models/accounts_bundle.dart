@@ -1,11 +1,11 @@
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 
-/// 單一匯出帳號：包含祈願資料與選填別名。
+/// 單一匯出帳號：包含喚取資料與選填別名。
 class ExportedAccount {
   /// 建立 [ExportedAccount]。
   const ExportedAccount({required this.data, this.alias});
 
-  /// 帳號的祈願存檔資料。
+  /// 帳號的喚取存檔資料。
   final BannerStorage data;
 
   /// 使用者自定義別名（選填）。
@@ -38,7 +38,7 @@ class AccountsBundle {
   });
 
   /// 目前支援的 schema 版本號，反序列化時用於相容性檢查。
-  static const int currentSchemaVersion = 1;
+  static const int currentSchemaVersion = 2;
 
   /// 此包的 schema 版本，固定回傳 [currentSchemaVersion]。
   int get schemaVersion => currentSchemaVersion;
@@ -70,9 +70,10 @@ class AccountsBundle {
     if (version is! int) {
       throw const FormatException('Missing or invalid "schema_version"');
     }
-    if (version > currentSchemaVersion) {
+    if (version != currentSchemaVersion) {
       throw FormatException(
-        'Unsupported schema version: $version. Please update the app.',
+        'schema_version=$version 與本版（$currentSchemaVersion）不相容：'
+        '此備份來自不相容的舊版本，無法匯入。',
       );
     }
 
@@ -94,8 +95,10 @@ class AccountsBundle {
       } catch (e) {
         throw FormatException('accounts[$i]: $e');
       }
-      if (!seen.add(account.data.uid)) {
-        throw FormatException('Duplicate UID in accounts: ${account.data.uid}');
+      if (!seen.add(account.data.playerId)) {
+        throw FormatException(
+          'Duplicate playerId in accounts: ${account.data.playerId}',
+        );
       }
       accounts.add(account);
     }

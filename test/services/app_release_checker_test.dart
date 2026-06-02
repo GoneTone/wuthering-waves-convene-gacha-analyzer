@@ -5,7 +5,7 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/app_release_checker.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/app_release_checker.dart';
 
 http.Response _ok(List<Map<String, dynamic>> body) =>
     http.Response(jsonEncode(body), 200);

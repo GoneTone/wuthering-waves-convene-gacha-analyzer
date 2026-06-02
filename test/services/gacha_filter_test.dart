@@ -1,65 +1,33 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_filter.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_row.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_row.dart';
 
 GachaRecord _r({
-  required String id,
   required int rank,
-  required String itemType,
+  required String resourceType,
   required String name,
-  DateTime? time,
+  required DateTime time,
 }) => GachaRecord(
-  id: id,
-  uid: '1',
-  gachaType: '301',
+  resourceId: name.hashCode & 0xffff,
+  qualityLevel: rank,
+  resourceType: resourceType,
+  cardPoolType: '1',
   name: name,
-  itemType: itemType,
-  rankType: rank,
-  time: time ?? DateTime(2025),
-  lang: 'zh-tw',
+  count: 1,
+  time: time,
 );
 
 void main() {
   late List<GachaRecord> records;
   setUp(() {
+    // 以 time desc 排序（與 gacha_repository 一致）；name 作為行身分。
     records = [
-      _r(
-        id: '5',
-        rank: 5,
-        itemType: '角色',
-        name: '夜蘭',
-        time: DateTime(2025, 5, 1),
-      ),
-      _r(
-        id: '4',
-        rank: 4,
-        itemType: '武器',
-        name: '匣裡龍吟',
-        time: DateTime(2025, 4, 1),
-      ),
-      _r(
-        id: '3',
-        rank: 3,
-        itemType: '武器',
-        name: '黑纓槍',
-        time: DateTime(2025, 3, 1),
-      ),
-      _r(
-        id: '2',
-        rank: 4,
-        itemType: '角色',
-        name: '煙緋',
-        time: DateTime(2025, 2, 1),
-      ),
-      _r(
-        id: '1',
-        rank: 5,
-        itemType: '武器',
-        name: '若水',
-        time: DateTime(2025, 1, 1),
-      ),
+      _r(rank: 5, resourceType: '角色', name: '夜蘭', time: DateTime(2025, 5, 1)),
+      _r(rank: 4, resourceType: '武器', name: '匣裡龍吟', time: DateTime(2025, 4, 1)),
+      _r(rank: 3, resourceType: '武器', name: '黑纓槍', time: DateTime(2025, 3, 1)),
+      _r(rank: 4, resourceType: '角色', name: '煙緋', time: DateTime(2025, 2, 1)),
+      _r(rank: 5, resourceType: '武器', name: '若水', time: DateTime(2025, 1, 1)),
     ];
   });
 
@@ -92,25 +60,31 @@ void main() {
   group('filterRecordRows', () {
     late List<RecordRow> rows;
     setUp(() {
-      // 空 index → itemTypeKey fallback 回原始 itemType 字串，故以下測試仍用
-      //「武器」「角色」這類原始字串當 filter 值比對（canonical 鍵的過濾另有測試）。
-      rows = buildRecordRows(records, index: const HoYoWikiIndex.empty());
+      // itemTypeKeyOf 將原始 resourceType 映射為 canonical kind（kind:character
+      // 等）；以下 filter 測試以 canonical 鍵或原始字串擇一比對。
+      rows = buildRecordRows(records);
     });
 
     test('5★ + 武器 → 只剩 1 row，且 totalIndex / pity 不變', () {
       final out = filterRecordRows(
         rows,
-        const RecordFilter(rarity: RarityFilter.fiveStar, itemType: '武器'),
+        const RecordFilter(
+          rarity: RarityFilter.fiveStar,
+          itemType: 'kind:weapon',
+        ),
       );
       expect(out.length, 1);
-      expect(out.first.record.id, '1');
-      // id '1' 是最舊一筆 → totalIndex = 1
+      expect(out.first.record.name, '若水');
+      // 若水是最舊一筆 → totalIndex = 1
       expect(out.first.totalIndex, 1);
     });
 
-    test('itemType="角色" → 只剩 character 條目', () {
-      final out = filterRecordRows(rows, const RecordFilter(itemType: '角色'));
-      expect(out.map((r) => r.record.id).toSet(), {'5', '2'});
+    test('itemType="kind:character" → 只剩 character 條目', () {
+      final out = filterRecordRows(
+        rows,
+        const RecordFilter(itemType: 'kind:character'),
+      );
+      expect(out.map((r) => r.record.name).toSet(), {'夜蘭', '煙緋'});
     });
 
     test('itemType=null → 不過濾 itemType', () {
@@ -119,43 +93,28 @@ void main() {
     });
 
     test('filterRecordRows 依 itemTypeKey 過濾', () {
-      final kindRows = [
-        RecordRow(
-          record: _r(id: 'a', rank: 4, itemType: '角色', name: '煙緋'),
-          totalIndex: 1,
-          mainPityIndex: 1,
-          itemTypeKey: 'kind:character',
-        ),
-        RecordRow(
-          record: _r(id: 'b', rank: 4, itemType: '武器', name: '匣裡龍吟'),
-          totalIndex: 2,
-          mainPityIndex: 2,
-          itemTypeKey: 'kind:weapon',
-        ),
-      ];
       final out = filterRecordRows(
-        kindRows,
+        rows,
         const RecordFilter(itemType: 'kind:character'),
       );
-      expect(out.length, 1);
-      expect(out.first.itemTypeKey, 'kind:character');
+      expect(out.every((r) => r.itemTypeKey == 'kind:character'), isTrue);
     });
 
     test('搜尋 query 過濾 row 集', () {
       final out = filterRecordRows(rows, const RecordFilter(query: '夜'));
-      expect(out.map((r) => r.record.id), ['5']);
+      expect(out.map((r) => r.record.name), ['夜蘭']);
     });
   });
 
   group('sortRecordRows', () {
     late List<RecordRow> rows;
     setUp(() {
-      rows = buildRecordRows(records, index: const HoYoWikiIndex.empty());
+      rows = buildRecordRows(records);
     });
 
     test('null → 不排序，保持輸入順序', () {
       final out = sortRecordRows(rows, null);
-      expect(out.map((r) => r.record.id), ['5', '4', '3', '2', '1']);
+      expect(out.map((r) => r.record.name), ['夜蘭', '匣裡龍吟', '黑纓槍', '煙緋', '若水']);
     });
 
     test('time desc / asc', () {
@@ -163,13 +122,13 @@ void main() {
         rows,
         const TableSort(column: SortColumn.time, direction: SortDirection.desc),
       );
-      expect(desc.map((r) => r.record.id), ['5', '4', '3', '2', '1']);
+      expect(desc.map((r) => r.record.name), ['夜蘭', '匣裡龍吟', '黑纓槍', '煙緋', '若水']);
 
       final asc = sortRecordRows(
         rows,
         const TableSort(column: SortColumn.time, direction: SortDirection.asc),
       );
-      expect(asc.map((r) => r.record.id), ['1', '2', '3', '4', '5']);
+      expect(asc.map((r) => r.record.name), ['若水', '煙緋', '黑纓槍', '匣裡龍吟', '夜蘭']);
     });
 
     test('rarity desc：5★ 在前，二級鍵以 time desc', () {
@@ -180,11 +139,11 @@ void main() {
           direction: SortDirection.desc,
         ),
       );
-      expect(out.first.record.rankType, 5);
-      expect(out.last.record.rankType, 3);
-      // 兩個 5★（id 5 time 2025-05-01、id 1 time 2025-01-01）→ id 5 在前
-      final fives = out.where((r) => r.record.rankType == 5).toList();
-      expect(fives.map((r) => r.record.id), ['5', '1']);
+      expect(out.first.record.qualityLevel, 5);
+      expect(out.last.record.qualityLevel, 3);
+      // 兩個 5★（夜蘭 2025-05-01、若水 2025-01-01）→ 夜蘭在前
+      final fives = out.where((r) => r.record.qualityLevel == 5).toList();
+      expect(fives.map((r) => r.record.name), ['夜蘭', '若水']);
     });
 
     test('rarity asc', () {
@@ -195,8 +154,8 @@ void main() {
           direction: SortDirection.asc,
         ),
       );
-      expect(out.first.record.rankType, 3);
-      expect(out.last.record.rankType, 5);
+      expect(out.first.record.qualityLevel, 3);
+      expect(out.last.record.qualityLevel, 5);
     });
 
     test('totalIndex asc / desc', () {
@@ -226,12 +185,13 @@ void main() {
           direction: SortDirection.asc,
         ),
       );
-      // buildRecordRows 由 asc 視角 (id 1..5) 累計，ranks = 5,4,3,4,5：
-      //   id 1 pity=1 (寫後重置 0), id 2 pity=1, id 3 pity=2, id 4 pity=3, id 5 pity=4
+      // buildRecordRows 由 asc 視角（若水→夜蘭）累計，ranks = 5,4,3,4,5：
+      //   若水 pity=1（寫後重置 0）, 煙緋 pity=1, 黑纓槍 pity=2, 匣裡龍吟 pity=3,
+      //   夜蘭 pity=4
       // asc by pity → [pity=1 兩個, 2, 3, 4]
-      // 二級鍵 time desc → 兩個 pity=1 中 id 2 (02-01) 比 id 1 (01-01) 新
-      // 最終：[2, 1, 3, 4, 5]
-      expect(out.map((r) => r.record.id), ['2', '1', '3', '4', '5']);
+      // 二級鍵 time desc → 兩個 pity=1 中煙緋（02-01）比若水（01-01）新
+      // 最終：[煙緋, 若水, 黑纓槍, 匣裡龍吟, 夜蘭]
+      expect(out.map((r) => r.record.name), ['煙緋', '若水', '黑纓槍', '匣裡龍吟', '夜蘭']);
     });
 
     test('name 排序', () {
@@ -243,22 +203,32 @@ void main() {
     });
 
     test('SortColumn.kind 依 itemTypeKey 排序', () {
-      final rows = [
+      final kindRows = [
         RecordRow(
-          record: _r(id: 'a', rank: 4, itemType: '武器', name: '匣裡龍吟'),
+          record: _r(
+            rank: 4,
+            resourceType: '武器',
+            name: '匣裡龍吟',
+            time: DateTime(2025, 4, 1),
+          ),
           totalIndex: 1,
           mainPityIndex: 1,
           itemTypeKey: 'kind:weapon',
         ),
         RecordRow(
-          record: _r(id: 'b', rank: 5, itemType: '角色', name: '夜蘭'),
+          record: _r(
+            rank: 5,
+            resourceType: '角色',
+            name: '夜蘭',
+            time: DateTime(2025, 5, 1),
+          ),
           totalIndex: 2,
           mainPityIndex: 2,
           itemTypeKey: 'kind:character',
         ),
       ];
       final sorted = sortRecordRows(
-        rows,
+        kindRows,
         const TableSort(column: SortColumn.kind, direction: SortDirection.asc),
       );
       // 'kind:character' < 'kind:weapon' 字典序，asc 時 character 在前

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_pity.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/pity_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_pity.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/pity_card.dart';
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(
@@ -58,28 +58,6 @@ void main() {
     // distance = 60. "暫無 5★" 應該不會出現（lastRecordAt is null but spec
     // says no-5★ branch — ensure 30/90 renders correctly).
     expect(find.text('30 / 90'), findsOneWidget);
-  });
-
-  testWidgets('beginner ended pool shows ended state', (tester) async {
-    final pity = const Pity(
-      current: 20,
-      threshold: 20,
-      lastRecordAt: null,
-      averageInterval: null,
-      hitCount: 0,
-    );
-    await tester.pumpWidget(
-      wrap(
-        PityCard(
-          label: 'Beginner',
-          rank: 5,
-          pity: pity,
-          accent: GachaTokens.dark.fiveStar,
-          isEndedPool: true,
-        ),
-      ),
-    );
-    expect(find.text('20 / 20'), findsOneWidget);
   });
 
   testWidgets('renders value text across all phase boundaries', (tester) async {

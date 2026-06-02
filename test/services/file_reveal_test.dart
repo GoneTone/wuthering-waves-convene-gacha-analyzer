@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/file_reveal.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_reveal.dart';
 
 void main() {
   // 記錄 fake 收到的呼叫
@@ -19,7 +19,7 @@ void main() {
   tearDown(resetFileRevealSeams);
 
   Future<File> makeTempFile() => File(
-    '${Directory.systemTemp.path}/__giwga_reveal_${DateTime.now().microsecondsSinceEpoch}.tmp',
+    '${Directory.systemTemp.path}/__wwcga_reveal_${DateTime.now().microsecondsSinceEpoch}.tmp',
   ).create();
 
   group('revealInFileManager', () {
@@ -35,7 +35,7 @@ void main() {
       };
 
       final fakePath =
-          '${Directory.systemTemp.path}/__giwga_missing_${DateTime.now().microsecondsSinceEpoch}.tmp';
+          '${Directory.systemTemp.path}/__wwcga_missing_${DateTime.now().microsecondsSinceEpoch}.tmp';
       final ok = await revealInFileManager(fakePath);
 
       expect(ok, isFalse);
@@ -125,7 +125,7 @@ void main() {
         return true;
       };
       final dir = await Directory(
-        '${Directory.systemTemp.path}/__giwga_open_${DateTime.now().microsecondsSinceEpoch}',
+        '${Directory.systemTemp.path}/__wwcga_open_${DateTime.now().microsecondsSinceEpoch}',
       ).create();
       try {
         final ok = await openFolder(dir.path);

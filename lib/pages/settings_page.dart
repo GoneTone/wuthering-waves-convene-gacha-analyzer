@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
@@ -7,38 +8,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/app_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/log_service.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/data/app_repo.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/data/team_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/accounts_bundle.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/accounts_export.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/accounts_import.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/file_reveal.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_sanitize.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/settings_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/app_release.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/localization_metadata.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/settings.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_repository.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_cache_usage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/utils/format_bytes.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/uid_ordering.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/utils/relative_time.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/app_link.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/banner_link.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/account_management.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/cards/section_card.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/accounts_picker_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/app_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/current_release_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/page_header.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/translator_text.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/log_service.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/app_repo.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_export.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_reveal.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/localization_metadata.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/format_bytes.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/account_management.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/section_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/accounts_picker_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/current_release_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/page_header.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/translator_text.dart';
 
 /// 設定頁，包含外觀、語言、資料管理、帳號管理、日誌、關於等 section。
 class SettingsPage extends ConsumerWidget {
@@ -253,14 +253,11 @@ class _AboutContent extends ConsumerWidget {
 
     ref.listen<ReleaseCheckState>(appReleaseProvider, (prev, next) {
       if (next is ReleaseUpToDate) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l.updateAlreadyLatest)));
+        _showSnack(context, l.updateAlreadyLatest);
       } else if (next is ReleaseCheckFailed) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l.updateCheckFailed(_resolveReason(l, next.reason))),
-          ),
+        _showSnack(
+          context,
+          l.updateCheckFailed(_resolveReason(l, next.reason)),
         );
       }
     });
@@ -312,9 +309,6 @@ class _AboutContent extends ConsumerWidget {
               url: 'https://github.com/GoneTone',
               child: Text('GoneTone'),
             ),
-            const Text(' ('),
-            const AppLink(url: TeamInfo.websiteUrl, child: Text(TeamInfo.name)),
-            const Text(')'),
           ],
         ),
         const SizedBox(height: AppSpacing.l),
@@ -327,12 +321,6 @@ class _AboutContent extends ConsumerWidget {
               assetPath: 'assets/banners/gonetone_banner.png',
               url: 'https://blog.reh.tw/',
               semanticLabel: '旋風之音 GoneTone',
-              height: 64,
-            ),
-            BannerLink(
-              assetPath: 'assets/banners/genshin_info_banner.png',
-              url: TeamInfo.websiteUrl,
-              semanticLabel: TeamInfo.name,
               height: 64,
             ),
           ],
@@ -452,7 +440,7 @@ class _DataManagement extends ConsumerWidget {
     final stamp = fileTimestamp(now);
 
     final loc = await getSaveLocation(
-      suggestedName: 'genshin_gacha_backup_$stamp.json',
+      suggestedName: 'wuwa_convene_backup_$stamp.json',
       acceptedTypeGroups: const [
         XTypeGroup(label: 'JSON', extensions: ['json']),
       ],
@@ -525,9 +513,7 @@ class _DataManagement extends ConsumerWidget {
       text = await file.readAsString();
     } catch (e) {
       if (!ctx.mounted) return;
-      ScaffoldMessenger.of(ctx).showSnackBar(
-        SnackBar(content: Text(l.settingsImportFailed(e.toString()))),
-      );
+      _showSnack(ctx, l.settingsImportFailed(e.toString()));
       return;
     }
 
@@ -536,9 +522,7 @@ class _DataManagement extends ConsumerWidget {
       bundle = importAccounts(text);
     } on FormatException catch (e) {
       if (!ctx.mounted) return;
-      ScaffoldMessenger.of(ctx).showSnackBar(
-        SnackBar(content: Text(l.settingsImportFailed(e.message))),
-      );
+      _showSnack(ctx, l.settingsImportFailed(e.message));
       return;
     }
 
@@ -547,11 +531,11 @@ class _DataManagement extends ConsumerWidget {
     final entries = [
       for (final a in bundle.accounts)
         AccountPickerEntry(
-          uid: a.data.uid,
+          uid: a.data.playerId,
           alias: a.alias,
           lastUpdated: a.data.lastUpdated,
           recordCount: a.data.allRecords.length,
-          badge: existing.contains(a.data.uid)
+          badge: existing.contains(a.data.playerId)
               ? l.settingsImportOverwriteBadge
               : null,
         ),
@@ -574,13 +558,13 @@ class _DataManagement extends ConsumerWidget {
           ? bundle.lastActiveUid
           : null,
       accounts: bundle.accounts
-          .where((a) => pickedSet.contains(a.data.uid))
+          .where((a) => pickedSet.contains(a.data.playerId))
           .toList(growable: false),
     );
 
     // Confirm dialog：以 filteredBundle 重新計算 incoming / conflicts / preserved。
     final incoming = filteredBundle.accounts
-        .map((a) => a.data.uid)
+        .map((a) => a.data.playerId)
         .toList(growable: false);
     final conflicts = incoming.where(existing.contains).toList(growable: false);
     final preserved = (existing.toSet()..removeAll(incoming)).toList()..sort();
@@ -598,8 +582,8 @@ class _DataManagement extends ConsumerWidget {
       final alias = a.alias;
       buf.writeln(
         alias == null || alias.isEmpty
-            ? '  • ${a.data.uid}'
-            : '  • ${a.data.uid} ($alias)',
+            ? '  • ${a.data.playerId}'
+            : '  • ${a.data.playerId} ($alias)',
       );
     }
     buf.writeln();
@@ -634,7 +618,9 @@ class _DataManagement extends ConsumerWidget {
     unawaited(
       ref
           .read(gachaRepositoryProvider.notifier)
-          .importAccountsAndFetchHoYoWiki(filteredBundle),
+          .importAccountsAndFetchItemImages(
+            jsonEncode(filteredBundle.toJson()),
+          ),
     );
   }
 
@@ -671,7 +657,7 @@ class _DataManagement extends ConsumerWidget {
   }
 }
 
-/// 圖片快取區塊：顯示用量（icon / gallery / 總計），提供「清除詳情圖快取」
+/// 圖片快取區塊：顯示用量（小圖示 / 立繪 / 總計），提供「清除立繪快取」
 /// 與「強制重抓物品圖片」按鈕。
 class _ImageCacheSection extends ConsumerStatefulWidget {
   /// 建立 [_ImageCacheSection]。
@@ -690,14 +676,14 @@ class _ImageCacheSectionState extends ConsumerState<_ImageCacheSection> {
     // 都會落地此 listener。
     ref.listen(gachaRepositoryProvider.select((s) => s.progress), (prev, next) {
       if (prev != null && next == null) {
-        ref.invalidate(hoyowikiCacheUsageProvider);
+        ref.invalidate(itemImageCacheUsageProvider);
       }
     });
 
     final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final tokens = theme.gacha;
-    final usageAsync = ref.watch(hoyowikiCacheUsageProvider);
+    final usageAsync = ref.watch(itemImageCacheUsageProvider);
     final hasData = ref.watch(
       gachaRepositoryProvider.select((s) => s.byUid.isNotEmpty),
     );
@@ -712,7 +698,7 @@ class _ImageCacheSectionState extends ConsumerState<_ImageCacheSection> {
           loading: () => _UsageRows(
             total: l.settingsImageCacheCalculating,
             icons: l.settingsImageCacheCalculating,
-            gallery: l.settingsImageCacheCalculating,
+            illustration: l.settingsImageCacheCalculating,
             muted: true,
             theme: theme,
             l: l,
@@ -726,7 +712,7 @@ class _ImageCacheSectionState extends ConsumerState<_ImageCacheSection> {
           data: (u) => _UsageRows(
             total: formatBytes(u.totalBytes),
             icons: formatBytes(u.iconBytes),
-            gallery: formatBytes(u.galleryBytes),
+            illustration: formatBytes(u.illustrationBytes),
             muted: false,
             theme: theme,
             l: l,
@@ -747,7 +733,7 @@ class _ImageCacheSectionState extends ConsumerState<_ImageCacheSection> {
                       usageAsync.when(
                         loading: () => true,
                         error: (e, _) => false,
-                        data: (u) => u.galleryBytes <= 0,
+                        data: (u) => u.illustrationBytes <= 0,
                       ))
                   ? null
                   : () => _clearGallery(context),
@@ -755,7 +741,7 @@ class _ImageCacheSectionState extends ConsumerState<_ImageCacheSection> {
               label: Text(l.settingsImageCacheClearGallery),
             ),
             Tooltip(
-              message: !hasData ? l.settingsRefetchHoyoWikiImagesEmpty : '',
+              message: !hasData ? l.settingsRefetchItemImagesEmpty : '',
               child: FilledButton.icon(
                 style: FilledButton.styleFrom(
                   backgroundColor: tokens.stateDanger,
@@ -765,7 +751,7 @@ class _ImageCacheSectionState extends ConsumerState<_ImageCacheSection> {
                     ? null
                     : () => _refetchAll(context),
                 icon: const Icon(Icons.refresh, size: 18),
-                label: Text(l.settingsRefetchHoyoWikiImagesTitle),
+                label: Text(l.settingsRefetchItemImagesTitle),
               ),
             ),
           ],
@@ -774,11 +760,43 @@ class _ImageCacheSectionState extends ConsumerState<_ImageCacheSection> {
     );
   }
 
-  /// 顯示「清除詳情圖快取」確認 dialog，確認後呼叫 `deleteGalleryCacheFiles`。
+  /// 顯示確認 dialog，確認後呼叫 [GachaRepository.forceRefetchAllItemImages]。
+  Future<void> _refetchAll(BuildContext ctx) async {
+    final l = AppLocalizations.of(ctx)!;
+    final ok = await showDialog<bool>(
+      context: ctx,
+      builder: (d) => AppDialog(
+        title: Text(l.confirmRefetchItemImagesTitle),
+        content: Text(l.confirmRefetchItemImagesBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(d).pop(false),
+            child: Text(l.actionCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(d).gacha.stateDanger,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(d).pop(true),
+            child: Text(l.confirmRefetchItemImagesConfirm),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    // 後端流程獨立於 dialog lifecycle；UpdateProgressDialog 由 app_shell.dart
+    // 既有 ref.listen 自動彈出。
+    unawaited(
+      ref.read(gachaRepositoryProvider.notifier).forceRefetchAllItemImages(),
+    );
+  }
+
+  /// 顯示「清除立繪快取」確認 dialog，確認後刪除立繪快取並刷新用量顯示。
   Future<void> _clearGallery(BuildContext ctx) async {
     final l = AppLocalizations.of(ctx)!;
-    final usage = ref.read(hoyowikiCacheUsageProvider).value;
-    final sizeText = usage == null ? '' : formatBytes(usage.galleryBytes);
+    final usage = ref.read(itemImageCacheUsageProvider).value;
+    final sizeText = usage == null ? '' : formatBytes(usage.illustrationBytes);
     final ok = await showDialog<bool>(
       context: ctx,
       builder: (d) => AppDialog(
@@ -802,63 +820,37 @@ class _ImageCacheSectionState extends ConsumerState<_ImageCacheSection> {
     );
     if (ok != true) return;
     try {
-      final storage = ref.read(hoyowikiIndexStorageProvider);
-      await storage.deleteGalleryCacheFiles();
+      final removed = await ref
+          .read(itemImageIndexStorageProvider)
+          .deleteIllustrationCacheFiles();
       if (!ctx.mounted) return;
-      ref.invalidate(hoyowikiCacheUsageProvider);
-      Logger('gacha.hoyowiki.storage').info('user cleared gallery cache');
+      ref.invalidate(itemImageCacheUsageProvider);
+      Logger(
+        'item_image.usage',
+      ).info('user cleared illustration cache: $removed files');
     } catch (e, st) {
-      Logger('gacha.hoyowiki.storage').warning('clear gallery failed', e, st);
+      Logger(
+        'item_image.usage',
+      ).warning('clear illustration cache failed', e, st);
       if (!ctx.mounted) return;
-      ref.invalidate(hoyowikiCacheUsageProvider);
-      ScaffoldMessenger.of(
-        ctx,
-      ).showSnackBar(SnackBar(content: Text(l.settingsImageCacheFailed)));
+      ref.invalidate(itemImageCacheUsageProvider);
+      _showSnack(ctx, l.settingsImageCacheClearGalleryFailed);
     }
-  }
-
-  /// 顯示確認 dialog，確認後呼叫 [GachaRepository.forceRefetchAllHoYoWikiImages]。
-  Future<void> _refetchAll(BuildContext ctx) async {
-    final l = AppLocalizations.of(ctx)!;
-    final ok = await showDialog<bool>(
-      context: ctx,
-      builder: (d) => AppDialog(
-        title: Text(l.confirmRefetchHoyoWikiTitle),
-        content: Text(l.confirmRefetchHoyoWikiBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(d).pop(false),
-            child: Text(l.actionCancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(d).gacha.stateDanger,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.of(d).pop(true),
-            child: Text(l.confirmRefetchHoyoWikiConfirm),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    // 後端流程獨立於 dialog lifecycle；UpdateProgressDialog 由 app_shell.dart
-    // 既有 ref.listen 自動彈出。
-    unawaited(
-      ref
-          .read(gachaRepositoryProvider.notifier)
-          .forceRefetchAllHoYoWikiImages(),
-    );
   }
 }
 
-/// 「總計 / 小圖示 / 詳情圖」三行用量顯示。
+/// 在 [context] 顯示僅含一行文字 [message] 的 SnackBar。
+void _showSnack(BuildContext context, String message) => ScaffoldMessenger.of(
+  context,
+).showSnackBar(SnackBar(content: Text(message)));
+
+/// 「總計 / 小圖示 / 立繪大圖」三行用量顯示。
 class _UsageRows extends StatelessWidget {
   /// 建立 [_UsageRows]。
   const _UsageRows({
     required this.total,
     required this.icons,
-    required this.gallery,
+    required this.illustration,
     required this.muted,
     required this.theme,
     required this.l,
@@ -870,8 +862,8 @@ class _UsageRows extends StatelessWidget {
   /// 小圖示 bytes 字串。
   final String icons;
 
-  /// 詳情圖 bytes 字串。
-  final String gallery;
+  /// 立繪大圖 bytes 字串。
+  final String illustration;
 
   /// 是否套用 textMuted 風格（loading 狀態下）。
   final bool muted;
@@ -905,7 +897,7 @@ class _UsageRows extends StatelessWidget {
       children: [
         row(l.settingsImageCacheTotal, total, labelStyle),
         row(l.settingsImageCacheIcons, icons, secondaryStyle),
-        row(l.settingsImageCacheGallery, gallery, secondaryStyle),
+        row(l.settingsImageCacheGallery, illustration, secondaryStyle),
       ],
     );
   }
@@ -1007,7 +999,7 @@ class _LogsSection extends ConsumerWidget {
     final stamp = fileTimestamp(now);
 
     final loc = await getSaveLocation(
-      suggestedName: 'giwga_logs_$stamp.log',
+      suggestedName: 'wwcga_logs_$stamp.log',
       acceptedTypeGroups: const [
         XTypeGroup(label: 'Log', extensions: ['log']),
       ],

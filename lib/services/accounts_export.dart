@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:genshin_impact_wish_gacha_analyzer/models/accounts_bundle.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/uid_ordering.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
 
 /// 把目前狀態打包成 [AccountsBundle] 並序列化成 pretty-printed JSON 字串。
 ///

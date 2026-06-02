@@ -1,93 +1,46 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/data/gacha_types.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_url.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 
-/// 認證過期（retcode -100 / -101）。
-class AuthExpiredException implements Exception {
-  /// 建立 [AuthExpiredException]，需提供 API 回傳的 [retcode]。
-  AuthExpiredException(this.retcode);
+/// 喚取記錄 API 回傳 `code != 0` 的失敗（已知 `-1`，語意待累積樣本）。
+/// 取代前身版本的 [AuthExpiredException] / [RateLimitedException] / [ApiErrorException]。
+class GachaApiException implements Exception {
+  /// 建立 [GachaApiException]，需提供 API 的 [code] 與 [message]。
+  const GachaApiException(this.code, this.message);
 
-  /// API 回傳的 retcode。
-  final int retcode;
+  /// API 回傳的 `code`（0 以外即失敗）。
+  final int code;
 
-  @override
-  String toString() => 'AuthExpiredException(retcode=$retcode)';
-}
-
-/// 請求頻率超限（retcode -110）且重試已達上限。
-class RateLimitedException implements Exception {
-  @override
-  String toString() => 'RateLimitedException';
-}
-
-/// API 回傳非預期的錯誤 retcode。
-class ApiErrorException implements Exception {
-  /// 建立 [ApiErrorException]，需提供 API 的 [retcode] 與 [message]。
-  ApiErrorException(this.retcode, this.message);
-
-  /// API 回傳的 retcode。
-  final int retcode;
-
-  /// API 回傳的 message 字串。
+  /// API 回傳的 `message` 字串（簡體中文，不可用於語言判斷）。
   final String message;
 
   @override
-  String toString() => 'ApiErrorException(retcode=$retcode, $message)';
+  String toString() => 'GachaApiException(code=$code, $message)';
 }
 
-/// 單頁 API 回應包裝。
-class FetchedPage {
-  /// 建立 [FetchedPage]，需提供本頁紀錄列表。
-  const FetchedPage(this.records);
+/// 單一 cardPoolType 的整池全歷史回應（鳴潮 API 無分頁，一次回傳整池）。
+class FetchedPoolResult {
+  /// 建立 [FetchedPoolResult]，[records] 為該池由新到舊的全歷史。
+  const FetchedPoolResult(this.records);
 
-  /// 本頁紀錄列表。
+  /// 該池全歷史紀錄（依 API 回傳順序：由新到舊）。
   final List<GachaRecord> records;
-
-  /// 本頁是否無紀錄。
-  bool get isEmpty => records.isEmpty;
-
-  /// 本頁紀錄數。
-  int get length => records.length;
 }
 
-/// 抓取進度回報。
-class FetchProgress {
-  /// 建立 [FetchProgress]，帶 [gachaType]、[pageIndex]、[newRecordsSoFar] 三個進度欄位。
-  const FetchProgress({
-    required this.gachaType,
-    required this.pageIndex,
-    required this.newRecordsSoFar,
-  });
-
-  /// 當前正在抓的卡池類型。
-  final String gachaType;
-
-  /// 目前已抓到第幾頁（1-based）。
-  final int pageIndex;
-
-  /// 目前新增紀錄累計數。
-  final int newRecordsSoFar;
-}
-
-/// 負責呼叫 Hoyoverse 祈願 log API、處理分頁與新舊合併。
+/// 負責呼叫鳴潮喚取記錄 API（POST `/gacha/record/query`），逐 cardPoolType 各一次。
 class GachaFetcher {
-  /// 建立 [GachaFetcher]，可調整速率限制、退避時間與逾時設定。
+  /// 建立 [GachaFetcher]，可調整速率限制與逾時設定。
   GachaFetcher({
     this.rateLimit = const Duration(milliseconds: 600),
-    this.retryBackoff = const Duration(seconds: 5),
-    this.timeout = const Duration(seconds: 10),
+    this.timeout = const Duration(seconds: 15),
   });
 
-  /// 兩次 API 呼叫之間的最短間隔。
+  /// 兩次 API 呼叫之間的最短間隔（夾在 8 個 cardPoolType 之間，避免被擋）。
   final Duration rateLimit;
-
-  /// rate-limit 退避等待時間。
-  final Duration retryBackoff;
 
   /// 單次 HTTP 請求超時。
   final Duration timeout;
@@ -95,204 +48,70 @@ class GachaFetcher {
   /// Logger 實例（gacha 抓取）。
   static final _log = Logger('gacha.fetcher');
 
-  /// 每頁最大紀錄數（API 上限）。
-  static const _pageSize = 20;
+  /// 單池全歷史可能上千筆，超過此長度改用 [compute] 在 isolate 解析避免卡 UI。
+  static const _isolateDecodeThreshold = 50 * 1024;
 
-  /// rate-limit 自動退避的最大重試次數。
-  static const _maxRetryOnRateLimit = 3;
-
-  /// 抓單頁，retcode 處理：0=ok / -101,-100=AuthExpired / -110=自動退避 / 其他=ApiError
-  Future<FetchedPage> fetchPage(Uri url, http.Client client) async {
-    final queryGachaType = url.queryParameters['gacha_type'] ?? '';
-    final queryLang = url.queryParameters['lang'] ?? '';
-    var attempt = 0;
+  /// 抓單一 [cardPoolType] 的整池全歷史。
+  ///
+  /// 對 [endpoint] 發 POST，body 為 `cred.toRequestBody(cardPoolType)` 的 JSON。
+  /// 回應 `{code,message,data[]}`：`code==0` → 取 `data`（空 = 空池，正常）；
+  /// `code!=0` → 丟 [GachaApiException]（任一池失敗由呼叫端中止整次更新）。
+  Future<FetchedPoolResult> fetchPool({
+    required Uri endpoint,
+    required GachaCredential cred,
+    required int cardPoolType,
+    required http.Client client,
+  }) async {
     _log.fine(
-      'fetchPage gachaType=$queryGachaType url=${sanitizeUrl(url.toString())}',
+      'fetchPool cardPoolType=$cardPoolType '
+      'playerId=${_maskTail(cred.playerId)}',
     );
-    while (true) {
-      final res = await client.get(url).timeout(timeout);
-      final body = jsonDecode(res.body) as Map<String, dynamic>;
-      final retcode = body['retcode'] as int;
-      if (retcode == 0) {
-        final list = (body['data']?['list'] as List<dynamic>?) ?? const [];
-        return FetchedPage(
-          list
-              .map(
-                (e) => GachaRecord.fromApiJson(
-                  e as Map<String, dynamic>,
-                  gachaType: queryGachaType,
-                  fallbackLang: queryLang,
-                ),
-              )
-              .toList(growable: false),
-        );
-      }
-      if (retcode == -101 || retcode == -100) {
-        _log.warning('auth expired retcode=$retcode');
-        throw AuthExpiredException(retcode);
-      }
-      if (retcode == -110) {
-        attempt++;
-        _log.warning(
-          'rate-limited (retcode=-110), backoff ${retryBackoff.inMilliseconds}ms, '
-          'attempt=$attempt/$_maxRetryOnRateLimit',
-        );
-        if (attempt > _maxRetryOnRateLimit) throw RateLimitedException();
-        await Future<void>.delayed(retryBackoff);
-        continue;
-      }
-      _log.severe('ApiError retcode=$retcode message=${body['message']}');
-      throw ApiErrorException(retcode, body['message'] as String? ?? '');
-    }
-  }
+    final res = await client
+        .post(
+          endpoint,
+          headers: const {'content-type': 'application/json'},
+          body: jsonEncode(cred.toRequestBody(cardPoolType)),
+        )
+        .timeout(timeout);
 
-  /// 對指定 banner 走完分頁 + merge：existing 是該 banner 的舊 desc list
-  /// primer 若不為 null 則作為第一頁（避免 UID 探測重抓）
-  Future<List<GachaRecord>> fetchBannerWithMerge({
-    required GachaUrl url,
-    required String gachaType,
-    required GachaEndpoint endpoint,
-    required List<GachaRecord> existing,
-    required FetchedPage? primer,
-    required void Function(FetchProgress) onProgress,
-    required http.Client client,
-  }) async {
-    final existingMaxId = existing.isEmpty ? '0' : existing.first.id;
-    _log.info('banner=$gachaType start, existing=${existing.length}');
-    final fresh = <GachaRecord>[];
-    var endId = '0';
-    var isFirstPage = true;
-    var pageIndex = 1;
-
-    while (true) {
-      final FetchedPage page;
-      if (isFirstPage && primer != null) {
-        page = primer;
-      } else {
-        if (!isFirstPage) {
-          await Future<void>.delayed(rateLimit);
-        }
-        page = await fetchPage(
-          url.build(gachaType: gachaType, endId: endId, endpoint: endpoint),
-          client,
-        );
-      }
-      isFirstPage = false;
-
-      if (page.isEmpty) break;
-
-      // 從頭往後吃直到碰到 existingMaxId 或頁尾
-      var hitOld = false;
-      for (final r in page.records) {
-        if (_idGreater(r.id, existingMaxId)) {
-          fresh.add(r);
-        } else {
-          hitOld = true;
-          break;
-        }
-      }
-      onProgress(
-        FetchProgress(
-          gachaType: gachaType,
-          pageIndex: pageIndex,
-          newRecordsSoFar: fresh.length,
-        ),
+    final body = await _decodeJson(res.body);
+    final code = (body['code'] as num?)?.toInt() ?? -999;
+    final message = body['message'] as String? ?? '';
+    if (code != 0) {
+      _log.severe(
+        'fetchPool failed cardPoolType=$cardPoolType code=$code msg=$message',
       );
-
-      if (hitOld) break;
-      if (page.length < _pageSize) break;
-      endId = page.records.last.id;
-      pageIndex++;
+      throw GachaApiException(code, message);
     }
-
-    // fresh + existing 都是 desc
-    _log.info('banner=$gachaType done, fresh=${fresh.length} pages=$pageIndex');
-
-    // 頌願 API 不回傳 lang；既有空 lang 記錄以擷取 URL 的 lang 回填（一般祈願
-    // existing 必有非空 lang，不受影響）。URL 缺 lang 則不動，避免以空蓋空。
-    final urlLang = url.lang;
-    final List<GachaRecord> normalizedExisting;
-    if (urlLang.isEmpty) {
-      normalizedExisting = existing;
-    } else {
-      var backfilled = 0;
-      normalizedExisting = existing
-          .map((r) {
-            if (r.lang.isEmpty) {
-              backfilled++;
-              return r.copyWith(lang: urlLang);
-            }
-            return r;
-          })
-          .toList(growable: false);
-      if (backfilled > 0) {
-        _log.info(
-          'banner=$gachaType backfilled lang for $backfilled records '
-          'to "$urlLang"',
-        );
-      }
-    }
-    return [...fresh, ...normalizedExisting];
+    final data = (body['data'] as List<dynamic>?) ?? const [];
+    final cardPoolTypeKey = cardPoolType.toString();
+    final records = data
+        .map(
+          (e) => GachaRecord.fromApiJson(
+            e as Map<String, dynamic>,
+            cardPoolType: cardPoolTypeKey,
+          ),
+        )
+        .toList(growable: false);
+    _log.info(
+      'fetchPool ok cardPoolType=$cardPoolType records=${records.length}',
+    );
+    return FetchedPoolResult(records);
   }
 
-  /// 字串字典序比對；id 等長 19 字元 → 字典序 = 數值序
-  bool _idGreater(String a, String b) => a.compareTo(b) > 0;
-
-  /// UID 探測：先掃所有 gacha banner，若全部空白再掃所有 odes banner。
-  /// 第一筆非空者回傳該 UID + 已累積的 primer pages。
-  Future<UidProbeResult> probeUid({
-    required GachaUrl url,
-    required http.Client client,
-  }) async {
-    final primers = <String, FetchedPage>{};
-
-    Future<UidProbeResult?> tryCategory(GachaCategory cat) async {
-      final endpoint = switch (cat) {
-        GachaCategory.gacha => GachaEndpoint.gacha,
-        GachaCategory.odes => GachaEndpoint.odes,
-      };
-      for (final type in gachaTypes.where((t) => t.category == cat)) {
-        if (primers.isNotEmpty) {
-          await Future<void>.delayed(rateLimit);
-        }
-        final page = await fetchPage(
-          url.build(gachaType: type.gachaType, endId: '0', endpoint: endpoint),
-          client,
-        );
-        primers[type.gachaType] = page;
-        if (page.records.isNotEmpty) {
-          return UidProbeResult(
-            uid: page.records.first.uid,
-            primerPages: primers,
-          );
-        }
-      }
-      return null;
+  /// 大 payload 在 isolate 解析避免卡 UI；小 payload 直接 [jsonDecode]。
+  Future<Map<String, dynamic>> _decodeJson(String raw) async {
+    if (raw.length >= _isolateDecodeThreshold) {
+      return compute(_jsonDecodeMap, raw);
     }
-
-    final gachaHit = await tryCategory(GachaCategory.gacha);
-    if (gachaHit != null) {
-      _log.info('probe gacha: hit uid=${sanitizeUid(gachaHit.uid ?? "")}');
-      return gachaHit;
-    }
-    final odesHit = await tryCategory(GachaCategory.odes);
-    if (odesHit != null) {
-      _log.info('probe odes: hit uid=${sanitizeUid(odesHit.uid ?? "")}');
-      return odesHit;
-    }
-    _log.info('probe: no records in any banner');
-    return UidProbeResult(uid: null, primerPages: primers);
+    return jsonDecode(raw) as Map<String, dynamic>;
   }
+
+  /// playerId 末段遮罩（僅供 fine log；正式脫敏在 [sanitizeUid]）。
+  String _maskTail(String s) =>
+      s.length <= 4 ? '***' : '***${s.substring(s.length - 4)}';
 }
 
-/// [GachaFetcher.probeUid] 的回傳值。
-class UidProbeResult {
-  /// 建立 [UidProbeResult]，包含 [uid]（可為 null）與 [primerPages] 欄位。
-  const UidProbeResult({required this.uid, required this.primerPages});
-
-  /// 探測到的 UID；若所有卡池皆無紀錄則為 null。
-  final String? uid;
-
-  /// 探測過程中已抓到的第一頁（primer），key = gachaType，供後續抓取重用避免重抓。
-  final Map<String, FetchedPage> primerPages;
-}
+/// 頂層函式：供 [compute] 在 isolate 內解析 JSON Map。
+Map<String, dynamic> _jsonDecodeMap(String raw) =>
+    jsonDecode(raw) as Map<String, dynamic>;

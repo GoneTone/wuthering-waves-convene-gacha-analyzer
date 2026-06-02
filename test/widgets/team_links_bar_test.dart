@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/data/team_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/app_link.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/team_links_bar.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/team_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   theme: buildDarkTheme(),
@@ -13,11 +13,11 @@ Widget _wrap(Widget child) => MaterialApp(
 );
 
 void main() {
-  testWidgets('TeamLinksBar 渲染 4 個社群 IconButton 與團隊名稱', (tester) async {
+  testWidgets('TeamLinksBar 渲染 3 個社群 IconButton 與團隊名稱', (tester) async {
     await tester.pumpWidget(_wrap(const TeamLinksBar()));
 
-    // 4 個社群 icon（用 FaIcon 找）
-    expect(find.byType(FaIcon), findsNWidgets(4));
+    // 3 個社群 icon（用 FaIcon 找）
+    expect(find.byType(FaIcon), findsNWidgets(3));
 
     // 團隊名稱出現
     expect(find.text(TeamInfo.name), findsOneWidget);
@@ -26,7 +26,7 @@ void main() {
   testWidgets('每個社群 IconButton 都有正確 tooltip', (tester) async {
     await tester.pumpWidget(_wrap(const TeamLinksBar()));
 
-    for (final label in const ['Facebook', 'Discord', 'Line', 'GitHub']) {
+    for (final label in const ['Facebook', 'Discord', 'GitHub']) {
       expect(
         find.byTooltip(label),
         findsOneWidget,
@@ -35,13 +35,13 @@ void main() {
     }
   });
 
-  testWidgets('4 個社群 IconButton 的 onPressed 都不為 null', (tester) async {
+  testWidgets('3 個社群 IconButton 的 onPressed 都不為 null', (tester) async {
     await tester.pumpWidget(_wrap(const TeamLinksBar()));
 
     final buttons = tester
         .widgetList<IconButton>(find.byType(IconButton))
         .toList();
-    expect(buttons.length, 4);
+    expect(buttons.length, 3);
     for (final b in buttons) {
       expect(b.onPressed, isNotNull);
     }
@@ -72,7 +72,6 @@ void main() {
 
     await tester.tap(find.byTooltip('Facebook'));
     await tester.tap(find.byTooltip('Discord'));
-    await tester.tap(find.byTooltip('Line'));
     await tester.tap(find.byTooltip('GitHub'));
     await tester.tap(find.text(TeamInfo.name));
     await tester.pumpAndSettle();

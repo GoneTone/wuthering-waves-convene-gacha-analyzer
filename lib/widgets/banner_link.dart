@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:logging/logging.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/app_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 
 /// 可點擊的卡池 banner 圖片，hover 時降低透明度、點擊後以系統瀏覽器開啟 URL。
 class BannerLink extends StatefulWidget {
@@ -35,14 +34,8 @@ class _BannerLinkState extends State<BannerLink> {
   bool _hovering = false;
 
   /// 解析並開啟 [widget.url]；URL 無效時記錄 warning。
-  Future<void> _handleTap() async {
-    final uri = Uri.tryParse(widget.url);
-    if (uri == null) {
-      Logger('ui.link').warning('BannerLink: invalid url "${widget.url}"');
-      return;
-    }
-    await openExternalUrl(uri);
-  }
+  Future<void> _handleTap() =>
+      openExternalUrlString(widget.url, context: 'BannerLink');
 
   @override
   Widget build(BuildContext context) {

@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/share_image_renderer.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/share_image_renderer.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

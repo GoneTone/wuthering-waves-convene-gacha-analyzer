@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_filter.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/record_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/record_filter.dart';
 
 void main() {
   test('預設值為空篩選 + sort=null', () {

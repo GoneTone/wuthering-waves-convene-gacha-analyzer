@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 
 /// 建立深色 [ThemeData]。
 ThemeData buildDarkTheme() =>

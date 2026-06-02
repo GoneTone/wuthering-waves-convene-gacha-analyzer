@@ -1,22 +1,16 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_stats.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/item_type_kind.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/distribution_legend.dart';
-
-/// Pie 圓環外徑（邏輯像素）。與 [RarityPie] 共用，確保兩個 Pie 視覺大小一致。
-/// 直徑 = (_kRingRadius + _kCenterRadius) × 2 = 230px，可在 ChartCard 預設 chart slot (~244px) 內安全顯示。
-const double _kRingRadius = 75;
-
-/// Pie 中心圓半徑（邏輯像素）。與 [_kRingRadius] 配合決定圓環寬度。
-const double _kCenterRadius = 40;
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_stats.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/chart_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_legend.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_ring_pie.dart';
 
 // 物品類型 chart 專屬配色：與 GachaTokens 內既有的 character/weapon/rarity 等
 // token 視覺脫鉤，避免「綠色 = 角色 / 紅色 = 武器」這類隨資料順序變動的誤判。
 // 6 色色相均勻分布、跟稀有度三色（金/紫/藍）也不會撞色。
+// 鳴潮三類型（角色/武器/道具）取前三色；palette 仍保留 6 色以備未知類型循環。
 
 /// Dark mode 物品類型圓餅色板（順序對應 sorted entries）。
 const _paletteDark = <Color>[
@@ -80,32 +74,36 @@ class ItemTypePie extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final tokens = theme.gacha;
+    return DistributionRingPie(
+      entries: itemTypeDistributionEntries(stats, theme.brightness, l),
+      total: stats.total,
+      animationDuration: animationDuration,
+    );
+  }
+}
 
-    if (stats.total == 0) {
-      return Center(
-        child: Text(l.statsNoData, style: TextStyle(color: tokens.textMuted)),
-      );
-    }
-    final palette = _itemTypePalette(theme.brightness);
-    final sections = <PieChartSectionData>[
-      for (final (i, e) in stats.sortedItemTypes().indexed)
-        PieChartSectionData(
-          showTitle: false,
-          value: e.value.toDouble(),
-          color: palette[i % palette.length],
-          radius: _kRingRadius,
+/// 物品類型分佈 ChartCard（標題 + [ItemTypePie] + 圖例），overview / banner 兩頁共用。
+class ItemTypeChartCard extends StatelessWidget {
+  /// 建立 [ItemTypeChartCard]。
+  const ItemTypeChartCard({super.key, required this.stats});
+
+  /// 物品類型統計資料。
+  final GachaStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return ChartCard(
+      title: l.statsItemTypeDistribution,
+      icon: Icons.donut_small_outlined,
+      chart: ItemTypePie(stats: stats),
+      legend: DistributionLegend(
+        entries: itemTypeDistributionEntries(
+          stats,
+          Theme.of(context).brightness,
+          l,
         ),
-    ].where((s) => s.value > 0).toList(growable: false);
-    return PieChart(
-      PieChartData(
-        sections: sections,
-        sectionsSpace: 2,
-        centerSpaceRadius: _kCenterRadius,
-        pieTouchData: PieTouchData(enabled: false),
       ),
-      duration: animationDuration,
-      curve: Curves.easeOut,
     );
   }
 }

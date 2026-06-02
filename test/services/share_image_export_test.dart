@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/share_image_export.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/share_image_export.dart';
 
 void main() {
   final png = Uint8List.fromList([1, 2, 3, 4]);

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/settings_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

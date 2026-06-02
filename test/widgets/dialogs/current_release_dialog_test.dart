@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/app_release_checker.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/current_release.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/current_release_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/release_notes_content.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/app_release_checker.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/current_release.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/current_release_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/release_notes_content.dart';
 
 AppRelease _release({String tag = 'v1.1.0', String body = '## Hi'}) =>
     AppRelease(

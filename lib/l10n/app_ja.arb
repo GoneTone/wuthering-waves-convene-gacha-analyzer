@@ -1,7 +1,7 @@
 {
   "@@locale": "ja",
   "localeNativeName": "日本語",
-  "localeTranslator": "jj、<a href=\"https://home.gamer.com.tw/homeindex.php?owner=XMoiswnX\">世界へいわ</a>、<a href=\"https://claude.com/claude-code\">Claude Code</a>",
+  "localeTranslator": "<a href=\"https://home.gamer.com.tw/homeindex.php?owner=XMoiswnX\">世界へいわ</a>、<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "翻訳者：{translator}",
   "@localeNativeName": {
     "description": "Native name of this locale, shown in language picker."
@@ -17,7 +17,7 @@
       }
     }
   },
-  "appName": "原神祈願分析ツール",
+  "appName": "鳴潮 集音分析ツール",
   "actionUpdate": "データ更新",
   "actionCancel": "キャンセル",
   "actionClose": "閉じる",
@@ -25,24 +25,25 @@
   "actionNextPage": "次へ",
   "actionOpenFolder": "フォルダーを開く",
   "navOverview": "総合",
-  "navCharacter": "キャラクター",
-  "navWeapon": "武器",
-  "navChronicled": "集録",
-  "navStandard": "通常",
-  "navBeginner": "初心者",
   "navSettings": "設定",
   "navContributors": "貢献者",
-  "gachaTypeCharacter": "イベント祈願・キャラクター",
-  "gachaTypeWeapon": "イベント祈願・武器",
-  "gachaTypeChronicled": "集録祈願",
-  "gachaTypeStandard": "通常祈願",
-  "gachaTypeBeginner": "初心者向け祈願",
-  "gachaTypeOdesEvent": "イベント星願",
-  "gachaTypeOdesStandard": "通常星願",
-  "navOdesEvent": "イベント",
-  "navOdesStandard": "通常",
-  "navSectionGacha": "祈願",
-  "navSectionOdes": "星願",
+  "gachaTypeCharacter": "共鳴者集音（イベント）",
+  "gachaTypeWeapon": "武器集音（イベント）",
+  "gachaTypeStandardCharacter": "共鳴者集音（恒常）",
+  "gachaTypeStandardWeapon": "武器集音（恒常）",
+  "gachaTypeBeginner": "初心者集音",
+  "gachaTypeBeginnerChoice": "初心者応援セレクト集音",
+  "gachaTypeNewVoyageCharacter": "共鳴者集音（旅立ち）",
+  "gachaTypeNewVoyageWeapon": "武器集音（旅立ち）",
+  "gachaTypeCharacterShort": "共鳴者（イベント）",
+  "gachaTypeWeaponShort": "武器（イベント）",
+  "gachaTypeStandardCharacterShort": "共鳴者（恒常）",
+  "gachaTypeStandardWeaponShort": "武器（恒常）",
+  "gachaTypeBeginnerShort": "初心者",
+  "gachaTypeBeginnerChoiceShort": "初心者応援セレクト",
+  "gachaTypeNewVoyageCharacterShort": "共鳴者（旅立ち）",
+  "gachaTypeNewVoyageWeaponShort": "武器（旅立ち）",
+  "navSectionGacha": "集音",
   "footerNotSynced": "未同期",
   "footerLastUpdated": "最終更新：{time}",
   "@footerLastUpdated": {
@@ -106,10 +107,9 @@
   "uidActiveSuffix": "（使用中）",
   "emptyNoSyncTitle": "まだデータが同期されていません",
   "emptyNoSyncMessage": "右上の「データ更新」から開始してください",
-  "emptyNoRecords": "この祈願に記録がありません",
+  "emptyNoRecords": "この集音に記録がありません",
   "emptyNoFilterMatch": "条件に一致する記録がありません",
-  "emptyNoOdesRecords": "星願の記録がまだありません",
-  "emptyNoGachaRecords": "祈願の記録がまだありません",
+  "emptyNoGachaRecords": "集音の記録がまだありません",
   "statsTotal": "累計回数",
   "statsRankCount": "{star} 件数",
   "@statsRankCount": {
@@ -133,6 +133,7 @@
   "kindUnknown": "不明",
   "kindCharacter": "キャラクター",
   "kindWeapon": "武器",
+  "kindItem": "アイテム",
   "tableTime": "日時",
   "tableName": "名称",
   "tableKind": "タイプ",
@@ -164,8 +165,8 @@
   "progressFetching": "取得中…",
   "progressDone": "更新完了",
   "progressFailed": "失敗",
-  "progressOpenGameHint": "原神 → 祈願 → 履歴 を開いてください",
-  "progressFallbackHint": "（以前の認証が失効したため、再取得が必要です）",
+  "progressOpenGameHint": "鳴潮 → 集音 → 集音履歴 を開いてください",
+  "progressFallbackHint": "（前回の取得が失効しました。集音履歴ページを開き直してください）",
   "progressFetchingBanner": "取得中：{name}",
   "@progressFetchingBanner": {
     "placeholders": {
@@ -174,10 +175,13 @@
       }
     }
   },
-  "progressPageStatus": "{page} ページ目、{count} 件追加しました",
-  "@progressPageStatus": {
+  "progressPoolStatus": "{total} 件中 {index} 件目のカードプール、{count} 件追加",
+  "@progressPoolStatus": {
     "placeholders": {
-      "page": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
         "type": "int"
       },
       "count": {
@@ -195,7 +199,7 @@
   },
   "progressDoneImagesSummary": "アイテム画像を {count} 件ダウンロード",
   "@progressDoneImagesSummary": {
-    "description": "Completion summary additional line: how many HoYoWiki item images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
     "placeholders": {
       "count": {
         "type": "int"
@@ -231,8 +235,8 @@
       }
     }
   },
-  "updateProgressHoyoWikiSearching": "アイテムデータを検索中 {done}/{total}",
-  "@updateProgressHoyoWikiSearching": {
+  "updateProgressItemDownloading": "アイテム画像をダウンロード中 {done}/{total}",
+  "@updateProgressItemDownloading": {
     "placeholders": {
       "done": {
         "type": "int"
@@ -242,8 +246,8 @@
       }
     }
   },
-  "updateProgressHoyoWikiFetchingEntries": "アイテム詳細を取得中 {done}/{total}",
-  "@updateProgressHoyoWikiFetchingEntries": {
+  "updateProgressItemFetchingData": "アイテムデータを取得中 {done}/{total}",
+  "@updateProgressItemFetchingData": {
     "placeholders": {
       "done": {
         "type": "int"
@@ -253,31 +257,10 @@
       }
     }
   },
-  "updateProgressHoyoWikiDownloading": "アイテム画像をダウンロード中 {done}/{total}",
-  "@updateProgressHoyoWikiDownloading": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "errorAuthExpired": "認証が継続して失効しています。ゲームに再ログインしてください",
-  "errorRateLimited": "リクエストが多すぎます。しばらくしてから再試行してください",
-  "errorServer": "サーバーエラー：{message}",
-  "@errorServer": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
-  "errorNoRecords": "このアカウントには祈願の記録がまだありません",
-  "pageOverviewTitle": "総合データ（全祈願合計）",
-  "pageOverviewGachaSection": "祈願総合",
-  "pageOverviewOdesSection": "星願総合",
+  "errorGachaFailed": "再取得しても記録を取得できませんでした。サーバーが一時的に不安定な可能性があります。しばらくしてから再試行してください。",
+  "errorNoRecords": "このアカウントには集音の記録がまだありません",
+  "pageOverviewTitle": "総合データ（全集音合計）",
+  "pageOverviewGachaSection": "集音総合",
   "pageBannerRecordList": "記録一覧",
   "rarityOverviewTitle": "{star} 一覧",
   "@rarityOverviewTitle": {
@@ -362,7 +345,6 @@
       }
     }
   },
-  "pityBeginnerEnded": "終了済み",
   "pityAverageInterval": "平均 {n} 回で出現",
   "@pityAverageInterval": {
     "placeholders": {
@@ -455,24 +437,24 @@
   "pagerLast": "最後のページ",
   "settingsClearActive": "現在のアカウントのデータを削除",
   "settingsClearAll": "すべてのデータを削除",
-  "settingsRefetchHoyoWikiImagesTitle": "アイテム画像を強制再取得",
-  "@settingsRefetchHoyoWikiImagesTitle": {
-    "description": "Settings → Data management → button: forcibly clears all cached HoYoWiki item images (icon + header) and re-fetches them from scratch."
+  "settingsRefetchItemImagesTitle": "アイテム画像を強制再取得",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
   },
-  "settingsRefetchHoyoWikiImagesEmpty": "祈願記録がありません、再取得対象がありません",
-  "@settingsRefetchHoyoWikiImagesEmpty": {
+  "settingsRefetchItemImagesEmpty": "集音記録がありません、再取得対象がありません",
+  "@settingsRefetchItemImagesEmpty": {
     "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
   },
-  "confirmRefetchHoyoWikiTitle": "アイテム画像を強制再取得",
-  "@confirmRefetchHoyoWikiTitle": {
+  "confirmRefetchItemImagesTitle": "アイテム画像を強制再取得",
+  "@confirmRefetchItemImagesTitle": {
     "description": "Title of the AlertDialog confirming the refetch action."
   },
-  "confirmRefetchHoyoWikiBody": "すべての物品画像のローカルキャッシュを消去し、HoYoWiki から小アイコンを再ダウンロードします。物品詳細の大きな画像は次回開いた際に自動的にダウンロードされます。物品数によっては数分かかる場合があります。",
-  "@confirmRefetchHoyoWikiBody": {
+  "confirmRefetchItemImagesBody": "ローカルのアイテム画像キャッシュをすべて削除し、キャラクターアイコンを再ダウンロードします。詳細画像は次回アイテム詳細を開いたときに必要に応じてダウンロードされます。アイテム数によっては数分の通信量と時間がかかる場合があります。",
+  "@confirmRefetchItemImagesBody": {
     "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
   },
-  "confirmRefetchHoyoWikiConfirm": "再取得を開始",
-  "@confirmRefetchHoyoWikiConfirm": {
+  "confirmRefetchItemImagesConfirm": "再取得を開始",
+  "@confirmRefetchItemImagesConfirm": {
     "description": "Confirm button label in the refetch AlertDialog."
   },
   "settingsImageCache": "画像キャッシュ",
@@ -485,7 +467,7 @@
   },
   "settingsImageCacheIcons": "アイコン",
   "@settingsImageCacheIcons": {
-    "description": "Label for icon cache size (small thumbnails shown in wish list)."
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
   },
   "settingsImageCacheGallery": "詳細画像",
   "@settingsImageCacheGallery": {
@@ -500,26 +482,17 @@
     "description": "Shown when scanning cache size fails (e.g. permission denied)."
   },
   "settingsImageCacheClearGallery": "詳細画像をクリア",
-  "@settingsImageCacheClearGallery": {
-    "description": "Button label: clear gallery cache (keeps icons)."
-  },
   "confirmClearGalleryCacheTitle": "詳細画像をクリアしますか？",
-  "@confirmClearGalleryCacheTitle": {
-    "description": "Confirmation dialog title for clearing gallery cache."
-  },
   "confirmClearGalleryCacheBody": "アイテム詳細画像 約 {size} を削除します。小アイコンキャッシュは保持されます。次回アイテム詳細を開いたときに再ダウンロードされます。",
   "@confirmClearGalleryCacheBody": {
-    "description": "Confirmation dialog body for clearing gallery cache; {size} is formatted bytes string (e.g. '123.4 MB').",
     "placeholders": {
       "size": {
         "type": "String"
       }
     }
   },
-  "confirmClearGalleryCacheConfirm": "クリア",
-  "@confirmClearGalleryCacheConfirm": {
-    "description": "Confirm button label for clearing gallery cache."
-  },
+  "confirmClearGalleryCacheConfirm": "削除",
+  "settingsImageCacheClearGalleryFailed": "詳細画像のクリアに失敗しました",
   "settingsExportData": "データをエクスポート",
   "settingsImportData": "データをインポート",
   "shareImageButton": "シェア画像を生成",
@@ -597,31 +570,6 @@
     }
   },
   "settingsImportConfirmWarning": "この操作は元に戻せません。確認のため IMPORT と入力してください。",
-  "settingsImportSuccess": "{accounts} 個のアカウント（{records} 件の記録）を正常にインポートしました",
-  "@settingsImportSuccess": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportPartial": "{success}/{total} 個のアカウントをインポートしました。失敗：{failedUids}",
-  "@settingsImportPartial": {
-    "placeholders": {
-      "success": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      },
-      "failedUids": {
-        "type": "String"
-      }
-    }
-  },
   "settingsImportFailed": "インポートに失敗しました：{reason}",
   "@settingsImportFailed": {
     "placeholders": {
@@ -643,7 +591,7 @@
     }
   },
   "confirmTitle": "操作の確認",
-  "confirmClearActiveBody": "UID {uid} のすべての祈願記録を完全に削除します。確認のため UID を入力してください：",
+  "confirmClearActiveBody": "UID {uid} のすべての集音記録を完全に削除します。確認のため UID を入力してください：",
   "@confirmClearActiveBody": {
     "placeholders": {
       "uid": {
@@ -651,7 +599,7 @@
       }
     }
   },
-  "confirmClearAllBody": "すべてのアカウントの祈願記録を完全に削除します。確認のため DELETE と入力してください：",
+  "confirmClearAllBody": "すべてのアカウントの集音記録を完全に削除します。確認のため DELETE と入力してください：",
   "confirmDelete": "削除",
   "confirmImport": "インポート",
   "confirmExport": "エクスポート",
@@ -684,7 +632,7 @@
       }
     }
   },
-  "bannerTopRarityCountTitle": "祈願別の最高レアリティ件数",
+  "bannerTopRarityCountTitle": "集音別の最高レアリティ件数",
   "bannerTopRarityPullsSinceLast": "前回の {star} から {n} 回",
   "@bannerTopRarityPullsSinceLast": {
     "placeholders": {
@@ -763,9 +711,9 @@
   "@aboutViewReleaseNotes": {
     "description": "Settings > About: button next to the version label that opens the current-release dialog."
   },
-  "updateErrorWipeHoyoWikiCache": "アイテム画像キャッシュのクリアに失敗：{detail}",
-  "@updateErrorWipeHoyoWikiCache": {
-    "description": "Force-refetch flow: failed to clear hoyowiki_index.json or hoyowiki_cache/ directory. {detail} is the sanitized exception message.",
+  "updateErrorWipeItemImageCache": "アイテム画像キャッシュのクリアに失敗：{detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
     "placeholders": {
       "detail": {
         "type": "String"
@@ -801,17 +749,17 @@
     }
   },
   "settingsLogsClearConfirmBody": "logs/ 内のすべてのファイルを完全に削除します。問題報告の前にログが必要な場合は、先にエクスポートしてください。確認のため CLEAR と入力してください。",
-  "galleryCardLabel": "カード",
-  "@galleryCardLabel": {
-    "description": "Item detail dialog gallery: chip label for the card (pic) page. Maps to hoyowiki entry_page gallery_character.pic; not the item's own name."
+  "galleryIllustrationLabel": "衣装",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
+  "galleryLuckdrawLabel": "募集",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
   },
   "galleryIconLabel": "アイコン",
   "@galleryIconLabel": {
     "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
-  },
-  "actionViewOnHoYoWiki": "HoYoWiki で開く",
-  "@actionViewOnHoYoWiki": {
-    "description": "Item detail dialog actions: button label that opens the HoYoLAB Wiki entry page for the current item in the default browser."
   },
   "galleryLazyLoadFailed": "画像の読み込みに失敗しました",
   "@galleryLazyLoadFailed": {
@@ -824,5 +772,10 @@
   "actionCloseImagePreview": "画像プレビューを閉じる",
   "@actionCloseImagePreview": {
     "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
+
+  "actionViewOnEncore": "encore.moe で見る",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
   }
 }

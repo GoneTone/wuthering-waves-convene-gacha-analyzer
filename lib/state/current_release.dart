@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/app_release_checker.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/app_release.dart'
+import 'package:wuthering_waves_convene_gacha_analyzer/services/app_release_checker.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart'
     show httpClientProvider;
 
 /// Logger 實例（當期版本 release notes 抓取）。

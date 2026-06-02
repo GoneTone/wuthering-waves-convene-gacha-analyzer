@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/pages/contributors_page.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/app_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/pages/contributors_page.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 
 Widget _wrap(Widget child) => ProviderScope(
   child: MaterialApp(
@@ -49,32 +49,18 @@ void main() {
     expect(link.url, 'https://github.com/GoneTone');
   });
 
-  testWidgets('測試人員 SectionCard 顯示兩位 testers', (tester) async {
+  testWidgets('測試人員 SectionCard 顯示世界へいわ，不再顯示 Zhi', (tester) async {
     await tester.pumpWidget(_wrap(const ContributorsPage()));
     await tester.pumpAndSettle();
     expect(find.text('世界へいわ'), findsWidgets);
-    expect(find.text('Zhi'), findsOneWidget);
-    expect(
-      find.ancestor(of: find.text('Zhi'), matching: find.byType(AppLink)),
-      findsOneWidget,
-    );
+    expect(find.text('Zhi'), findsNothing);
   });
 
-  testWidgets('翻譯審稿人 SectionCard 顯示三人；pan93412 / Lemon7777 為純文字（無 url）', (
-    tester,
-  ) async {
+  testWidgets('翻譯審稿人 SectionCard 不再顯示 pan93412 / Lemon7777', (tester) async {
     await tester.pumpWidget(_wrap(const ContributorsPage()));
     await tester.pumpAndSettle();
-    expect(find.text('pan93412'), findsOneWidget);
-    expect(find.text('Lemon7777'), findsOneWidget);
-    expect(
-      find.ancestor(of: find.text('pan93412'), matching: find.byType(AppLink)),
-      findsNothing,
-    );
-    expect(
-      find.ancestor(of: find.text('Lemon7777'), matching: find.byType(AppLink)),
-      findsNothing,
-    );
+    expect(find.text('pan93412'), findsNothing);
+    expect(find.text('Lemon7777'), findsNothing);
   });
 
   testWidgets('GitHub 貢獻者 SectionCard 顯示完整 URL', (tester) async {
@@ -82,7 +68,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       find.text(
-        'https://github.com/GoneTone/genshin-impact-wish-gacha-analyzer/graphs/contributors',
+        'https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/graphs/contributors',
       ),
       findsOneWidget,
     );
@@ -102,7 +88,7 @@ void main() {
     expect(find.textContaining('沒有您的語言嗎'), findsOneWidget);
     expect(
       find.text(
-        'https://crowdin.com/project/genshin-impact-wish-gacha-analyzer',
+        'https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer',
       ),
       findsOneWidget,
     );

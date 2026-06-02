@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 
 /// 頁面頂部的標題區塊，含主標題、可選的副標題與前置圖示。
 class PageHeader extends StatelessWidget {

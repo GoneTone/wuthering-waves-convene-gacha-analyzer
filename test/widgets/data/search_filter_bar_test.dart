@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_filter.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/item_type_kind.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/record_filter.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/data/search_filter_bar.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/record_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/search_filter_bar.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   theme: buildDarkTheme(),

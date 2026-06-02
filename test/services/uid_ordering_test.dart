@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/uid_ordering.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
 
 void main() {
   DateTime t(int day) => DateTime.utc(2026, 5, day);

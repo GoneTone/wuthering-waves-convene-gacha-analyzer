@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/data/app_repo.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/data/team_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/app_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/app_repo.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/team_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 
 /// AppShell 底部 footer 右側的團隊資訊列：
-/// 4 個社群 icon（Facebook / Discord / Line / GitHub）+ 分隔線 + 團隊名稱連結。
+/// 3 個社群 icon（Facebook / Discord / GitHub）+ 分隔線 + 團隊名稱連結。
 class TeamLinksBar extends StatelessWidget {
   /// 建立 [TeamLinksBar]。
   const TeamLinksBar({super.key});
@@ -28,11 +27,6 @@ class TeamLinksBar extends StatelessWidget {
           icon: FontAwesomeIcons.discord,
           tooltip: 'Discord',
           url: TeamInfo.discordUrl,
-        ),
-        _IconLink(
-          icon: FontAwesomeIcons.line,
-          tooltip: 'Line',
-          url: TeamInfo.lineUrl,
         ),
         _IconLink(
           icon: FontAwesomeIcons.github,
@@ -83,14 +77,7 @@ class _IconLink extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 40, minHeight: 32),
       mouseCursor: SystemMouseCursors.click,
       icon: FaIcon(icon, color: tokens.textSecondary),
-      onPressed: () {
-        final uri = Uri.tryParse(url);
-        if (uri == null) {
-          Logger('ui.link').warning('TeamLinksBar: invalid url "$url"');
-          return;
-        }
-        openExternalUrl(uri);
-      },
+      onPressed: () => openExternalUrlString(url, context: 'TeamLinksBar'),
     );
   }
 }

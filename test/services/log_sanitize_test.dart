@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
 void main() {
   group('sanitizeUrl', () {
@@ -46,7 +46,7 @@ void main() {
   group('sanitizeLogMessage', () {
     test('redacts authkey inside a rust mitm log line', () {
       const msg =
-          'hit gacha endpoint: GET https://public-operation-hk4e-sg.hoyoverse.com/gacha_info/api/getGachaLog?authkey_ver=1&sign_type=2&authkey=X%2bYD8cYuvO2c&game_biz=hk4e_global&gacha_type=301&region=os_asia&page=1';
+          'hit gacha endpoint: GET https://gmserver-api.aki-game2.net/gacha/record/query?authkey_ver=1&sign_type=2&authkey=X%2bYD8cYuvO2c&game_biz=wuthering_global&gacha_type=301&region=os_asia&page=1';
       final out = sanitizeLogMessage(msg);
       expect(out, startsWith('hit gacha endpoint: GET https://'));
       expect(out, contains('authkey=***'));
@@ -168,6 +168,44 @@ void main() {
 
     test('passes through empty string unchanged', () {
       expect(sanitizeFsPath(''), equals(''));
+    });
+  });
+
+  group('sanitizeCredential', () {
+    const body =
+        '{"playerId":"701000000",'
+        '"cardPoolId":"2e2300000000000000000000002768",'
+        '"cardPoolType":1,'
+        '"serverId":"86d500000000000000000000009650",'
+        '"languageCode":"zh-Hant",'
+        '"recordId":"0632000000000000000000008550"}';
+
+    test('playerId 走 sanitizeUid、hash 欄位前4後4遮罩、languageCode 保留', () {
+      final out = sanitizeCredential(body);
+      expect(out, isNot(contains('701000000')));
+      expect(out, contains(sanitizeUid('701000000')));
+      // cardPoolId 前4後4：2e23...2768
+      expect(out, contains('2e23'));
+      expect(out, contains('2768'));
+      expect(out, isNot(contains('2e2300000000000000000000002768')));
+      // recordId / serverId 中段遮罩
+      expect(out, isNot(contains('0632000000000000000000008550')));
+      expect(out, isNot(contains('86d500000000000000000000009650')));
+      // languageCode 非敏感、保留
+      expect(out, contains('zh-Hant'));
+      // cardPoolType 非敏感、保留
+      expect(out, contains('1'));
+    });
+
+    test('非 JSON 字串 → 回退標記，不洩漏原文', () {
+      final out = sanitizeCredential('not a json body');
+      expect(out, '<malformed credential>');
+    });
+
+    test('輸出為可解析 JSON', () {
+      final out = sanitizeCredential(body);
+      expect(() => out, returnsNormally);
+      expect(out, contains('"playerId"'));
     });
   });
 }

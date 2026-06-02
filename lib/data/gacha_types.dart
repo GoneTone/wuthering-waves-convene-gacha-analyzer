@@ -1,13 +1,4 @@
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-
-/// 卡池分類：一般祈願或頌願。
-enum GachaCategory {
-  /// 一般祈願（getGachaLog API）。
-  gacha,
-
-  /// 頌願（getBeyondGachaLog API）。
-  odes,
-}
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
 /// 保底規則：指定 rank 的抽數門檻。
 class PityRule {
@@ -21,26 +12,26 @@ class PityRule {
   final int threshold;
 }
 
-/// 卡池類型定義，含 API gacha_type、名稱 i18n key、分類與保底規則。
+/// 卡池類型定義，含 API cardPoolType、名稱 i18n key 與保底規則。
 class GachaType {
   /// 建立 [GachaType]。
   const GachaType({
-    required this.gachaType,
+    required this.cardPoolType,
     required this.nameKey,
-    required this.category,
     required this.pities,
   });
 
-  /// 對應 getGachaLog / getBeyondGachaLog API 的 query string `gacha_type=...`。
-  final String gachaType;
+  /// 對應喚取記錄 API 的 `cardPoolType`（int，集合 [1,2,3,4,5,6,8,9]，無 7）。
+  final int cardPoolType;
+
+  /// 對外 key/route/map 用的字串（即 [cardPoolType] 的字串形式）。
+  /// 轉換只發生於此 getter，禁止散落於各處硬轉（spec D4）。
+  String get key => cardPoolType.toString();
 
   /// i18n key（透過 [resolveName] 取顯示字串）。
   final String nameKey;
 
-  /// gacha = getGachaLog，odes = getBeyondGachaLog。
-  final GachaCategory category;
-
-  /// 由高 rank 到低 rank。[0] 為主保底，[1] 為副保底（若有）。
+  /// 由高 rank 到低 rank。[0] 為主保底（5★），[1] 為副保底（4★）。
   final List<PityRule> pities;
 
   /// 主保底（[pities] 第一條）。
@@ -53,78 +44,65 @@ class GachaType {
   String resolveName(AppLocalizations l) => switch (nameKey) {
     'gachaTypeCharacter' => l.gachaTypeCharacter,
     'gachaTypeWeapon' => l.gachaTypeWeapon,
-    'gachaTypeChronicled' => l.gachaTypeChronicled,
-    'gachaTypeStandard' => l.gachaTypeStandard,
+    'gachaTypeStandardCharacter' => l.gachaTypeStandardCharacter,
+    'gachaTypeStandardWeapon' => l.gachaTypeStandardWeapon,
     'gachaTypeBeginner' => l.gachaTypeBeginner,
-    'gachaTypeOdesEvent' => l.gachaTypeOdesEvent,
-    'gachaTypeOdesStandard' => l.gachaTypeOdesStandard,
+    'gachaTypeBeginnerChoice' => l.gachaTypeBeginnerChoice,
+    'gachaTypeNewVoyageCharacter' => l.gachaTypeNewVoyageCharacter,
+    'gachaTypeNewVoyageWeapon' => l.gachaTypeNewVoyageWeapon,
     _ => nameKey,
   };
 }
 
-/// 五星保底 90 抽（角色、綜合、常駐、無暇）。
-const _pityFive90 = PityRule(rank: 5, threshold: 90);
-
-/// 五星保底 80 抽（武器）。
+/// 五星保底 80 抽（角色／武器活動、常駐、新手自選、新旅）。
 const _pityFive80 = PityRule(rank: 5, threshold: 80);
 
-/// 五星保底 70 抽（頌願活動）。
-const _pityFive70 = PityRule(rank: 5, threshold: 70);
+/// 五星保底 50 抽（新手喚取）。
+const _pityFive50 = PityRule(rank: 5, threshold: 50);
 
-/// 五星保底 20 抽（新手）。
-const _pityFive20 = PityRule(rank: 5, threshold: 20);
-
-/// 四星保底 70 抽（頌願常駐）。
-const _pityFour70 = PityRule(rank: 4, threshold: 70);
-
-/// 四星保底 10 抽（一般祈願）。
+/// 四星保底 10 抽（所有卡池統一）。
 const _pityFour10 = PityRule(rank: 4, threshold: 10);
-
-/// 三星保底 5 抽（頌願常駐）。
-const _pityThree5 = PityRule(rank: 3, threshold: 5);
 
 /// 全部支援的卡池類型定義，順序對應側欄顯示順序。
 const gachaTypes = <GachaType>[
   GachaType(
-    gachaType: '301',
+    cardPoolType: 1,
     nameKey: 'gachaTypeCharacter',
-    category: GachaCategory.gacha,
-    pities: [_pityFive90, _pityFour10],
-  ),
-  GachaType(
-    gachaType: '302',
-    nameKey: 'gachaTypeWeapon',
-    category: GachaCategory.gacha,
     pities: [_pityFive80, _pityFour10],
   ),
   GachaType(
-    gachaType: '500',
-    nameKey: 'gachaTypeChronicled',
-    category: GachaCategory.gacha,
-    pities: [_pityFive90, _pityFour10],
+    cardPoolType: 2,
+    nameKey: 'gachaTypeWeapon',
+    pities: [_pityFive80, _pityFour10],
   ),
   GachaType(
-    gachaType: '200',
-    nameKey: 'gachaTypeStandard',
-    category: GachaCategory.gacha,
-    pities: [_pityFive90, _pityFour10],
+    cardPoolType: 3,
+    nameKey: 'gachaTypeStandardCharacter',
+    pities: [_pityFive80, _pityFour10],
   ),
   GachaType(
-    gachaType: '100',
+    cardPoolType: 4,
+    nameKey: 'gachaTypeStandardWeapon',
+    pities: [_pityFive80, _pityFour10],
+  ),
+  GachaType(
+    cardPoolType: 5,
     nameKey: 'gachaTypeBeginner',
-    category: GachaCategory.gacha,
-    pities: [_pityFive20, _pityFour10],
+    pities: [_pityFive50, _pityFour10],
   ),
   GachaType(
-    gachaType: '2000',
-    nameKey: 'gachaTypeOdesEvent',
-    category: GachaCategory.odes,
-    pities: [_pityFive70, _pityFour10],
+    cardPoolType: 6,
+    nameKey: 'gachaTypeBeginnerChoice',
+    pities: [_pityFive80, _pityFour10],
   ),
   GachaType(
-    gachaType: '1000',
-    nameKey: 'gachaTypeOdesStandard',
-    category: GachaCategory.odes,
-    pities: [_pityFour70, _pityThree5],
+    cardPoolType: 8,
+    nameKey: 'gachaTypeNewVoyageCharacter',
+    pities: [_pityFive80, _pityFour10],
+  ),
+  GachaType(
+    cardPoolType: 9,
+    nameKey: 'gachaTypeNewVoyageWeapon',
+    pities: [_pityFive80, _pityFour10],
   ),
 ];

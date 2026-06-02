@@ -2,11 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:genshin_impact_wish_gacha_analyzer/app_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/app_release_checker.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/app_release_checker.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
-export 'package:genshin_impact_wish_gacha_analyzer/services/app_release_checker.dart'
+export 'package:wuthering_waves_convene_gacha_analyzer/services/app_release_checker.dart'
     show AppRelease;
 
 /// 版本檢查狀態：閒置、檢查中、最新、有新版、失敗。

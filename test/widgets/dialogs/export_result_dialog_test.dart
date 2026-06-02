@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/file_reveal.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_reveal.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
 
 void main() {
   String? capturedExe;
@@ -82,7 +82,7 @@ void main() {
     // makeTempFile 是真實 IO，需在 runAsync 內執行
     final f = await t.runAsync(
       () => File(
-        '${Directory.systemTemp.path}/__giwga_erd_${DateTime.now().microsecondsSinceEpoch}.tmp',
+        '${Directory.systemTemp.path}/__wwcga_erd_${DateTime.now().microsecondsSinceEpoch}.tmp',
       ).create(),
     );
     final l = await AppLocalizations.delegate.load(const Locale('zh'));
@@ -131,7 +131,7 @@ void main() {
 
     final f = await t.runAsync(
       () => File(
-        '${Directory.systemTemp.path}/__giwga_erd_${DateTime.now().microsecondsSinceEpoch}.tmp',
+        '${Directory.systemTemp.path}/__wwcga_erd_${DateTime.now().microsecondsSinceEpoch}.tmp',
       ).create(),
     );
     final l = await AppLocalizations.delegate.load(const Locale('zh'));

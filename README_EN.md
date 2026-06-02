@@ -1,62 +1,58 @@
-# 原神祈願卡池分析 Genshin Impact Wish Gacha Analyzer
+# 鳴潮喚取卡池分析 Wuthering Waves Convene Gacha Analyzer
 
 [繁體中文](README.md) | [简体中文](README_ZH-HANS.md) | English
 
-[![Crowdin](https://badges.crowdin.net/genshin-impact-wish-gacha-analyzer/localized.svg)](https://crowdin.com/project/genshin-impact-wish-gacha-analyzer)
+[![Crowdin](https://badges.crowdin.net/wuthering-waves-convene-gacha-analyzer/localized.svg)](https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer)
 
-I have developed a utility for analyzing gacha history, where all data and numbers are well-organized in a convenient manner.
+I have developed a utility for analyzing convene history, where all data and numbers are well-organized in a convenient manner.
 
-When you press *Update*, the utility starts a local proxy server (running only on your computer) and automatically installs a locally generated root certificate, so it can intercept Genshin Impact's WebView request to the miHoYo wish history API. You therefore need to open the wish history page in the game *after* pressing *Update*, so the request can be captured. The captured URL is parsed and the resulting parameters are used to call miHoYo's API.
+When you press *Update*, the utility starts a local interception helper (running only on your computer; it requires administrator privileges, so you'll see a one-time UAC prompt — click Yes) and automatically installs a locally generated root certificate. It then redirects Wuthering Waves' convene-record page request to the official convene history API to your local machine for parsing, so it can capture that one request. You therefore need to open the convene record page in the game *after* pressing *Update*, so the request can be captured. The captured request is parsed for the parameters needed to query your convene records, which are then used to call the official API. Interception only runs during the update and stops immediately once done, restoring your network state.
 
-The first time you press *Update*, the utility loads your full gacha history, which may take a while. The data is then stored locally so you don't have to wait again on the next launch. To pull new records, just press *Update*: the utility remembers the previously captured URL and reuses it as long as it's still valid, so you don't have to repeat the capture every time. If the captured URL has expired, the utility will ask you to open the wish history page in the game again to re-capture.
+The first time you press *Update*, the utility loads your full convene history, which may take a while. The data is then stored locally so you don't have to wait again on the next launch. To pull new records, just press *Update*: the utility remembers the previously captured parameters and reuses them as long as they're still valid, so you don't have to repeat the capture every time. If the captured parameters have expired, the utility will ask you to open the convene record page in the game again to re-capture.
 
-Rest assured: this utility does not read or modify any game file, game memory, or in-game network traffic. It only intercepts the wish history page request that the in-game WebView itself makes, so there is no risk of being banned for using it. If you have been banned, it was likely for a different reason. Please do not blame us, thanks.
+Rest assured: this utility does not read or modify any game file or game memory, and does not affect how the game runs. It only intercepts and parses that single request to the official convene history API to obtain the query parameters; all other traffic passes through untouched. So there is no risk of being banned for using it. If you have been banned, it was likely for a different reason. Please do not blame us, thanks.
 
-Posts:
-- 巴哈姆特 (Bahamut): <https://forum.gamer.com.tw/C.php?bsn=36730&snA=11990&tnum=4>
-- HoYoLAB: <https://www.hoyolab.com/genshin/article/552176>
-- 原神資訊站 (Genshin Impact Info): <https://genshininfo.reh.tw/archives/97>
- 
 ## Multiple Language
- 
-Please help us translate this software.
- 
-<https://crowdin.com/project/genshin-impact-wish-gacha-analyzer>
- 
-## Download Software
- 
-The utility may trigger anti-virus software during installation and execution. This is because it generates and installs a local root certificate, and briefly configures a system proxy when you press *Update* to intercept the in-game WebView's wish history request — behavior that resembles malware. However, the utility only intercepts the `getGachaLog` (Wish) and `getBeyondGachaLog` (Odes) wish-history endpoints on `*.hoyoverse.com`, and the certificate stays on your computer. If the utility doesn't function correctly, please try disabling any anti-virus software you have installed. We guarantee this utility is safe and virus-free.
 
-<https://github.com/GoneTone/genshin-impact-wish-gacha-analyzer/releases>
+Please help us translate this software.
+
+<https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer>
+
+## Download Software
+
+The utility may trigger anti-virus software during installation and execution. This is because it generates and installs a local root certificate, and when you press *Update* it launches an interception helper with administrator privileges (bundling the [WinDivert](https://github.com/basil00/WinDivert) kernel driver) that redirects the convene-record page request to your local machine — behavior (installing a certificate, loading a kernel driver, redirecting traffic) that resembles malware and is especially prone to false positives. However, the utility only intercepts the official convene history API, the certificate stays on your computer, and the source code is open for inspection. If the utility doesn't function correctly, please try disabling any anti-virus software you have installed. We guarantee this utility is safe and virus-free.
+
+<https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/releases>
 
 ## How to Use
 
-1. Launch Genshin Impact (don't open the wish history page yet).
-2. Open this utility and press *Update*. The utility will start a local proxy server in the background and wait for the request.
-3. Switch back to the game and open *Wish → History* to view the wish history page.
-4. Once captured, the utility automatically shuts down the proxy, restores your system proxy settings, and starts fetching your data. To update again later, just repeat step 2 — the captured URL will be reused if still valid.
+1. Launch Wuthering Waves (don't open the convene record page yet).
+2. Open this utility and press *Update*. The utility will start a local interception helper (a one-time UAC administrator prompt will appear — click Yes) and wait for the request.
+3. Switch back to the game and open *Convene → Convene History* to view the convene record page.
+4. Once captured, the utility automatically stops the interception, restores your network state, and starts fetching your data. To update again later, just repeat step 2 — the captured URL will be reused if still valid.
 
 ## Features
 
-- Auto-intercepts the in-game WebView's request to the miHoYo wish history API via a local proxy and a self-signed root certificate — no need to paste URLs by hand
+- Auto-intercepts the convene-record page request to the official convene history API via a local interception helper and a self-signed root certificate — no need to paste URLs by hand
 - Supports the Global server (CN server not supported yet)
-- Covers all 7 gacha types: Character Event Wish, Weapon Event Wish, Chronicled Wish, Standard Wish, Beginners' Wish, Event Odes, Standard Odes
+- Covers all 8 convene types: Featured Resonator Convene, Featured Weapon Convene, Standard Resonator Convene, Standard Weapon Convene, Beginner Convene, Beginner's Choice Convene, New Voyage Resonator Convene, New Voyage Weapon Convene
 - Multi-account (UID) management: custom aliases, drag-to-reorder, one-click switching
 - Incremental updates merge new records without overwriting old ones, so entries that fall off the official history won't disappear
-- Total pulls and 5★ / 4★ / 3★ / 2★ counts with their share of the total
+- Total pulls and 5★ / 4★ / 3★ counts with their share of the total
 - Dual pity progress (5★ and 4★) showing remaining pulls until pity
 - Average pulls per 5★ / 4★ hit (per-banner and overall)
-- Per-gacha 5★ timeline
+- Per-banner 5★ timeline
 - 5★ overview: every distinct 5★ you've pulled laid out in a row, each with a cumulative count badge and clickable for details — shown on each banner page, the overview page, and the share image
-- Bar chart comparing each gacha's highest-rarity counts
+- Bar chart comparing each banner's highest-rarity counts
 - Rarity distribution pie chart
 - Item type distribution pie chart
-- Wish history table: multi-column sort, fuzzy search, rarity and item-type filters, pagination
-- Auto-fetched character / weapon icons and details (from [HoYoWiki](https://wiki.hoyolab.com/pc/genshin/home)): shown in the history table and timelines; click an item to view official artwork, description, and tags — with a one-click jump to HoYoWiki
-- Generate a share image in one click (dark / light theme, full UID or first-3-digits mask), auto-saved and copied to the clipboard
+- Convene history table: multi-column sort, keyword search (by name), rarity and item-type filters, pagination
+- Auto-fetched item icons (from the encore.moe API): characters, weapons, and items all have icons, shown in the table, timelines, and the 5★ overview
+- Click any item for details: characters show the introduction, element, weapon type, and switchable Outfit and Convene artwork (the Convene art is captured live from encore's rendered canvas on your machine and cached — no artwork is redistributed); weapons show their description and weapon type
+- Generate a share image in one click (dark / light theme, full UID or first-3-digits mask), automatically copied to the clipboard and optionally saved as a PNG file
 - Export / Import accounts as JSON
 - Dark / Light theme toggle
-- Multi-language ([help us translate](https://crowdin.com/project/genshin-impact-wish-gacha-analyzer))
+- Multi-language ([help us translate](https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer))
 - Optional UID masking in the UI (first 3 digits only) for added privacy
 - Automatic update check on launch, with a manual trigger in Settings
 - All data stays on your machine — nothing is uploaded
@@ -64,13 +60,12 @@ The utility may trigger anti-virus software during installation and execution. T
 ## Screenshot
 
 ![Overview page](docs/images/en/1.png)
-![Character Event Wish page](docs/images/en/2.png)
-![Weapon Event Wish page](docs/images/en/3.png)
-![Event Ode page](docs/images/en/4.png)
-![Settings page](docs/images/en/5.png)
-![Share image options](docs/images/en/6.png)
-![Share image](docs/images/en/7.png)
-![Item details](docs/images/en/8.png)
+![Character Event Convene page](docs/images/en/2.png)
+![Weapon Event Convene page](docs/images/en/3.png)
+![Settings page](docs/images/en/4.png)
+![Share image options](docs/images/en/5.png)
+![Share image](docs/images/en/6.png)
+![Item details](docs/images/en/7.png)
 
 ## Development
 
@@ -84,8 +79,8 @@ The utility may trigger anti-virus software during installation and execution. T
 ### Clone and install dependencies
 
 ```bash
-git clone https://github.com/GoneTone/genshin-impact-wish-gacha-analyzer.git
-cd genshin-impact-wish-gacha-analyzer
+git clone https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer.git
+cd wuthering-waves-convene-gacha-analyzer
 flutter pub get
 ```
 

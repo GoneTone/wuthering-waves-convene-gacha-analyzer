@@ -27,7 +27,8 @@ enum AppDialogSize {
 
 /// 專案統一使用的 dialog 容器。包裝 `AlertDialog` 並自動套寬高上限：
 ///
-/// - 寬：`min(size.maxWidth, mq.size.width - 80)`
+/// - 寬：title 與 content 同鎖 `min(size.maxWidth, mq.size.width - 80)`
+///   （標題內的長文字會在此寬度內換行，不會把 dialog 撐寬）
 /// - 高：`min(maxHeight ?? 720, mq.size.height - 120)`（透過
 ///   `AlertDialog.constraints` 設定）
 ///
@@ -83,7 +84,9 @@ class AppDialog extends StatelessWidget {
 
     return AlertDialog(
       constraints: BoxConstraints(maxHeight: dialogMaxHeight),
-      title: title,
+      // title 與 content 同鎖 dialogWidth：避免標題內的長文字（如詳情 dialog 的
+      // 簡介 Html）以 intrinsic 單行寬度把整個 dialog 撐寬，而非在寬度內換行。
+      title: SizedBox(width: dialogWidth, child: title),
       content: body,
       actions: actions.isEmpty ? null : actions,
     );

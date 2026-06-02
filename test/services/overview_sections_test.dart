@@ -1,66 +1,54 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/overview_sections.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/overview_sections.dart';
 
-GachaRecord _r(String gt, int rank, String name, DateTime t) => GachaRecord(
-  id: '${name}_${t.microsecondsSinceEpoch}',
-  uid: '123456789',
-  gachaType: gt,
+GachaRecord _r(String cpt, int rank, String name, DateTime t) => GachaRecord(
+  resourceId: name.hashCode & 0xffff,
+  qualityLevel: rank,
+  resourceType: rank == 5 ? '角色' : '武器',
+  cardPoolType: cpt,
   name: name,
-  itemType: rank == 5 ? '角色' : '武器',
-  rankType: rank,
+  count: 1,
   time: t,
-  lang: 'zh-tw',
 );
 
 void main() {
-  test('buildOverviewSections 切出祈願與頌願兩段、統計正確', () {
-    final t = DateTime(2026, 5, 1);
+  test('buildOverviewSections 聚合全部 8 池於單段、統計正確', () {
+    final t = DateTime(2026, 5, 1, 10);
     final activeBanners = <String, List<GachaRecord>>{
-      '301': [_r('301', 5, '那維萊特', t), _r('301', 3, '冷刃', t)],
-      '2000': [_r('2000', 5, '某五星', t)],
+      '1': [_r('1', 5, '達妮婭', t), _r('1', 3, '冷刃', t)],
+      '8': [_r('8', 5, '新旅角色', t.add(const Duration(hours: 1)))],
     };
 
-    final sections = buildOverviewSections(
-      activeBanners,
-      index: const HoYoWikiIndex.empty(),
-    );
+    final sections = buildOverviewSections(activeBanners);
 
-    expect(sections.gacha.stats.total, 2);
-    expect(sections.gacha.stats.fiveStarCount, 1);
-    expect(sections.gacha.timeline.length, 1);
-    expect(sections.odes.stats.total, 1);
-    expect(sections.odes.eventFiveCount, 1);
+    expect(sections.stats.total, 3);
+    expect(sections.stats.fiveStarCount, 2);
+    expect(sections.timeline.length, 2);
+    expect(sections.timelineRank, 5);
   });
 
   test('buildOverviewSections 空輸入不拋例外、各欄位回傳零值', () {
-    final sections = buildOverviewSections(
-      const <String, List<GachaRecord>>{},
-      index: const HoYoWikiIndex.empty(),
-    );
+    final sections = buildOverviewSections(const <String, List<GachaRecord>>{});
 
-    expect(sections.gacha.stats.total, 0);
-    expect(sections.odes.stats.total, 0);
-    expect(sections.gacha.fiveStarAvg, isNull);
-    expect(sections.odes.eventFiveCount, 0);
-    expect(sections.odes.standardFourCount, 0);
-    expect(sections.gacha.timeline, isEmpty);
-    expect(sections.odes.timeline, isEmpty);
+    expect(sections.stats.total, 0);
+    expect(sections.fiveStarAvg, isNull);
+    expect(sections.fourStarAvg, isNull);
+    expect(sections.timeline, isEmpty);
+    expect(sections.timelineNowPulls, 0);
   });
 
-  test('buildOverviewSections 僅頌願輸入：祈願 total=0，odes eventFiveCount=1', () {
-    final t = DateTime(2026, 5, 1);
-    final activeBanners = <String, List<GachaRecord>>{
-      '2000': [_r('2000', 5, '某頌願五星', t)],
-    };
-
-    final sections = buildOverviewSections(
-      activeBanners,
-      index: const HoYoWikiIndex.empty(),
-    );
-
-    expect(sections.gacha.stats.total, 0);
-    expect(sections.odes.eventFiveCount, 1);
+  test('types 含全部 8 個卡池', () {
+    final sections = buildOverviewSections(const <String, List<GachaRecord>>{});
+    expect(sections.types.map((t) => t.cardPoolType).toList(), [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      9,
+    ]);
   });
 }

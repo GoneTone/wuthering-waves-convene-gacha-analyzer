@@ -10,25 +10,24 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/app_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/routing/app_router.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_sanitize.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_service.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/window_state_keeper.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/src/rust/api/capture.dart'
-    as rust_capture;
-import 'package:genshin_impact_wish_gacha_analyzer/src/rust/api/logging.dart'
+import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/routing/app_router.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_service.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/window_state_keeper.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/src/rust/api/logging.dart'
     as rust_logging;
-import 'package:genshin_impact_wish_gacha_analyzer/src/rust/frb_generated.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/localization_metadata.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/log_service.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/settings.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_repository.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/src/rust/frb_generated.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/localization_metadata.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/log_service.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luckdraw_capture_host.dart';
 
 /// 應用程式入口：初始化 Flutter、Rust bridge、視窗管理、log 服務，然後啟動 app。
 Future<void> main() async {
@@ -75,37 +74,28 @@ Future<void> main() async {
         'locale=${Platform.localeName}',
       );
 
-      try {
-        final cleaned = await rust_capture.cleanupStaleProxy();
-        if (cleaned) {
-          Logger(
-            'app.startup',
-          ).info('cleanup_stale_proxy: stale proxy detected and reset');
-        }
-      } catch (e, st) {
-        Logger('app.startup').warning('cleanup_stale_proxy failed', e, st);
-      }
-
       final gachaDir = Directory('${supportDir.path}/gacha_data');
       if (!await gachaDir.exists()) {
         await gachaDir.create(recursive: true);
       }
       final storage = GachaStorage(gachaDir);
 
-      final hoyowikiCacheDir = Directory('${supportDir.path}/hoyowiki_cache');
-      if (!await hoyowikiCacheDir.exists()) {
-        await hoyowikiCacheDir.create(recursive: true);
+      final itemImageCacheDir = Directory(
+        '${supportDir.path}/item_image_cache',
+      );
+      if (!await itemImageCacheDir.exists()) {
+        await itemImageCacheDir.create(recursive: true);
       }
-      final hoyowikiIndexStorage = HoYoWikiIndexStorage(hoyowikiCacheDir);
+      final itemImageIndexStorage = ItemImageIndexStorage(itemImageCacheDir);
 
       runApp(
         ProviderScope(
           overrides: [
             gachaStorageProvider.overrideWithValue(storage),
-            hoyowikiIndexStorageProvider.overrideWithValue(
-              hoyowikiIndexStorage,
+            itemImageIndexStorageProvider.overrideWithValue(
+              itemImageIndexStorage,
             ),
-            hoyowikiCacheDirProvider.overrideWithValue(hoyowikiCacheDir),
+            itemImageCacheDirProvider.overrideWithValue(itemImageCacheDir),
             appVersionProvider.overrideWithValue(pkgInfo.version),
             logServiceProvider.overrideWithValue(logService),
           ],
@@ -190,6 +180,13 @@ class _MainAppState extends ConsumerState<MainApp> {
       supportedLocales: ref.watch(releasedLocalesProvider),
       localeListResolutionCallback: localeListResolution,
       routerConfig: _router,
+      builder: (context, child) => Stack(
+        clipBehavior: Clip.none,
+        children: [
+          const Positioned(left: 0, top: 0, child: LuckdrawCaptureHost()),
+          if (child != null) Positioned.fill(child: child),
+        ],
+      ),
     );
   }
 }

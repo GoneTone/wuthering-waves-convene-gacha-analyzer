@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 
 /// 單一統計數值的卡片，含標籤、大字主數值、可選副標題與尾端 widget。
 class StatCard extends StatelessWidget {
@@ -54,16 +54,7 @@ class StatCard extends StatelessWidget {
               children: [
                 Text(label.toUpperCase(), style: theme.textTheme.labelSmall),
                 const SizedBox(height: AppSpacing.xs),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: AppFontSize.display,
-                    fontWeight: FontWeight.w800,
-                    color: tokens.textPrimary,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                    height: 1.1,
-                  ),
-                ),
+                Text(value, style: displayNumberStyle(tokens)),
                 if (subtitle != null) ...[
                   const SizedBox(height: AppSpacing.xs),
                   Text(

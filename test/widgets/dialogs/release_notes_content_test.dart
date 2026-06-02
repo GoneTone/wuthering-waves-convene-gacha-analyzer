@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/utils/github_release_linkify.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/release_notes_content.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/app_repo.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/github_release_linkify.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/release_notes_content.dart';
 
 /// 蒐集目前畫面上所有 [RichText] 的純文字並串接，用來檢查渲染後的空白。
 String _renderedText(WidgetTester tester) {
@@ -17,8 +18,7 @@ String _renderedText(WidgetTester tester) {
 void main() {
   testWidgets('連結後不應出現 markdown_widget 注入的多餘空格', (tester) async {
     final data = linkifyGithubReferences(
-      'images by @GoneTone in '
-      'https://github.com/GoneTone/genshin-impact-wish-gacha-analyzer/pull/70',
+      'images by @GoneTone in ${AppRepo.githubUrl}/pull/70',
     );
 
     await tester.pumpWidget(

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/five_star_collection.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/five_star_collection.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 
 /// 圓形 icon 邊長。
 const double _iconSize = 48;
@@ -107,7 +107,7 @@ class _FiveStarChip extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   height: 1,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+                  fontFeatures: kTabularFigures,
                 ),
               ),
             ),

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_filter.dart';
 
 /// 記錄列表的篩選條件與排序狀態。
 @immutable
@@ -14,10 +14,6 @@ class RecordFilterState {
 
   /// 目前的排序設定；null 表示依預設順序（id 降序）。
   final TableSort? sort;
-
-  /// 複製並選擇性覆蓋 [filter]，sort 保持不變。
-  RecordFilterState copyWith({RecordFilter? filter}) =>
-      RecordFilterState(filter: filter ?? this.filter, sort: sort);
 }
 
 /// 記錄列表篩選與排序的 Riverpod notifier。

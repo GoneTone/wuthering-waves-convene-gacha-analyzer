@@ -1,10 +1,9 @@
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/item_type_kind.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 
-/// 單一卡池的祈願統計摘要。
+/// 單一卡池的喚取統計摘要。
 class GachaStats {
   /// 建立 [GachaStats]。
   const GachaStats({
@@ -12,7 +11,6 @@ class GachaStats {
     required this.fiveStarCount,
     required this.fourStarCount,
     required this.threeStarCount,
-    required this.twoStarCount,
     required this.byItemType,
   });
 
@@ -28,11 +26,8 @@ class GachaStats {
   /// 3★ 數量。
   final int threeStarCount;
 
-  /// 2★ 數量。
-  final int twoStarCount;
-
-  /// 各物品類型的抽數，key = [itemTypeKeyOf] 產物（canonical 鍵如 `kind:character`，
-  /// 或查無 menu_id 時 fallback 的原始 itemType 字串）。
+  /// 各物品類型的抽數，key = [itemTypeKeyOf] 產物（canonical 鍵如 `kind:character`／
+  /// `kind:item`，或未知 resourceType 的 fallback 原始字串）。
   final Map<String, int> byItemType;
 
   /// 計算 [n] 在總抽數中的占比；總抽數為 0 時回傳 0.0。
@@ -47,9 +42,6 @@ class GachaStats {
   /// 3★ 出率。
   double get threeStarRate => _rate(threeStarCount);
 
-  /// 2★ 出率。
-  double get twoStarRate => _rate(twoStarCount);
-
   /// 依 count desc 排序的 entries（給 pie / legend 用）。
   List<MapEntry<String, int>> sortedItemTypes() {
     final list = byItemType.entries.toList();
@@ -58,31 +50,28 @@ class GachaStats {
   }
 }
 
-/// 祈願統計 logger。
+/// 喚取統計 logger。
 final _log = Logger('gacha.stats');
 
-/// 從 [records] 計算統計摘要；[index] 用於將 itemType 原始字串聚合為
-/// 語言無關的類型鍵（[itemTypeKeyOf]），消除跨語系分裂。
-GachaStats computeGachaStats(
-  List<GachaRecord> records, {
-  required HoYoWikiIndex index,
-}) {
-  var five = 0, four = 0, three = 0, two = 0;
+/// 從 [records] 計算統計摘要；類型聚合改用 record 自帶的 `resourceType`
+/// 直接映射（[itemTypeKeyOf]），消除跨語系分裂，不再依賴外部 index。
+GachaStats computeGachaStats(List<GachaRecord> records) {
+  var five = 0, four = 0, three = 0;
   var canonical = 0, fallback = 0;
   final byItemType = <String, int>{};
   for (final r in records) {
-    switch (r.rankType) {
+    switch (r.qualityLevel) {
       case 5:
         five++;
       case 4:
         four++;
       case 3:
         three++;
-      case 2:
-        two++;
     }
-    final key = itemTypeKeyOf(r, index);
-    if (key == kItemKindCharacter || key == kItemKindWeapon) {
+    final key = itemTypeKeyOf(r);
+    if (key == kItemKindCharacter ||
+        key == kItemKindWeapon ||
+        key == kItemKindItem) {
       canonical++;
     } else {
       fallback++;
@@ -100,7 +89,6 @@ GachaStats computeGachaStats(
     fiveStarCount: five,
     fourStarCount: four,
     threeStarCount: three,
-    twoStarCount: two,
     byItemType: byItemType,
   );
 }

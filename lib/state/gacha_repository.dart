@@ -1,35 +1,50 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/data/gacha_types.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_sanitize.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/accounts_bundle.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/cancellable_http_client.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/concurrent_pool.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_url.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/uid_ordering.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_fetcher.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/settings.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/update_progress.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/concurrent_pool.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/record_merge.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 
-export 'package:genshin_impact_wish_gacha_analyzer/state/update_progress.dart';
+export 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
 
-/// probeUid 回傳 null 時拋出，轉成 [UpdateErrorNoRecords]。
+/// 8 個卡池全部 `code==0` 且 `data` 全空（該帳號從未喚取）→ 轉成 [UpdateErrorNoRecords]。
 class _NoRecordsException implements Exception {
   const _NoRecordsException();
 }
 
-/// 祈願資料整體狀態，包含帳號資料、更新進度與 bootstrap 旗標。
+/// recordId 疑似失效訊號，由 [_runUpdate] 接住後自動重攔一次；重攔後第二輪仍全失敗才轉成
+/// [UpdateErrorGachaFailed]。兩個觸發來源：①第一輪首抓的角色活動（pool 0）失敗即早退
+/// （recordId 為 8 池共用，pool 0 失敗 ≈ 全域失效）②第二輪跑滿 8 池且全部 `code != 0`。
+class _AllPoolsFailedException implements Exception {
+  /// 建立 [_AllPoolsFailedException]，[apiError] 為觸發訊號的失敗池 [GachaApiException]。
+  const _AllPoolsFailedException(this.apiError);
+
+  /// 觸發此訊號的失敗池資訊（早退時為 pool 0，全失敗時為最後一個失敗池；供 log 與錯誤文案）。
+  final GachaApiException apiError;
+}
+
+/// 喚取資料整體狀態，包含帳號資料、更新進度與 bootstrap 旗標。
 @immutable
 class GachaState {
   /// 建立 [GachaState]。
@@ -86,7 +101,7 @@ final gachaCaptureProvider = Provider<GachaCapture>(
   (ref) => RustGachaCapture(),
 );
 
-/// [GachaFetcher] provider，負責從 Hoyoverse API 拉取祈願紀錄。
+/// [GachaFetcher] provider，負責從官方喚取 API 拉取喚取紀錄。
 final gachaFetcherProvider = Provider<GachaFetcher>((ref) => GachaFetcher());
 
 /// 每次 update 用一個獨立的 [CancellableHttpClient]（cancel 不會影響其他連線）。
@@ -100,14 +115,21 @@ final gachaRepositoryProvider = NotifierProvider<GachaRepository, GachaState>(
   GachaRepository.new,
 );
 
+/// 作用中帳號的擷取語言（無帳號時 null）；dialog 用來查 per-lang 詳情。
+final activeLanguageCodeProvider = Provider<String?>(
+  (ref) => ref.watch(
+    gachaRepositoryProvider.select((s) => s.activeData?.languageCode),
+  ),
+);
+
 // ─── Notifier ───
 
-/// 祈願資料狀態管理，統一處理 bootstrap、更新、匯入與刪除。
+/// 喚取資料狀態管理，統一處理 bootstrap、更新、匯入與刪除。
 class GachaRepository extends Notifier<GachaState> {
   static final _log = Logger('gacha.repo');
 
   /// Logger 實例（force-refetch 流程，獨立子樹以利日誌過濾）。
-  static final _refetchLog = Logger('gacha.hoyowiki.refetch');
+  static final _refetchLog = Logger('gacha.itemimage.refetch');
 
   /// Logger 實例（匯入流程，獨立子樹以利日誌過濾）。
   static final _importLog = Logger('gacha.import');
@@ -188,7 +210,7 @@ class GachaRepository extends Notifier<GachaState> {
     state = state.copyWith(clearProgress: true);
   }
 
-  /// 啟動祈願資料更新，優先使用快取 URL，無快取則觸發 MITM 捕獲。
+  /// 啟動喚取資料更新，優先使用快取 URL，無快取則觸發 MITM 捕獲。
   Future<void> update() async {
     await _runUpdate(forceRecapture: false);
   }
@@ -203,7 +225,7 @@ class GachaRepository extends Notifier<GachaState> {
     final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
     _activeCancellable = cancellable;
 
-    // 立刻 set Preparing → ref.listen 立刻觸發 dialog
+    // 立刻 set Preparing → ref.listen 立刻觸發 dialog。
     state = state.copyWith(progress: const Preparing());
 
     try {
@@ -211,76 +233,100 @@ class GachaRepository extends Notifier<GachaState> {
       final storage = ref.read(gachaStorageProvider);
       final fetcher = ref.read(gachaFetcherProvider);
 
-      if (forceRecapture && initialActiveUid != null) {
-        await storage.deleteCapturedUrl(initialActiveUid);
-        if (!ref.mounted) return;
-      }
-
-      String? capturedUrl;
+      GachaCredential? cred;
 
       if (!forceRecapture && initialActiveUid != null) {
-        capturedUrl = await storage.loadCapturedUrl(initialActiveUid);
+        final cachedJson = await storage.loadCapturedCredential(
+          initialActiveUid,
+        );
         if (!ref.mounted) return;
-        if (capturedUrl != null) {
-          _log.info(
-            'using cached url for uid=${sanitizeUid(initialActiveUid)}',
-          );
+        if (cachedJson != null) {
+          try {
+            cred = GachaCredential.fromCapturedBody(cachedJson);
+            _log.info(
+              'using cached credential for playerId='
+              '${sanitizeUid(initialActiveUid)}',
+            );
+          } catch (e) {
+            _log.warning('cached credential malformed, recapturing: $e');
+          }
         }
       }
 
-      if (capturedUrl == null) {
-        capturedUrl = await _runMitm(isFallback: false);
-        if (!ref.mounted) return;
-        if (capturedUrl == null) {
-          _log.info('update aborted (user cancelled capture)');
-          state = state.copyWith(clearProgress: true);
-          return;
-        }
+      cred ??= await _runMitm(isFallback: false);
+      if (!ref.mounted) return;
+      if (cred == null) {
+        _log.info('update aborted (user cancelled capture)');
+        state = state.copyWith(clearProgress: true);
+        return;
       }
 
       try {
         await _fetchAllBanners(
-          url: capturedUrl,
+          cred: cred,
           fetcher: fetcher,
           storage: storage,
           client: cancellable.client,
+          abortOnFirstPoolFailure: true,
         );
-      } on AuthExpiredException {
+      } on _AllPoolsFailedException catch (e) {
+        // 第一輪 pool 0 失敗（≈ recordId 失效）：沿用既有 recordId 失效流程自動重攔一次。
         if (!ref.mounted) return;
-        _log.warning('auth expired, falling back to MITM recapture');
-        if (initialActiveUid != null) {
-          await storage.deleteCapturedUrl(initialActiveUid);
-          if (!ref.mounted) return;
-        }
-        final newUrl = await _runMitm(isFallback: true);
+        _log.warning(
+          'first pool failed (code=${e.apiError.code}), falling back to recapture',
+        );
+        final newCred = await _runMitm(isFallback: true);
         if (!ref.mounted) return;
-        if (newUrl == null) {
+        if (newCred == null) {
+          _log.info('recapture cancelled by user');
           state = state.copyWith(clearProgress: true);
           return;
         }
         try {
           await _fetchAllBanners(
-            url: newUrl,
+            cred: newCred,
             fetcher: fetcher,
             storage: storage,
             client: cancellable.client,
+            abortOnFirstPoolFailure: false,
           );
-        } on AuthExpiredException {
+        } on _AllPoolsFailedException catch (e2) {
+          // 重攔後仍全失敗才放棄；文案已改為不再要求重開頁（errorGachaFailed）。
+          if (!ref.mounted) return;
+          _log.warning(
+            'still all-failing after recapture, code=${e2.apiError.code}',
+          );
+          state = state.copyWith(
+            progress: UpdateFailed(
+              UpdateErrorGachaFailed(e2.apiError.code, e2.apiError.message),
+            ),
+          );
+        } on _NoRecordsException {
           if (!ref.mounted) return;
           state = state.copyWith(
-            progress: const UpdateFailed(UpdateErrorAuthExpired()),
+            progress: const UpdateFailed(UpdateErrorNoRecords()),
           );
-        } on http.ClientException catch (e) {
+        } on http.ClientException catch (e2) {
           if (!ref.mounted) return;
           if (_cancelTriggered) {
             state = state.copyWith(clearProgress: true);
           } else {
-            state = state.copyWith(progress: UpdateFailed(_friendlyError(e)));
+            _log.warning(
+              'http client error (post-recapture): ${e2.message}'
+              '${e2.uri != null ? " uri=${sanitizeUrl(e2.uri!.toString())}" : ""}',
+            );
+            state = state.copyWith(progress: UpdateFailed(_friendlyError(e2)));
           }
-        } catch (e) {
+        } catch (e2, st) {
           if (!ref.mounted) return;
-          state = state.copyWith(progress: UpdateFailed(_friendlyError(e)));
+          _log.severe('update unexpected error (post-recapture)', e2, st);
+          state = state.copyWith(progress: UpdateFailed(_friendlyError(e2)));
         }
+      } on _NoRecordsException {
+        if (!ref.mounted) return;
+        state = state.copyWith(
+          progress: const UpdateFailed(UpdateErrorNoRecords()),
+        );
       } on http.ClientException catch (e) {
         if (!ref.mounted) return;
         if (_cancelTriggered) {
@@ -306,121 +352,153 @@ class GachaRepository extends Notifier<GachaState> {
     }
   }
 
-  /// 啟動 MITM 捕獲會話並等候 URL；[isFallback] 為 auth 過期後的二次捕獲。
-  Future<String?> _runMitm({required bool isFallback}) async {
+  /// 啟動 MITM 捕獲會話並等候 [GachaCredential]；[isFallback] true 表示此為 recordId 全池失效後觸發的補救（fallback）捕獲。
+  Future<GachaCredential?> _runMitm({required bool isFallback}) async {
     state = state.copyWith(progress: WaitingForCapture(isFallback: isFallback));
     final session = ref.read(gachaCaptureProvider).start();
     _activeCancel = session.cancel;
     _log.info('MITM ${isFallback ? "fallback" : "primary"} session started');
     try {
       final result = await session.result;
-      _log.info('MITM session done, hasUrl=${result != null}');
+      _log.info('MITM session done, hasCredential=${result != null}');
       return result;
     } finally {
       _activeCancel = null;
     }
   }
 
-  /// 依序拉取所有 banner 的新紀錄並合併存檔。
+  /// 依序拉取 8 個 cardPoolType 的整池全歷史，合併存檔。
+  ///
+  /// 逐池容錯：單池 `code!=0` 保留舊資料、記入 `failed` 後繼續（最終以
+  /// `UpdateCompleted.failedBanners` 顯示部分失敗紅字）；**8 池全失敗** → 丟
+  /// [_AllPoolsFailedException]（由 [_runUpdate] 自動重攔一次）；全部成功但每池皆空且
+  /// 無既有資料 → 丟 [_NoRecordsException]。網路層 [http.ClientException] 不在此攔截。
+  ///
+  /// [abortOnFirstPoolFailure] 為 true（第一輪）時，首抓的角色活動（pool 0，`i == 0`）一
+  /// 失敗就立刻丟 [_AllPoolsFailedException] 早退、不再續抓其餘 7 池（recordId 為 8 池共用，
+  /// pool 0 失敗 ≈ 全域失效）；為 false（重攔後第二輪）時維持「跑滿全池、全失敗才判定」的容錯。
   Future<void> _fetchAllBanners({
-    required String url,
+    required GachaCredential cred,
     required GachaFetcher fetcher,
     required GachaStorage storage,
     required http.Client client,
+    required bool abortOnFirstPoolFailure,
   }) async {
-    final gachaUrl = GachaUrl.parse(url);
-
-    final probe = await fetcher.probeUid(url: gachaUrl, client: client);
-    if (!ref.mounted) return;
-    if (probe.uid == null) {
-      throw const _NoRecordsException();
-    }
-    final uid = probe.uid!;
+    final endpoint = Uri.parse(
+      'https://gmserver-api.aki-game2.net/gacha/record/query',
+    );
+    final playerId = cred.playerId;
 
     final existing =
-        state.byUid[uid] ??
+        state.byUid[playerId] ??
         BannerStorage(
-          uid: uid,
+          playerId: playerId,
+          languageCode: cred.languageCode,
           lastUpdated: DateTime.utc(1970),
-          banners: {for (final t in gachaTypes) t.gachaType: <GachaRecord>[]},
+          banners: {for (final t in gachaTypes) t.key: <GachaRecord>[]},
         );
 
     final mergedBanners = <String, List<GachaRecord>>{};
     final failed = <String>[];
+    GachaApiException? lastApiError;
     var totalNew = 0;
+    var anyNonEmpty = false;
 
-    for (final t in gachaTypes) {
-      final endpoint = switch (t.category) {
-        GachaCategory.gacha => GachaEndpoint.gacha,
-        GachaCategory.odes => GachaEndpoint.odes,
-      };
+    for (var i = 0; i < gachaTypes.length; i++) {
+      final t = gachaTypes[i];
+      if (i > 0) {
+        await Future<void>.delayed(fetcher.rateLimit);
+        if (!ref.mounted) return;
+      }
+      state = state.copyWith(
+        progress: FetchingBanner(
+          displayName: t.nameKey,
+          poolIndex: i + 1,
+          poolCount: gachaTypes.length,
+          newRecordsSoFar: totalNew,
+        ),
+      );
+
       try {
-        final merged = await fetcher.fetchBannerWithMerge(
-          url: gachaUrl,
-          gachaType: t.gachaType,
+        final result = await fetcher.fetchPool(
           endpoint: endpoint,
-          existing: existing.banners[t.gachaType] ?? const [],
-          primer: probe.primerPages[t.gachaType],
+          cred: cred,
+          cardPoolType: t.cardPoolType,
           client: client,
-          onProgress: (p) {
-            if (!ref.mounted) return;
-            state = state.copyWith(
-              progress: FetchingBanner(
-                gachaType: t.gachaType,
-                displayName: t.nameKey,
-                pageIndex: p.pageIndex,
-                newRecordsSoFar: p.newRecordsSoFar,
-              ),
-            );
-          },
         );
         if (!ref.mounted) return;
-        final newCount =
-            merged.length - (existing.banners[t.gachaType]?.length ?? 0);
-        totalNew += newCount;
-        mergedBanners[t.gachaType] = merged;
-      } on AuthExpiredException {
-        rethrow;
-      } on http.ClientException {
-        rethrow;
-      } catch (e) {
-        _log.warning('banner=${t.nameKey} failed: $e');
-        mergedBanners[t.gachaType] = existing.banners[t.gachaType] ?? const [];
+
+        final existingForPool =
+            existing.banners[t.key] ?? const <GachaRecord>[];
+        final merged = mergeOrderedRecords(result.records, existingForPool);
+        mergedBanners[t.key] = merged;
+        if (merged.isNotEmpty) anyNonEmpty = true;
+        totalNew += merged.length - existingForPool.length;
+      } on GachaApiException catch (e) {
+        // 第一輪：首抓的角色活動（pool 0）失敗 ≈ 8 池共用的 recordId 失效。不續抓其餘 7
+        // 池，直接丟全池失效訊號交由 _runUpdate 自動重攔。
+        if (abortOnFirstPoolFailure && i == 0) {
+          _log.warning(
+            'first pool ${t.key} failed code=${e.code} msg=${e.message}, '
+            'aborting to recapture',
+          );
+          throw _AllPoolsFailedException(e);
+        }
+        // 單池 code!=0：保留舊資料、記入 failed，繼續抓其他池；全池皆失敗時於迴圈後
+        // 轉成 _AllPoolsFailedException 觸發自動重攔。http.ClientException 不在此攔截，
+        // 往上拋給 _runUpdate 當作網路層失敗。
+        _log.warning('pool ${t.key} failed code=${e.code} msg=${e.message}');
+        lastApiError = e;
+        mergedBanners[t.key] = existing.banners[t.key] ?? const <GachaRecord>[];
         failed.add(t.nameKey);
       }
     }
 
+    if (failed.length == gachaTypes.length) {
+      _log.warning(
+        'all ${gachaTypes.length} pools failed, code=${lastApiError!.code}',
+      );
+      throw _AllPoolsFailedException(lastApiError);
+    }
+    // 僅在「無任何池失敗」時才能斷定帳號從未喚取；有池失敗時失敗池可能其實有紀錄，
+    // 不可誤判為 NoRecords，應走存檔＋部分失敗紅字。
+    if (failed.isEmpty &&
+        !anyNonEmpty &&
+        existing.banners.values.every((l) => l.isEmpty)) {
+      throw const _NoRecordsException();
+    }
+
     final updatedAt = DateTime.now().toUtc();
     final newData = BannerStorage(
-      uid: uid,
+      playerId: playerId,
+      languageCode: cred.languageCode,
       lastUpdated: updatedAt,
       banners: mergedBanners,
     );
     await storage.save(newData);
     if (!ref.mounted) return;
-    await storage.saveCapturedUrl(uid, url);
+    await storage.saveCapturedCredential(playerId, cred.toJsonString());
     if (!ref.mounted) return;
 
     final newByUid = Map<String, BannerStorage>.from(state.byUid)
-      ..[uid] = newData;
+      ..[playerId] = newData;
     _log.info(
-      'update completed: uid=${sanitizeUid(uid)} '
-      'totalNew=$totalNew failed=[${failed.join(",")}]',
+      'update completed: playerId=${sanitizeUid(playerId)} totalNew=$totalNew',
     );
-    state = state.copyWith(byUid: newByUid, activeUid: uid);
+    state = state.copyWith(byUid: newByUid, activeUid: playerId);
     if (!ref.mounted) return;
-    await ref.read(settingsProvider.notifier).setLastActiveUid(uid);
+    await ref.read(settingsProvider.notifier).setLastActiveUid(playerId);
     if (!ref.mounted) return;
-    // HoYoWiki 補圖階段（best-effort，不影響 UpdateCompleted）
-    var hoYoWikiImagesDownloaded = 0;
+
+    // 圖片補抓階段（best-effort，不影響 UpdateCompleted）。
+    var itemImagesDownloaded = 0;
     try {
-      hoYoWikiImagesDownloaded = await _fetchHoYoWiki(client);
+      itemImagesDownloaded = await _fetchItemImages(client);
     } catch (e, st) {
-      _log.warning('hoyowiki stage threw (ignored)', e, st);
+      _log.warning('image stage threw (ignored)', e, st);
     }
     if (!ref.mounted) return;
     if (_cancelTriggered) {
-      // 使用者在 HoYoWiki 階段取消；清掉 progress 不要 emit UpdateCompleted
       state = state.copyWith(clearProgress: true);
       return;
     }
@@ -429,7 +507,7 @@ class GachaRepository extends Notifier<GachaState> {
         totalNewRecords: totalNew,
         failedBanners: failed,
         updatedAt: updatedAt,
-        hoYoWikiImagesDownloaded: hoYoWikiImagesDownloaded,
+        itemImagesDownloaded: itemImagesDownloaded,
       ),
     );
   }
@@ -465,16 +543,16 @@ class GachaRepository extends Notifier<GachaState> {
     await _runUpdate(forceRecapture: true);
   }
 
-  /// 強制重抓所有 UID 祈願紀錄聯集物品的 HoYoWiki 圖檔。
+  /// 強制重抓所有帳號物品的角色圖片。
   ///
   /// 流程：
   ///   1. 互斥檢查：`state.progress != null` 直接 no-op（UI 應已 disable 按鈕）。
   ///   2. emit `Preparing`、建 cancellable client。
-  ///   3. `hoyowikiIndexProvider.notifier.resetAll()` 清 index + 刪 cache 目錄。
-  ///   4. 呼叫 [_fetchHoYoWiki] 跑既有三階段管線（它本就跨 UID 聚合 pairs）。
+  ///   3. `itemImageIndexProvider.notifier.resetAll()` 清 index + 刪 cache 目錄。
+  ///   4. 呼叫 [_fetchItemImages] 跑單階段補圖管線。
   ///   5. 結束依取消狀態 emit `UpdateCompleted` 或清 progress。
-  ///   6. 清檔失敗時 emit `UpdateFailed(UpdateErrorWipeHoYoWikiCache)`。
-  Future<void> forceRefetchAllHoYoWikiImages() async {
+  ///   6. 清檔失敗時 emit `UpdateFailed(UpdateErrorWipeItemImageCache)`。
+  Future<void> forceRefetchAllItemImages() async {
     if (state.progress != null) {
       _refetchLog.info('skip: another progress in-flight');
       return;
@@ -492,7 +570,7 @@ class GachaRepository extends Notifier<GachaState> {
 
     try {
       try {
-        await ref.read(hoyowikiIndexProvider.notifier).resetAll();
+        await ref.read(itemImageIndexProvider.notifier).resetAll();
         if (!ref.mounted) return;
         _refetchLog.info('wiped (index+cache cleared)');
       } catch (e, st) {
@@ -500,17 +578,17 @@ class GachaRepository extends Notifier<GachaState> {
         if (!ref.mounted) return;
         state = state.copyWith(
           progress: UpdateFailed(
-            UpdateErrorWipeHoYoWikiCache(sanitizeFsPath(e.toString())),
+            UpdateErrorWipeItemImageCache(sanitizeFsPath(e.toString())),
           ),
         );
         return;
       }
 
-      var hoYoWikiImagesDownloaded = 0;
+      var itemImagesDownloaded = 0;
       try {
-        hoYoWikiImagesDownloaded = await _fetchHoYoWiki(cancellable.client);
+        itemImagesDownloaded = await _fetchItemImages(cancellable.client);
       } catch (e, st) {
-        _refetchLog.warning('hoyowiki stage threw (ignored)', e, st);
+        _refetchLog.warning('item image stage threw (ignored)', e, st);
       }
       if (!ref.mounted) return;
 
@@ -526,7 +604,7 @@ class GachaRepository extends Notifier<GachaState> {
           totalNewRecords: 0,
           failedBanners: const [],
           updatedAt: DateTime.now().toUtc(),
-          hoYoWikiImagesDownloaded: hoYoWikiImagesDownloaded,
+          itemImagesDownloaded: itemImagesDownloaded,
         ),
       );
     } finally {
@@ -537,24 +615,44 @@ class GachaRepository extends Notifier<GachaState> {
     }
   }
 
-  /// 匯入帳號 bundle，並接續以增量方式抓取 HoYoWiki 圖片。
+  /// 匯入帳號 bundle，並接續以增量方式補抓物品角色圖片。
   ///
   /// 流程：
   ///   1. 互斥檢查：`state.progress != null` 直接 no-op。
   ///   2. emit `Preparing`、建 cancellable client。
   ///   3. 跑 [_runImport] 寫入 storage 與更新 settings。
-  ///   4. 跑 [_fetchHoYoWiki] 三階段（best-effort，例外 warn-log）。
+  ///   4. 跑 [_fetchItemImages] 單階段（best-effort，例外 warn-log）。
   ///   5. 結束一律 emit `UpdateCompleted(importSummary: ...)`，不論取消與否。
   ///      取消時 import 已寫入 storage 無法回滾，仍透過 dialog 告知使用者
   ///      「資料已匯入、圖片下載被略過」。
-  Future<void> importAccountsAndFetchHoYoWiki(AccountsBundle bundle) async {
+  Future<ImportResult> importAccountsAndFetchItemImages(
+    String bundleJson,
+  ) async {
+    const emptyResult = ImportResult(
+      successAccounts: 0,
+      totalRecords: 0,
+      failedUids: [],
+    );
     if (state.progress != null) {
       _importLog.info('skip: another progress in-flight');
-      return;
+      return emptyResult;
     }
-    if (_isUpdating) return;
+    if (_isUpdating) {
+      return emptyResult;
+    }
     _isUpdating = true;
     _cancelTriggered = false;
+
+    AccountsBundle bundle;
+    try {
+      final decoded = jsonDecode(bundleJson) as Map<String, dynamic>;
+      bundle = AccountsBundle.fromJson(decoded);
+    } catch (e) {
+      _importLog.warning('bundle parse failed: $e');
+      _isUpdating = false;
+      return emptyResult;
+    }
+
     _importLog.info('start, accounts=${bundle.accounts.length}');
 
     final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
@@ -563,34 +661,51 @@ class GachaRepository extends Notifier<GachaState> {
 
     try {
       final result = await _runImport(bundle);
-      if (!ref.mounted) return;
+      if (!ref.mounted) return result;
       _importLog.info(
         'import done: success=${result.successAccounts} '
         'failed=[${result.failedUids.map(sanitizeUid).join(",")}] '
         'records=${result.totalRecords}',
       );
 
-      var images = 0;
-      try {
-        images = await _fetchHoYoWiki(cancellable.client);
-      } catch (e, st) {
-        _importLog.warning('hoyowiki stage threw (ignored)', e, st);
+      if (result.successAccounts == 0) {
+        // 無帳號匯入成功（拒絕路徑），不觸發補圖。
+        state = state.copyWith(
+          progress: UpdateCompleted(
+            totalNewRecords: 0,
+            failedBanners: const [],
+            updatedAt: DateTime.now().toUtc(),
+            itemImagesDownloaded: 0,
+            importSummary: result,
+          ),
+        );
+        return result;
       }
-      if (!ref.mounted) return;
+
+      var itemImagesDownloaded = 0;
+      try {
+        itemImagesDownloaded = await _fetchItemImages(cancellable.client);
+      } catch (e, st) {
+        _importLog.warning('item image stage threw (ignored)', e, st);
+      }
+      if (!ref.mounted) return result;
 
       if (_cancelTriggered) {
-        _importLog.info('cancelled during hoyowiki, still emitting completed');
+        _importLog.info(
+          'cancelled during item image fetch, still emitting completed',
+        );
       }
       state = state.copyWith(
         progress: UpdateCompleted(
           totalNewRecords: 0,
           failedBanners: const [],
           updatedAt: DateTime.now().toUtc(),
-          hoYoWikiImagesDownloaded: images,
+          itemImagesDownloaded: itemImagesDownloaded,
           importSummary: result,
         ),
       );
-      _importLog.info('done, images=$images');
+      _importLog.info('done, images=$itemImagesDownloaded');
+      return result;
     } finally {
       _activeCancellable?.client.close();
       _activeCancellable = null;
@@ -619,8 +734,8 @@ class GachaRepository extends Notifier<GachaState> {
 
   /// 批次匯入 [AccountsBundle]，合併現有帳號資料與偏好設定。
   ///
-  /// 純資料層操作，**不**啟動 progress 或 HoYoWiki 圖片抓取。
-  /// 對外入口請用 [importAccountsAndFetchHoYoWiki]。
+  /// 純資料層操作，**不**啟動 progress 或物品圖片抓取。
+  /// 對外入口請用 [importAccountsAndFetchItemImages]。
   Future<ImportResult> _runImport(AccountsBundle bundle) async {
     final storage = ref.read(gachaStorageProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
@@ -640,31 +755,31 @@ class GachaRepository extends Notifier<GachaState> {
             failedUids: failed,
           );
         }
-        newByUid[account.data.uid] = account.data;
+        newByUid[account.data.playerId] = account.data;
         successCount++;
         for (final list in account.data.banners.values) {
           totalRecords += list.length;
         }
       } catch (_) {
-        failed.add(account.data.uid);
+        failed.add(account.data.playerId);
       }
     }
 
     final currentSettings = ref.read(settingsProvider);
     final mergedAliases = Map<String, String>.from(currentSettings.uidAliases);
     for (final account in bundle.accounts) {
-      if (failed.contains(account.data.uid)) continue;
+      if (failed.contains(account.data.playerId)) continue;
       final a = account.alias?.trim();
       if (a == null || a.isEmpty) {
-        mergedAliases.remove(account.data.uid);
+        mergedAliases.remove(account.data.playerId);
       } else {
-        mergedAliases[account.data.uid] = a;
+        mergedAliases[account.data.playerId] = a;
       }
     }
 
     final exportedOrder = bundle.accounts
-        .where((a) => !failed.contains(a.data.uid))
-        .map((a) => a.data.uid)
+        .where((a) => !failed.contains(a.data.playerId))
+        .map((a) => a.data.playerId)
         .toList();
     final exportedSet = exportedOrder.toSet();
     final remaining = currentSettings.uidOrder
@@ -716,7 +831,7 @@ class GachaRepository extends Notifier<GachaState> {
   }
 
   /// 測試用：暴露 [_runImport] 給單元測試（驗證純 import 邏輯，
-  /// 不必 mock HoYoWiki fetcher）。生產勿用。
+  /// 不必 mock 物品圖片 fetcher）。生產勿用。
   @visibleForTesting
   Future<ImportResult> debugImportOnly(AccountsBundle bundle) =>
       _runImport(bundle);
@@ -756,264 +871,276 @@ class GachaRepository extends Notifier<GachaState> {
     _log.info('cleared uid=${sanitizeUid(uid)}');
   }
 
-  /// 補齊所有 UID 中祈願類 record 的 HoYoWiki icon / header。
+  /// 補齊所有帳號喚取記錄聯集物品的 icon 與 dialog 詳情（catalog + prefetch）。
   ///
   /// 流程：
-  ///   1. 收集所有 UID 的祈願類 record（gachaType ∈ {301, 302, 500, 200, 100}）
-  ///      取 unique (name, lang)。
-  ///   2. 對 index.search 缺對應的跑 search；命中時寫 index.search 並把 id 加入
-  ///      entry worklist。
-  ///   3. 對 index.entries 缺或任一 URL 為空字串的 id 跑 entry_page；成功時寫
-  ///      index.entries 並把非空 URL 加入 download worklist。
-  ///   4. 對 cache 檔不存在的 (id, kind, url) 下載寫檔；成功後呼叫
-  ///      [HoYoWikiIndexNotifier.bumpCacheRevision] 觸發 UI rebuild。
+  ///   1. 逐 [BannerStorage] 收集 `id → (kind, langs)`：kind 由 [itemTypeKeyOf]
+  ///      決定；同 id 跨帳號彙整所有出現過的 `languageCode`。
+  ///   2. worklist：`(id, kind, lang)` —— icon 未就緒（[needsItemImageFetch]），或
+  ///      該 lang 詳情尚未抓（非道具）。
+  ///   3a. 逐 distinct lang 序列抓 encore catalog（icon 來源；同 lang 一次、無
+  ///       race）。
+  ///   3b. 序列解析每個 id 的 icon（catalog 純查表、無 HTTP）：命中 [mergeIcon] 正
+  ///       取並加入 toDownload，否則寫負取（非永久）；收集正取 id。
+  ///   3c. **取得物品資料階段**：並行逐 `(id, lang)` 預抓詳情（icon 正取、非道具、
+  ///       該 lang 未抓）寫 [mergeItemDetail]；對所有 worklist triple 計數 emit
+  ///       `phase: checking`。
+  ///   4. **下載階段**：只下載 toDownload 的 icon（立繪走 dialog lazy）；emit
+  ///       `phase: downloading`。toDownload 為空則直接 return。
   ///
-  /// 每筆獨立 try/catch：單筆失敗不終止整段。每筆完成更新 progress。整段失敗
-  /// 不影響 `UpdateCompleted`。取消（`_cancelTriggered` 或 `!ref.mounted`）早退。
-  ///
-  /// 回傳本次成功寫入磁碟的圖片張數（icon + header 各算一張）。
-  Future<int> _fetchHoYoWiki(http.Client client) async {
+  /// 不預先用 resourceId/resourceType 篩角色是否有圖（D7：由 catalog 命中決定）。
+  /// 每筆獨立 try/catch，單筆失敗不終止整段。取消（`_cancelTriggered` 或
+  /// `!ref.mounted`）早退。回傳本次成功寫入磁碟的 icon 張數。
+  Future<int> _fetchItemImages(http.Client client) async {
     var downloaded = 0;
-    final fetcher = ref.read(hoyowikiFetcherProvider);
-    final indexNotifier = ref.read(hoyowikiIndexProvider.notifier);
-    final cacheDir = ref.read(hoyowikiCacheDirProvider);
+    final fetcher = ref.read(itemImageFetcherProvider);
+    final indexNotifier = ref.read(itemImageIndexProvider.notifier);
+    final cacheDir = ref.read(itemImageCacheDirProvider);
     await indexNotifier.waitForLoad();
 
-    const hoyoWikiTargetGachaTypes = {'301', '302', '500', '200', '100'};
-
-    // 收集所有 UID 全部卡池 record 的 unique (name, lang)
-    final uniquePairs = <(String name, String lang)>{};
+    // (1) 收集 (id → (kind, langs))；同 id 跨帳號彙整所有出現過的 lang。
+    final kindById = <int, String>{};
+    final langsById = <int, Set<String>>{};
     for (final data in state.byUid.values) {
-      for (final entry in data.banners.entries) {
-        if (!hoyoWikiTargetGachaTypes.contains(entry.key)) continue;
-        for (final r in entry.value) {
-          if (r.name.isEmpty || r.lang.isEmpty) continue;
-          uniquePairs.add((r.name, r.lang));
+      final lang = data.languageCode;
+      if (lang.isEmpty) continue;
+      for (final list in data.banners.values) {
+        for (final r in list) {
+          kindById[r.resourceId] = itemTypeKeyOf(r);
+          langsById.putIfAbsent(r.resourceId, () => {}).add(lang);
         }
       }
     }
 
-    // 切三段 worklist
-    var index = ref.read(hoyowikiIndexProvider);
-    final searchTodo = <(String, String)>[];
-    for (final pair in uniquePairs) {
-      if (index.lookupId(name: pair.$1, lang: pair.$2) == null) {
-        searchTodo.add(pair);
-      }
-    }
-
-    /// 重抓判定：entry 或 menuId 缺失，或該 lang 還沒有 page → true。
-    bool needRefetchEntry(HoYoWikiEntry? entry, int? menuId, String lang) {
-      if (entry == null) return true;
-      if (menuId == null) return true;
-      if (!entry.pageByLang.containsKey(lang)) return true;
-      return false;
-    }
-
-    // entryTodo 初始：走過所有 record lang+name，蒐集需要重抓的 (id, lang) pair
-    final allLangs = uniquePairs.map((p) => p.$2).toSet();
-    final namesByLang = <String, Set<String>>{};
-    for (final pair in uniquePairs) {
-      namesByLang.putIfAbsent(pair.$2, () => {}).add(pair.$1);
-    }
-    final entryTodo = <({String id, String lang})>{};
-    for (final lang in allLangs) {
-      for (final name in namesByLang[lang] ?? const <String>{}) {
-        final id = index.lookupId(name: name, lang: lang);
-        if (id == null) continue;
-        if (needRefetchEntry(
-          index.lookupEntry(id),
-          index.lookupMenuId(id),
-          lang,
-        )) {
-          entryTodo.add((id: id, lang: lang));
-        }
-      }
-    }
-
-    // downloadTodo 初始：現有 entry 的非空 URL 中，cache 檔不存在的
-    final downloadTodo = <_HoYoWikiDownloadItem>[];
-    final seenUrls = <String>{}; // 跨 entry/lang 去重，避免重複 enqueue
-
-    void enqueueDownloadsForEntry(String id, HoYoWikiEntry entry) {
-      // gallery 大圖改 lazy：由 GachaItemDetailDialog 打開時下載。
-      // 此處僅 enqueue icon — icon 在祈願列表常駐顯示，維持預下載。
-      if (entry.iconUrl.isEmpty) return;
-      final iconFile = hoyowikiIconCacheFile(
-        baseDir: cacheDir,
-        id: id,
-        url: entry.iconUrl,
+    // (2) worklist：(id, kind, lang) —— icon 未就緒，或該 lang 詳情未抓。
+    final index = ref.read(itemImageIndexProvider);
+    final worklist = <(int id, String kind, String lang)>[];
+    for (final entry in langsById.entries) {
+      final id = entry.key;
+      final kind = kindById[id]!;
+      final existing = index.lookupImage(id);
+      final iconNeeded = needsItemImageFetch(
+        existing: existing,
+        cacheDir: cacheDir,
+        resourceId: id,
       );
-      if (!iconFile.existsSync() && seenUrls.add('icon::${entry.iconUrl}')) {
-        downloadTodo.add(_HoYoWikiDownloadItem(id: id, url: entry.iconUrl));
+      // 既有使用者升級 backfill：角色已快取詳情但 luckdraw 尚未評估（null）時，
+      // 強制重抓一次詳情以評估 hasLuckdraw。評估後變定值，下次更新不再重抓。
+      final luckdrawUnevaluated =
+          kind == kItemKindCharacter &&
+          existing != null &&
+          existing.hasLuckdraw == null;
+      for (final lang in entry.value) {
+        final detailMissing =
+            kind != kItemKindItem &&
+            !(existing?.detailByLang.containsKey(lang) ?? false);
+        if (iconNeeded || detailMissing || luckdrawUnevaluated) {
+          worklist.add((id, kind, lang));
+        }
       }
     }
-
-    final initialIds = uniquePairs
-        .map((p) => index.lookupId(name: p.$1, lang: p.$2))
-        .whereType<String>()
-        .toSet();
-    for (final id in initialIds) {
-      final e = index.lookupEntry(id);
-      if (e != null) enqueueDownloadsForEntry(id, e);
-    }
-
-    // 三段加起來都沒工作就直接結束。
-    final totalInitial =
-        searchTodo.length + entryTodo.length + downloadTodo.length;
-    if (totalInitial == 0) return downloaded;
+    if (worklist.isEmpty) return downloaded;
 
     bool isAborted() => !ref.mounted || _cancelTriggered;
 
-    // (1) search 階段
-    if (searchTodo.isNotEmpty) {
-      var doneSearch = 0;
-      await runConcurrent<(String, String)>(
-        items: searchTodo,
-        concurrency: fetcher.searchConcurrency,
-        shouldAbort: isAborted,
-        worker: (pair) async {
-          try {
-            final hit = await fetcher.searchEntryId(
-              name: pair.$1,
-              lang: pair.$2,
+    // (3a) 逐 distinct lang 序列抓 catalog（icon 來源；同 lang 一次，無 race）。
+    final toDownload = <(int id, String iconUrl)>[];
+    final catalogByLang = <String, EncoreCatalog>{};
+    for (final lang in worklist.map((w) => w.$3).toSet()) {
+      if (isAborted()) return downloaded;
+      catalogByLang[lang] = await fetcher.fetchCatalog(
+        lang: lang,
+        kinds: worklist.where((w) => w.$3 == lang).map((w) => w.$2).toSet(),
+        client: client,
+      );
+    }
+
+    // (3b) 序列解析每個 id 的 icon（catalog 純查表、無 HTTP）；收集正取 id。
+    // icon 為 lang-agnostic，任一出現過的 lang 的 catalog 皆可查。
+    final positiveIds = <int>{};
+    for (final id in langsById.keys) {
+      final kind = kindById[id]!;
+      final existing = index.lookupImage(id);
+      if (!needsItemImageFetch(
+        existing: existing,
+        cacheDir: cacheDir,
+        resourceId: id,
+      )) {
+        if (existing?.hasIcon ?? false) positiveIds.add(id);
+        continue;
+      }
+      final lang = langsById[id]!.first;
+      final iconUrl = catalogByLang[lang]?.iconFor(kind: kind, id: id);
+      if (iconUrl != null) {
+        await indexNotifier.mergeIcon(
+          resourceId: id,
+          iconUrl: iconUrl,
+          noImage: false,
+          permanentNoImage: false,
+        );
+        toDownload.add((id, iconUrl));
+        positiveIds.add(id);
+      } else {
+        await indexNotifier.mergeIcon(
+          resourceId: id,
+          iconUrl: null,
+          noImage: true,
+          permanentNoImage: false,
+        );
+      }
+    }
+
+    // (3c) 並行：逐 (id, lang) 預抓詳情（icon 正取、非道具、該 lang 未抓），
+    // 並收集角色的 HD icon URL（256px）供 (3c-2) 升級。
+    // checking 進度對所有 worklist triple 計數（全負取情境也會 emit checking）。
+    final hdIconById = <int, String>{};
+    var checkedDone = 0;
+    await runConcurrent<(int, String, String)>(
+      items: worklist,
+      concurrency: fetcher.downloadConcurrency,
+      shouldAbort: isAborted,
+      worker: (item) async {
+        final (id, kind, lang) = item;
+        try {
+          final existingEntry = ref
+              .read(itemImageIndexProvider)
+              .lookupImage(id);
+          final detailAlready =
+              existingEntry?.detailByLang.containsKey(lang) ?? false;
+          // backfill：角色 luckdraw 尚未評估時，即使該 lang 詳情已存在也重抓一次。
+          final luckdrawUnevaluated =
+              kind == kItemKindCharacter && existingEntry?.hasLuckdraw == null;
+          if (positiveIds.contains(id) &&
+              kind != kItemKindItem &&
+              (!detailAlready || luckdrawUnevaluated)) {
+            final detail = await fetcher.fetchItemDetail(
+              resourceId: id,
+              kind: kind,
+              lang: lang,
               client: client,
             );
-            if (hit != null) {
-              await indexNotifier.setSearch(
-                name: pair.$1,
-                lang: pair.$2,
-                id: hit.id,
-                menuId: hit.menuId,
+            if (detail != null) {
+              await indexNotifier.mergeItemDetail(
+                resourceId: id,
+                lang: lang,
+                detail: ItemDetailL10n(
+                  intro: detail.intro,
+                  elementName: detail.elementName,
+                  weaponTypeName: detail.weaponTypeName,
+                  skins: [
+                    for (final s in detail.skins)
+                      ItemSkin(
+                        formationCard: s.formationCard,
+                        name: s.name,
+                        subDecName: s.subDecName,
+                        bgDescription: s.bgDescription,
+                      ),
+                  ],
+                ),
+                hasLuckdraw: detail.hasLuckdraw,
               );
-              if (!entryTodo.contains((id: hit.id, lang: pair.$2)) &&
-                  needRefetchEntry(
-                    ref.read(hoyowikiIndexProvider).lookupEntry(hit.id),
-                    hit.menuId,
-                    pair.$2,
-                  )) {
-                entryTodo.add((id: hit.id, lang: pair.$2));
+              // 角色 HD icon（256px，lang-agnostic）：多 lang 寫同值、冪等。
+              if (kind == kItemKindCharacter && detail.iconHd.isNotEmpty) {
+                hdIconById[id] = detail.iconHd;
               }
             }
-          } catch (e) {
-            _log.warning('hoyowiki search failed name=${pair.$1} err=$e');
           }
-          if (!ref.mounted) return;
-          doneSearch++;
-          state = state.copyWith(
-            progress: FetchingHoYoWiki(
-              phase: HoYoWikiPhase.searching,
-              doneCount: doneSearch,
-              totalCount: searchTodo.length,
-            ),
-          );
-        },
+        } catch (e) {
+          _log.warning('item detail fetch failed id=$id lang=$lang err=$e');
+        }
+        if (!ref.mounted) return;
+        checkedDone++;
+        state = state.copyWith(
+          progress: FetchingItemImages(
+            phase: ItemImagePhase.checking,
+            doneCount: checkedDone,
+            totalCount: worklist.length,
+          ),
+        );
+      },
+    );
+
+    // (3c-2) 角色 icon 升級為詳情提供的 256px HD 版（RoleHeadIconLarge）。序列、
+    // 在並行 3c 之後 → 無 race。只動 toDownload 內的角色（武器／道具沿用列表
+    // icon）；詳情無 iconHd（抓失敗或缺欄位）的角色自動退回列表 150px icon。
+    for (var i = 0; i < toDownload.length; i++) {
+      final hd = hdIconById[toDownload[i].$1];
+      if (hd == null) continue;
+      await indexNotifier.mergeIcon(
+        resourceId: toDownload[i].$1,
+        iconUrl: hd,
+        noImage: false,
+        permanentNoImage: false,
       );
-      if (isAborted()) return downloaded;
+      toDownload[i] = (toDownload[i].$1, hd);
     }
 
-    // (2) entry 階段
-    if (entryTodo.isNotEmpty) {
-      final entryList = entryTodo.toList();
-      var doneEntry = 0;
-      await runConcurrent<({String id, String lang})>(
-        items: entryList,
-        concurrency: fetcher.entryConcurrency,
-        shouldAbort: isAborted,
-        worker: (pair) async {
-          try {
-            final fetched = await fetcher.fetchEntryPage(
-              id: pair.id,
-              lang: pair.lang,
-              client: client,
+    // (4) 下載階段：只下載 icon（立繪走 dialog lazy）。
+    if (toDownload.isEmpty || isAborted()) return downloaded;
+    var downloadedDone = 0;
+    await runConcurrent<(int, String)>(
+      items: toDownload,
+      concurrency: fetcher.downloadConcurrency,
+      shouldAbort: isAborted,
+      worker: (item) async {
+        final (id, iconUrl) = item;
+        try {
+          final iconBytes = await fetcher.downloadImage(iconUrl, client);
+          if (iconBytes != null) {
+            final file = itemIconCacheFile(
+              baseDir: cacheDir,
+              resourceId: id,
+              url: iconUrl,
             );
-            await indexNotifier.mergeEntry(
-              id: pair.id,
-              lang: pair.lang,
-              fetched: fetched,
-            );
-            // enqueueDownloadsForEntry 會處理 icon + 各 lang 的 gallery 圖（URL 去重）。
-            final entry = ref.read(hoyowikiIndexProvider).lookupEntry(pair.id);
-            if (entry != null) enqueueDownloadsForEntry(pair.id, entry);
-          } catch (e) {
-            _log.warning(
-              'hoyowiki entry failed id=${pair.id} lang=${pair.lang} err=$e',
-            );
+            await writeImageFileAtomic(file, iconBytes);
+            indexNotifier.bumpCacheRevision();
+            downloaded++;
           }
-          if (!ref.mounted) return;
-          doneEntry++;
-          state = state.copyWith(
-            progress: FetchingHoYoWiki(
-              phase: HoYoWikiPhase.fetchingEntries,
-              doneCount: doneEntry,
-              totalCount: entryList.length,
-            ),
-          );
-        },
-      );
-      if (isAborted()) return downloaded;
-    }
-
-    // (3) download 階段
-    if (downloadTodo.isNotEmpty) {
-      var doneDownload = 0;
-      await runConcurrent<_HoYoWikiDownloadItem>(
-        items: downloadTodo,
-        concurrency: fetcher.downloadConcurrency,
-        shouldAbort: isAborted,
-        worker: (item) async {
-          try {
-            final bytes = await fetcher.downloadImage(item.url, client);
-            if (bytes != null) {
-              final file = hoyowikiIconCacheFile(
-                baseDir: cacheDir,
-                id: item.id,
-                url: item.url,
-              );
-              await file.writeAsBytes(bytes, flush: true);
-              indexNotifier.bumpCacheRevision();
-              downloaded++;
-            }
-          } catch (e) {
-            _log.warning(
-              'hoyowiki download failed url=${sanitizeUrl(item.url)} err=$e',
-            );
-          }
-          if (!ref.mounted) return;
-          doneDownload++;
-          state = state.copyWith(
-            progress: FetchingHoYoWiki(
-              phase: HoYoWikiPhase.downloading,
-              doneCount: doneDownload,
-              totalCount: downloadTodo.length,
-            ),
-          );
-        },
-      );
-      if (isAborted()) return downloaded;
-    }
+        } catch (e) {
+          _log.warning('item icon download failed id=$id err=$e');
+        }
+        if (!ref.mounted) return;
+        downloadedDone++;
+        state = state.copyWith(
+          progress: FetchingItemImages(
+            phase: ItemImagePhase.downloading,
+            doneCount: downloadedDone,
+            totalCount: toDownload.length,
+          ),
+        );
+      },
+    );
     return downloaded;
   }
 
-  /// 測試用：略過 banner fetch 直接跑 hoyowiki 階段（用既有 state.byUid）。
+  /// 測試用：略過 banner fetch 直接跑 item image 階段（用既有 state.byUid）。
   @visibleForTesting
-  Future<void> debugRunHoYoWikiOnly() async {
+  Future<void> debugRunItemImagesOnly() async {
     _cancelTriggered = false;
     final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
     try {
-      await _fetchHoYoWiki(cancellable.client);
+      await _fetchItemImages(cancellable.client);
     } finally {
       cancellable.client.close();
     }
   }
 
+  /// 測試用：直接塞一筆帳號到 state.byUid（不走 bootstrap/storage）。生產勿用。
+  @visibleForTesting
+  void debugSeedAccount(BannerStorage data) {
+    final next = Map<String, BannerStorage>.from(state.byUid)
+      ..[data.playerId] = data;
+    state = state.copyWith(byUid: next, activeUid: data.playerId);
+  }
+
   /// 將各種 exception 轉換成對應的 [UpdateError] 子類，供 UI 顯示。
   UpdateError _friendlyError(Object e) => switch (e) {
     _NoRecordsException() => const UpdateErrorNoRecords(),
+    GachaApiException(:final code, :final message) => UpdateErrorGachaFailed(
+      code,
+      message,
+    ),
     FormatException(:final message) => UpdateErrorOther(message),
-    RateLimitedException() => const UpdateErrorRateLimited(),
-    ApiErrorException(:final message) => UpdateErrorServer(message),
-    AuthExpiredException() => const UpdateErrorAuthExpired(),
     http.ClientException(:final message, :final uri) => UpdateErrorOther(
       uri != null ? '$message ($uri)' : message,
     ),
@@ -1025,16 +1152,4 @@ class GachaRepository extends Notifier<GachaState> {
   void debugSetProgress(UpdateProgress p) {
     state = state.copyWith(progress: p);
   }
-}
-
-/// HoYoWiki 下載佇列的單一工作項。
-class _HoYoWikiDownloadItem {
-  /// 建立 [_HoYoWikiDownloadItem]。
-  const _HoYoWikiDownloadItem({required this.id, required this.url});
-
-  /// HoYoWiki entry_page_id。
-  final String id;
-
-  /// 圖片 URL。
-  final String url;
 }

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/pages/app_shell.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/pages/banner_page.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/pages/overview_page.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/pages/contributors_page.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/pages/settings_page.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/pages/app_shell.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/pages/banner_page.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/pages/overview_page.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/pages/contributors_page.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/pages/settings_page.dart';
 
 /// 建立並回傳 app 的 [GoRouter]，定義所有頁面路由。
 GoRouter buildAppRouter() => GoRouter(
@@ -18,7 +18,7 @@ GoRouter buildAppRouter() => GoRouter(
         GoRoute(
           path: '/banner/:type',
           pageBuilder: (_, state) =>
-              _fade(BannerPage(gachaType: state.pathParameters['type']!)),
+              _fade(BannerPage(cardPoolType: state.pathParameters['type']!)),
         ),
         GoRoute(
           path: '/contributors',

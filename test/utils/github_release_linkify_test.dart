@@ -1,9 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/utils/github_release_linkify.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/app_repo.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/github_release_linkify.dart';
 
 void main() {
-  const base = 'https://github.com/GoneTone/genshin-impact-wish-gacha-analyzer';
+  const base = AppRepo.githubUrl;
 
   group('linkifyGithubReferences — 網址型', () {
     test('PR 連結轉成 #N', () {
@@ -59,8 +60,8 @@ void main() {
   group('linkifyGithubReferences — 不該動的情況', () {
     test('非 GitHub 網址維持原樣', () {
       expect(
-        linkifyGithubReferences('https://genshininfo.reh.tw/archives/97'),
-        'https://genshininfo.reh.tw/archives/97',
+        linkifyGithubReferences('https://example.com/archives/97'),
+        'https://example.com/archives/97',
       );
     });
 

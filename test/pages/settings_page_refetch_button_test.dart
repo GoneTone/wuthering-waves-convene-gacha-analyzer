@@ -7,19 +7,19 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/app_info.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/pages/settings_page.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/cancellable_http_client.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_capture.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_repository.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/settings.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/pages/settings_page.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 
 class _NullCapture implements GachaCapture {
   @override
@@ -44,10 +44,10 @@ Future<ProviderContainer> _setupContainer({
           cancel: () {},
         ),
       ),
-      hoyowikiIndexStorageProvider.overrideWithValue(
-        HoYoWikiIndexStorage(tempDir),
+      itemImageIndexStorageProvider.overrideWithValue(
+        ItemImageIndexStorage(tempDir),
       ),
-      hoyowikiCacheDirProvider.overrideWithValue(tempDir),
+      itemImageCacheDirProvider.overrideWithValue(tempDir),
       appVersionProvider.overrideWithValue('0.0.0-test'),
     ],
   );
@@ -79,7 +79,7 @@ void main() {
     if (await tempDir.exists()) await tempDir.delete(recursive: true);
   });
 
-  testWidgets('無祈願紀錄：按鈕 disabled', (tester) async {
+  testWidgets('無喚取紀錄：按鈕 disabled', (tester) async {
     SharedPreferences.setMockInitialValues({});
     late ProviderContainer container;
     await tester.runAsync(() async {
@@ -110,25 +110,28 @@ void main() {
     await tester.runAsync(() async {
       await storage.save(
         BannerStorage(
-          uid: '1001',
+          playerId: '1001',
+          languageCode: 'en',
           lastUpdated: DateTime.utc(2026, 5, 24),
           banners: {
-            '301': [
+            '1': [
               GachaRecord(
-                id: '1',
-                uid: '1001',
-                gachaType: '301',
+                resourceId: 1301,
+                qualityLevel: 5,
+                resourceType: 'Character',
+                cardPoolType: '1',
                 name: 'Hu Tao',
-                itemType: 'Character',
-                rankType: 5,
+                count: 1,
                 time: DateTime(2026, 5, 24),
-                lang: 'en-us',
               ),
             ],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );
@@ -151,25 +154,28 @@ void main() {
     await tester.runAsync(() async {
       await storage.save(
         BannerStorage(
-          uid: '1001',
+          playerId: '1001',
+          languageCode: 'en',
           lastUpdated: DateTime.utc(2026, 5, 24),
           banners: {
-            '301': [
+            '1': [
               GachaRecord(
-                id: '1',
-                uid: '1001',
-                gachaType: '301',
+                resourceId: 1301,
+                qualityLevel: 5,
+                resourceType: 'Character',
+                cardPoolType: '1',
                 name: 'Hu Tao',
-                itemType: 'Character',
-                rankType: 5,
+                count: 1,
                 time: DateTime(2026, 5, 24),
-                lang: 'en-us',
               ),
             ],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );

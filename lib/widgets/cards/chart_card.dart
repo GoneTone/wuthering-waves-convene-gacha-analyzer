@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/inline_section_title.dart';
 
 /// 包裹圖表的統一卡片容器，含標題列與可選圖例。
 class ChartCard extends StatelessWidget {
@@ -49,18 +50,9 @@ class ChartCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: fixedHeight ? MainAxisSize.max : MainAxisSize.min,
         children: [
-          if (icon == null)
-            titleText
-          else
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(icon, size: 20, color: tokens.textPrimary),
-                const SizedBox(width: AppSpacing.s),
-                Flexible(child: titleText),
-              ],
-            ),
+          icon == null
+              ? titleText
+              : InlineSectionTitle(icon: icon!, title: title),
           const SizedBox(height: AppSpacing.l),
           if (fixedHeight) Expanded(child: chart) else chart,
           if (legend != null) ...[

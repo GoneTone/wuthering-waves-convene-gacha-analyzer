@@ -3,26 +3,25 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_filter.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_row.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/data/sortable_table.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_row.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 
-GachaRecord _r({required String id, required int rank, required String name}) =>
+GachaRecord _r({required int seq, required int rank, required String name}) =>
     GachaRecord(
-      id: id,
-      uid: '1',
-      gachaType: '301',
+      resourceId: seq,
+      qualityLevel: rank,
+      resourceType: '角色',
+      cardPoolType: '1',
       name: name,
-      itemType: '角色',
-      rankType: rank,
-      time: DateTime(2025, 1, int.parse(id)),
-      lang: 'zh-tw',
+      count: 1,
+      time: DateTime(2025, 1, seq),
     );
 
 /// 建立含 [UncontrolledProviderScope] 的測試包裝 widget。
@@ -46,10 +45,10 @@ Widget _wrap(
 /// 建立測試用 [ProviderContainer]，override 需要 main() 注入的 provider。
 ProviderContainer _makeContainer(Directory tempDir) => ProviderContainer(
   overrides: [
-    hoyowikiIndexStorageProvider.overrideWithValue(
-      HoYoWikiIndexStorage(tempDir),
+    itemImageIndexStorageProvider.overrideWithValue(
+      ItemImageIndexStorage(tempDir),
     ),
-    hoyowikiCacheDirProvider.overrideWithValue(tempDir),
+    itemImageCacheDirProvider.overrideWithValue(tempDir),
   ],
 );
 
@@ -73,11 +72,11 @@ void main() {
     tester,
   ) async {
     final records = [
-      _r(id: '5', rank: 5, name: 'A'), // accent != null → _Pill
-      _r(id: '4', rank: 4, name: 'B'), // accent != null → _Pill
-      _r(id: '3', rank: 3, name: 'C'), // accent == null → 純 Text 分支
+      _r(seq: 5, rank: 5, name: 'A'), // accent != null → _Pill
+      _r(seq: 4, rank: 4, name: 'B'), // accent != null → _Pill
+      _r(seq: 3, rank: 3, name: 'C'), // accent == null → 純 Text 分支
     ];
-    final rows = buildRecordRows(records, index: const HoYoWikiIndex.empty());
+    final rows = buildRecordRows(records);
     await tester.pumpWidget(
       _wrap(
         SortableTable(
@@ -102,11 +101,11 @@ void main() {
     tester,
   ) async {
     final records = [
-      _r(id: '5', rank: 5, name: 'A'),
-      _r(id: '4', rank: 4, name: 'B'),
-      _r(id: '3', rank: 3, name: 'C'),
+      _r(seq: 5, rank: 5, name: 'A'),
+      _r(seq: 4, rank: 4, name: 'B'),
+      _r(seq: 3, rank: 3, name: 'C'),
     ];
-    final rows = buildRecordRows(records, index: const HoYoWikiIndex.empty());
+    final rows = buildRecordRows(records);
     await tester.pumpWidget(
       _wrap(
         SortableTable(
@@ -131,9 +130,9 @@ void main() {
   ) async {
     final records = List.generate(
       45,
-      (i) => _r(id: '${i + 1}', rank: 4, name: 'r$i'),
+      (i) => _r(seq: i + 1, rank: 4, name: 'r$i'),
     );
-    final rows = buildRecordRows(records, index: const HoYoWikiIndex.empty());
+    final rows = buildRecordRows(records);
     await tester.pumpWidget(
       _wrap(
         SortableTable(
@@ -153,8 +152,8 @@ void main() {
   });
 
   testWidgets('表頭點擊呼叫 onSortColumnTapped(對應欄)', (tester) async {
-    final records = [_r(id: '1', rank: 5, name: 'A')];
-    final rows = buildRecordRows(records, index: const HoYoWikiIndex.empty());
+    final records = [_r(seq: 1, rank: 5, name: 'A')];
+    final rows = buildRecordRows(records);
     SortColumn? tapped;
     await tester.pumpWidget(
       _wrap(
@@ -181,8 +180,8 @@ void main() {
   });
 
   testWidgets('當前排序欄顯示 arrow_downward；其他欄維持 unfold_more', (tester) async {
-    final records = [_r(id: '1', rank: 5, name: 'A')];
-    final rows = buildRecordRows(records, index: const HoYoWikiIndex.empty());
+    final records = [_r(seq: 1, rank: 5, name: 'A')];
+    final rows = buildRecordRows(records);
     await tester.pumpWidget(
       _wrap(
         SortableTable(
@@ -202,11 +201,11 @@ void main() {
     expect(find.byIcon(Icons.unfold_more), findsNWidgets(5));
   });
 
-  testWidgets('類型欄顯示 itemTypeKeyLabel 結果（fallback 原始字串）', (tester) async {
-    // _r 產的 record.itemType = '角色'；empty index → itemTypeKey = '角色'（fallback）
-    // itemTypeKeyLabel('角色', l) 原樣回傳 '角色'
-    final records = [_r(id: '1', rank: 5, name: 'A')];
-    final rows = buildRecordRows(records, index: const HoYoWikiIndex.empty());
+  testWidgets('類型欄顯示 itemTypeKeyLabel 結果（canonical kind 標籤）', (tester) async {
+    // _r 產的 record.resourceType = '角色' → itemTypeKeyOf 映射 kind:character；
+    // itemTypeKeyLabel('kind:character', l) 回傳本地化 '角色'。
+    final records = [_r(seq: 1, rank: 5, name: 'A')];
+    final rows = buildRecordRows(records);
     await tester.pumpWidget(
       _wrap(
         SortableTable(
@@ -224,11 +223,11 @@ void main() {
 
   testWidgets('每列名稱欄前顯示 GachaItemIcon', (tester) async {
     final records = [
-      _r(id: '5', rank: 5, name: 'A'),
-      _r(id: '4', rank: 4, name: 'B'),
-      _r(id: '3', rank: 3, name: 'C'),
+      _r(seq: 5, rank: 5, name: 'A'),
+      _r(seq: 4, rank: 4, name: 'B'),
+      _r(seq: 3, rank: 3, name: 'C'),
     ];
-    final rows = buildRecordRows(records, index: const HoYoWikiIndex.empty());
+    final rows = buildRecordRows(records);
     await tester.pumpWidget(
       _wrap(
         SortableTable(

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
 /// Logger 實例（檔案總管 reveal）。
 final _log = Logger('ui.reveal');

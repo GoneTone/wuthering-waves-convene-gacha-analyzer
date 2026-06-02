@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/settings_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
 
 /// App 設定的 Riverpod notifier，負責從磁碟讀寫 [AppSettings]。
 class SettingsNotifier extends Notifier<AppSettings> {

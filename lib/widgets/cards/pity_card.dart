@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_pity.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_pity.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 
 /// 顯示單一稀有度的保底進度卡片，包含抽數、進度條與副標題。
 class PityCard extends StatefulWidget {
@@ -13,7 +13,6 @@ class PityCard extends StatefulWidget {
     required this.rank,
     required this.pity,
     required this.accent,
-    this.isEndedPool = false,
   });
 
   /// 卡片標籤（顯示於最上方，轉 uppercase）。
@@ -28,9 +27,6 @@ class PityCard extends StatefulWidget {
 
   /// 左側邊條與進度條的主色。
   final Color accent;
-
-  /// 新手池 20 抽結束 → 顯示「已結束」狀態。
-  final bool isEndedPool;
 
   @override
   State<PityCard> createState() => _PityCardState();
@@ -86,13 +82,7 @@ class _PityCardState extends State<PityCard>
           const SizedBox(height: AppSpacing.xs),
           Text(
             l.pityCurrent(p.current, p.threshold),
-            style: TextStyle(
-              fontSize: AppFontSize.display,
-              fontWeight: FontWeight.w800,
-              color: tokens.textPrimary,
-              fontFeatures: const [FontFeature.tabularFigures()],
-              height: 1.1,
-            ),
+            style: displayNumberStyle(tokens),
           ),
           const SizedBox(height: AppSpacing.s),
           _ProgressBar(
@@ -107,7 +97,6 @@ class _PityCardState extends State<PityCard>
             phase: phase,
             pity: p,
             rank: widget.rank,
-            isEndedPool: widget.isEndedPool,
             tokens: tokens,
             l: l,
           ),
@@ -118,7 +107,6 @@ class _PityCardState extends State<PityCard>
 
   /// 依 [Pity] 狀態判斷目前顯示階段。
   _Phase _phase(Pity p) {
-    if (widget.isEndedPool) return _Phase.ended;
     if (p.progress >= 1.0 || p.distance == 0) return _Phase.guaranteed;
     // 5★ 池（threshold 90）：剩餘 20 抽以內顯示「快保底」。
     // 4★ 池（threshold 10）等較小的池子用 30% 作為比例門檻。
@@ -129,7 +117,7 @@ class _PityCardState extends State<PityCard>
 }
 
 /// 保底卡片的顯示階段，決定顏色與副標題文案。
-enum _Phase { normal, close, guaranteed, ended }
+enum _Phase { normal, close, guaranteed }
 
 /// 保底進度條；`close` phase 時加入呼吸閃爍動畫。
 class _ProgressBar extends StatelessWidget {
@@ -202,7 +190,6 @@ class _Subtitle extends StatelessWidget {
     required this.phase,
     required this.pity,
     required this.rank,
-    required this.isEndedPool,
     required this.tokens,
     required this.l,
   });
@@ -216,9 +203,6 @@ class _Subtitle extends StatelessWidget {
   /// 稀有度，用於「暫無 N★」文案。
   final int rank;
 
-  /// 是否為已結束的新手池。
-  final bool isEndedPool;
-
   /// 主題 token。
   final GachaTokens tokens;
 
@@ -230,7 +214,6 @@ class _Subtitle extends StatelessWidget {
     final theme = Theme.of(context);
 
     final (text, color) = switch (phase) {
-      _Phase.ended => (l.pityBeginnerEnded, tokens.textMuted),
       _Phase.guaranteed => (l.pityGuaranteed, tokens.stateWarning),
       _Phase.close => (l.pityClose(pity.distance), tokens.stateWarning),
       _Phase.normal =>

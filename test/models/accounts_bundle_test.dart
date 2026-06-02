@@ -1,66 +1,55 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/accounts_bundle.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 
-GachaRecord _r(String id, {String uid = '1'}) => GachaRecord(
-  id: id,
-  uid: uid,
-  gachaType: '301',
-  name: '夜蘭',
-  itemType: '角色',
-  rankType: 5,
-  time: DateTime.utc(2025, 4, 1, 14, 23),
-  lang: 'zh-tw',
+GachaRecord _r(int id) => GachaRecord(
+  resourceId: id,
+  qualityLevel: 5,
+  resourceType: '角色',
+  cardPoolType: '1',
+  name: '達妮婭',
+  count: 1,
+  time: DateTime(2026, 5, 21, 10, 39, 3),
+);
+
+BannerStorage _bs(String playerId) => BannerStorage(
+  playerId: playerId,
+  languageCode: 'zh-Hant',
+  lastUpdated: DateTime.utc(2026, 5, 21),
+  banners: {
+    '1': [_r(1211)],
+  },
 );
 
 void main() {
-  test(
-    'toJson / fromJson roundtrip preserves order, alias, last_active_uid',
-    () {
-      final bundle = AccountsBundle(
-        exportedAt: DateTime.utc(2026, 5, 12, 8, 30),
-        appVersion: '1.2.3',
-        lastActiveUid: 'A',
-        accounts: [
-          ExportedAccount(
-            alias: '主號',
-            data: BannerStorage(
-              uid: 'A',
-              lastUpdated: DateTime.utc(2026, 5, 12, 7, 55),
-              banners: {
-                '301': [_r('1', uid: 'A')],
-              },
-            ),
-          ),
-          ExportedAccount(
-            data: BannerStorage(
-              uid: 'B',
-              lastUpdated: DateTime.utc(2026, 5, 11, 20, 11),
-              banners: const {'301': []},
-            ),
-          ),
-        ],
-      );
+  test('schemaVersion 為 2', () {
+    expect(AccountsBundle.currentSchemaVersion, 2);
+  });
 
-      final json = bundle.toJson();
-      final back = AccountsBundle.fromJson(json);
+  test('toJson / fromJson roundtrip 保留順序、alias、last_active_uid', () {
+    final bundle = AccountsBundle(
+      exportedAt: DateTime.utc(2026, 5, 21, 8, 30),
+      appVersion: '2.0.0',
+      lastActiveUid: 'A',
+      accounts: [
+        ExportedAccount(alias: '主號', data: _bs('A')),
+        ExportedAccount(data: _bs('B')),
+      ],
+    );
+    final back = AccountsBundle.fromJson(bundle.toJson());
+    expect(back.schemaVersion, 2);
+    expect(back.lastActiveUid, 'A');
+    expect(back.accounts.map((a) => a.data.playerId).toList(), ['A', 'B']);
+    expect(back.accounts[0].alias, '主號');
+    expect(back.accounts[1].alias, isNull);
+  });
 
-      expect(back.schemaVersion, 1);
-      expect(back.lastActiveUid, 'A');
-      expect(back.accounts.map((a) => a.data.uid).toList(), ['A', 'B']);
-      expect(back.accounts[0].alias, '主號');
-      expect(back.accounts[1].alias, isNull);
-      expect(back.accounts[0].data.banners['301']!.first.name, '夜蘭');
-    },
-  );
-
-  test('schema_version > 1 throws with "update the app" hint', () {
+  test('schema_version != 2（不相容的舊備份 version=1）→ 友善訊息', () {
     final json = {
-      'schema_version': 999,
-      'exported_at': '2026-05-12T00:00:00.000Z',
+      'schema_version': 1,
+      'exported_at': '2026-05-21T00:00:00.000Z',
       'app_version': '1.0.0',
-      'last_active_uid': null,
       'accounts': <Map<String, dynamic>>[],
     };
     expect(
@@ -69,13 +58,25 @@ void main() {
         isA<FormatException>().having(
           (e) => e.message,
           'message',
-          contains('update the app'),
+          contains('不相容'),
         ),
       ),
     );
   });
 
-  test('missing schema_version throws', () {
+  test('schema_version 為較新版本（999）→ 同樣拒絕', () {
+    final json = {
+      'schema_version': 999,
+      'exported_at': '2026-05-21T00:00:00.000Z',
+      'accounts': <Map<String, dynamic>>[],
+    };
+    expect(
+      () => AccountsBundle.fromJson(json),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test('缺 schema_version → 拋例外', () {
     expect(
       () => AccountsBundle.fromJson({'accounts': []}),
       throwsA(
@@ -88,46 +89,35 @@ void main() {
     );
   });
 
-  test('accounts must be an array', () {
+  test('accounts 非陣列 → 拋例外', () {
     expect(
-      () => AccountsBundle.fromJson({'schema_version': 1, 'accounts': 'nope'}),
+      () => AccountsBundle.fromJson({'schema_version': 2, 'accounts': 'nope'}),
       throwsA(isA<FormatException>()),
     );
   });
 
-  test('duplicate UID throws', () {
-    final accountJson = BannerStorage(
-      uid: 'X',
-      lastUpdated: DateTime.utc(2026),
-      banners: const {'301': []},
-    ).toJson();
+  test('重複 playerId → 拋例外', () {
+    final accountJson = _bs('X').toJson();
     expect(
       () => AccountsBundle.fromJson({
-        'schema_version': 1,
+        'schema_version': 2,
         'accounts': [accountJson, accountJson],
       }),
       throwsA(
         isA<FormatException>().having(
           (e) => e.message,
           'message',
-          contains('Duplicate UID'),
+          contains('Duplicate'),
         ),
       ),
     );
   });
 
-  test('alias empty string is read back as null', () {
+  test('alias 空白字串讀回為 null', () {
     final bundle = AccountsBundle.fromJson({
-      'schema_version': 1,
+      'schema_version': 2,
       'accounts': [
-        {
-          ...BannerStorage(
-            uid: 'A',
-            lastUpdated: DateTime.utc(2026),
-            banners: const {'301': []},
-          ).toJson(),
-          'alias': '   ',
-        },
+        {..._bs('A').toJson(), 'alias': '   '},
       ],
     });
     expect(bundle.accounts.single.alias, isNull);

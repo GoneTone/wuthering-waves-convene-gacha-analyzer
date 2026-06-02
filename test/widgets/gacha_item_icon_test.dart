@@ -4,27 +4,26 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_fetcher.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/app_theme.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/share/preloaded_hoyowiki_images.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/preloaded_item_images.dart';
 
 GachaRecord _rec({
+  required int resourceId,
   required String name,
-  required String gachaType,
-  int rankType = 5,
+  int qualityLevel = 5,
+  String resourceType = '角色',
 }) => GachaRecord(
-  id: '1',
-  uid: '801057625',
-  gachaType: gachaType,
+  resourceId: resourceId,
+  qualityLevel: qualityLevel,
+  resourceType: resourceType,
+  cardPoolType: '1',
   name: name,
-  itemType: 'Character',
-  rankType: rankType,
+  count: 1,
   time: DateTime(2026, 5, 23),
-  lang: 'en-us',
 );
 
 Widget _wrap(Widget child, ProviderContainer container) =>
@@ -44,25 +43,19 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('gacha_item_icon_test_');
     container = ProviderContainer(
       overrides: [
-        hoyowikiIndexStorageProvider.overrideWithValue(
-          HoYoWikiIndexStorage(tempDir),
+        itemImageIndexStorageProvider.overrideWithValue(
+          ItemImageIndexStorage(tempDir),
         ),
-        hoyowikiCacheDirProvider.overrideWithValue(tempDir),
+        itemImageCacheDirProvider.overrideWithValue(tempDir),
       ],
     );
     addTearDown(container.dispose);
-    await container.read(hoyowikiIndexProvider.notifier).waitForLoad();
+    await container.read(itemImageIndexProvider.notifier).waitForLoad();
   });
 
   tearDown(() async {
-    // 清 process-wide ImageCache（含 live image listeners），避免「完整 chain」
-    // 那一 case 留下的 Image.file 背景 codec 在 tempDir 被刪後仍嘗試讀檔，
-    // 害下一個 testWidgets 收到 ImageResourceService 拋的「Codec failed to
-    // produce an image」。Linux CI 上 tempDir.delete 必定成功，曾觀察到 flaky。
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
-
-    // Windows 上 Image.file 可能持有檔案 handle，忽略刪除失敗。
     if (await tempDir.exists()) {
       try {
         await tempDir.delete(recursive: true);
@@ -70,25 +63,11 @@ void main() {
     }
   });
 
-  testWidgets('頌願 gachaType → SizedBox.shrink', (tester) async {
+  testWidgets('空 index → placeholder（武器/道具亦同）', (tester) async {
     await tester.pumpWidget(
       _wrap(
         GachaItemIcon(
-          record: _rec(name: 'OdesItem', gachaType: '2000'),
-          size: 20,
-        ),
-        container,
-      ),
-    );
-    final box = tester.getSize(find.byType(GachaItemIcon));
-    expect(box, Size.zero);
-  });
-
-  testWidgets('空 index → placeholder', (tester) async {
-    await tester.pumpWidget(
-      _wrap(
-        GachaItemIcon(
-          record: _rec(name: 'Hu Tao', gachaType: '301'),
+          record: _rec(resourceId: 111, name: 'SomeWeapon', resourceType: '武器'),
           size: 20,
         ),
         container,
@@ -101,80 +80,40 @@ void main() {
     expect(size.height, 20);
   });
 
-  testWidgets('有 id 無 entry → placeholder', (tester) async {
-    final notifier = container.read(hoyowikiIndexProvider.notifier);
-    // setSearch 涉及真實檔案 I/O（atomic rename），需在 runAsync 內執行。
-    await tester.runAsync(
-      () => notifier.setSearch(
-        name: 'Hu Tao',
-        lang: 'en-us',
-        id: '111',
-        menuId: 2,
-      ),
-    );
-    await tester.pumpWidget(
-      _wrap(
-        GachaItemIcon(
-          record: _rec(name: 'Hu Tao', gachaType: '301'),
-          size: 20,
-        ),
-        container,
-      ),
-    );
-    expect(find.byType(Image), findsNothing);
-  });
-
   testWidgets('有 entry 但 cache 檔不存在 → placeholder', (tester) async {
-    final notifier = container.read(hoyowikiIndexProvider.notifier);
     await tester.runAsync(() async {
-      await notifier.setSearch(
-        name: 'Hu Tao',
-        lang: 'en-us',
-        id: '111',
-        menuId: 2,
-      );
-      await notifier.mergeEntry(
-        id: '111',
-        lang: 'en-us',
-        fetched: const HoYoWikiEntryFetched(
-          iconUrl: 'https://x/icon.png',
-          page: HoYoWikiPageData(gallery: null, desc: '', tags: []),
-        ),
-      );
+      await container
+          .read(itemImageIndexProvider.notifier)
+          .mergeIcon(
+            resourceId: 111,
+            iconUrl: 'https://x/icon.png',
+            noImage: false,
+            permanentNoImage: false,
+          );
     });
     await tester.pumpWidget(
       _wrap(
-        GachaItemIcon(
-          record: _rec(name: 'Hu Tao', gachaType: '301'),
-          size: 20,
-        ),
+        GachaItemIcon(record: _rec(resourceId: 111, name: 'Hu Tao'), size: 20),
         container,
       ),
     );
     expect(find.byType(Image), findsNothing);
   });
 
-  testWidgets('完整 chain（index + cache 檔在） → 顯示 Image', (tester) async {
-    final notifier = container.read(hoyowikiIndexProvider.notifier);
-    final iconUrl = 'https://x/icon.png';
+  testWidgets('完整 chain（index + cache 檔在）→ 顯示 Image', (tester) async {
+    const iconUrl = 'https://x/icon.png';
     await tester.runAsync(() async {
-      await notifier.setSearch(
-        name: 'Hu Tao',
-        lang: 'en-us',
-        id: '111',
-        menuId: 2,
-      );
-      await notifier.mergeEntry(
-        id: '111',
-        lang: 'en-us',
-        fetched: HoYoWikiEntryFetched(
-          iconUrl: iconUrl,
-          page: const HoYoWikiPageData(gallery: null, desc: '', tags: []),
-        ),
-      );
-      final cacheFile = hoyowikiIconCacheFile(
+      await container
+          .read(itemImageIndexProvider.notifier)
+          .mergeIcon(
+            resourceId: 111,
+            iconUrl: iconUrl,
+            noImage: false,
+            permanentNoImage: false,
+          );
+      final cacheFile = itemIconCacheFile(
         baseDir: tempDir,
-        id: '111',
+        resourceId: 111,
         url: iconUrl,
       );
       await cacheFile.writeAsBytes(_minimalPng());
@@ -184,7 +123,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           GachaItemIcon(
-            record: _rec(name: 'Hu Tao', gachaType: '301'),
+            record: _rec(resourceId: 111, name: 'Hu Tao'),
             size: 20,
           ),
           container,
@@ -195,25 +134,17 @@ void main() {
     expect(find.byType(Image), findsOneWidget);
   });
 
-  testWidgets('PreloadedHoYoWikiImages 命中 → 顯示 RawImage', (tester) async {
+  testWidgets('PreloadedItemImages 命中 → 顯示 RawImage', (tester) async {
     await tester.runAsync(() async {
-      final notifier = container.read(hoyowikiIndexProvider.notifier);
-      await notifier.setSearch(
-        name: 'Hu Tao',
-        lang: 'en-us',
-        id: '111',
-        menuId: 2,
-      );
-      await notifier.mergeEntry(
-        id: '111',
-        lang: 'en-us',
-        fetched: const HoYoWikiEntryFetched(
-          iconUrl: 'https://x/icon.png',
-          page: HoYoWikiPageData(gallery: null, desc: '', tags: []),
-        ),
-      );
+      await container
+          .read(itemImageIndexProvider.notifier)
+          .mergeIcon(
+            resourceId: 111,
+            iconUrl: 'https://x/icon.png',
+            noImage: false,
+            permanentNoImage: false,
+          );
 
-      // 用 PictureRecorder 合成最小 ui.Image（比 instantiateImageCodec 更穩定）。
       final recorder = ui.PictureRecorder();
       Canvas(recorder).drawRect(
         const Rect.fromLTWH(0, 0, 1, 1),
@@ -224,10 +155,10 @@ void main() {
 
       await tester.pumpWidget(
         _wrap(
-          PreloadedHoYoWikiImages(
-            images: {'111': img},
+          PreloadedItemImages(
+            images: {111: img},
             child: GachaItemIcon(
-              record: _rec(name: 'Hu Tao', gachaType: '301'),
+              record: _rec(resourceId: 111, name: 'Hu Tao'),
               size: 20,
             ),
           ),
@@ -253,9 +184,9 @@ void main() {
         _wrap(
           GachaItemIcon(
             record: _rec(
+              resourceId: rank,
               name: 'Missing $rank',
-              gachaType: '301',
-              rankType: rank,
+              qualityLevel: rank,
             ),
             size: 32,
           ),
@@ -279,7 +210,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         GachaItemIcon(
-          record: _rec(name: '夜蘭', gachaType: '301', rankType: 5),
+          record: _rec(resourceId: 1001, name: '夜蘭', qualityLevel: 5),
           size: 48,
           circular: true,
         ),
@@ -307,7 +238,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         GachaItemIcon(
-          record: _rec(name: '夜蘭', gachaType: '301', rankType: 5),
+          record: _rec(resourceId: 1001, name: '夜蘭', qualityLevel: 5),
           size: 48,
         ),
         container,

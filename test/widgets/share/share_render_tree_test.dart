@@ -5,18 +5,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/share_image_options.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/share_image_renderer.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/share/share_card.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/share/share_image_helper.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/share_image_options.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/share_image_renderer.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_image_helper.dart';
 
 // 自適應高度斷言用上下界（邏輯px × pixelRatio 3）：
 // 下界證明確有內容（非空白圖）；上界 = renderer 預設 maxHeight × pixelRatio，
-// 證明沒撞到上限被裁切。實測 overview 兩段大資料 < 3500 邏輯px。
+// 證明沒撞到上限被裁切。實測 overview 聚合單段資料 < 3500 邏輯px。
 const _minPngHeight = 600 * 3; // > 600 邏輯px 才算有實際內容
 const _maxPngHeight = 8000 * 3; // renderer maxHeight 上限 × pixelRatio
 
@@ -30,15 +30,14 @@ Future<ui.Image> _img() async {
   return recorder.endRecording().toImage(4, 4);
 }
 
-GachaRecord _r(String gt, int rank, String name) => GachaRecord(
-  id: '$name$rank${gt}_${DateTime.now().microsecondsSinceEpoch}',
-  uid: '800123456',
-  gachaType: gt,
+GachaRecord _r(String cpt, int rank, String name) => GachaRecord(
+  resourceId: name.hashCode & 0xffff,
+  qualityLevel: rank,
+  resourceType: rank == 5 ? '角色' : '武器',
+  cardPoolType: cpt,
   name: name,
-  itemType: rank == 5 ? '角色' : '武器',
-  rankType: rank,
+  count: 1,
   time: DateTime(2026, 5, 10, 12),
-  lang: 'zh-tw',
 );
 
 void main() {
@@ -58,13 +57,13 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('share_render_tree_test_');
     container = ProviderContainer(
       overrides: [
-        hoyowikiIndexStorageProvider.overrideWithValue(
-          HoYoWikiIndexStorage(tempDir),
+        itemImageIndexStorageProvider.overrideWithValue(
+          ItemImageIndexStorage(tempDir),
         ),
-        hoyowikiCacheDirProvider.overrideWithValue(tempDir),
+        itemImageCacheDirProvider.overrideWithValue(tempDir),
       ],
     );
-    await container.read(hoyowikiIndexProvider.notifier).waitForLoad();
+    await container.read(itemImageIndexProvider.notifier).waitForLoad();
   });
 
   tearDown(() async {
@@ -85,14 +84,9 @@ void main() {
         options: const ShareImageOptions(),
         uid: '800123456',
         updatedAt: DateTime(2026, 5, 18, 14, 30),
-        title: '角色活動祈願',
-        records: [
-          _r('301', 5, '那維萊特'),
-          _r('301', 4, '菲謝爾'),
-          _r('301', 3, '冷刃'),
-        ],
+        title: '角色活動喚取',
+        records: [_r('1', 5, '那維萊特'), _r('1', 4, '菲謝爾'), _r('1', 3, '冷刃')],
         targetRank: 5,
-        index: const HoYoWikiIndex.empty(),
       );
       final png = await renderWidgetToPng(
         buildShareRenderTree(
@@ -133,7 +127,7 @@ void main() {
     });
   });
 
-  testWidgets('buildShareRenderTree 渲染 overview 卡（兩段雙圓餅）不應拋錯', (t) async {
+  testWidgets('buildShareRenderTree 渲染 overview 卡（聚合單段雙圓餅）不應拋錯', (t) async {
     await t.runAsync(() async {
       final l = await AppLocalizations.delegate.load(const Locale('zh'));
       final card = ShareCard.overview(
@@ -144,10 +138,9 @@ void main() {
         uid: '800123456',
         updatedAt: DateTime(2026, 5, 18, 14, 30),
         banners: {
-          '301': [_r('301', 5, '那維萊特'), _r('301', 3, '冷刃')],
-          '2000': [_r('2000', 5, '某五星')],
+          '1': [_r('1', 5, '那維萊特'), _r('1', 3, '冷刃')],
+          '8': [_r('8', 5, '某五星')],
         },
-        index: const HoYoWikiIndex.empty(),
       );
       final png = await renderWidgetToPng(
         buildShareRenderTree(

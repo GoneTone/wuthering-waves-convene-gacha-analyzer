@@ -13,7 +13,7 @@
       }
     }
   },
-  "appName": "原神祈愿卡池分析",
+  "appName": "鸣潮唤取卡池分析",
   "actionUpdate": "更新数据",
   "actionCancel": "取消",
   "actionClose": "关闭",
@@ -21,24 +21,25 @@
   "actionNextPage": "下一页",
   "actionOpenFolder": "打开文件夹",
   "navOverview": "综合",
-  "navCharacter": "角色",
-  "navWeapon": "武器",
-  "navChronicled": "集录",
-  "navStandard": "常驻",
-  "navBeginner": "新手",
   "navSettings": "设置",
   "navContributors": "贡献者",
-  "gachaTypeCharacter": "角色活动祈愿",
-  "gachaTypeWeapon": "武器活动祈愿",
-  "gachaTypeChronicled": "集录祈愿",
-  "gachaTypeStandard": "常驻祈愿",
-  "gachaTypeBeginner": "新手祈愿",
-  "gachaTypeOdesEvent": "活动颂愿",
-  "gachaTypeOdesStandard": "常驻颂愿",
-  "navOdesEvent": "活动",
-  "navOdesStandard": "常驻",
-  "navSectionGacha": "祈愿",
-  "navSectionOdes": "颂愿",
+  "gachaTypeCharacter": "角色活动唤取",
+  "gachaTypeWeapon": "武器活动唤取",
+  "gachaTypeStandardCharacter": "角色常驻唤取",
+  "gachaTypeStandardWeapon": "武器常驻唤取",
+  "gachaTypeBeginner": "新手唤取",
+  "gachaTypeBeginnerChoice": "新手自选唤取",
+  "gachaTypeNewVoyageCharacter": "角色新旅唤取",
+  "gachaTypeNewVoyageWeapon": "武器新旅唤取",
+  "gachaTypeCharacterShort": "角色活动",
+  "gachaTypeWeaponShort": "武器活动",
+  "gachaTypeStandardCharacterShort": "角色常驻",
+  "gachaTypeStandardWeaponShort": "武器常驻",
+  "gachaTypeBeginnerShort": "新手",
+  "gachaTypeBeginnerChoiceShort": "新手自选",
+  "gachaTypeNewVoyageCharacterShort": "角色新旅",
+  "gachaTypeNewVoyageWeaponShort": "武器新旅",
+  "navSectionGacha": "唤取",
   "footerNotSynced": "尚未同步",
   "footerLastUpdated": "最后更新：{time}",
   "@footerLastUpdated": {
@@ -104,8 +105,7 @@
   "emptyNoSyncMessage": "点右上「更新数据」开始",
   "emptyNoRecords": "此卡池无记录",
   "emptyNoFilterMatch": "没有符合条件的记录",
-  "emptyNoOdesRecords": "暂无颂愿记录",
-  "emptyNoGachaRecords": "暂无祈愿记录",
+  "emptyNoGachaRecords": "暂无唤取记录",
   "statsTotal": "总抽数",
   "statsRankCount": "{star} 件数",
   "@statsRankCount": {
@@ -129,6 +129,7 @@
   "kindUnknown": "未知",
   "kindCharacter": "角色",
   "kindWeapon": "武器",
+  "kindItem": "道具",
   "tableTime": "时间",
   "tableName": "名称",
   "tableKind": "类型",
@@ -160,8 +161,8 @@
   "progressFetching": "抓取中…",
   "progressDone": "更新完成",
   "progressFailed": "失败",
-  "progressOpenGameHint": "请打开原神 → 卡池 → 历史记录",
-  "progressFallbackHint": "（先前的认证已失效，需重新拦截）",
+  "progressOpenGameHint": "请开启鸣潮 → 唤取 → 唤取记录",
+  "progressFallbackHint": "（先前的拦截已失效，需重新拦截）",
   "progressFetchingBanner": "正在抓取：{name}",
   "@progressFetchingBanner": {
     "placeholders": {
@@ -170,10 +171,13 @@
       }
     }
   },
-  "progressPageStatus": "第 {page} 页，已新增 {count} 条",
-  "@progressPageStatus": {
+  "progressPoolStatus": "第 {index} / {total} 个卡池，已新增 {count} 笔",
+  "@progressPoolStatus": {
     "placeholders": {
-      "page": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
         "type": "int"
       },
       "count": {
@@ -191,7 +195,7 @@
   },
   "progressDoneImagesSummary": "下载 {count} 张物品图片",
   "@progressDoneImagesSummary": {
-    "description": "Completion summary additional line: how many HoYoWiki item images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
     "placeholders": {
       "count": {
         "type": "int"
@@ -227,8 +231,8 @@
       }
     }
   },
-  "updateProgressHoyoWikiSearching": "搜索物品数据 {done}/{total}",
-  "@updateProgressHoyoWikiSearching": {
+  "updateProgressItemDownloading": "下载物品图片 {done}/{total}",
+  "@updateProgressItemDownloading": {
     "placeholders": {
       "done": {
         "type": "int"
@@ -238,8 +242,8 @@
       }
     }
   },
-  "updateProgressHoyoWikiFetchingEntries": "抓取物品详情 {done}/{total}",
-  "@updateProgressHoyoWikiFetchingEntries": {
+  "updateProgressItemFetchingData": "获取物品数据 {done}/{total}",
+  "@updateProgressItemFetchingData": {
     "placeholders": {
       "done": {
         "type": "int"
@@ -249,31 +253,10 @@
       }
     }
   },
-  "updateProgressHoyoWikiDownloading": "下载物品图片 {done}/{total}",
-  "@updateProgressHoyoWikiDownloading": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "errorAuthExpired": "认证持续失效，请重新登录游戏",
-  "errorRateLimited": "请求过于频繁，请稍后再试",
-  "errorServer": "服务器错误：{message}",
-  "@errorServer": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
+  "errorGachaFailed": "重新拦截后仍无法获取记录，服务器可能暂时异常，请稍后再试",
   "errorNoRecords": "此账号尚无任何卡池记录",
   "pageOverviewTitle": "综合数据（全卡池合计）",
-  "pageOverviewGachaSection": "祈愿综合",
-  "pageOverviewOdesSection": "颂愿综合",
+  "pageOverviewGachaSection": "唤取综合",
   "pageBannerRecordList": "记录列表",
   "rarityOverviewTitle": "{star} 一览",
   "@rarityOverviewTitle": {
@@ -358,7 +341,6 @@
       }
     }
   },
-  "pityBeginnerEnded": "已结束",
   "pityAverageInterval": "平均 {n} 抽出",
   "@pityAverageInterval": {
     "placeholders": {
@@ -451,24 +433,24 @@
   "pagerLast": "末页",
   "settingsClearActive": "清除当前账号数据",
   "settingsClearAll": "清除所有数据",
-  "settingsRefetchHoyoWikiImagesTitle": "强制重抓物品图片",
-  "@settingsRefetchHoyoWikiImagesTitle": {
-    "description": "Settings → Data management → button: forcibly clears all cached HoYoWiki item images (icon + header) and re-fetches them from scratch."
+  "settingsRefetchItemImagesTitle": "强制重抓物品图片",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
   },
-  "settingsRefetchHoyoWikiImagesEmpty": "尚无祈愿记录，无物品可重抓",
-  "@settingsRefetchHoyoWikiImagesEmpty": {
+  "settingsRefetchItemImagesEmpty": "尚无唤取记录，无物品可重抓",
+  "@settingsRefetchItemImagesEmpty": {
     "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
   },
-  "confirmRefetchHoyoWikiTitle": "强制重抓物品图片",
-  "@confirmRefetchHoyoWikiTitle": {
+  "confirmRefetchItemImagesTitle": "强制重抓物品图片",
+  "@confirmRefetchItemImagesTitle": {
     "description": "Title of the AlertDialog confirming the refetch action."
   },
-  "confirmRefetchHoyoWikiBody": "这会清空所有物品图片的本机缓存并重新从 HoYoWiki 抓取小图标。物品详情大图会在你下次打开该物品时自动下载。视物品数量可能耗费数分钟流量与时间。",
-  "@confirmRefetchHoyoWikiBody": {
+  "confirmRefetchItemImagesBody": "这会清除所有本机物品图片缓存并重新下载角色 icon。详情图会在下次打开物品详情时按需下载。依物品数量，可能花费数分钟的流量与时间。",
+  "@confirmRefetchItemImagesBody": {
     "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
   },
-  "confirmRefetchHoyoWikiConfirm": "开始重抓",
-  "@confirmRefetchHoyoWikiConfirm": {
+  "confirmRefetchItemImagesConfirm": "开始重抓",
+  "@confirmRefetchItemImagesConfirm": {
     "description": "Confirm button label in the refetch AlertDialog."
   },
   "settingsImageCache": "图片缓存",
@@ -481,7 +463,7 @@
   },
   "settingsImageCacheIcons": "小图标",
   "@settingsImageCacheIcons": {
-    "description": "Label for icon cache size (small thumbnails shown in wish list)."
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
   },
   "settingsImageCacheGallery": "详情图",
   "@settingsImageCacheGallery": {
@@ -496,16 +478,9 @@
     "description": "Shown when scanning cache size fails (e.g. permission denied)."
   },
   "settingsImageCacheClearGallery": "清除详情图",
-  "@settingsImageCacheClearGallery": {
-    "description": "Button label: clear gallery cache (keeps icons)."
-  },
   "confirmClearGalleryCacheTitle": "清除详情图？",
-  "@confirmClearGalleryCacheTitle": {
-    "description": "Confirmation dialog title for clearing gallery cache."
-  },
   "confirmClearGalleryCacheBody": "将删除约 {size} 的物品详情图，小图标缓存保留。下次打开物品详情时会重新下载。",
   "@confirmClearGalleryCacheBody": {
-    "description": "Confirmation dialog body for clearing gallery cache; {size} is formatted bytes string (e.g. '123.4 MB').",
     "placeholders": {
       "size": {
         "type": "String"
@@ -513,9 +488,7 @@
     }
   },
   "confirmClearGalleryCacheConfirm": "清除",
-  "@confirmClearGalleryCacheConfirm": {
-    "description": "Confirm button label for clearing gallery cache."
-  },
+  "settingsImageCacheClearGalleryFailed": "清除详情图失败",
   "settingsExportData": "导出数据",
   "settingsImportData": "导入数据",
   "shareImageButton": "生成分享图",
@@ -593,31 +566,6 @@
     }
   },
   "settingsImportConfirmWarning": "此操作无法撤销。请输入 IMPORT 以确认。",
-  "settingsImportSuccess": "已成功导入 {accounts} 个账号（{records} 条记录）",
-  "@settingsImportSuccess": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportPartial": "已导入 {success}/{total} 个账号；失败：{failedUids}",
-  "@settingsImportPartial": {
-    "placeholders": {
-      "success": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      },
-      "failedUids": {
-        "type": "String"
-      }
-    }
-  },
   "settingsImportFailed": "导入失败：{reason}",
   "@settingsImportFailed": {
     "placeholders": {
@@ -639,7 +587,7 @@
     }
   },
   "confirmTitle": "确认操作",
-  "confirmClearActiveBody": "这会永久删除 UID {uid} 的所有祈愿记录。输入 UID 确认：",
+  "confirmClearActiveBody": "这会永久删除 UID {uid} 的所有唤取记录。输入 UID 确认：",
   "@confirmClearActiveBody": {
     "placeholders": {
       "uid": {
@@ -647,7 +595,7 @@
       }
     }
   },
-  "confirmClearAllBody": "这会永久删除所有账号的祈愿记录。输入 DELETE 确认：",
+  "confirmClearAllBody": "这会永久删除所有账号的唤取记录。输入 DELETE 确认：",
   "confirmDelete": "删除",
   "confirmImport": "导入",
   "confirmExport": "导出",
@@ -759,9 +707,9 @@
   "@aboutViewReleaseNotes": {
     "description": "Settings > About: button next to the version label that opens the current-release dialog."
   },
-  "updateErrorWipeHoyoWikiCache": "清除物品图片缓存失败：{detail}",
-  "@updateErrorWipeHoyoWikiCache": {
-    "description": "Force-refetch flow: failed to clear hoyowiki_index.json or hoyowiki_cache/ directory. {detail} is the sanitized exception message.",
+  "updateErrorWipeItemImageCache": "清除物品图片缓存失败：{detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
     "placeholders": {
       "detail": {
         "type": "String"
@@ -797,17 +745,17 @@
     }
   },
   "settingsLogsClearConfirmBody": "这会永久删除 logs/ 内所有文件。若报告问题前需要 logs，请先导出。输入 CLEAR 确认。",
-  "galleryCardLabel": "卡片",
-  "@galleryCardLabel": {
-    "description": "Item detail dialog gallery: chip label for the card (pic) page. Maps to hoyowiki entry_page gallery_character.pic; not the item's own name."
+  "galleryIllustrationLabel": "造型",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
+  "galleryLuckdrawLabel": "唤取",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
   },
   "galleryIconLabel": "图标",
   "@galleryIconLabel": {
     "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
-  },
-  "actionViewOnHoYoWiki": "前往 HoYoWiki",
-  "@actionViewOnHoYoWiki": {
-    "description": "Item detail dialog actions: button label that opens the HoYoLAB Wiki entry page for the current item in the default browser."
   },
   "galleryLazyLoadFailed": "图片加载失败",
   "@galleryLazyLoadFailed": {
@@ -820,5 +768,10 @@
   "actionCloseImagePreview": "关闭图片预览",
   "@actionCloseImagePreview": {
     "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
+
+  "actionViewOnEncore": "在 encore.moe 查看",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
   }
 }

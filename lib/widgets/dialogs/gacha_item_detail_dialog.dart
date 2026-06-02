@@ -7,46 +7,52 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/log_sanitize.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_cache_usage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/hoyowiki_index.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/app_link.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/app_dialog.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/encore_entry_text.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
 
-/// 頌願卡池 gachaType 集合 — 永遠不可點。
-const _odesGachaTypes = {'2000', '1000'};
+/// module-level logger，供 dialog 與其 tap target 共用。
+final _log = Logger('gacha.itemimage.detail');
 
-/// 判斷 [record] 是否在 dialog 內有東西可顯示。可點性放寬為「icon 檔在即可」
-/// — gallery 可能因為武器頁等 entry 沒有 `gallery_character` module 而為空，
-/// 此時 dialog 仍會顯示 icon 大圖（chip 列只有 Icon 一個項目，自動隱藏 chip 列）。
-bool hasHoYoWikiContent(WidgetRef ref, GachaRecord record) {
-  if (_odesGachaTypes.contains(record.gachaType)) return false;
-  final index = ref.watch(hoyowikiIndexProvider);
-  final id = index.lookupId(name: record.name, lang: record.lang);
-  if (id == null) return false;
-  final entry = index.lookupEntry(id);
+/// 判斷 [record] 是否有可點開的詳情（icon 已成功下載 → 可開圖片切換器）。
+///
+/// 無 icon（負取／未抓）回 false，呼叫端據此不包 [GachaItemTapTarget]（passthrough）。
+bool hasItemDetailContent(WidgetRef ref, GachaRecord record) {
+  final index = ref.watch(itemImageIndexProvider);
+  final entry = index.lookupImage(record.resourceId);
   if (entry == null) return false;
-  if (entry.iconUrl.isEmpty) return false;
-  final cacheDir = ref.watch(hoyowikiCacheDirProvider);
-  return hoyowikiIconCacheFile(
+  final iconUrl = entry.iconUrl;
+  if (iconUrl == null || iconUrl.isEmpty) return false;
+  final cacheDir = ref.watch(itemImageCacheDirProvider);
+  return itemIconCacheFile(
     baseDir: cacheDir,
-    id: id,
-    url: entry.iconUrl,
+    resourceId: record.resourceId,
+    url: iconUrl,
   ).existsSync();
 }
 
-/// 物品 dialog — title 為 icon + 名稱；content 為頂部 chip 列 +
-/// 中央 gallery 圖（含 GIF）+ 下方 imgDesc HTML 描述。
+/// 物品詳情 dialog：title 為 icon + 名稱；content 為 chip 切換器（喚取 / 造型 / Icon）。
+///
+/// chip 順序固定「喚取（角色且 hasLuckdraw 才有，永遠排第一）→ 造型（依序，每個 skin 一個）→
+/// Icon（永遠最後）」。只有一個 chip（如武器只有 icon）時自動隱藏 chip 列、直接放大顯示
+/// 該圖。造型 chip 的圖下方顯示該造型的 Name／SubDecName／BgDescription。
 class GachaItemDetailDialog extends ConsumerStatefulWidget {
   /// 建立 [GachaItemDetailDialog]。
   const GachaItemDetailDialog({super.key, required this.record});
 
-  /// 要顯示的卡池 record。
+  /// 要顯示的喚取 record。
   final GachaRecord record;
 
   @override
@@ -54,26 +60,22 @@ class GachaItemDetailDialog extends ConsumerStatefulWidget {
       _GachaItemDetailDialogState();
 }
 
-/// [GachaItemDetailDialog] 的 state：維護 chip 列當前選中索引與 lazy 下載狀態。
+/// [GachaItemDetailDialog] 的 state：維護 chip 選中索引與各圖 lazy 下載狀態。
 class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
-  /// 當前選中 chip 的 index；點 chip 時 setState 更新；超出範圍由 `clampedIndex` 收斂。
+  /// 當前選中 chip 的 index；超出範圍由 `clampedIndex` 收斂。
   int _selectedIndex = 0;
 
-  /// 已排程 precacheImage 的本地圖檔路徑；避免每次 setState 重新呼叫。
+  /// 每張圖的下載／載入狀態，key 為該圖本地 cache 檔絕對路徑。
+  final Map<String, _ImageLoadState> _loadStates = {};
+
+  /// 已排程 precache 的本地圖檔路徑；避免每次 setState 重排。
   final Set<String> _precachedPaths = {};
 
-  /// 是否已有 precache 排程於下一個 frame；避免每次 setState 重排相同 callback。
+  /// 是否已有 precache 排程於下一 frame。
   bool _precacheScheduled = false;
 
-  /// 每張 gallery 圖的下載／載入狀態，key 為「該圖的本地 cache 檔絕對路徑」。
-  /// 同 URL 撞同 hash → 自然共用同一 entry，跨 chip 自然 dedup。
-  final Map<String, _GalleryLoadState> _loadStates = {};
-
-  /// initState 後使用的 http client（dispose 時 close 中斷 in-flight 請求）。
+  /// http client（dispose 時 close 中斷 in-flight 請求）。
   late final http.Client _client;
-
-  /// 該 dialog 的 logger。
-  static final _log = Logger('gacha.hoyowiki.detail');
 
   @override
   void initState() {
@@ -87,85 +89,103 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     super.dispose();
   }
 
-  /// 對 [url] 做 lazy 下載；成功寫入 cache 並 setState 為 [_GalleryReady]；
-  /// 失敗 setState 為 [_GalleryFailed]。重複呼叫（例如重試）安全。
-  Future<void> _fetchAndCache({
-    required String id,
-    required String url,
-    required File file,
-  }) async {
-    final fetcher = ref.read(hoyowikiFetcherProvider);
+  /// 對立繪 [url] 做 lazy 下載；成功寫 cache 並 setState 為 ready，失敗為 failed。
+  Future<void> _fetchAndCache({required String url, required File file}) async {
+    final fetcher = ref.read(itemImageFetcherProvider);
     try {
       final bytes = await fetcher.downloadImage(url, _client);
       if (bytes == null) {
         if (!mounted) return;
-        setState(() {
-          _loadStates[file.path] = _GalleryFailed(
-            const FormatException('downloadImage returned null'),
-          );
-        });
-        _log.warning('lazy fetch returned null id=$id url=${sanitizeUrl(url)}');
+        setState(() => _loadStates[file.path] = const _ImageFailed());
+        _log.warning(
+          'illustration download null rid=${widget.record.resourceId} '
+          'url=${sanitizeUrl(url)}',
+        );
         return;
       }
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(bytes);
+      await writeImageFileAtomic(file, bytes);
       if (!mounted) return;
-      setState(() {
-        _loadStates[file.path] = _GalleryReady(file);
-      });
-      ref.invalidate(hoyowikiCacheUsageProvider);
+      setState(() => _loadStates[file.path] = _ImageReady(file));
+      ref.invalidate(itemImageCacheUsageProvider);
       _log.info(
-        'lazy fetch ok id=$id bytes=${bytes.length} '
-        'path=${sanitizeFsPath(file.path)}',
+        'illustration ok rid=${widget.record.resourceId} '
+        'bytes=${bytes.length} path=${sanitizeFsPath(file.path)}',
       );
     } catch (e, st) {
       if (!mounted) return;
-      setState(() {
-        _loadStates[file.path] = _GalleryFailed(e);
-      });
-      _log.warning('lazy fetch failed id=$id url=${sanitizeUrl(url)}', e, st);
+      setState(() => _loadStates[file.path] = const _ImageFailed());
+      _log.warning(
+        'illustration failed rid=${widget.record.resourceId} '
+        'url=${sanitizeUrl(url)}',
+        e,
+        st,
+      );
     }
   }
 
-  /// 對某張圖檔由 [_GalleryFailed] 重試，改回 [_GalleryLoading] 並再次呼叫
-  /// [_fetchAndCache]。
-  void _retry({required String id, required String url, required File file}) {
-    setState(() {
-      _loadStates[file.path] = const _GalleryLoading();
-    });
-    unawaited(_fetchAndCache(id: id, url: url, file: file));
+  /// 由 failed 重試：改回 loading 並依 chip 類別重新取圖。
+  void _retryEntry(_ImageChipEntry e) {
+    setState(() => _loadStates[e.file.path] = const _ImageLoading());
+    if (e.kind == _ChipKind.luckdraw) {
+      final lang = ref.read(activeLanguageCodeProvider) ?? '';
+      unawaited(_captureLuckdraw(file: e.file, lang: lang));
+    } else {
+      unawaited(_fetchAndCache(url: e.url, file: e.file));
+    }
   }
 
-  /// 只 precache [_GalleryReady] 的圖檔；未下載完的 chip 略過。
-  void _precacheChipImages(
-    BuildContext context,
-    List<_GalleryChipEntry> entries,
-  ) {
+  /// 擷取喚取立繪：呼叫 [LuckdrawCaptureService]，成功 setState ready、失敗 failed。
+  Future<void> _captureLuckdraw({
+    required File file,
+    required String lang,
+  }) async {
+    final service = ref.read(luckdrawCaptureServiceProvider);
+    try {
+      final result = await service.capture(
+        resourceId: widget.record.resourceId,
+        kind: itemTypeKeyOf(widget.record),
+        lang: lang,
+      );
+      if (!mounted) return;
+      if (result == null) {
+        setState(() => _loadStates[file.path] = const _ImageFailed());
+        _log.warning('luckdraw capture null rid=${widget.record.resourceId}');
+        return;
+      }
+      setState(() => _loadStates[file.path] = _ImageReady(result));
+      ref.invalidate(itemImageCacheUsageProvider);
+      _log.info(
+        'luckdraw ready rid=${widget.record.resourceId} '
+        'path=${sanitizeFsPath(result.path)}',
+      );
+    } catch (e, st) {
+      if (!mounted) return;
+      setState(() => _loadStates[file.path] = const _ImageFailed());
+      _log.warning('luckdraw failed rid=${widget.record.resourceId}', e, st);
+    }
+  }
+
+  /// 只 precache ready 的圖檔。
+  void _precacheImages(BuildContext context, List<_ImageChipEntry> entries) {
     for (final e in entries) {
       final st = _loadStates[e.file.path];
-      if (st is! _GalleryReady) continue;
+      if (st is! _ImageReady) continue;
       if (_precachedPaths.add(e.file.path)) {
         precacheImage(FileImage(e.file), context);
       }
     }
   }
 
-  /// 依當前 chip 的 [_GalleryLoadState] 顯示對應內容：
-  ///   - Ready → Image.file（可點開縮放）
-  ///   - Loading → CircularProgressIndicator
-  ///   - Failed → Icon + 重試按鈕
-  Widget _buildCurrentImageArea(
-    BuildContext context,
-    _GalleryChipEntry current,
-  ) {
+  /// 依當前 chip 狀態顯示內容（ready→可縮放圖／loading→spinner／failed→重試）。
+  Widget _buildCurrentImageArea(BuildContext context, _ImageChipEntry current) {
     final theme = Theme.of(context);
     final tokens = theme.gacha;
     final l = AppLocalizations.of(context)!;
-    final state = _loadStates[current.file.path] ?? const _GalleryLoading();
+    final state = _loadStates[current.file.path] ?? const _ImageLoading();
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: switch (state) {
-        _GalleryReady(:final file) => MouseRegion(
+        _ImageReady(:final file) => MouseRegion(
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -178,21 +198,12 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
               key: ValueKey(file.path),
               fit: BoxFit.contain,
               alignment: Alignment.center,
-              // 切 chip / 同圖重 build 時保留前一張 frame，等新 frame
-              // 解碼完才換；配合 precacheImage 消除「閃一下」。
               gaplessPlayback: true,
-              errorBuilder: (_, e, st) {
-                _log.warning(
-                  'gallery image errorBuilder path=${sanitizeFsPath(file.path)}',
-                  e,
-                  st,
-                );
-                return const SizedBox.shrink();
-              },
+              errorBuilder: (_, e, st) => const SizedBox.shrink(),
             ),
           ),
         ),
-        _GalleryLoading() => Center(
+        _ImageLoading() => Center(
           child: SizedBox(
             width: 48,
             height: 48,
@@ -202,7 +213,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
             ),
           ),
         ),
-        _GalleryFailed() => Center(
+        _ImageFailed() => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -220,11 +231,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
               ),
               const SizedBox(height: AppSpacing.s),
               TextButton.icon(
-                onPressed: () => _retry(
-                  id: _extractIdFromPath(current.file.path) ?? '',
-                  url: current.url,
-                  file: current.file,
-                ),
+                onPressed: () => _retryEntry(current),
                 icon: const Icon(Icons.refresh, size: 18),
                 label: Text(l.actionRetry),
               ),
@@ -235,13 +242,75 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     );
   }
 
-  /// 從 cache 檔路徑反推 hoyowiki id（僅用於 retry log 標籤，失敗回 null）。
-  /// 路徑樣式：`.../<id>_gallery_<hash>.<ext>` 或 `.../<id>_icon.<ext>`。
-  String? _extractIdFromPath(String path) {
-    final base = path.split(Platform.pathSeparator).last;
-    final underscoreIdx = base.indexOf('_');
-    if (underscoreIdx <= 0) return null;
-    return base.substring(0, underscoreIdx);
+  /// 詳情 dialog 用的 HTML 樣式（簡介與造型說明共用）：body 字級 bodyMedium、弱色、
+  /// margin/padding 歸零；`<p>` margin 歸零。
+  Map<String, Style> _detailHtmlStyle(ThemeData theme) => {
+    'body': Style(
+      fontSize: FontSize(theme.textTheme.bodyMedium?.fontSize ?? 14),
+      color: theme.gacha.textSecondary,
+      margin: Margins.zero,
+      padding: HtmlPaddings.zero,
+    ),
+    'p': Style(margin: Margins.zero),
+  };
+
+  /// 詳情 dialog 用的 HTML 區塊（簡介與造型說明共用）：先以 [stripEntryLinkTags] 還原
+  /// encore 詞條標籤 `<te>` 為純文字（否則 flutter_html 會連同內文丟棄而缺字），再套
+  /// [_detailHtmlStyle]，並以 [DefaultTextStyle] 把環境字級重置為 bodyMedium。
+  ///
+  /// flutter_html 會以 `DefaultTextStyle.of(context)` 當作 root 行高來源。簡介位於
+  /// AlertDialog 的 title 區，環境 [DefaultTextStyle] 是大行高的 titleTextStyle，
+  /// 會讓單行說明文字在第一行上方多塞約 8px leading、換行時卻貼齊，造成「換行／不換
+  /// 行」與標題的間距不一致。改用 bodyMedium 當 root 後，單行與多行皆貼齊（間距一致）。
+  Widget _detailHtml(ThemeData theme, String data) => DefaultTextStyle(
+    style: theme.textTheme.bodyMedium ?? const TextStyle(),
+    child: Html(data: stripEntryLinkTags(data), style: _detailHtmlStyle(theme)),
+  );
+
+  /// 造型圖下方 caption：Name（標題）＋SubDecName（次標、弱色）＋BgDescription
+  /// （內文、含 HTML、過長捲動）。三者皆空則不繪。
+  Widget _buildSkinCaption(BuildContext context, ItemSkin skin) {
+    final theme = Theme.of(context);
+    final tokens = theme.gacha;
+    final hasName = skin.name.trim().isNotEmpty;
+    final hasSub = skin.subDecName.trim().isNotEmpty;
+    final hasBg = skin.bgDescription.trim().isNotEmpty;
+    if (!hasName && !hasSub && !hasBg) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.m),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (hasName)
+            Text(
+              skin.name,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: tokens.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          if (hasSub) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              skin.subDecName,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: tokens.textSecondary,
+              ),
+            ),
+          ],
+          if (hasBg) ...[
+            const SizedBox(height: AppSpacing.xs),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 96),
+              child: SingleChildScrollView(
+                child: _detailHtml(theme, skin.bgDescription),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   @override
@@ -251,95 +320,107 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     final tokens = theme.gacha;
     final record = widget.record;
 
-    final index = ref.watch(hoyowikiIndexProvider);
-    final cacheDir = ref.watch(hoyowikiCacheDirProvider);
-    final id = index.lookupId(name: record.name, lang: record.lang);
-    final entry = id == null ? null : index.lookupEntry(id);
-    final page = entry?.pageByLang[record.lang];
-    final gallery = page?.gallery;
-    final desc = page?.desc ?? '';
-    final tags = page?.tags ?? const <String>[];
+    final index = ref.watch(itemImageIndexProvider);
+    final cacheDir = ref.watch(itemImageCacheDirProvider);
+    final entry = index.lookupImage(record.resourceId);
 
+    // per-lang 詳情：優先取作用中帳號擷取語言；該 lang 未抓時 fallback 第一筆已抓
+    // 語言（總比空白好）。
+    final activeLang = ref.watch(activeLanguageCodeProvider);
+    final detail =
+        (activeLang == null ? null : entry?.detailByLang[activeLang]) ??
+        (entry?.detailByLang.isNotEmpty == true
+            ? entry!.detailByLang.values.first
+            : null);
+    final intro = detail?.intro ?? '';
+    final elementName = detail?.elementName ?? '';
+    final weaponTypeName = detail?.weaponTypeName ?? '';
+    final skins = detail?.skins ?? const <ItemSkin>[];
+
+    // icon cache 檔（已於更新階段下載 → 永遠 ready）。
     File? iconFile;
-    if (id != null && entry != null && entry.iconUrl.isNotEmpty) {
-      final f = hoyowikiIconCacheFile(
+    final iconUrl = entry?.iconUrl;
+    if (iconUrl != null && iconUrl.isNotEmpty) {
+      final f = itemIconCacheFile(
         baseDir: cacheDir,
-        id: id,
-        url: entry.iconUrl,
+        resourceId: record.resourceId,
+        url: iconUrl,
       );
       if (f.existsSync()) iconFile = f;
     }
 
-    // chip 順序：gallery list → pic 卡片 → Icon。Icon chip 永遠最後一個。
-    final chipEntries = <_GalleryChipEntry>[];
-    if (id != null) {
-      if (gallery != null) {
-        for (final it in gallery.list) {
-          if (it.imgUrl.isEmpty) continue;
-          final f = hoyowikiGalleryCacheFile(
+    // chip 順序：造型（依序，每個 skin 一個）→ 喚取（角色 hasLuckdraw 才有）→ Icon（永遠最後）。
+    final chipEntries = <_ImageChipEntry>[];
+    final isCharacter = itemTypeKeyOf(record) == kItemKindCharacter;
+    for (final skin in skins) {
+      if (skin.formationCard.isEmpty) continue;
+      final f = itemIllustrationCacheFile(
+        baseDir: cacheDir,
+        resourceId: record.resourceId,
+        url: skin.formationCard,
+      );
+      chipEntries.add(
+        _ImageChipEntry(
+          label: skin.name.isNotEmpty ? skin.name : l.galleryIllustrationLabel,
+          url: skin.formationCard,
+          file: f,
+          kind: _ChipKind.skin,
+          skin: skin,
+        ),
+      );
+    }
+    if (isCharacter && (entry?.hasLuckdraw ?? false)) {
+      chipEntries.add(
+        _ImageChipEntry(
+          label: l.galleryLuckdrawLabel,
+          url: '',
+          file: itemLuckdrawCacheFile(
             baseDir: cacheDir,
-            id: id,
-            url: it.imgUrl,
-          );
-          chipEntries.add(
-            _GalleryChipEntry(
-              label: it.key,
-              url: it.imgUrl,
-              file: f,
-              descHtml: it.imgDescHtml,
-              kind: _ChipKind.galleryList,
-            ),
-          );
-        }
-        if (gallery.picUrl.isNotEmpty) {
-          final f = hoyowikiGalleryCacheFile(
-            baseDir: cacheDir,
-            id: id,
-            url: gallery.picUrl,
-          );
-          chipEntries.add(
-            _GalleryChipEntry(
-              label: l.galleryCardLabel,
-              url: gallery.picUrl,
-              file: f,
-              descHtml: '',
-              kind: _ChipKind.galleryPic,
-            ),
-          );
-        }
-      }
-      if (iconFile != null) {
-        chipEntries.add(
-          _GalleryChipEntry(
-            label: l.galleryIconLabel,
-            url: entry?.iconUrl ?? '',
-            file: iconFile,
-            descHtml: '',
-            kind: _ChipKind.icon,
+            resourceId: record.resourceId,
           ),
-        );
-      }
+          kind: _ChipKind.luckdraw,
+        ),
+      );
+    }
+    if (iconFile != null) {
+      chipEntries.add(
+        _ImageChipEntry(
+          label: l.galleryIconLabel,
+          url: iconUrl ?? '',
+          file: iconFile,
+          kind: _ChipKind.icon,
+        ),
+      );
     }
 
-    // 同步 _loadStates：首次出現的 gallery chip 若本地已有檔 → _GalleryReady；
-    // 否則 → _GalleryLoading 並觸發背景下載。Icon chip 永遠 _GalleryReady。
+    // 同步 _loadStates：icon 永遠 ready；喚取／造型圖本地有檔→ready，否則 loading + 背景取圖。
     for (final ce in chipEntries) {
       if (_loadStates.containsKey(ce.file.path)) continue;
       switch (ce.kind) {
         case _ChipKind.icon:
-          _loadStates[ce.file.path] = _GalleryReady(ce.file);
-        case _ChipKind.galleryList:
-        case _ChipKind.galleryPic:
+          _loadStates[ce.file.path] = _ImageReady(ce.file);
+        case _ChipKind.luckdraw:
           if (ce.file.existsSync()) {
-            _loadStates[ce.file.path] = _GalleryReady(ce.file);
+            _loadStates[ce.file.path] = _ImageReady(ce.file);
           } else {
-            _loadStates[ce.file.path] = const _GalleryLoading();
-            final theId = id!;
+            _loadStates[ce.file.path] = const _ImageLoading();
+            final theFile = ce.file;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              final lang = ref.read(activeLanguageCodeProvider) ?? '';
+              unawaited(_captureLuckdraw(file: theFile, lang: lang));
+            });
+          }
+        case _ChipKind.skin:
+          if (ce.file.existsSync()) {
+            _loadStates[ce.file.path] = _ImageReady(ce.file);
+          } else {
+            _loadStates[ce.file.path] = const _ImageLoading();
             final theUrl = ce.url;
             final theFile = ce.file;
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
-              unawaited(_fetchAndCache(id: theId, url: theUrl, file: theFile));
+              unawaited(_fetchAndCache(url: theUrl, file: theFile));
             });
           }
       }
@@ -350,18 +431,16 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
         : _selectedIndex.clamp(0, chipEntries.length - 1);
     final current = clampedIndex >= 0 ? chipEntries[clampedIndex] : null;
 
-    // 排程所有已就緒 chip 圖預載；post-frame 是避開 build 內直接 schedule async 的 lint。
-    // 以 _precacheScheduled flag 確保每個 frame 最多只排一次，避免每次 setState 累積 callback。
     if (chipEntries.isNotEmpty && !_precacheScheduled) {
       _precacheScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _precacheScheduled = false;
         if (!mounted) return;
-        _precacheChipImages(context, chipEntries);
+        _precacheImages(context, chipEntries);
       });
     }
 
-    final nameColor = switch (record.rankType) {
+    final nameColor = switch (record.qualityLevel) {
       5 => tokens.fiveStar,
       4 => tokens.fourStar,
       _ => tokens.textPrimary,
@@ -369,7 +448,6 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
 
     return AppDialog(
       size: AppDialogSize.md,
-      // 物品 dialog 含大圖預覽，需要更高空間；AppDialog 仍會 fit 小視窗。
       maxHeight: 880,
       title: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,13 +460,10 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                 width: 64,
                 height: 64,
                 fit: BoxFit.cover,
-                errorBuilder: (_, e, st) {
-                  _log.warning('icon errorBuilder id=$id', e, st);
-                  return const SizedBox.shrink();
-                },
+                errorBuilder: (_, e, st) => const SizedBox.shrink(),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.m),
           ],
           Expanded(
             child: Column(
@@ -404,39 +479,36 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (desc.trim().isNotEmpty)
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 120),
-                    child: SingleChildScrollView(
-                      child: Html(
-                        data: desc,
-                        style: {
-                          'body': Style(
-                            fontSize: FontSize(
-                              theme.textTheme.bodyMedium?.fontSize ?? 14,
-                            ),
-                            color: tokens.textSecondary,
-                            margin: Margins.zero,
-                            padding: HtmlPaddings.zero,
-                          ),
-                          'p': Style(margin: Margins.zero),
-                        },
+                if (intro.trim().isNotEmpty)
+                  Padding(
+                    // 名稱與簡介間留一點間距，避免兩者貼齊（2dp，無對應 token 故用字面值）。
+                    padding: const EdgeInsets.only(top: 2),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 120),
+                      child: SingleChildScrollView(
+                        child: _detailHtml(theme, intro),
                       ),
                     ),
                   ),
-                if (tags.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+                if (_tagsFor(
+                  l,
+                  record,
+                  elementName,
+                  weaponTypeName,
+                ).isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.s),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      for (final t in tags)
+                      for (final t in _tagsFor(
+                        l,
+                        record,
+                        elementName,
+                        weaponTypeName,
+                      ))
                         Chip(
                           label: Text(t),
-                          // 用 textPrimary 加 alpha 做半透明色塊：dark 主題
-                          // 疊出比表面亮一階的灰、light 主題疊出比表面暗一
-                          // 階的灰，兩個情境下都自動跟 dialog 背景拉開層次。
-                          // 0.15 alpha 經對比測試在兩主題下都有明確色塊感。
                           backgroundColor: tokens.textPrimary.withValues(
                             alpha: 0.15,
                           ),
@@ -465,17 +537,14 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
           ),
         ],
       ),
-      // hasImage 為 true 時 Column 撐到 parent 給的 maxHeight，配合
-      // Expanded(image) 吸收剩餘空間 → 切 chip 時即使 imgDesc 區 0px ↔ 105px
-      // 變動，dialog 整體高度仍固定（只有 image 區大小被重新分配）。
       content: Column(
         mainAxisSize: current != null ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (chipEntries.length > 1)
+          if (chipEntries.length > 1) ...[
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: AppSpacing.s,
+              runSpacing: AppSpacing.s,
               children: [
                 for (var i = 0; i < chipEntries.length; i++)
                   ChoiceChip(
@@ -486,37 +555,31 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                   ),
               ],
             ),
-          if (chipEntries.length > 1) const SizedBox(height: 12),
-          if (current != null) ...[
+            const SizedBox(height: AppSpacing.m),
+          ],
+          if (current != null)
             Expanded(child: _buildCurrentImageArea(context, current)),
-          ],
-          if (current != null && current.descHtml.trim().isNotEmpty) ...[
-            const SizedBox(height: 12),
-            // 顯式收緊段落 margin：flutter_html 預設 `<p>` 上下 1em margin，
-            // 在 imgDescHtml 「<p>標題</p><p>內文</p>」結構下會有 ~25-30px
-            // 空白；官方頁面只有 ~6-8px。body margin/padding 歸零避免額外間距。
-            Html(
-              data: current.descHtml,
-              style: {
-                'body': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
-                'p': Style(margin: Margins.symmetric(vertical: 4)),
-              },
-            ),
-          ],
+          if (current?.skin != null) _buildSkinCaption(context, current!.skin!),
         ],
       ),
       actions: [
         TextButton.icon(
           icon: const Icon(Icons.open_in_new, size: 18),
-          label: Text(l.actionViewOnHoYoWiki),
-          onPressed: id == null
-              ? null
-              : () {
-                  _log.info('open wiki id=$id');
-                  openExternalUrl(
-                    Uri.parse('https://wiki.hoyolab.com/pc/genshin/entry/$id'),
-                  );
-                },
+          label: Text(l.actionViewOnEncore),
+          onPressed: () {
+            _log.info(
+              'open encore kind=${itemTypeKeyOf(record)} id=${record.resourceId}',
+            );
+            openExternalUrl(
+              Uri.parse(
+                encoreItemUrl(
+                  kind: itemTypeKeyOf(record),
+                  resourceId: record.resourceId,
+                  lang: activeLang ?? '',
+                ),
+              ),
+            );
+          },
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -527,43 +590,55 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   }
 }
 
-/// chip 類別 — icon 永遠 ready（已由 hasHoYoWikiContent 把關），gallery 走 lazy。
+/// 組詳情 tag：★（app UI 語系）＋元素＋武器類型（encore 在地化，空者略過）。
+List<String> _tagsFor(
+  AppLocalizations l,
+  GachaRecord record,
+  String elementName,
+  String weaponTypeName,
+) => [
+  l.rarityStar(record.qualityLevel),
+  if (elementName.isNotEmpty) elementName,
+  if (weaponTypeName.isNotEmpty) weaponTypeName,
+];
+
+/// chip 類別 — icon 永遠 ready（已快取），造型走 lazy，luckdraw 由 webview 擷取。
 enum _ChipKind {
-  /// gallery list[i].imgUrl。
-  galleryList,
+  /// 喚取（Luckdraw）立繪：由 webview 擷取 encore canvas，僅角色且 hasLuckdraw。
+  luckdraw,
 
-  /// gallery picUrl。
-  galleryPic,
+  /// 造型 formation 大圖（URL 取自 per-lang 詳情 [ItemDetailL10n.skins]，lazy 下載）。
+  skin,
 
-  /// entry.iconUrl（已預下載，永遠 ready）。
+  /// entry.iconUrl（已預下載，永遠 ready，永遠排最後）。
   icon,
 }
 
 /// 內部：單一 chip 條目。
-class _GalleryChipEntry {
-  /// 建立 [_GalleryChipEntry]。
-  const _GalleryChipEntry({
+class _ImageChipEntry {
+  /// 建立 [_ImageChipEntry]。
+  const _ImageChipEntry({
     required this.label,
     required this.url,
     required this.file,
-    required this.descHtml,
     required this.kind,
+    this.skin,
   });
 
   /// chip 顯示文字。
   final String label;
 
-  /// 該 chip 對應的遠端 URL（icon chip 為 entry.iconUrl，gallery chip 為對應 gallery URL）。
+  /// 該 chip 對應的遠端 URL。
   final String url;
 
-  /// 該 chip 對應的本地 cache 檔（可能尚未存在，由 [_GachaItemDetailDialogState._loadStates] 追蹤狀態）。
+  /// 該 chip 對應的本地 cache 檔（造型圖可能尚未存在）。
   final File file;
 
-  /// 描述 HTML；trim 後為空則不繪描述區。
-  final String descHtml;
-
-  /// chip 類別 — icon 永遠 ready（已由 hasHoYoWikiContent 把關），gallery 走 lazy。
+  /// chip 類別。
   final _ChipKind kind;
+
+  /// 造型 chip 才有，供圖下方 caption（Name／SubDecName／BgDescription）。
+  final ItemSkin? skin;
 }
 
 /// 顯示 [GachaItemDetailDialog]。
@@ -572,7 +647,8 @@ Future<void> showGachaItemDetailDialog(
   GachaRecord record,
 ) {
   _log.info(
-    'open name=${record.name} lang=${record.lang} rank=${record.rankType}',
+    'open rid=${record.resourceId} name=${record.name} '
+    'quality=${record.qualityLevel}',
   );
   return showDialog<void>(
     context: context,
@@ -580,10 +656,7 @@ Future<void> showGachaItemDetailDialog(
   );
 }
 
-/// module-level logger，供 [showGachaItemDetailDialog] 使用。
-final _log = Logger('gacha.hoyowiki.detail');
-
-/// 把任意 [child] 包成可點區塊；[hasHoYoWikiContent] 為 false 時 passthrough。
+/// 把任意 [child] 包成可點區塊；[hasItemDetailContent] 為 false 時 passthrough。
 class GachaItemTapTarget extends ConsumerWidget {
   /// 建立 [GachaItemTapTarget]。
   const GachaItemTapTarget({
@@ -600,7 +673,7 @@ class GachaItemTapTarget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!hasHoYoWikiContent(ref, record)) return child;
+    if (!hasItemDetailContent(ref, record)) return child;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
@@ -612,32 +685,29 @@ class GachaItemTapTarget extends ConsumerWidget {
   }
 }
 
-/// gallery 圖檔的下載／載入狀態，由 [_GachaItemDetailDialogState._loadStates] 管理。
-sealed class _GalleryLoadState {
-  /// 建立 [_GalleryLoadState]。
-  const _GalleryLoadState();
+/// 圖片的下載／載入狀態。
+sealed class _ImageLoadState {
+  /// 建立 [_ImageLoadState]。
+  const _ImageLoadState();
 }
 
-/// 下載中（initState 觸發後尚未完成，或使用者按下重試後）。
-class _GalleryLoading extends _GalleryLoadState {
-  /// 建立 [_GalleryLoading]。
-  const _GalleryLoading();
+/// 下載中。
+class _ImageLoading extends _ImageLoadState {
+  /// 建立 [_ImageLoading]。
+  const _ImageLoading();
 }
 
 /// 本地已有 cache 檔，可直接 `Image.file` 顯示。
-class _GalleryReady extends _GalleryLoadState {
-  /// 建立 [_GalleryReady]。
-  const _GalleryReady(this.file);
+class _ImageReady extends _ImageLoadState {
+  /// 建立 [_ImageReady]。
+  const _ImageReady(this.file);
 
-  /// 對應的本地 cache 檔（已保證 existsSync）。
+  /// 對應的本地 cache 檔。
   final File file;
 }
 
-/// 下載失敗，UI 顯示 placeholder + 重試按鈕。
-class _GalleryFailed extends _GalleryLoadState {
-  /// 建立 [_GalleryFailed]。
-  const _GalleryFailed(this.error);
-
-  /// 失敗原因，用於 log；UI 不顯示。
-  final Object error;
+/// 下載失敗。
+class _ImageFailed extends _ImageLoadState {
+  /// 建立 [_ImageFailed]。
+  const _ImageFailed();
 }

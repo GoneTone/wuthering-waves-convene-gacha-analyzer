@@ -1,0 +1,23 @@
+[package]
+name = "capture_helper"
+version = "0.1.0"
+edition = "2021"
+
+# 提權的喚取攔截 helper（按「更新」時由主程式 UAC 提權 spawn）。
+# 職責：WinDivert 鎖定 KRWebView.exe 行程、重導向其 :443 進主程式 hudsucker、drop 其
+# UDP 443（QUIC）。與主程式 gacha_capture_core crate 分離；建置需 WINDIVERT_PATH。
+# 詳見 docs/superpowers/specs/2026-06-02-windivert-capture-design.md。
+
+[[bin]]
+name = "capture_helper"
+path = "src/main.rs"
+
+[dependencies]
+windivert = "0.5.3"
+windivert-sys = "0.9"
+sysinfo = "0.33"
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_System_Threading",
+] }

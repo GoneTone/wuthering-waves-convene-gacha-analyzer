@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -856456648;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1433476922;
 
 // Section: executor
 
@@ -46,40 +46,6 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
-fn wire__crate__api__capture__cleanup_stale_proxy_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "cleanup_stale_proxy",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::capture::cleanup_stale_proxy()?;
-                        Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
 fn wire__crate__api__capture__start_capture_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -232,13 +198,6 @@ impl SseDecode for String {
     }
 }
 
-impl SseDecode for bool {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u8().unwrap() != 0
-    }
-}
-
 impl SseDecode for crate::api::capture::CapturedRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -246,11 +205,13 @@ impl SseDecode for crate::api::capture::CapturedRequest {
         let mut var_url = <String>::sse_decode(deserializer);
         let mut var_host = <String>::sse_decode(deserializer);
         let mut var_timestampMs = <i64>::sse_decode(deserializer);
+        let mut var_body = <String>::sse_decode(deserializer);
         return crate::api::capture::CapturedRequest {
             method: var_method,
             url: var_url,
             host: var_host,
             timestamp_ms: var_timestampMs,
+            body: var_body,
         };
     }
 }
@@ -309,6 +270,13 @@ impl SseDecode for i32 {
     }
 }
 
+impl SseDecode for bool {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u8().unwrap() != 0
+    }
+}
+
 fn pde_ffi_dispatcher_primary_impl(
     func_id: i32,
     port: flutter_rust_bridge::for_generated::MessagePort,
@@ -318,10 +286,9 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        1 => wire__crate__api__capture__cleanup_stale_proxy_impl(port, ptr, rust_vec_len, data_len),
-        2 => wire__crate__api__capture__start_capture_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire__crate__api__logging__start_log_stream_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__capture__stop_capture_impl(port, ptr, rust_vec_len, data_len),
+        1 => wire__crate__api__capture__start_capture_impl(port, ptr, rust_vec_len, data_len),
+        2 => wire__crate__api__logging__start_log_stream_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__api__capture__stop_capture_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -348,6 +315,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::capture::CapturedRequest {
             self.url.into_into_dart().into_dart(),
             self.host.into_into_dart().into_dart(),
             self.timestamp_ms.into_into_dart().into_dart(),
+            self.body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -419,13 +387,6 @@ impl SseEncode for String {
     }
 }
 
-impl SseEncode for bool {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_u8(self as _).unwrap();
-    }
-}
-
 impl SseEncode for crate::api::capture::CapturedRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -433,6 +394,7 @@ impl SseEncode for crate::api::capture::CapturedRequest {
         <String>::sse_encode(self.url, serializer);
         <String>::sse_encode(self.host, serializer);
         <i64>::sse_encode(self.timestamp_ms, serializer);
+        <String>::sse_encode(self.body, serializer);
     }
 }
 
@@ -479,6 +441,13 @@ impl SseEncode for i32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for bool {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_u8(self as _).unwrap();
     }
 }
 

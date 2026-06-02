@@ -8,7 +8,7 @@ class AppRepo {
   static const String owner = 'GoneTone';
 
   /// GitHub repo 名稱。
-  static const String repo = 'genshin-impact-wish-gacha-analyzer';
+  static const String repo = 'wuthering-waves-convene-gacha-analyzer';
 
   /// 專案 GitHub 頁面 URL。
   static const String githubUrl = 'https://github.com/$owner/$repo';

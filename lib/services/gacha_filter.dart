@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_row.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_row.dart';
 
 /// 稀有度篩選條件。
 enum RarityFilter {
@@ -14,7 +14,7 @@ enum RarityFilter {
   fourStar,
 }
 
-/// 祈願紀錄篩選條件（稀有度、物品類型、關鍵字）。
+/// 喚取紀錄篩選條件（稀有度、物品類型、關鍵字）。
 @immutable
 class RecordFilter {
   /// 建立 [RecordFilter]，預設不限稀有度、不限物品類型、無關鍵字。
@@ -114,8 +114,12 @@ List<RecordRow> filterRecordRows(List<RecordRow> rows, RecordFilter f) {
   return rows
       .where((row) {
         final r = row.record;
-        if (f.rarity == RarityFilter.fiveStar && r.rankType != 5) return false;
-        if (f.rarity == RarityFilter.fourStar && r.rankType != 4) return false;
+        if (f.rarity == RarityFilter.fiveStar && r.qualityLevel != 5) {
+          return false;
+        }
+        if (f.rarity == RarityFilter.fourStar && r.qualityLevel != 4) {
+          return false;
+        }
         if (f.itemType != null && row.itemTypeKey != f.itemType) return false;
         if (q.isNotEmpty && !r.name.toLowerCase().contains(q)) return false;
         return true;
@@ -139,7 +143,7 @@ List<RecordRow> sortRecordRows(List<RecordRow> rows, TableSort? sort) {
       // 刻意不依在地化標籤排序，避免排序結果隨 UI 語言變動。
       cmp = (a, b) => a.itemTypeKey.compareTo(b.itemTypeKey);
     case SortColumn.rarity:
-      cmp = (a, b) => a.record.rankType.compareTo(b.record.rankType);
+      cmp = (a, b) => a.record.qualityLevel.compareTo(b.record.qualityLevel);
     case SortColumn.totalIndex:
       cmp = (a, b) => a.totalIndex.compareTo(b.totalIndex);
     case SortColumn.mainPity:

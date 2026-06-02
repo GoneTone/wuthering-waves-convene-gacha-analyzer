@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 
 /// 單一卡池的保底狀態計算結果。
 @immutable
@@ -53,7 +53,7 @@ Pity computePity(
   var hitCount = 0;
   DateTime? lastAt;
   for (final r in records) {
-    if (r.rankType == rank) {
+    if (r.qualityLevel == rank) {
       lastAt ??= r.time; // 首次命中後鎖定（等同原本 break 後不再賦值）
       hitCount++;
     } else if (lastAt == null) {

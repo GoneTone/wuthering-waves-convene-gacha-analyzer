@@ -1,17 +1,17 @@
 ; scripts/build_installer/installer.iss
 ;
-; Genshin Impact Wish Gacha Analyzer — Inno Setup 安裝檔
+; Wuthering Waves Convene Gacha Analyzer — Inno Setup 安裝檔
 ;
 ; 編譯方式：
 ;   ISCC.exe /DMyAppVersion=1.0.0 scripts\build_installer\installer.iss
 ;
-; AppId 為固定 GUID，任何情況下不得變更（會破壞升級路徑）。
+; AppId 為本產品專屬的固定 GUID，任何情況下不得變更（會破壞升級路徑）；與前身版本不同 GUID 以避免被當成升級而覆蓋安裝。
 
-#define MyAppId       "{50C50DF7-CB14-4D51-9618-0E5116DDA065}"
-#define MyAppName     "Genshin Impact Wish Gacha Analyzer"
-#define MyAppExeName  "genshin_impact_wish_gacha_analyzer.exe"
-#define MyAppPublisher "原神資訊站 Genshin Impact Info"
-#define MyAppURL      "https://genshininfo.reh.tw/"
+#define MyAppId       "{27F3CD23-7E15-4570-8EBB-79D2801C9C85}"
+#define MyAppName     "Wuthering Waves Convene Gacha Analyzer"
+#define MyAppExeName  "wuthering_waves_convene_gacha_analyzer.exe"
+#define MyAppPublisher "GoneTone"
+#define MyAppURL      "https://github.com/GoneTone"
 
 ; MyAppVersion 透過 ISCC /DMyAppVersion=... 從外面傳入
 #ifndef MyAppVersion
@@ -28,7 +28,7 @@ VersionInfoProductVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppCopyright=Copyright (C) 2020-{#GetDateTimeString('yyyy','','')} {#MyAppPublisher}
-DefaultDirName={commonpf}\Genshin_Impact_Wish_Gacha_Analyzer
+DefaultDirName={commonpf}\Wuthering_Waves_Convene_Gacha_Analyzer
 DefaultGroupName={#MyAppName}
 DisableDirPage=no
 PrivilegesRequired=admin
@@ -40,7 +40,7 @@ Compression=lzma2/ultra
 SolidCompression=yes
 WizardStyle=modern
 OutputDir=..\..\build\installer
-OutputBaseFilename=Genshin_Impact_Wish_Gacha_Analyzer-Setup-{#MyAppVersion}
+OutputBaseFilename=Wuthering_Waves_Convene_Gacha_Analyzer-Setup-{#MyAppVersion}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -82,6 +82,13 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "..\..\build\windows\x64\runner\Release\*"; DestDir: "{app}"; \
     Flags: recursesubdirs createallsubdirs ignoreversion
+; WebView2 Evergreen Bootstrapper（喚取立繪功能所需）。由 build_release.ps1 於建置時
+; 下載到本目錄；缺檔時整段以 #if 略過，不影響手動編譯。僅在系統無 WebView2 Runtime
+; 時才解壓並於 [Run] 靜默安裝。
+#if FileExists(AddBackslash(SourcePath) + "MicrosoftEdgeWebview2Setup.exe")
+Source: "MicrosoftEdgeWebview2Setup.exe"; DestDir: "{tmp}"; \
+    Flags: deleteafterinstall; Check: WebView2NotInstalled
+#endif
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -89,138 +96,49 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
+#if FileExists(AddBackslash(SourcePath) + "MicrosoftEdgeWebview2Setup.exe")
+; 系統缺 WebView2 Runtime 時靜默安裝（等它裝完再繼續），保證喚取立繪功能可用。
+Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; \
+    StatusMsg: "{cm:InstallingWebView2}"; Check: WebView2NotInstalled; \
+    Flags: waituntilterminated
+#endif
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; \
     Flags: nowait postinstall skipifsilent
 
 [CustomMessages]
+InstallingWebView2=Installing Microsoft Edge WebView2 Runtime...
+tradchinese.InstallingWebView2=正在安裝 Microsoft Edge WebView2 執行階段...
+simpchinese.InstallingWebView2=正在安装 Microsoft Edge WebView2 运行时...
 UninstallRemoveDataBody=Also remove user data?%n%nThis will permanently delete the contents of:%n%1%n%nincluding banner records, settings, caches and logs. This cannot be undone.
 tradchinese.UninstallRemoveDataBody=是否要同時移除使用者資料？%n%n將永久刪除位於以下目錄的所有內容：%n%1%n%n包含卡池記錄、設定、快取與 log。此操作無法復原。
 simpchinese.UninstallRemoveDataBody=是否要同时移除用户数据？%n%n将永久删除位于以下目录的所有内容：%n%1%n%n包含卡池记录、设定、缓存与 log。此操作无法复原。
 
 [Code]
-const
-  UninstallPath = 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall';
-  DisplayNameNeedle = 'Genshin Impact Wish Gacha Analyzer';
-  // 新版自己的 Inno Setup 卸載 key 名稱（用於排除），格式固定為 "{AppId}_is1"
-  SelfUninstKey = '{#MyAppId}_is1';
-
 var
   // 解除安裝期間記錄使用者是否選擇連同移除 %APPDATA% 內的使用者資料。
   // usUninstall 階段由 MsgBox 設定，usPostUninstall 階段讀取以決定是否 DelTree。
   // Inno Setup 啟動 uninstaller process 時 Pascal Boolean 預設為 False，符合「預設不刪」語意。
   ShouldRemoveUserData: Boolean;
 
-// 收集所有判定為「舊版」的 UninstallString
-procedure CollectOldUninstallers(RootKey: Integer; const SubPath: String; List: TStringList);
+// 偵測系統是否已安裝 WebView2 Evergreen Runtime（per-machine x64 或 per-user）。
+// 回傳 True＝未安裝，供 [Files]/[Run] 的 Check 決定是否解壓並靜默安裝隨附 Bootstrapper。
+// 以巢狀 if 判斷（不依賴布林短路）；GUID 為 WebView2 Runtime 的 EdgeUpdate client id。
+function WebView2NotInstalled: Boolean;
 var
-  SubKeys: TArrayOfString;
-  i: Integer;
-  KeyName, FullPath, DisplayName, UninstallString: String;
-begin
-  if not RegGetSubkeyNames(RootKey, SubPath, SubKeys) then
-    Exit;
-  for i := 0 to GetArrayLength(SubKeys) - 1 do
-  begin
-    KeyName := SubKeys[i];
-    if SameText(KeyName, SelfUninstKey) then
-      Continue;
-    FullPath := SubPath + '\' + KeyName;
-    if not RegQueryStringValue(RootKey, FullPath, 'DisplayName', DisplayName) then
-      Continue;
-    if Pos(DisplayNameNeedle, DisplayName) = 0 then
-      Continue;
-    if not RegQueryStringValue(RootKey, FullPath, 'UninstallString', UninstallString) then
-      Continue;
-    if Trim(UninstallString) = '' then
-      Continue;
-    List.Add(UninstallString);
-  end;
-end;
-
-function GetOldUninstallers(): TStringList;
-begin
-  Result := TStringList.Create;
-  Result.Duplicates := dupIgnore;
-  Result.Sorted := True;
-  CollectOldUninstallers(HKLM32, UninstallPath, Result);
-  CollectOldUninstallers(HKLM64, UninstallPath, Result);
-  CollectOldUninstallers(HKCU,   UninstallPath, Result);
-end;
-
-// 解析 UninstallString，拆出 exe 路徑與額外參數
-procedure ParseUninstallCommand(const Cmd: String; var ExePath, ExtraArgs: String);
-var
-  Trimmed: String;
-  EndQuote: Integer;
-begin
-  Trimmed := Trim(Cmd);
-  ExtraArgs := '';
-  if (Length(Trimmed) > 0) and (Trimmed[1] = '"') then
-  begin
-    EndQuote := Pos('"', Copy(Trimmed, 2, Length(Trimmed))) + 1;
-    if EndQuote > 1 then
-    begin
-      ExePath := Copy(Trimmed, 2, EndQuote - 2);
-      ExtraArgs := Trim(Copy(Trimmed, EndQuote + 1, Length(Trimmed)));
-    end
-    else
-      ExePath := Trimmed;
-  end
-  else
-  begin
-    ExePath := Trimmed;
-  end;
-end;
-
-function RunOldUninstaller(const UninstallString: String): Boolean;
-var
-  ExePath, ExtraArgs, Params: String;
-  ResultCode: Integer;
-begin
-  ParseUninstallCommand(UninstallString, ExePath, ExtraArgs);
-  // NSIS 靜默卸載 + 全機器；若舊版 uninstaller 不認得，參數會被忽略
-  Params := '/S /allusers';
-  if ExtraArgs <> '' then
-    Params := ExtraArgs + ' ' + Params;
-  // 新版本身已 admin，直接執行舊版 uninstaller 不需要再提權
-  Result := ShellExec('', ExePath, Params, '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-end;
-
-function InitializeSetup(): Boolean;
-var
-  Olds: TStringList;
-  i: Integer;
-  Msg: String;
+  pv: String;
 begin
   Result := True;
-  Olds := GetOldUninstallers();
-  try
-    if Olds.Count = 0 then
-      Exit;
-
-    if ActiveLanguage() = 'tradchinese' then
-      Msg := '偵測到已安裝的舊版本 (Electron 版)，是否要先移除舊版本再繼續安裝新版本？' + #13#10#13#10 +
-             '按「否」將取消安裝。'
-    else if ActiveLanguage() = 'simpchinese' then
-      Msg := '检测到已安装的旧版本 (Electron 版)，是否要先卸载旧版本再继续安装新版本？' + #13#10#13#10 +
-             '单击“否”将取消安装。'
-    else
-      Msg := 'An older version (Electron-based) was detected. Uninstall it before continuing?' + #13#10#13#10 +
-             'Selecting No will cancel the installation.';
-
-    if MsgBox(Msg, mbConfirmation, MB_YESNO) <> IDYES then
-    begin
+  if RegQueryStringValue(HKLM,
+      'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}',
+      'pv', pv) then
+    if (pv <> '') and (pv <> '0.0.0.0') then
       Result := False;
-      Exit;
-    end;
-
-    for i := 0 to Olds.Count - 1 do
-      RunOldUninstaller(Olds[i]);
-    // 不檢查每個 RunOldUninstaller 的回傳：
-    // 若 uninstaller 不存在（殘留註冊表項）→ ShellExec 失敗，但舊版已壞，讓新版蓋過去
-  finally
-    Olds.Free;
-  end;
+  if Result then
+    if RegQueryStringValue(HKCU,
+        'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}',
+        'pv', pv) then
+      if (pv <> '') and (pv <> '0.0.0.0') then
+        Result := False;
 end;
 
 // 解除安裝流程：usUninstall 階段詢問使用者是否同時移除使用者資料，
@@ -231,7 +149,7 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   UserDataDir: String;
 begin
-  UserDataDir := ExpandConstant('{userappdata}\tw.reh\genshin_impact_wish_gacha_analyzer');
+  UserDataDir := ExpandConstant('{userappdata}\tw.reh\wuthering_waves_convene_gacha_analyzer');
   case CurUninstallStep of
     usUninstall:
       begin

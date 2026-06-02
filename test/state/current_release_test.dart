@@ -5,10 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/services/app_release_checker.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/app_release.dart'
+import 'package:wuthering_waves_convene_gacha_analyzer/services/app_release_checker.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart'
     show httpClientProvider;
-import 'package:genshin_impact_wish_gacha_analyzer/state/current_release.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/current_release.dart';
 
 Map<String, dynamic> _releaseJson(String tag, String published) => {
   'tag_name': tag,

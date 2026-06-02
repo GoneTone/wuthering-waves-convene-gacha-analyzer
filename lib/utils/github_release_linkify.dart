@@ -1,4 +1,4 @@
-import 'package:genshin_impact_wish_gacha_analyzer/data/app_repo.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/app_repo.dart';
 
 /// 把 [s] 內的 regex 特殊字元跳脫，使其可安全嵌入 [RegExp] pattern 作為字面值。
 String _escapeRegExp(String s) =>

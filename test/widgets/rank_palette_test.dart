@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/rank_palette.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rank_palette.dart';
 
 void main() {
   group('accentForRank', () {
@@ -18,12 +18,12 @@ void main() {
       expect(accentForRank(3, tokens), tokens.threeStar);
     });
 
-    test('rank 2 maps to twoStar', () {
-      expect(accentForRank(2, tokens), tokens.twoStar);
+    test('rank 2 falls back to textMuted', () {
+      expect(accentForRank(2, tokens), tokens.textMuted);
     });
 
-    test('rank 1 maps to oneStar', () {
-      expect(accentForRank(1, tokens), tokens.oneStar);
+    test('rank 1 falls back to textMuted', () {
+      expect(accentForRank(1, tokens), tokens.textMuted);
     });
 
     test('rank 0 falls back to textMuted', () {

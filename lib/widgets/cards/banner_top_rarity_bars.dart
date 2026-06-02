@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/data/gacha_types.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/gacha_record.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_pity.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/theme/tokens.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/widgets/banner_colors.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_pity.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
 
 /// 卡池主稀有度件數長條圖。
 ///
-/// 每個 [GachaType] 依其 `primaryPity.rank` 決定該池要計數的稀有度（卡池是
-/// 5★、頌願常駐是 4★），bar 長度為各池件數相對最大值的比例。
+/// 每個 [GachaType] 依其 `primaryPity.rank` 決定該池要計數的稀有度（多為
+/// 5★，部分卡池為 4★），bar 長度為各池件數相對最大值的比例。
 class BannerTopRarityBars extends StatelessWidget {
   /// 建立 [BannerTopRarityBars]。
   const BannerTopRarityBars({
@@ -23,7 +23,7 @@ class BannerTopRarityBars extends StatelessWidget {
   /// 要顯示的卡池類型列表，決定條目數量與各池的主稀有度。
   final List<GachaType> types;
 
-  /// 各 gachaType → 該池所有祈願紀錄的映射。
+  /// 各 gachaType → 該池所有喚取紀錄的映射。
   final Map<String, List<GachaRecord>> banners;
 
   /// 各卡池節點的顏色映射。
@@ -35,21 +35,18 @@ class BannerTopRarityBars extends StatelessWidget {
 
     final counts = <String, int>{
       for (final t in types)
-        t.gachaType: (banners[t.gachaType] ?? const [])
-            .where((r) => r.rankType == t.primaryPity.rank)
+        t.key: (banners[t.key] ?? const [])
+            .where((r) => r.qualityLevel == t.primaryPity.rank)
             .length,
     };
     final maxCount = counts.values.fold<int>(0, (m, v) => v > m ? v : m);
 
     final rows = types
         .map((type) {
-          final records = banners[type.gachaType] ?? const <GachaRecord>[];
-          final topCount = counts[type.gachaType]!;
-          final isEnded = type.gachaType == '100';
+          final records = banners[type.key] ?? const <GachaRecord>[];
+          final topCount = counts[type.key]!;
           final String subtitle;
-          if (isEnded) {
-            subtitle = l.pityBeginnerEnded;
-          } else if (topCount == 0) {
+          if (topCount == 0) {
             subtitle = l.pityNoMainRarity(l.rarityStar(type.primaryPity.rank));
           } else {
             final pity = computePity(
@@ -64,7 +61,7 @@ class BannerTopRarityBars extends StatelessWidget {
           }
           return _BannerRow(
             name: type.resolveName(l),
-            color: colors.colorFor(type.gachaType),
+            color: colors.colorFor(type.key),
             topCount: topCount,
             subtitle: subtitle,
             ratio: maxCount == 0 ? 0.0 : topCount / maxCount,

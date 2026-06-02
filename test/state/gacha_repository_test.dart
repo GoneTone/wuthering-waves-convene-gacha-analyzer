@@ -5,39 +5,37 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/accounts_bundle.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/cancellable_http_client.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/settings_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_fetcher.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/gacha_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/settings.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_capture.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeCapture implements GachaCapture {
-  _FakeCapture(this._url);
-  final String? _url;
+  _FakeCapture(this._cred);
+  final GachaCredential? _cred;
 
   @override
   CaptureSession start() =>
-      CaptureSession(result: Future.value(_url), cancel: () async {});
+      CaptureSession(result: Future.value(_cred), cancel: () async {});
 }
 
-class _CountingCapture implements GachaCapture {
-  _CountingCapture(this._inner, this._onCall);
-  final GachaCapture _inner;
-  final void Function() _onCall;
-
-  @override
-  CaptureSession start() {
-    _onCall();
-    return _inner.start();
-  }
-}
+/// 測試用虛假憑證。
+GachaCredential _fakeCred() => GachaCredential(
+  playerId: '100000001',
+  cardPoolId: '2e23deadbeef2768',
+  serverId: '86d5deadbeef9650',
+  recordId: '0632deadbeef8550',
+  languageCode: 'zh-Hant',
+);
 
 void main() {
   late Directory tempDir;
@@ -84,16 +82,36 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 1, 1),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     await storage.save(
       BannerStorage(
-        uid: '100000002',
+        playerId: '100000002',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9), // 較新
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
 
@@ -119,80 +137,29 @@ void main() {
     expect(state.activeUid, '100000002');
   });
 
-  test('AuthExpired 連續 2 次 → UpdateFailed with exact message', () async {
-    final storage = GachaStorage(tempDir);
-    // 先 seed 一個 cached URL，讓 update 直接走 fetch path（跳過 MITM 階段）
-    await storage.save(
-      BannerStorage(
-        uid: '100000001',
-        lastUpdated: DateTime.utc(2026),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
-      ),
-    );
-    await storage.saveCapturedUrl(
-      '100000001',
-      'https://example.com/getGachaLog?authkey=expired',
-    );
-
-    var fetcherCalls = 0;
-    final mock = MockClient((req) async {
-      fetcherCalls++;
-      // 永遠回 -101 認證失效
-      return http.Response(
-        '{"retcode":-101,"message":"authkey timeout","data":null}',
-        200,
-        headers: {'content-type': 'application/json'},
-      );
-    });
-
-    var captureCalls = 0;
-    final fakeCapture = _FakeCapture(
-      'https://example.com/getGachaLog?authkey=alsoexpired',
-    );
-
-    final container = ProviderContainer(
-      overrides: [
-        gachaStorageProvider.overrideWithValue(storage),
-        gachaCaptureProvider.overrideWith((ref) {
-          // 計數 capture 被呼叫幾次
-          return _CountingCapture(fakeCapture, () => captureCalls++);
-        }),
-        cancellableHttpClientFactoryProvider.overrideWithValue(
-          () => CancellableHttpClient(client: mock, cancel: () {}),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-
-    // 等 bootstrap 完成
-    container.read(gachaRepositoryProvider);
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(container.read(gachaRepositoryProvider).activeUid, '100000001');
-
-    await container.read(gachaRepositoryProvider.notifier).update();
-
-    final progress = container.read(gachaRepositoryProvider).progress;
-    expect(progress, isA<UpdateFailed>());
-    expect((progress as UpdateFailed).error, isA<UpdateErrorAuthExpired>());
-    // capture 應該被叫 1 次（fallback MITM）；cached URL 第一次直接用，沒 MITM
-    expect(captureCalls, 1);
-    // fetcher 至少被叫過（兩次嘗試都打 mock）
-    expect(fetcherCalls, greaterThan(0));
-  });
-
   test('update() 立刻設定 Preparing（在第一個 await 之前）', () async {
     final storage = GachaStorage(tempDir);
-    // seed cached URL，update 走 fetch 路徑（不進 MITM）
+    // seed cached credential，update 走 fetch 路徑（不進 MITM）
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
-    await storage.saveCapturedUrl(
+    await storage.saveCapturedCredential(
       '100000001',
-      'https://example.com/getGachaLog?authkey=x',
+      _fakeCred().toJsonString(),
     );
 
     // 用一個永遠不 complete 的 Completer 阻塞 HTTP，這樣 _runUpdate
@@ -222,14 +189,21 @@ void main() {
     final notifier = container.read(gachaRepositoryProvider.notifier);
     final updateFut = notifier.update();
 
-    // 把 microtask 跑一輪，讓 loadCapturedUrl 完成、進到 probe 並 await
-    // mock client 的 future（永遠不 complete），此刻 state.progress 應該是 Preparing
-    await Future<void>.delayed(const Duration(milliseconds: 30));
-
+    // update() 在第一個 await 之前同步 emit Preparing；此刻尚未跑任何 microtask，
+    // state.progress 應已是 Preparing（ref.listen 可立刻彈出 dialog）。
     expect(
       container.read(gachaRepositoryProvider).progress,
       isA<Preparing>(),
-      reason: '進入 probe 階段時 state 應該維持在 Preparing',
+      reason: 'update() 應在第一個 await 之前同步設定 Preparing',
+    );
+
+    // 跑數輪 microtask，讓 loadCapturedCredential 完成、進到第一池 fetchPool 並
+    // await 永不 complete 的 mock client；此刻 state 已推進到 FetchingBanner。
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+    expect(
+      container.read(gachaRepositoryProvider).progress,
+      isA<FetchingBanner>(),
+      reason: '取得快取憑證後直接進首池抓取，state 應為 FetchingBanner',
     );
 
     // cleanup
@@ -241,14 +215,24 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
-    await storage.saveCapturedUrl(
+    await storage.saveCapturedCredential(
       '100000001',
-      'https://example.com/getGachaLog?authkey=x',
+      _fakeCred().toJsonString(),
     );
 
     final block = Completer<http.Response>();
@@ -290,14 +274,24 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
-    await storage.saveCapturedUrl(
+    await storage.saveCapturedCredential(
       '100000001',
-      'https://example.com/getGachaLog?authkey=x',
+      _fakeCred().toJsonString(),
     );
 
     final container = ProviderContainer(
@@ -359,16 +353,36 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 1, 1),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     await storage.save(
       BannerStorage(
-        uid: '100000002',
+        playerId: '100000002',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9), // 較新
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     SharedPreferences.setMockInitialValues({'pref.lastActiveUid': '100000001'});
@@ -398,27 +412,35 @@ void main() {
       final storage = GachaStorage(tempDir);
       await storage.save(
         BannerStorage(
-          uid: '100000001',
+          playerId: '100000001',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 1, 1),
           banners: const {
-            '301': [],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '1': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );
       await storage.save(
         BannerStorage(
-          uid: '100000002',
+          playerId: '100000002',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 5, 9),
           banners: const {
-            '301': [],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '1': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );
@@ -454,9 +476,19 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
 
@@ -485,16 +517,36 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 1, 1),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     await storage.save(
       BannerStorage(
-        uid: '100000002',
+        playerId: '100000002',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     SharedPreferences.setMockInitialValues({
@@ -521,140 +573,40 @@ void main() {
     expect(container.read(gachaRepositoryProvider).activeUid, '100000001');
   });
 
-  test(
-    'cancelPreparing 在 FetchingBanner 階段也應 clearProgress (非 UpdateCompleted)',
-    () async {
-      final storage = GachaStorage(tempDir);
-      await storage.save(
-        BannerStorage(
-          uid: '100000001',
-          lastUpdated: DateTime.utc(2026),
-          banners: const {
-            '301': [],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
-          },
-        ),
-      );
-      await storage.saveCapturedUrl(
-        '100000001',
-        'https://example.com/getGachaLog?authkey=x',
-      );
-
-      // 第一次 request（probe 第一個 banner，命中 → primer，state 還在 Preparing）
-      // 第二次 request 起會卡住（fetchBannerWithMerge 第二頁的 HTTP），這時 state
-      // 已經被 onProgress 推進到 FetchingBanner。
-      var hits = 0;
-      final block = Completer<http.Response>();
-      final container = ProviderContainer(
-        overrides: [
-          gachaStorageProvider.overrideWithValue(storage),
-          gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
-          cancellableHttpClientFactoryProvider.overrideWithValue(
-            () => CancellableHttpClient(
-              client: MockClient((req) {
-                hits++;
-                if (hits == 1) {
-                  // primer：20 筆紀錄迫使 fetchBannerWithMerge 進入第二頁
-                  return Future.value(
-                    http.Response(
-                      jsonEncode({
-                        'retcode': 0,
-                        'message': 'OK',
-                        'data': {
-                          'list': List.generate(
-                            20,
-                            (i) => {
-                              'uid': '100000001',
-                              'gacha_type': '301',
-                              'item_id': '',
-                              'count': '1',
-                              'time': '2025-09-23 21:27:37',
-                              'name': 'x',
-                              'lang': 'zh-tw',
-                              'item_type': '武器',
-                              'rank_type': '3',
-                              // 19 字元 id，遞減確保 desc 順序
-                              'id': '17${(99 - i).toString().padLeft(17, '0')}',
-                            },
-                          ),
-                          'page': '1',
-                          'size': '20',
-                          'total': '0',
-                        },
-                      }),
-                      200,
-                      headers: {'content-type': 'application/json'},
-                    ),
-                  );
-                }
-                // 後續 request 永遠不 complete
-                return block.future;
-              }),
-              cancel: () {
-                if (!block.isCompleted) {
-                  block.completeError(
-                    http.ClientException('cancelled by test'),
-                  );
-                }
-              },
-            ),
-          ),
-          // 加快 rate limit，免得測試太慢
-          gachaFetcherProvider.overrideWithValue(
-            GachaFetcher(rateLimit: Duration.zero, retryBackoff: Duration.zero),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      container.read(gachaRepositoryProvider);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      final notifier = container.read(gachaRepositoryProvider.notifier);
-      final updateFut = notifier.update();
-
-      // 等更長一點，讓 probe 完成（命中第一個 banner）、進入 fetchBannerWithMerge、
-      // 處理 primer（onProgress → state=FetchingBanner）、再 await 第二頁 HTTP（block.future）
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-
-      // 確認此刻已經是 FetchingBanner
-      expect(
-        container.read(gachaRepositoryProvider).progress,
-        isA<FetchingBanner>(),
-        reason: '應該已進入 banner fetch 階段',
-      );
-
-      notifier.cancelPreparing();
-      await updateFut;
-
-      // progress 應為 null（clean cancel），不是 UpdateCompleted with failedBanners
-      final finalProgress = container.read(gachaRepositoryProvider).progress;
-      expect(
-        finalProgress,
-        isNull,
-        reason:
-            'cancel during FetchingBanner 應 clearProgress，不應產生 UpdateCompleted',
-      );
-    },
-  );
-
   test('setActiveUid 寫入 settings.lastActiveUid', () async {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 1, 1),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     await storage.save(
       BannerStorage(
-        uid: '100000002',
+        playerId: '100000002',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
 
@@ -686,16 +638,36 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     await storage.save(
       BannerStorage(
-        uid: '100000002',
+        playerId: '100000002',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 1, 1),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     SharedPreferences.setMockInitialValues({
@@ -734,16 +706,36 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     await storage.save(
       BannerStorage(
-        uid: '100000002',
+        playerId: '100000002',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 1, 1),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     SharedPreferences.setMockInitialValues({'pref.lastActiveUid': '100000001'});
@@ -776,9 +768,19 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     SharedPreferences.setMockInitialValues({'pref.lastActiveUid': '100000001'});
@@ -811,16 +813,36 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     await storage.save(
       BannerStorage(
-        uid: '100000002',
+        playerId: '100000002',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 1, 1),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     SharedPreferences.setMockInitialValues({'pref.lastActiveUid': '100000001'});
@@ -851,9 +873,19 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
     SharedPreferences.setMockInitialValues({
@@ -890,9 +922,19 @@ void main() {
     final storage = GachaStorage(tempDir);
     await storage.save(
       BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 9),
-        banners: const {'301': [], '302': [], '500': [], '200': [], '100': []},
+        banners: const {
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          '6': [],
+          '8': [],
+          '9': [],
+        },
       ),
     );
 
@@ -931,14 +973,16 @@ void main() {
       // Existing: 100000001 (old data), 100000003 (untouched)
       await storage.save(
         BannerStorage(
-          uid: '100000001',
+          playerId: '100000001',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 1, 1),
           banners: const {'301': []},
         ),
       );
       await storage.save(
         BannerStorage(
-          uid: '100000003',
+          playerId: '100000003',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 1, 1),
           banners: const {'301': []},
         ),
@@ -964,12 +1008,14 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       final newA = BannerStorage(
-        uid: '100000001',
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 12),
         banners: const {'301': [], '302': []},
       );
       final newB = BannerStorage(
-        uid: '100000002',
+        playerId: '100000002',
+        languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026, 5, 12),
         banners: const {'301': []},
       );
@@ -1013,7 +1059,8 @@ void main() {
       for (final uid in ['100000001', '100000003', '100000004']) {
         await storage.save(
           BannerStorage(
-            uid: uid,
+            playerId: uid,
+            languageCode: 'zh-Hant',
             lastUpdated: DateTime.utc(2026, 1, 1),
             banners: const {'301': []},
           ),
@@ -1047,14 +1094,16 @@ void main() {
         accounts: [
           ExportedAccount(
             data: BannerStorage(
-              uid: '100000002',
+              playerId: '100000002',
+              languageCode: 'zh-Hant',
               lastUpdated: DateTime.utc(2026, 5, 12),
               banners: const {'301': []},
             ),
           ),
           ExportedAccount(
             data: BannerStorage(
-              uid: '100000001',
+              playerId: '100000001',
+              languageCode: 'zh-Hant',
               lastUpdated: DateTime.utc(2026, 5, 12),
               banners: const {'301': []},
             ),
@@ -1100,7 +1149,8 @@ void main() {
         accounts: [
           ExportedAccount(
             data: BannerStorage(
-              uid: '100000001',
+              playerId: '100000001',
+              languageCode: 'zh-Hant',
               lastUpdated: DateTime.utc(2026, 5, 12),
               banners: const {'301': []},
             ),
@@ -1108,7 +1158,8 @@ void main() {
           ),
           ExportedAccount(
             data: BannerStorage(
-              uid: '100000002',
+              playerId: '100000002',
+              languageCode: 'zh-Hant',
               lastUpdated: DateTime.utc(2026, 5, 12),
               banners: const {'301': []},
             ),
@@ -1142,7 +1193,8 @@ void main() {
       // Existing active = 200000001 (will remain after import)
       await storage.save(
         BannerStorage(
-          uid: '200000001',
+          playerId: '200000001',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 1, 1),
           banners: const {'301': []},
         ),
@@ -1176,7 +1228,8 @@ void main() {
         accounts: [
           ExportedAccount(
             data: BannerStorage(
-              uid: '200000002',
+              playerId: '200000002',
+              languageCode: 'zh-Hant',
               lastUpdated: DateTime.utc(2026, 5, 12),
               banners: const {'301': []},
             ),
@@ -1206,32 +1259,29 @@ void main() {
       final sub = Logger.root.onRecord.listen(records.add);
       addTearDown(sub.cancel);
 
-      // Reuse happy-path setup from the FetchingBanner cancel test:
-      // primer page returns 20 records (forcing fetchBannerWithMerge into
-      // page 2), but here the second and subsequent pages return an empty
-      // list so the fetch completes successfully.
       final storage = GachaStorage(tempDir);
       await storage.save(
         BannerStorage(
-          uid: '100000001',
+          playerId: '100000001',
+          languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026),
           banners: const {
-            '301': [],
-            '302': [],
-            '500': [],
-            '200': [],
-            '100': [],
+            '1': [],
+            '2': [],
+            '3': [],
+            '4': [],
+            '5': [],
+            '6': [],
+            '8': [],
+            '9': [],
           },
         ),
       );
-      await storage.saveCapturedUrl(
+      await storage.saveCapturedCredential(
         '100000001',
-        'https://hk4e-api-os.hoyoverse.com/event/gacha_info/api/getGachaLog'
-            '?authkey=fakekey&authkey_ver=1&sign_type=2'
-            '&game_biz=hk4e_global&lang=zh-tw&gacha_type=301&page=1&size=20&end_id=0',
+        _fakeCred().toJsonString(),
       );
 
-      var hits = 0;
       final container = ProviderContainer(
         overrides: [
           gachaStorageProvider.overrideWithValue(storage),
@@ -1239,50 +1289,25 @@ void main() {
           cancellableHttpClientFactoryProvider.overrideWithValue(
             () => CancellableHttpClient(
               client: MockClient((req) async {
-                hits++;
-                if (hits == 1) {
-                  // primer: 20 records causes fetchBannerWithMerge to page 2
-                  return http.Response(
-                    jsonEncode({
-                      'retcode': 0,
-                      'message': 'OK',
-                      'data': {
-                        'list': List.generate(
-                          20,
-                          (i) => {
-                            'uid': '100000001',
-                            'gacha_type': '301',
-                            'item_id': '',
-                            'count': '1',
-                            'time': '2025-09-23 21:27:37',
-                            'name': 'x',
-                            'lang': 'zh-tw',
-                            'item_type': '武器',
-                            'rank_type': '3',
-                            'id': '17${(99 - i).toString().padLeft(17, '0')}',
-                          },
-                        ),
-                        'page': '1',
-                        'size': '20',
-                        'total': '0',
-                      },
-                    }),
-                    200,
-                    headers: {'content-type': 'application/json'},
-                  );
-                }
-                // All subsequent pages return empty list → fetch completes
+                // 第一池回傳一筆紀錄、其餘空 → 走 happy path（非 NoRecords），
+                // 確保抵達 `update completed` log。
+                final body = jsonDecode(req.body) as Map<String, dynamic>;
+                final type = body['cardPoolType'] as int;
+                final data = type == 1
+                    ? <Map<String, dynamic>>[
+                        {
+                          'cardPoolType': '1',
+                          'resourceId': 1211,
+                          'qualityLevel': 5,
+                          'resourceType': '角色',
+                          'name': '達妮婭',
+                          'count': 1,
+                          'time': '2026-05-21 10:39:03',
+                        },
+                      ]
+                    : const <Map<String, dynamic>>[];
                 return http.Response(
-                  jsonEncode({
-                    'retcode': 0,
-                    'message': 'OK',
-                    'data': {
-                      'list': <dynamic>[],
-                      'page': '2',
-                      'size': '20',
-                      'total': '0',
-                    },
-                  }),
+                  jsonEncode({'code': 0, 'message': 'success', 'data': data}),
                   200,
                   headers: {'content-type': 'application/json'},
                 );
@@ -1291,7 +1316,7 @@ void main() {
             ),
           ),
           gachaFetcherProvider.overrideWithValue(
-            GachaFetcher(rateLimit: Duration.zero, retryBackoff: Duration.zero),
+            GachaFetcher(rateLimit: Duration.zero),
           ),
         ],
       );
@@ -1330,7 +1355,7 @@ class _FailingStorage extends GachaStorage {
 
   @override
   Future<void> save(BannerStorage data) async {
-    if (data.uid == failOnUid) {
+    if (data.playerId == failOnUid) {
       throw Exception('simulated failure');
     }
     return super.save(data);

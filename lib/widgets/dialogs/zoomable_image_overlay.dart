@@ -4,14 +4,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
-import 'package:genshin_impact_wish_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
 /// 開啟全螢幕 lightbox 顯示 [imageFile]，可拖曳平移、滾輪 / 雙擊縮放、ESC / 點背景 / X 關閉。
 Future<void> showZoomableImageOverlay(
   BuildContext context, {
   required File imageFile,
 }) {
-  Logger('gacha.hoyowiki.zoom').info('overlay open file=${imageFile.path}');
+  Logger('gacha.itemimage.zoom').info('overlay open file=${imageFile.path}');
   return showDialog<void>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.75),
@@ -97,7 +97,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
 
   /// 關 overlay 並 log 來源。[reason] 走 `backdrop | outside-image | button` 三選一；ESC 由 Navigator barrierDismissible 處理，不經此路徑。
   void _close(String reason) {
-    Logger('gacha.hoyowiki.zoom').info('overlay close reason=$reason');
+    Logger('gacha.itemimage.zoom').info('overlay close reason=$reason');
     Navigator.of(context).pop();
   }
 
@@ -211,7 +211,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
                             image: _imageProvider,
                             fit: BoxFit.contain,
                             errorBuilder: (_, e, st) {
-                              Logger('gacha.hoyowiki.zoom').warning(
+                              Logger('gacha.itemimage.zoom').warning(
                                 'image errorBuilder file=${widget.imageFile.path}',
                                 e,
                                 st,

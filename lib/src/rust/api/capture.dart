@@ -14,25 +14,31 @@ Stream<CapturedRequest> startCapture() =>
 
 Future<void> stopCapture() => RustLib.instance.api.crateApiCaptureStopCapture();
 
-Future<bool> cleanupStaleProxy() =>
-    RustLib.instance.api.crateApiCaptureCleanupStaleProxy();
-
 class CapturedRequest {
   final String method;
   final String url;
   final String host;
   final PlatformInt64 timestampMs;
 
+  /// 攔到的 POST 請求 body 原文（JSON 字串）。鳴潮喚取憑證在此（playerId 等），
+  /// Dart 端用 `GachaCredential.fromCapturedBody` 解析；Rust 端絕不印其原文。
+  final String body;
+
   const CapturedRequest({
     required this.method,
     required this.url,
     required this.host,
     required this.timestampMs,
+    required this.body,
   });
 
   @override
   int get hashCode =>
-      method.hashCode ^ url.hashCode ^ host.hashCode ^ timestampMs.hashCode;
+      method.hashCode ^
+      url.hashCode ^
+      host.hashCode ^
+      timestampMs.hashCode ^
+      body.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -42,5 +48,6 @@ class CapturedRequest {
           method == other.method &&
           url == other.url &&
           host == other.host &&
-          timestampMs == other.timestampMs;
+          timestampMs == other.timestampMs &&
+          body == other.body;
 }

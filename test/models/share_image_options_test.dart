@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/share_image_options.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/share_image_options.dart';
 
 void main() {
   test('預設：深色 + 不顯示完整 UID', () {

@@ -1,13 +1,23 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/models/banner_storage.dart';
-import 'package:genshin_impact_wish_gacha_analyzer/services/accounts_export.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_export.dart';
 
 BannerStorage _bs(String uid, DateTime updated) => BannerStorage(
-  uid: uid,
+  playerId: uid,
+  languageCode: 'zh-Hant',
   lastUpdated: updated,
-  banners: const {'301': [], '302': [], '100': [], '200': [], '500': []},
+  banners: const {
+    '1': [],
+    '2': [],
+    '3': [],
+    '4': [],
+    '5': [],
+    '6': [],
+    '8': [],
+    '9': [],
+  },
 );
 
 void main() {
@@ -30,13 +40,13 @@ void main() {
     );
 
     final decoded = jsonDecode(out) as Map<String, dynamic>;
-    expect(decoded['schema_version'], 1);
+    expect(decoded['schema_version'], 2);
     expect(decoded['app_version'], '9.9.9');
     expect(decoded['last_active_uid'], 'A');
     expect(decoded['exported_at'], '2026-05-12T08:30:00.000Z');
 
     final accounts = decoded['accounts'] as List<dynamic>;
-    expect(accounts.map((a) => a['uid']).toList(), ['C', 'A', 'B']);
+    expect(accounts.map((a) => a['player_id']).toList(), ['C', 'A', 'B']);
     expect(accounts[0]['alias'], '小號');
     expect(accounts[1]['alias'], '主號');
     expect(accounts[2].containsKey('alias'), isFalse);
@@ -61,7 +71,7 @@ void main() {
     );
     final decoded = jsonDecode(out) as Map<String, dynamic>;
     final accounts = decoded['accounts'] as List<dynamic>;
-    expect(accounts.map((a) => a['uid']).toList(), ['A', 'C']);
+    expect(accounts.map((a) => a['player_id']).toList(), ['A', 'C']);
     expect(decoded['last_active_uid'], isNull);
   });
 }
