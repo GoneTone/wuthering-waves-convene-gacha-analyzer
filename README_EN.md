@@ -24,6 +24,11 @@ The utility may trigger anti-virus software during installation and execution. T
 
 <https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/releases>
 
+### Versions for Other Games
+
+- Genshin Impact: <https://github.com/GoneTone/genshin-impact-wish-gacha-analyzer>
+- More games may be supported in the future...
+
 ## How to Use
 
 1. Launch Wuthering Waves (don't open the convene record page yet).
