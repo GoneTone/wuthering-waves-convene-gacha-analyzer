@@ -368,6 +368,50 @@ void main() {
     expect(idx.lookupImage(21040084)!.kind, isNull);
   });
 
+  test('既有角色詳情已抓但 hasLuckdraw 未評估 → 重抓評估（legacy backfill）', () async {
+    // 預植：角色 1211 icon 已快取、kind 已分類、該語言詳情已抓，但 hasLuckdraw 為 null。
+    await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
+    await ItemImageIndexStorage(tempDir).save(
+      const ItemImageIndex(
+        items: {
+          1211: ItemImageEntry(
+            iconUrl: 'https://x/1211.png',
+            noImage: false,
+            permanentNoImage: false,
+            kind: kItemKindCharacter,
+            detailByLang: {
+              'zh-Hant': ItemDetailL10n(
+                intro: 'i',
+                elementName: '',
+                weaponTypeName: '',
+                skins: [],
+              ),
+            },
+          ),
+        },
+      ),
+    );
+    final container = build(characters: {1211}, details: {1211});
+    addTearDown(container.dispose);
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    await container.read(itemImageIndexProvider.notifier).waitForLoad();
+    repo.debugSeedAccount(
+      BannerStorage(
+        playerId: '701000000',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.utc(2026),
+        banners: {
+          '1': [_rec(1211, 5, '角色')],
+        },
+      ),
+    );
+    await repo.debugRunItemImagesOnly();
+    final e = container.read(itemImageIndexProvider).lookupImage(1211)!;
+    // hasLuckdraw 已由重抓詳情評估為定值（fake fetcher 回 false），不再是 null。
+    expect(e.hasLuckdraw, isNotNull);
+  });
+
   test('既有快取 icon 但 kind==null → 補 kind、不重下載', () async {
     await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
     await ItemImageIndexStorage(tempDir).save(

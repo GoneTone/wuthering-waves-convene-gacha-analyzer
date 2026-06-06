@@ -874,8 +874,9 @@ class GachaRepository extends Notifier<GachaState> {
   ///
   /// 流程：
   ///   1. 逐筆收集 `id → 出現過的擷取語言集合`（per-record lang）。
-  ///   2. 工作閘：icon 未就緒、kind 未分類（含既有快取 icon 的升級回填）、或某 lang
-  ///      詳情未抓 → 需處理。全無 → early return（不打 catalog）。
+  ///   2. 工作閘：icon 未就緒、kind 未分類（含既有快取 icon 的升級回填）、某 lang
+  ///      詳情未抓、或角色 hasLuckdraw 尚未評估（legacy backfill）→ 需處理。
+  ///      全無 → early return（不打 catalog）。
   ///   3. 對每個出現過的語言抓三清單（角色／武器／道具），union 成歸屬表（kind + icon）；
   ///      icon 語言無關，union 容忍個別語系缺漏。kind 由 catalog 歸屬決定，不依
   ///      `resourceType` 語言對應表。
@@ -911,8 +912,9 @@ class GachaRepository extends Notifier<GachaState> {
     }
     if (langsById.isEmpty) return downloaded;
 
-    // (2) gate：icon 未就緒、kind 未分類（含既有快取 icon 的升級回填）、或某 lang
-    //     詳情未抓 → 需處理。全無 → early return（不打 catalog）。
+    // (2) gate：icon 未就緒、kind 未分類（含既有快取 icon 的升級回填）、某 lang
+    //     詳情未抓、或角色 hasLuckdraw 尚未評估（legacy backfill）→ 需處理。
+    //     全無 → early return（不打 catalog）。
     final idx0 = ref.read(itemImageIndexProvider);
     bool needsWork(int id) {
       final existing = idx0.lookupImage(id);
@@ -924,7 +926,13 @@ class GachaRepository extends Notifier<GachaState> {
         return true;
       }
       if (existing?.kind == null) return true;
-      if (existing!.kind != kItemKindItem) {
+      // 既有使用者升級 backfill：角色 kind 已知但 luckdraw 尚未評估（hasLuckdraw==null）
+      // 時，即使詳情已抓也要重新處理一次以評估 hasLuckdraw（評估後為定值，之後不再重抓）。
+      if (existing!.kind == kItemKindCharacter &&
+          existing.hasLuckdraw == null) {
+        return true;
+      }
+      if (existing.kind != kItemKindItem) {
         for (final lang in langsById[id]!) {
           if (!existing.detailByLang.containsKey(lang)) return true;
         }
