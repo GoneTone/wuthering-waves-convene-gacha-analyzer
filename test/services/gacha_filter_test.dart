@@ -32,12 +32,14 @@ ItemImageIndex _idx(Map<int, String> kinds) => ItemImageIndex(
   },
 );
 
-/// 依 name.hashCode & 0xffff 為各測試 record 建立 index（角色→character，武器→weapon）。
+/// 依 name.hashCode & 0xffff 為各測試 record 建立 index（角色→character，武器→weapon，其他→item）。
 ItemImageIndex _recordIdx(List<GachaRecord> records) => _idx({
   for (final r in records)
-    r.resourceId: r.resourceType == '角色' || r.resourceType == 'Character'
-        ? kItemKindCharacter
-        : kItemKindWeapon,
+    r.resourceId: switch (r.resourceType) {
+      '角色' || 'Character' => kItemKindCharacter,
+      '武器' || 'Weapon' => kItemKindWeapon,
+      _ => kItemKindItem,
+    },
 });
 
 void main() {

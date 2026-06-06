@@ -124,8 +124,8 @@ class ItemImageEntry {
   final Map<String, ItemDetailL10n> detailByLang;
 
   /// 該物品的語言無關類型聚合鍵（`kItemKindCharacter`／`kItemKindWeapon`／
-  /// `kItemKindItem`），由 encore catalog 清單歸屬判定；尚未分類為 null。
-  /// 供 `itemTypeKeyOf` 做語言無關分類，取代 resourceType 語言對應表。
+  /// `kItemKindItem`），由 encore catalog 清單歸屬判定；null 代表尚未分類，
+  /// `itemTypeKeyOf` 此時 fallback 回該筆的原始 `resourceType` 字串。
   final String? kind;
 
   /// 是否有可顯示的成功 icon（D7：是否有圖的權威判定基礎）。
