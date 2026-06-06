@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
@@ -148,17 +149,12 @@ class _Body extends StatelessWidget {
     final theme = Theme.of(context);
     final tokens = theme.gacha;
 
-    String resolveBannerName(String key) => switch (key) {
-      'gachaTypeCharacter' => l.gachaTypeCharacter,
-      'gachaTypeWeapon' => l.gachaTypeWeapon,
-      'gachaTypeStandardCharacter' => l.gachaTypeStandardCharacter,
-      'gachaTypeStandardWeapon' => l.gachaTypeStandardWeapon,
-      'gachaTypeBeginner' => l.gachaTypeBeginner,
-      'gachaTypeBeginnerChoice' => l.gachaTypeBeginnerChoice,
-      'gachaTypeNewVoyageCharacter' => l.gachaTypeNewVoyageCharacter,
-      'gachaTypeNewVoyageWeapon' => l.gachaTypeNewVoyageWeapon,
-      _ => key,
-    };
+    String resolveBannerName(String key) {
+      for (final t in gachaTypes) {
+        if (t.nameKey == key) return t.resolveName(l);
+      }
+      return key;
+    }
 
     return switch (progress) {
       Preparing() => Column(
