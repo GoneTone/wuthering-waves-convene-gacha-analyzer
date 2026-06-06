@@ -446,7 +446,7 @@
   "settingsClearAll": "Clear all data",
   "settingsRefetchItemImagesTitle": "Force re-fetch item images",
   "@settingsRefetchItemImagesTitle": {
-    "description": "Settings → Data management → button: forcibly clears all cached item images (icon + header) and re-fetches them from scratch."
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
   },
   "settingsRefetchItemImagesEmpty": "No gacha records yet, nothing to re-fetch",
   "@settingsRefetchItemImagesEmpty": {
@@ -478,7 +478,7 @@
   },
   "settingsImageCacheGallery": "Detail images",
   "@settingsImageCacheGallery": {
-    "description": "Label for outfit cache size (large character art shown in item dialog)."
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
   },
   "settingsImageCacheCalculating": "Calculating…",
   "@settingsImageCacheCalculating": {
@@ -780,7 +780,6 @@
   "@actionCloseImagePreview": {
     "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
   },
-
   "actionViewOnEncore": "View on encore.moe",
   "@actionViewOnEncore": {
     "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
