@@ -1,7 +1,7 @@
 {
   "@@locale": "ja",
   "localeNativeName": "日本語",
-  "localeTranslator": "<a href=\"https://home.gamer.com.tw/homeindex.php?owner=XMoiswnX\">世界へいわ</a>、<a href=\"https://claude.com/claude-code\">Claude Code</a>",
+  "localeTranslator": "",
   "localeTranslatorLabel": "翻訳者：{translator}",
   "@localeNativeName": {
     "description": "Native name of this locale, shown in language picker."
@@ -780,7 +780,6 @@
   "@actionCloseImagePreview": {
     "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
   },
-
   "actionViewOnEncore": "encore.moe で見る",
   "@actionViewOnEncore": {
     "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
