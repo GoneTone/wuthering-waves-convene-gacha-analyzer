@@ -284,6 +284,9 @@
   "settingsMaskUidInUi": "画面上の UID をマスク",
   "settingsMaskUidInUiHint": "オンにすると、画面とアカウント一覧の UID が先頭 3 桁と残りを x でマスクして表示されます（例：123xxxxx）。配信や画面共有時に便利です。共有画像、エクスポートファイル、削除確認ダイアログは影響を受けません。",
   "settingsAbout": "このツールについて",
+  "settingsOtherGamesTitle": "他のゲーム向けバージョン",
+  "settingsOtherGamesGenshin": "原神",
+  "settingsOtherGamesFuture": "今後、対応ゲームが増える可能性があります...",
   "settingsAboutVersion": "バージョン {version}",
   "@settingsAboutVersion": {
     "placeholders": {

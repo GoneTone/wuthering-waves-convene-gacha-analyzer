@@ -37,6 +37,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialo
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/current_release_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/other_game_versions.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/page_header.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/translator_text.dart';
 
@@ -325,6 +326,8 @@ class _AboutContent extends ConsumerWidget {
             ),
           ],
         ),
+        const SizedBox(height: AppSpacing.l),
+        const OtherGameVersions(),
       ],
     );
   }
