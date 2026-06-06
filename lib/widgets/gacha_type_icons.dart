@@ -13,5 +13,7 @@ IconData gachaTypeOutlinedIcon(String nameKey) => switch (nameKey) {
   'gachaTypeBeginnerChoice' => Icons.checklist_outlined,
   'gachaTypeNewVoyageCharacter' => Icons.sailing_outlined,
   'gachaTypeNewVoyageWeapon' => Icons.explore_outlined,
+  'gachaTypeCollabCharacter' => Icons.diversity_3_outlined,
+  'gachaTypeCollabWeapon' => Icons.handshake_outlined,
   _ => Icons.casino_outlined,
 };
