@@ -88,7 +88,7 @@ void main() {
       expect(buildFiveStarCollection(records), hasLength(2));
     });
 
-    test('不再排除任何卡池（所有 8 池的 5★ 都納入）', () {
+    test('不再排除任何卡池（所有 10 池的 5★ 都納入）', () {
       final records = [
         _r(
           resourceId: 1,

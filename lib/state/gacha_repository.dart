@@ -28,14 +28,14 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart'
 
 export 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
 
-/// 8 個卡池全部 `code==0` 且 `data` 全空（該帳號從未喚取）→ 轉成 [UpdateErrorNoRecords]。
+/// 10 個卡池全部 `code==0` 且 `data` 全空（該帳號從未喚取）→ 轉成 [UpdateErrorNoRecords]。
 class _NoRecordsException implements Exception {
   const _NoRecordsException();
 }
 
 /// recordId 疑似失效訊號，由 [_runUpdate] 接住後自動重攔一次；重攔後第二輪仍全失敗才轉成
 /// [UpdateErrorGachaFailed]。兩個觸發來源：①第一輪首抓的角色活動（pool 0）失敗即早退
-/// （recordId 為 8 池共用，pool 0 失敗 ≈ 全域失效）②第二輪跑滿 8 池且全部 `code != 0`。
+/// （recordId 為 10 池共用，pool 0 失敗 ≈ 全域失效）②第二輪跑滿 10 池且全部 `code != 0`。
 class _AllPoolsFailedException implements Exception {
   /// 建立 [_AllPoolsFailedException]，[apiError] 為觸發訊號的失敗池 [GachaApiException]。
   const _AllPoolsFailedException(this.apiError);
@@ -367,15 +367,15 @@ class GachaRepository extends Notifier<GachaState> {
     }
   }
 
-  /// 依序拉取 8 個 cardPoolType 的整池全歷史，合併存檔。
+  /// 依序拉取 10 個 cardPoolType 的整池全歷史，合併存檔。
   ///
   /// 逐池容錯：單池 `code!=0` 保留舊資料、記入 `failed` 後繼續（最終以
-  /// `UpdateCompleted.failedBanners` 顯示部分失敗紅字）；**8 池全失敗** → 丟
+  /// `UpdateCompleted.failedBanners` 顯示部分失敗紅字）；**10 池全失敗** → 丟
   /// [_AllPoolsFailedException]（由 [_runUpdate] 自動重攔一次）；全部成功但每池皆空且
   /// 無既有資料 → 丟 [_NoRecordsException]。網路層 [http.ClientException] 不在此攔截。
   ///
   /// [abortOnFirstPoolFailure] 為 true（第一輪）時，首抓的角色活動（pool 0，`i == 0`）一
-  /// 失敗就立刻丟 [_AllPoolsFailedException] 早退、不再續抓其餘 7 池（recordId 為 8 池共用，
+  /// 失敗就立刻丟 [_AllPoolsFailedException] 早退、不再續抓其餘 9 池（recordId 為 10 池共用，
   /// pool 0 失敗 ≈ 全域失效）；為 false（重攔後第二輪）時維持「跑滿全池、全失敗才判定」的容錯。
   Future<void> _fetchAllBanners({
     required GachaCredential cred,
@@ -435,7 +435,7 @@ class GachaRepository extends Notifier<GachaState> {
         if (merged.isNotEmpty) anyNonEmpty = true;
         totalNew += merged.length - existingForPool.length;
       } on GachaApiException catch (e) {
-        // 第一輪：首抓的角色活動（pool 0）失敗 ≈ 8 池共用的 recordId 失效。不續抓其餘 7
+        // 第一輪：首抓的角色活動（pool 0）失敗 ≈ 10 池共用的 recordId 失效。不續抓其餘 9
         // 池，直接丟全池失效訊號交由 _runUpdate 自動重攔。
         if (abortOnFirstPoolFailure && i == 0) {
           _log.warning(

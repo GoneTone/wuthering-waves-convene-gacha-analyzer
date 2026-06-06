@@ -223,7 +223,7 @@ void main() {
     await _pump(t, card, container);
     expect(t.takeException(), isNull);
 
-    // 綜合模式現為 8 池聚合單段：總計 / 5★ / 4★ 共 3 張 StatCard、1 條時間軸。
+    // 綜合模式現為 10 池聚合單段：總計 / 5★ / 4★ 共 3 張 StatCard、1 條時間軸。
     expect(find.byType(StatCard), findsNWidgets(3));
     expect(find.byType(TimelineVertical), findsOneWidget);
     expect(find.byType(InlineSectionTitle), findsNothing);

@@ -38,7 +38,7 @@ class _Bucket {
 int _mergeKey(GachaRecord r) => r.resourceId;
 
 /// 由單一 records 來源建構五星一覽：取所有 5★，依 resourceId 去重計數，
-/// 依「次數降冪 → 最近抽到時間降冪」排序。鳴潮 8 池皆納入（無 odes 排除）。
+/// 依「次數降冪 → 最近抽到時間降冪」排序。鳴潮 10 池皆納入（無 odes 排除）。
 List<FiveStarCollectionItem> buildFiveStarCollection(
   List<GachaRecord> records,
 ) {

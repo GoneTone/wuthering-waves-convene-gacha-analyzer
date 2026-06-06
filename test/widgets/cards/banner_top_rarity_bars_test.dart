@@ -35,7 +35,7 @@ Widget _wrap(
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: Scaffold(
-    // 以 SingleChildScrollView 給 8 列 bars 不受限的垂直空間（測試視窗預設僅
+    // 以 SingleChildScrollView 給 10 列 bars 不受限的垂直空間（測試視窗預設僅
     // 800×600，固定高 SizedBox 會被夾到 600 而誤觸 RenderFlex overflow）；
     // width 仍由 SizedBox 鎖死，用以逼出窄欄換行驗證。
     body: SingleChildScrollView(
@@ -69,7 +69,7 @@ void main() {
     for (final t in gachaTypes) {
       expect(find.text(t.resolveName(l)), findsOneWidget);
     }
-    // 鳴潮 8 池主稀有度皆 5★，空資料時每列顯示「暫無 5★」。
+    // 鳴潮 10 池主稀有度皆 5★，空資料時每列顯示「暫無 5★」。
     expect(
       find.text(l.pityNoMainRarity(l.rarityStar(5))),
       findsNWidgets(gachaTypes.length),

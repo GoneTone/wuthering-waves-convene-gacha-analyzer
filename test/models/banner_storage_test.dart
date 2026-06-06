@@ -13,7 +13,7 @@ GachaRecord _r(int id) => GachaRecord(
 );
 
 void main() {
-  test('toJson 落 player_id / language_code / 8 個 cardPoolType key', () {
+  test('toJson 落 player_id / language_code / 10 個 cardPoolType key', () {
     final storage = BannerStorage(
       playerId: '701000000',
       languageCode: 'zh-Hant',
@@ -27,6 +27,8 @@ void main() {
         '6': [],
         '8': [],
         '9': [],
+        '10': [],
+        '11': [],
       },
     );
     final json = storage.toJson();
@@ -42,6 +44,8 @@ void main() {
       '6',
       '8',
       '9',
+      '10',
+      '11',
     });
     expect((json['banners'] as Map)['1'], hasLength(1));
   });
