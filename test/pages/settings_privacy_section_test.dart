@@ -49,8 +49,7 @@ Future<ProviderContainer> _setupContainer({
     ],
   );
   await container.read(settingsProvider.notifier).waitForLoad();
-  container.read(gachaRepositoryProvider);
-  await Future<void>.delayed(const Duration(milliseconds: 50));
+  await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
   return container;
 }
 

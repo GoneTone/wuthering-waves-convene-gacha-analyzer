@@ -27,7 +27,7 @@ class _NullCapture implements GachaCapture {
 /// 建立並預熱 ProviderContainer。
 ///
 /// 必須在 tester.runAsync 裡呼叫，以跳出 FakeAsync 環境，
-/// 讓 File I/O 和 Future.delayed 能正常完成。
+/// 讓 bootstrap 的 File I/O 能正常完成。
 Future<ProviderContainer> _setupContainer({
   required GachaStorage storage,
   Map<String, dynamic> prefs = const {},
@@ -46,8 +46,7 @@ Future<ProviderContainer> _setupContainer({
     ],
   );
   await container.read(settingsProvider.notifier).waitForLoad();
-  container.read(gachaRepositoryProvider);
-  await Future<void>.delayed(const Duration(milliseconds: 50));
+  await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
   return container;
 }
 

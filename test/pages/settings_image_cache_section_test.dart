@@ -50,10 +50,9 @@ Future<ProviderContainer> _setupContainer({
     ],
   );
   await container.read(settingsProvider.notifier).waitForLoad();
-  container.read(gachaRepositoryProvider);
+  await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
   // itemImageCacheUsageProvider 在 container 內預熱，讓 widget 訂閱時已有快取值。
   await container.read(itemImageCacheUsageProvider.future);
-  await Future<void>.delayed(const Duration(milliseconds: 50));
   return container;
 }
 
