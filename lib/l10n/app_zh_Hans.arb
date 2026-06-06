@@ -776,7 +776,6 @@
   "@actionCloseImagePreview": {
     "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
   },
-
   "actionViewOnEncore": "在 encore.moe 查看",
   "@actionViewOnEncore": {
     "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
