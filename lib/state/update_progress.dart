@@ -38,7 +38,7 @@ class FetchingBanner extends UpdateProgress {
   /// 目前正在抓第幾個 cardPoolType（1-based，共 [poolCount] 個）。
   final int poolIndex;
 
-  /// 本次更新需迭代的 cardPoolType 總數（固定 8）。
+  /// 本次更新需迭代的 cardPoolType 總數（固定 10）。
   final int poolCount;
 
   /// 到目前為止累積的新紀錄數。
