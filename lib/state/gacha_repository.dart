@@ -114,13 +114,6 @@ final gachaRepositoryProvider = NotifierProvider<GachaRepository, GachaState>(
   GachaRepository.new,
 );
 
-/// 作用中帳號的擷取語言（無帳號時 null）；dialog 用來查 per-lang 詳情。
-final activeLanguageCodeProvider = Provider<String?>(
-  (ref) => ref.watch(
-    gachaRepositoryProvider.select((s) => s.activeData?.languageCode),
-  ),
-);
-
 // ─── Notifier ───
 
 /// 喚取資料狀態管理，統一處理 bootstrap、更新、匯入與刪除。

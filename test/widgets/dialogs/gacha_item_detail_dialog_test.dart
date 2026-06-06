@@ -10,7 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
@@ -21,6 +20,7 @@ GachaRecord _rec({
   required String name,
   int qualityLevel = 5,
   String resourceType = '角色',
+  String languageCode = '',
 }) => GachaRecord(
   resourceId: resourceId,
   qualityLevel: qualityLevel,
@@ -29,6 +29,7 @@ GachaRecord _rec({
   name: name,
   count: 1,
   time: DateTime(2026, 5, 24),
+  languageCode: languageCode,
 );
 
 /// 找 label 文字為 [text] 的詳情 tag [Chip]（與 [ChoiceChip] 切換器 chip 區隔）。
@@ -47,23 +48,19 @@ void main() {
   late Directory tempDir;
   late ProviderContainer container;
 
-  /// 以 [tempDir] 為快取根重建 [container]；[activeLang] 非 null 時覆寫
-  /// [activeLanguageCodeProvider]，供 dialog 查 per-lang 詳情。重建會 dispose 舊
-  /// container，故新 container 以 [addTearDown] 收尾。
+  /// 以 [tempDir] 為快取根重建 [container]。重建會 dispose 舊 container，
+  /// 故新 container 以 [addTearDown] 收尾。
   ///
   /// 僅建立 container、不 await index 載入：在 `testWidgets` 的 fake-async 區內
   /// 直接 await 真實磁碟 I/O 會卡住，故載入交由呼叫端在 [WidgetTester.runAsync]
   /// 內呼叫 `waitForLoad()`（見 [loadIndex]）。
-  void rebuildContainer({String? activeLang}) {
+  void rebuildContainer() {
     container = ProviderContainer(
       overrides: [
         itemImageIndexStorageProvider.overrideWithValue(
           ItemImageIndexStorage(tempDir),
         ),
         itemImageCacheDirProvider.overrideWithValue(tempDir),
-        // 一律 override，避免 dialog watch 此 provider 時連帶觸發
-        // gachaRepositoryProvider.build → 讀未 override 的 gachaStorageProvider 報錯。
-        activeLanguageCodeProvider.overrideWithValue(activeLang),
       ],
     );
     addTearDown(container.dispose);
@@ -277,7 +274,7 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      rebuildContainer(activeLang: 'zh-Hant');
+      rebuildContainer();
       const iconUrl = 'https://cdn.example.com/long_icon.png';
       final longIntro = '這是一段刻意很長的角色簡介，用來驗證在寬視窗下會換行而非撐寬 dialog。' * 20;
       await tester.runAsync(() async {
@@ -307,7 +304,10 @@ void main() {
         await _touchFile(tempDir, cacheFile.uri.pathSegments.last);
       });
 
-      await pumpDialog(tester, _rec(resourceId: 222, name: 'LongIntro'));
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 222, name: 'LongIntro', languageCode: 'zh-Hant'),
+      );
 
       // 長簡介確實渲染（width 測試才有意義）。
       expect(find.byType(Html), findsOneWidget);
@@ -402,10 +402,13 @@ void main() {
         );
         await _touchFile(tempDir, illustFile.uri.pathSegments.last);
       });
-      rebuildContainer(activeLang: 'zh-Hant');
+      rebuildContainer();
       await tester.runAsync(loadIndex);
 
-      await pumpDialog(tester, _rec(resourceId: 111, name: 'Char'));
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
 
       // 2 chips。
       expect(find.byType(ChoiceChip), findsNWidgets(2));
@@ -500,7 +503,7 @@ void main() {
           );
           await _touchFile(tempDir, illustCacheFile.uri.pathSegments.last);
         });
-        rebuildContainer(activeLang: 'zh-Hant');
+        rebuildContainer();
         // rebuildContainer 換了新 container；index 已 persist 至同 tempDir，
         // 新 container 的 notifier load 後即可讀到。runAsync 確保 fake-async 區內
         // 仍能完成真實磁碟載入。
@@ -508,7 +511,12 @@ void main() {
 
         await pumpDialog(
           tester,
-          _rec(resourceId: 1503, name: 'Char', resourceType: '角色'),
+          _rec(
+            resourceId: 1503,
+            name: 'Char',
+            resourceType: '角色',
+            languageCode: 'zh-Hant',
+          ),
         );
 
         // 簡介＋造型 BgDescription 各一個 Html。
@@ -559,12 +567,17 @@ void main() {
           );
           await _touchFile(tempDir, iconFile.uri.pathSegments.last);
         });
-        rebuildContainer(activeLang: 'zh-Hant');
+        rebuildContainer();
         await tester.runAsync(loadIndex);
 
         await pumpDialog(
           tester,
-          _rec(resourceId: 21010011, name: 'WeaponX', resourceType: '武器'),
+          _rec(
+            resourceId: 21010011,
+            name: 'WeaponX',
+            resourceType: '武器',
+            languageCode: 'zh-Hant',
+          ),
         );
 
         // 只有 icon 一張圖 → chip 列隱藏。
@@ -608,13 +621,18 @@ void main() {
         );
         await _touchFile(tempDir, iconCacheFile.uri.pathSegments.last);
       });
-      // active lang = zh-Hant 但只 populate en → 走 detailByLang.values.first。
-      rebuildContainer(activeLang: 'zh-Hant');
+      // record.languageCode = zh-Hant 但只 populate en → 走 detailByLang.values.first。
+      rebuildContainer();
       await tester.runAsync(loadIndex);
 
       await pumpDialog(
         tester,
-        _rec(resourceId: 1503, name: 'Char', resourceType: '角色'),
+        _rec(
+          resourceId: 1503,
+          name: 'Char',
+          resourceType: '角色',
+          languageCode: 'zh-Hant',
+        ),
       );
 
       expect(find.byType(Html), findsOneWidget);
@@ -668,12 +686,17 @@ void main() {
           skins: [],
         ),
       );
-      rebuildContainer(activeLang: 'zh-Hant');
+      rebuildContainer();
       await tester.runAsync(loadIndex);
 
       await pumpDialog(
         tester,
-        _rec(resourceId: 1503, name: 'Char', resourceType: '角色'),
+        _rec(
+          resourceId: 1503,
+          name: 'Char',
+          resourceType: '角色',
+          languageCode: 'zh-Hant',
+        ),
       );
 
       expect(find.text('在 encore.moe 查看'), findsOneWidget);
@@ -693,12 +716,17 @@ void main() {
           skins: [],
         ),
       );
-      rebuildContainer(activeLang: 'zh-Hant');
+      rebuildContainer();
       await tester.runAsync(loadIndex);
 
       await pumpDialog(
         tester,
-        _rec(resourceId: 1104, name: 'Char', resourceType: '角色'),
+        _rec(
+          resourceId: 1104,
+          name: 'Char',
+          resourceType: '角色',
+          languageCode: 'zh-Hant',
+        ),
       );
 
       expect(find.byType(Html), findsOneWidget);
@@ -716,7 +744,7 @@ void main() {
       // 換掉 root widget type，徹底卸載前一次 pumpDialog 的 Navigator／overlay
       // （imperative showDialog 的 dialog route 會跨 pumpWidget 留存）。
       await tester.pumpWidget(const SizedBox());
-      rebuildContainer(activeLang: 'zh-Hant');
+      rebuildContainer();
       await tester.runAsync(() async {
         await loadIndex();
         final n = container.read(itemImageIndexProvider.notifier);
@@ -745,7 +773,12 @@ void main() {
       });
       await pumpDialog(
         tester,
-        _rec(resourceId: 1503, name: 'NameX', resourceType: '角色'),
+        _rec(
+          resourceId: 1503,
+          name: 'NameX',
+          resourceType: '角色',
+          languageCode: 'zh-Hant',
+        ),
       );
       final nameBottom = tester.getRect(find.text('NameX')).bottom;
       final rich = find
@@ -928,10 +961,13 @@ void main() {
           );
           await _touchFile(tempDir, illustCacheFile.uri.pathSegments.last);
         });
-        rebuildContainer(activeLang: 'zh-Hant');
+        rebuildContainer();
         await tester.runAsync(loadIndex);
 
-        await pumpDialog(tester, _rec(resourceId: 111, name: 'Char'));
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+        );
 
         final mouseRegions = tester.widgetList<MouseRegion>(
           find.descendant(
@@ -991,7 +1027,7 @@ void main() {
         );
         await _touchFile(tempDir, illustFile.uri.pathSegments.last);
       });
-      rebuildContainer(activeLang: 'zh-Hant');
+      rebuildContainer();
       await tester.runAsync(loadIndex);
 
       await tester.pumpWidget(
@@ -1005,7 +1041,7 @@ void main() {
               builder: (ctx) => ElevatedButton(
                 onPressed: () => showGachaItemDetailDialog(
                   ctx,
-                  _rec(resourceId: 111, name: 'Char'),
+                  _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
                 ),
                 child: const Text('open'),
               ),
