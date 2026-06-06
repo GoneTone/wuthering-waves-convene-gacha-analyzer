@@ -12,8 +12,9 @@ const _anchorBase = 3;
 ///
 /// 比對 `(time, resourceId, qualityLevel, count)` 全等，刻意排除 `name`／
 /// `resourceType`／`languageCode` —— 換遊戲語言重抓時這些在地化欄位會變，唯有
-/// 排除它們，舊紀錄才能被辨識為同一抽而保留原語言。鳴潮無唯一 id 且同十連 time
-/// 相同，故只用於序列對齊輔助、不可單獨當主鍵。
+/// 排除它們，舊紀錄才能被辨識為同一抽而保留原語言。`cardPoolType` 由呼叫端分池後
+/// 已隱式保證一致，不需再比。鳴潮無唯一 id 且同十連 time 相同，故只用於序列對齊
+/// 輔助、不可單獨當主鍵。
 bool recordsEqual(GachaRecord a, GachaRecord b) =>
     a.time == b.time &&
     a.resourceId == b.resourceId &&

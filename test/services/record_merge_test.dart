@@ -24,7 +24,7 @@ GachaRecord r(
 
 void main() {
   group('recordsEqual', () {
-    test('五欄位全等 → true', () {
+    test('四欄位全等 → true', () {
       expect(
         recordsEqual(r(1, name: 'a', sec: 3), r(1, name: 'a', sec: 3)),
         isTrue,
