@@ -16,7 +16,9 @@ class BannerStorage {
   /// 玩家 UID（取代前身版本 uid）。
   final String playerId;
 
-  /// 帳號級語言碼（如 `zh-Hant`）。
+  /// 帳號級語言碼（如 `zh-Hant`）：最近一次擷取的語言；亦為載入舊存檔時對缺
+  /// 逐筆 `language_code` 的紀錄回填的來源。逐筆顯示／分類一律以
+  /// `GachaRecord.languageCode` 為準，本欄位不再作為顯示語言權威。
   final String languageCode;
 
   /// 最後更新時間（UTC）。
@@ -28,16 +30,20 @@ class BannerStorage {
   /// 從本地存檔 JSON 還原 [BannerStorage]。
   factory BannerStorage.fromJson(Map<String, dynamic> json) {
     final bannersJson = json['banners'] as Map<String, dynamic>;
+    final bannerLang = json['language_code'] as String;
     return BannerStorage(
       playerId: json['player_id'] as String,
-      languageCode: json['language_code'] as String,
+      languageCode: bannerLang,
       lastUpdated: DateTime.parse(json['last_updated'] as String),
       banners: bannersJson.map(
         (k, v) => MapEntry(
           k,
           (v as List<dynamic>)
               .map(
-                (e) => GachaRecord.fromStorageJson(e as Map<String, dynamic>),
+                (e) => GachaRecord.fromStorageJson(
+                  e as Map<String, dynamic>,
+                  fallbackLanguageCode: bannerLang,
+                ),
               )
               .toList(growable: false),
         ),
