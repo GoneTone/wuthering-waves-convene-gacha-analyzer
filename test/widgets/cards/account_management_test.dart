@@ -186,7 +186,7 @@ void main() {
     final list = tester.widget<ReorderableListView>(
       find.byType(ReorderableListView),
     );
-    list.onReorder(0, 2); // 把第 0 個 (100000001) 移到第 1 個（之後）
+    list.onReorderItem!(0, 1); // 移到最後；onReorderItem 的 newIndex 已校正
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 

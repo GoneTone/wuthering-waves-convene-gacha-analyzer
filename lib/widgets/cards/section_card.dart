@@ -35,15 +35,21 @@ class SectionCard extends StatelessWidget {
         border: Border.all(color: tokens.borderSubtle),
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          icon == null
-              ? titleText
-              : InlineSectionTitle(icon: icon!, title: title),
-          const SizedBox(height: AppSpacing.m),
-          child,
-        ],
+      // 透明 Material 讓內容裡的 ListTile 系列（RadioListTile/SwitchListTile）
+      // 有 Material 祖先可繪製 ink/selection，疊在卡片底色之上。Flutter 3.44.1
+      // 起對「ListTile 直接位於有背景色的 DecoratedBox 內」會丟斷言，這層化解之。
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            icon == null
+                ? titleText
+                : InlineSectionTitle(icon: icon!, title: title),
+            const SizedBox(height: AppSpacing.m),
+            child,
+          ],
+        ),
       ),
     );
   }

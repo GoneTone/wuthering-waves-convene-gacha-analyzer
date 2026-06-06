@@ -56,11 +56,12 @@ class AccountManagement extends ConsumerWidget {
             physics: const NeverScrollableScrollPhysics(),
             buildDefaultDragHandles: false,
             itemCount: ordered.length,
-            onReorder: (oldIndex, newIndex) {
+            onReorderItem: (oldIndex, newIndex) {
+              // onReorderItem 的 newIndex 已由框架校正（移除 oldIndex 後的最終
+              // 插入位置），不需再手動 newIndex > oldIndex ? newIndex - 1 調整。
               final next = [...ordered];
-              final adjusted = newIndex > oldIndex ? newIndex - 1 : newIndex;
               final item = next.removeAt(oldIndex);
-              next.insert(adjusted, item);
+              next.insert(newIndex, item);
               unawaited(settingsNotifier.setUidOrder(next));
             },
             itemBuilder: (context, index) {
