@@ -326,7 +326,6 @@ class _AboutContent extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.l),
         const OtherGameVersions(),
       ],
     );
