@@ -68,14 +68,16 @@ class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
   /// 等待初始 load 結束。
   Future<void> waitForLoad() => _loadCompleter?.future ?? Future.value();
 
-  /// 寫入單一 resourceId 的 icon 抓取結果並 persist（保留既有 detailByLang）。
+  /// 寫入單一 resourceId 的 icon 抓取結果並 persist（保留既有 detailByLang 與 kind）。
   ///
   /// 正取：傳 `iconUrl` 非 null + `noImage:false`；負取：`noImage:true` + url 傳 null。
+  /// [kind] 為可選，不傳時保留既有 kind（避免二次 mergeIcon 清空已分類的 kind）。
   Future<void> mergeIcon({
     required int resourceId,
     required String? iconUrl,
     required bool noImage,
     required bool permanentNoImage,
+    String? kind,
   }) async {
     await _lock.synchronized(() async {
       final prev = state.items[resourceId];
@@ -86,11 +88,12 @@ class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
           permanentNoImage: permanentNoImage,
           detailByLang: prev?.detailByLang ?? const {},
           hasLuckdraw: prev?.hasLuckdraw,
+          kind: kind ?? prev?.kind,
         );
       await _saveAndEmit(ItemImageIndex(items: newItems));
       _log.fine(
         'mergeIcon resourceId=$resourceId noImage=$noImage '
-        'hasIcon=${iconUrl?.isNotEmpty == true}',
+        'hasIcon=${iconUrl?.isNotEmpty == true} kind=${kind ?? prev?.kind}',
       );
     });
   }
@@ -118,6 +121,7 @@ class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
           permanentNoImage: prev?.permanentNoImage ?? false,
           detailByLang: mergedDetail,
           hasLuckdraw: hasLuckdraw || (prev?.hasLuckdraw ?? false),
+          kind: prev?.kind,
         );
       await _saveAndEmit(ItemImageIndex(items: newItems));
       _log.fine(

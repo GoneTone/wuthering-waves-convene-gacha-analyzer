@@ -298,6 +298,38 @@ void main() {
       expect(await s.deleteIllustrationCacheFiles(), 0);
     });
 
+    test('ItemImageEntry.kind round-trips through storage save/load', () async {
+      final dir = await Directory.systemTemp.createTemp('iii_kind');
+      addTearDown(() => dir.delete(recursive: true));
+      final storage = ItemImageIndexStorage(dir);
+      await storage.save(
+        ItemImageIndex(
+          items: {
+            1211: const ItemImageEntry(
+              iconUrl: 'https://x/icon.webp',
+              noImage: false,
+              permanentNoImage: false,
+              kind: 'kind:character',
+            ),
+          },
+        ),
+      );
+      final loaded = await storage.load();
+      expect(loaded.lookupImage(1211)!.kind, 'kind:character');
+    });
+
+    test('ItemImageEntry.kind defaults to null when absent in JSON', () async {
+      final dir = await Directory.systemTemp.createTemp('iii_kind_legacy');
+      addTearDown(() => dir.delete(recursive: true));
+      final file = File('${dir.path}/item_image_index.json');
+      await file.writeAsString(
+        '{"version":2,"items":{"1211":{"icon_url":"u","no_image":false,'
+        '"permanent_no_image":false,"detail_by_lang":{}}}}',
+      );
+      final loaded = await ItemImageIndexStorage(dir).load();
+      expect(loaded.lookupImage(1211)!.kind, isNull);
+    });
+
     test('hasLuckdraw round-trip：save/load 保留；舊檔缺欄位預設 null（尚未評估）', () async {
       final original = ItemImageIndex(
         items: const {
