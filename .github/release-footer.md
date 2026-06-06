@@ -6,10 +6,10 @@ Please help us translate this software!
 
 <https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer>
 
-## 支援其他遊戲的版本
+## 支援其他遊戲的版本 Versions for Other Games
 
-- 原神：<https://github.com/GoneTone/genshin-impact-wish-gacha-analyzer>
-- 未來可能新增支援更多遊戲...
+- 原神 Genshin Impact：<https://github.com/GoneTone/genshin-impact-wish-gacha-analyzer>
+- 未來可能新增支援更多遊戲... More games may be supported in the future...
 
 ## 注意 Notice
 
