@@ -8,6 +8,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart'
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_filter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_row.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
@@ -23,6 +24,19 @@ GachaRecord _r({required int seq, required int rank, required String name}) =>
       count: 1,
       time: DateTime(2025, 1, seq),
     );
+
+/// 為一組 records 建立 index：全部 resourceType='角色' → kind:character。
+ItemImageIndex _idxFor(List<GachaRecord> records) => ItemImageIndex(
+  items: {
+    for (final r in records)
+      r.resourceId: const ItemImageEntry(
+        iconUrl: 'u',
+        noImage: false,
+        permanentNoImage: false,
+        kind: kItemKindCharacter,
+      ),
+  },
+);
 
 /// 建立含 [UncontrolledProviderScope] 的測試包裝 widget。
 Widget _wrap(
@@ -76,7 +90,7 @@ void main() {
       _r(seq: 4, rank: 4, name: 'B'), // accent != null → _Pill
       _r(seq: 3, rank: 3, name: 'C'), // accent == null → 純 Text 分支
     ];
-    final rows = buildRecordRows(records);
+    final rows = buildRecordRows(records, _idxFor(records));
     await tester.pumpWidget(
       _wrap(
         SortableTable(
@@ -105,7 +119,7 @@ void main() {
       _r(seq: 4, rank: 4, name: 'B'),
       _r(seq: 3, rank: 3, name: 'C'),
     ];
-    final rows = buildRecordRows(records);
+    final rows = buildRecordRows(records, _idxFor(records));
     await tester.pumpWidget(
       _wrap(
         SortableTable(
@@ -132,7 +146,7 @@ void main() {
       45,
       (i) => _r(seq: i + 1, rank: 4, name: 'r$i'),
     );
-    final rows = buildRecordRows(records);
+    final rows = buildRecordRows(records, _idxFor(records));
     await tester.pumpWidget(
       _wrap(
         SortableTable(
@@ -153,7 +167,7 @@ void main() {
 
   testWidgets('表頭點擊呼叫 onSortColumnTapped(對應欄)', (tester) async {
     final records = [_r(seq: 1, rank: 5, name: 'A')];
-    final rows = buildRecordRows(records);
+    final rows = buildRecordRows(records, _idxFor(records));
     SortColumn? tapped;
     await tester.pumpWidget(
       _wrap(
@@ -181,7 +195,7 @@ void main() {
 
   testWidgets('當前排序欄顯示 arrow_downward；其他欄維持 unfold_more', (tester) async {
     final records = [_r(seq: 1, rank: 5, name: 'A')];
-    final rows = buildRecordRows(records);
+    final rows = buildRecordRows(records, _idxFor(records));
     await tester.pumpWidget(
       _wrap(
         SortableTable(
@@ -205,7 +219,7 @@ void main() {
     // _r 產的 record.resourceType = '角色' → itemTypeKeyOf 映射 kind:character；
     // itemTypeKeyLabel('kind:character', l) 回傳本地化 '角色'。
     final records = [_r(seq: 1, rank: 5, name: 'A')];
-    final rows = buildRecordRows(records);
+    final rows = buildRecordRows(records, _idxFor(records));
     await tester.pumpWidget(
       _wrap(
         SortableTable(
@@ -227,7 +241,7 @@ void main() {
       _r(seq: 4, rank: 4, name: 'B'),
       _r(seq: 3, rank: 3, name: 'C'),
     ];
-    final rows = buildRecordRows(records);
+    final rows = buildRecordRows(records, _idxFor(records));
     await tester.pumpWidget(
       _wrap(
         SortableTable(

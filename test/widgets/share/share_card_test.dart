@@ -126,6 +126,7 @@ void main() {
       title: '角色活動喚取',
       records: [_r('1', 5, '那維萊特'), _r('1', 4, '菲謝爾'), _r('1', 3, '冷刃')],
       targetRank: 5,
+      index: const ItemImageIndex.empty(),
     );
     await _pump(t, card, container);
     expect(t.takeException(), isNull);
@@ -145,6 +146,7 @@ void main() {
       title: '角色活動喚取',
       records: [_r('1', 5, '那維萊特'), _r('1', 4, '菲謝爾'), _r('1', 3, '冷刃')],
       targetRank: 5,
+      index: const ItemImageIndex.empty(),
     );
     await _pump(t, card, container);
     expect(t.takeException(), isNull);
@@ -184,6 +186,7 @@ void main() {
       title: '角色活動喚取',
       records: [_r('1', 5, '那維萊特'), _r('1', 4, '菲謝爾'), _r('1', 3, '冷刃')],
       targetRank: 5,
+      index: const ItemImageIndex.empty(),
     );
     await _pump(t, card, container);
     expect(t.takeException(), isNull);
@@ -219,6 +222,7 @@ void main() {
         '1': [_r('1', 5, '那維萊特'), _r('1', 3, '冷刃')],
         '8': [_r('8', 5, '某五星')],
       },
+      index: const ItemImageIndex.empty(),
     );
     await _pump(t, card, container);
     expect(t.takeException(), isNull);
@@ -250,6 +254,7 @@ void main() {
       title: '角色活動喚取',
       records: _crossMonthFives(12),
       targetRank: 5,
+      index: const ItemImageIndex.empty(),
     );
     await _pump(t, card, container);
     // 直接裁切方案：不可有 RenderFlex overflow 或任何 error。
@@ -293,6 +298,7 @@ void main() {
       title: '角色活動喚取',
       records: [_r('1', 5, '那維萊特'), _r('1', 4, '菲謝爾'), _r('1', 3, '冷刃')],
       targetRank: 5,
+      index: const ItemImageIndex.empty(),
     );
     await _pump(t, card, container);
     expect(t.takeException(), isNull);
@@ -327,6 +333,7 @@ void main() {
         '1': _crossMonthFives(16),
         '8': [_r('8', 5, '某五星')],
       },
+      index: const ItemImageIndex.empty(),
     );
     await _pump(t, card, container);
     expect(t.takeException(), isNull);
@@ -348,6 +355,7 @@ void main() {
         '1': [_r('1', 5, '那維萊特'), _r('1', 3, '冷刃')],
         '8': [_r('8', 5, '某五星')],
       },
+      index: const ItemImageIndex.empty(),
     );
     await _pump(t, card, container);
     expect(t.takeException(), isNull);

@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_filter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_row.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 
 GachaRecord _r({
   required int rank,
@@ -17,6 +19,26 @@ GachaRecord _r({
   count: 1,
   time: time,
 );
+
+ItemImageIndex _idx(Map<int, String> kinds) => ItemImageIndex(
+  items: {
+    for (final e in kinds.entries)
+      e.key: ItemImageEntry(
+        iconUrl: 'u',
+        noImage: false,
+        permanentNoImage: false,
+        kind: e.value,
+      ),
+  },
+);
+
+/// 依 name.hashCode & 0xffff 為各測試 record 建立 index（角色→character，武器→weapon）。
+ItemImageIndex _recordIdx(List<GachaRecord> records) => _idx({
+  for (final r in records)
+    r.resourceId: r.resourceType == '角色' || r.resourceType == 'Character'
+        ? kItemKindCharacter
+        : kItemKindWeapon,
+});
 
 void main() {
   late List<GachaRecord> records;
@@ -60,9 +82,9 @@ void main() {
   group('filterRecordRows', () {
     late List<RecordRow> rows;
     setUp(() {
-      // itemTypeKeyOf 將原始 resourceType 映射為 canonical kind（kind:character
-      // 等）；以下 filter 測試以 canonical 鍵或原始字串擇一比對。
-      rows = buildRecordRows(records);
+      // itemTypeKeyOf 以 index 的 encore 歸屬 kind 映射（kind:character 等）；
+      // 以下 filter 測試以 canonical 鍵比對。
+      rows = buildRecordRows(records, _recordIdx(records));
     });
 
     test('5★ + 武器 → 只剩 1 row，且 totalIndex / pity 不變', () {
@@ -109,7 +131,7 @@ void main() {
   group('sortRecordRows', () {
     late List<RecordRow> rows;
     setUp(() {
-      rows = buildRecordRows(records);
+      rows = buildRecordRows(records, _recordIdx(records));
     });
 
     test('null → 不排序，保持輸入順序', () {

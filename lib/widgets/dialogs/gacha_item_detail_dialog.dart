@@ -143,7 +143,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     try {
       final result = await service.capture(
         resourceId: widget.record.resourceId,
-        kind: itemTypeKeyOf(widget.record),
+        kind: itemTypeKeyOf(widget.record, ref.read(itemImageIndexProvider)),
         lang: lang,
       );
       if (!mounted) return;
@@ -351,7 +351,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
 
     // chip 順序：造型（依序，每個 skin 一個）→ 喚取（角色 hasLuckdraw 才有）→ Icon（永遠最後）。
     final chipEntries = <_ImageChipEntry>[];
-    final isCharacter = itemTypeKeyOf(record) == kItemKindCharacter;
+    final isCharacter = itemTypeKeyOf(record, index) == kItemKindCharacter;
     for (final skin in skins) {
       if (skin.formationCard.isEmpty) continue;
       final f = itemIllustrationCacheFile(
@@ -568,12 +568,12 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
           label: Text(l.actionViewOnEncore),
           onPressed: () {
             _log.info(
-              'open encore kind=${itemTypeKeyOf(record)} id=${record.resourceId}',
+              'open encore kind=${itemTypeKeyOf(record, index)} id=${record.resourceId}',
             );
             openExternalUrl(
               Uri.parse(
                 encoreItemUrl(
-                  kind: itemTypeKeyOf(record),
+                  kind: itemTypeKeyOf(record, index),
                   resourceId: record.resourceId,
                   lang: activeLang ?? '',
                 ),

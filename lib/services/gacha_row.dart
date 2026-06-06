@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 
 /// 附帶計算後序號的喚取紀錄行（表格顯示用）。
@@ -33,8 +34,13 @@ class RecordRow {
 
 /// records 必須以時間 desc 排序（與 gacha_repository 一致）。
 /// 回傳順序與 records 相同（desc by time）。
+/// [index] 提供 encore catalog 歸屬的 kind，供 [itemTypeKeyOf] 語言無關分類。
 /// [mainRank] 預設 5（鳴潮卡池主稀有度）。
-List<RecordRow> buildRecordRows(List<GachaRecord> records, {int mainRank = 5}) {
+List<RecordRow> buildRecordRows(
+  List<GachaRecord> records,
+  ItemImageIndex index, {
+  int mainRank = 5,
+}) {
   if (records.isEmpty) return const [];
   // 以 asc 順序累計再 reverse，保持輸出順序與輸入一致。
   final asc = records.reversed.toList(growable: false);
@@ -49,7 +55,7 @@ List<RecordRow> buildRecordRows(List<GachaRecord> records, {int mainRank = 5}) {
         record: r,
         totalIndex: total,
         mainPityIndex: pity,
-        itemTypeKey: itemTypeKeyOf(r),
+        itemTypeKey: itemTypeKeyOf(r, index),
       ),
     );
     if (r.qualityLevel == mainRank) {

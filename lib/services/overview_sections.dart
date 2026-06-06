@@ -3,6 +3,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_pity.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_stats.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
 
 /// OverviewPage 與 ShareCard 共用的喚取彙整結果（鳴潮單段喚取）。
@@ -51,8 +52,10 @@ class OverviewSections {
 
 /// 從 [activeBanners]（key = cardPoolType 字串）建構 [OverviewSections]，供
 /// OverviewPage 與 ShareCard 共用，避免兩處複製分組邏輯。
+/// [index] 提供 encore catalog 歸屬的 kind，供統計語言無關分類。
 OverviewSections buildOverviewSections(
   Map<String, List<GachaRecord>> activeBanners,
+  ItemImageIndex index,
 ) {
   final gachaList = gachaTypes.toList(growable: false);
 
@@ -78,7 +81,7 @@ OverviewSections buildOverviewSections(
   return OverviewSections(
     types: gachaList,
     banners: gachaBanners,
-    stats: computeGachaStats(gachaAll),
+    stats: computeGachaStats(gachaAll, index),
     timeline: timeline,
     timelineRank: timelineRank,
     timelineNowPulls: timelineNowPulls,

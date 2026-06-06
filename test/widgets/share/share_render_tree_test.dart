@@ -87,6 +87,7 @@ void main() {
         title: '角色活動喚取',
         records: [_r('1', 5, '那維萊特'), _r('1', 4, '菲謝爾'), _r('1', 3, '冷刃')],
         targetRank: 5,
+        index: const ItemImageIndex.empty(),
       );
       final png = await renderWidgetToPng(
         buildShareRenderTree(
@@ -141,6 +142,7 @@ void main() {
           '1': [_r('1', 5, '那維萊特'), _r('1', 3, '冷刃')],
           '8': [_r('8', 5, '某五星')],
         },
+        index: const ItemImageIndex.empty(),
       );
       final png = await renderWidgetToPng(
         buildShareRenderTree(
