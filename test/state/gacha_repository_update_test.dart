@@ -74,7 +74,7 @@ void main() {
     ],
   );
 
-  test('happy path: 8 pools fetched, stored, UpdateCompleted', () async {
+  test('happy path: 10 pools fetched, stored, UpdateCompleted', () async {
     final storage = GachaStorage(tempDir);
     final hitTypes = <int>[];
     final mock = MockClient((req) async {
@@ -99,7 +99,7 @@ void main() {
 
     await container.read(gachaRepositoryProvider.notifier).update();
 
-    expect(hitTypes, [1, 2, 3, 4, 5, 6, 8, 9]);
+    expect(hitTypes, [1, 2, 3, 4, 5, 6, 8, 9, 10, 11]);
     final progress = container.read(gachaRepositoryProvider).progress;
     expect(progress, isA<UpdateCompleted>());
     expect((progress as UpdateCompleted).totalNewRecords, 1);
@@ -161,8 +161,8 @@ void main() {
       expect(progress, isA<UpdateCompleted>());
       // exactly one pool (pool 2) recorded as failed
       expect((progress as UpdateCompleted).failedBanners, hasLength(1));
-      // all 8 pools attempted (did NOT abort at pool 2)
-      expect(poolHits, 8);
+      // all 10 pools attempted (did NOT abort at pool 2)
+      expect(poolHits, 10);
       // pool 1's record was still saved despite pool 2 failing
       final state = container.read(gachaRepositoryProvider);
       expect(state.byUid['701000000']!.banners['1'], hasLength(1));
@@ -202,7 +202,7 @@ void main() {
         final body = jsonDecode(req.body) as Map<String, dynamic>;
         final type = body['cardPoolType'] as int;
         // round 1：pool 0（hit 1）失敗 → 早退重攔；
-        // round 2（hits 2-9）：完整 8 池，pool 1 給一筆紀錄。
+        // round 2（hits 2-11）：完整 10 池，pool 1 給一筆紀錄。
         final String payload = hits == 1
             ? _fail(-1)
             : (type == 1 ? _ok([_row('1')]) : _ok(const []));
@@ -238,8 +238,8 @@ void main() {
       expect(round1Fetches, 1);
       // cached cred 供第一輪使用，只有 fallback 那次重攔
       expect(captureCalls, 1);
-      // 1 次早退 + 8 次第二輪
-      expect(hits, 9);
+      // 1 次早退 + 10 次第二輪
+      expect(hits, 11);
       final progress = container.read(gachaRepositoryProvider).progress;
       expect(progress, isA<UpdateCompleted>());
       expect((progress as UpdateCompleted).totalNewRecords, 1);
@@ -270,12 +270,12 @@ void main() {
     var captureCalls = 0;
     var hits = 0;
     // round 1 的 pool 0（首抓角色活動）一失敗就早退重攔：第 1 個 hit 視為過期失敗，第 2
-    // 個 hit 起為重攔後新 cred 的成功回應（完整 8 池）。
+    // 個 hit 起為重攔後新 cred 的成功回應（完整 10 池）。
     final mock = MockClient((req) async {
       hits++;
       final body = jsonDecode(req.body) as Map<String, dynamic>;
       final type = body['cardPoolType'] as int;
-      // round 1 (hit 1): pool 0 fails → early abort; round 2 (hits 2-9): pool 1 yields a record
+      // round 1 (hit 1): pool 0 fails → early abort; round 2 (hits 2-11): pool 1 yields a record
       final String payload;
       if (hits <= 1) {
         payload = _fail(-1);
@@ -312,8 +312,8 @@ void main() {
 
     // cached cred used for round 1 (no primary capture); only the fallback captured
     expect(captureCalls, 1);
-    // round 1 aborted after a single fetch (pool 0); round 2 fetched all 8 pools
-    expect(hits, 9);
+    // round 1 aborted after a single fetch (pool 0); round 2 fetched all 10 pools
+    expect(hits, 11);
     final progress = container.read(gachaRepositoryProvider).progress;
     expect(progress, isA<UpdateCompleted>());
     expect((progress as UpdateCompleted).totalNewRecords, 1);
@@ -353,7 +353,7 @@ void main() {
           // round 1：pool 0 失敗 → 早退重攔
           payload = _fail(-1);
         } else {
-          // round 2（hits 2-9）：pool 0（type 1）仍失敗，pool 2（type 2）給一筆，其餘空
+          // round 2（hits 2-11）：pool 0（type 1）仍失敗，pool 2（type 2）給一筆，其餘空
           payload = switch (type) {
             1 => _fail(-1),
             2 => _ok([_row('2')]),
@@ -389,8 +389,8 @@ void main() {
 
       // 只重攔一次：第二輪 pool 0 失敗不觸發第三輪
       expect(captureCalls, 1);
-      // 1 次早退 + 8 次第二輪
-      expect(hits, 9);
+      // 1 次早退 + 10 次第二輪
+      expect(hits, 11);
       final progress = container.read(gachaRepositoryProvider).progress;
       expect(progress, isA<UpdateCompleted>());
       // 第二輪只有 pool 0（cardPoolType 1）記為失敗
@@ -504,7 +504,7 @@ void main() {
     expect(await storage.loadCapturedCredential('701000000'), isNotNull);
   });
 
-  test('all 8 pools empty → UpdateErrorNoRecords', () async {
+  test('all 10 pools empty → UpdateErrorNoRecords', () async {
     final storage = GachaStorage(tempDir);
     final mock = MockClient(
       (req) async => http.Response(

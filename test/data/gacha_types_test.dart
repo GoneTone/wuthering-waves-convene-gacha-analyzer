@@ -3,8 +3,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 
 void main() {
   group('gachaTypes registry', () {
-    test('共 8 個 type，cardPoolType 為 [1,2,3,4,5,6,8,9]（無 7）', () {
-      expect(gachaTypes.length, 8);
+    test('共 10 個 type，cardPoolType 為 [1,2,3,4,5,6,8,9,10,11]（無 7）', () {
+      expect(gachaTypes.length, 10);
       expect(gachaTypes.map((t) => t.cardPoolType).toList(), [
         1,
         2,
@@ -14,6 +14,8 @@ void main() {
         6,
         8,
         9,
+        10,
+        11,
       ]);
     });
 
@@ -39,8 +41,8 @@ void main() {
       }
     });
 
-    test('type 1/2/3/4/6/8/9 → 5★80 / 4★10', () {
-      for (final cpt in [1, 2, 3, 4, 6, 8, 9]) {
+    test('type 1/2/3/4/6/8/9/10/11 → 5★80 / 4★10', () {
+      for (final cpt in [1, 2, 3, 4, 6, 8, 9, 10, 11]) {
         final t = gachaTypes.firstWhere((g) => g.cardPoolType == cpt);
         expect(t.primaryPity.threshold, 80, reason: 'type $cpt 5star');
         expect(t.secondaryPity!.threshold, 10, reason: 'type $cpt 4star');
@@ -53,7 +55,7 @@ void main() {
       expect(t.secondaryPity!.threshold, 10);
     });
 
-    test('nameKey 對齊 8 個鳴潮卡池 key', () {
+    test('nameKey 對齊 10 個鳴潮卡池 key', () {
       expect(gachaTypes.map((t) => t.nameKey).toList(), [
         'gachaTypeCharacter',
         'gachaTypeWeapon',
@@ -63,6 +65,8 @@ void main() {
         'gachaTypeBeginnerChoice',
         'gachaTypeNewVoyageCharacter',
         'gachaTypeNewVoyageWeapon',
+        'gachaTypeCollabCharacter',
+        'gachaTypeCollabWeapon',
       ]);
     });
   });
