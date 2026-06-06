@@ -107,6 +107,7 @@ void main() {
       expect(json['name'], '達妮婭');
       expect(json['count'], 1);
       expect(json['time'], '2026-05-21 10:39:03');
+      expect(json['language_code'], '');
     });
 
     test('toStorageJson / fromStorageJson roundtrip', () {
@@ -160,6 +161,27 @@ void main() {
         };
         final restored = GachaRecord.fromStorageJson(
           legacy,
+          fallbackLanguageCode: 'en',
+        );
+        expect(restored.languageCode, 'en');
+      },
+    );
+
+    test(
+      'fromStorageJson uses fallbackLanguageCode when language_code is empty string',
+      () {
+        final record = {
+          'resource_id': 1211,
+          'quality_level': 5,
+          'resource_type': '角色',
+          'card_pool_type': '1',
+          'name': '達妮婭',
+          'count': 1,
+          'time': '2026-05-21 10:39:03',
+          'language_code': '',
+        };
+        final restored = GachaRecord.fromStorageJson(
+          record,
           fallbackLanguageCode: 'en',
         );
         expect(restored.languageCode, 'en');

@@ -2,8 +2,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart'
 
 /// 單一帳號（playerId）的全卡池喚取存檔。
 ///
-/// languageCode 為帳號級單一值（取代前身版本逐筆 record.lang），決定回應內名稱/類型
-/// 字串語言，並供 encore 圖片/詳情 API 的 `{lang}` 路徑參數使用。
+/// [languageCode] 記錄最近一次擷取的語言，並作為載入舊存檔時缺逐筆
+/// `language_code` 紀錄的回填來源；逐筆顯示語言以 [GachaRecord.languageCode] 為準。
 class BannerStorage {
   /// 建立 [BannerStorage]。
   const BannerStorage({
