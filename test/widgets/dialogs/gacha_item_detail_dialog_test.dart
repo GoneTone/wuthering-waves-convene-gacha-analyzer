@@ -458,7 +458,7 @@ void main() {
     }
 
     testWidgets(
-      '角色（active lang 有詳情）→ Html + 5★/元素/武器類型 chips + 造型/圖示 chip + caption + encore link',
+      '角色（record lang 有詳情）→ Html + 5★/元素/武器類型 chips + 造型/圖示 chip + caption + encore link',
       (tester) async {
         const iconUrl = 'https://cdn.example.com/c_icon.png';
         const illustUrl = 'https://cdn.example.com/c_illust.png';
@@ -589,7 +589,7 @@ void main() {
       },
     );
 
-    testWidgets('active lang 無詳情、他 lang 有 → fallback 到 values.first 仍渲染 Html', (
+    testWidgets('record lang 無詳情、他 lang 有 → fallback 到 values.first 仍渲染 Html', (
       tester,
     ) async {
       const iconUrl = 'https://cdn.example.com/c_icon.png';
