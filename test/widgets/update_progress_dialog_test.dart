@@ -54,7 +54,23 @@ Future<void> _pumpDialog(
 }
 
 void main() {
-  group('UpdateProgressDialog — FetchingBanner collab 卡池本地化', () {
+  group('UpdateProgressDialog — FetchingBanner 卡池本地化', () {
+    testWidgets('gachaTypeCharacter（既有池）顯示本地化名稱，不顯示原始 key', (tester) async {
+      await _pumpDialog(
+        tester,
+        progress: const FetchingBanner(
+          displayName: 'gachaTypeCharacter',
+          poolIndex: 1,
+          poolCount: 10,
+          newRecordsSoFar: 0,
+        ),
+      );
+
+      // 驗證既有池重構後仍可正確本地化（ARB: "角色活動喚取"）
+      expect(find.textContaining('角色活動喚取'), findsOneWidget);
+      expect(find.textContaining('gachaTypeCharacter'), findsNothing);
+    });
+
     testWidgets('gachaTypeCollabCharacter 顯示本地化名稱，不顯示原始 key', (tester) async {
       await _pumpDialog(
         tester,
