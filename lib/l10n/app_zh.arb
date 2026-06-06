@@ -39,6 +39,8 @@
   "gachaTypeBeginnerChoice": "新手自選喚取",
   "gachaTypeNewVoyageCharacter": "角色新旅喚取",
   "gachaTypeNewVoyageWeapon": "武器新旅喚取",
+  "gachaTypeCollabCharacter": "角色聯動喚取",
+  "gachaTypeCollabWeapon": "武器聯動喚取",
   "gachaTypeCharacterShort": "角色活動",
   "gachaTypeWeaponShort": "武器活動",
   "gachaTypeStandardCharacterShort": "角色常駐",
@@ -47,6 +49,8 @@
   "gachaTypeBeginnerChoiceShort": "新手自選",
   "gachaTypeNewVoyageCharacterShort": "角色新旅",
   "gachaTypeNewVoyageWeaponShort": "武器新旅",
+  "gachaTypeCollabCharacterShort": "角色聯動",
+  "gachaTypeCollabWeaponShort": "武器聯動",
 
   "navSectionGacha": "喚取",
 
