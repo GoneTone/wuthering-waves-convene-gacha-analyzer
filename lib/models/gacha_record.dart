@@ -11,9 +11,9 @@ String formatGachaTime(DateTime t) {
 
 /// 單筆喚取紀錄，支援 API 與本地存檔兩種來源。
 ///
-/// 鳴潮喚取記錄無唯一 id、無逐筆 uid（身分移至 [BannerStorage] 的 playerId）、
-/// 無逐筆 lang（移至帳號級 languageCode）。同一十連的多筆 [time] 完全相同，
-/// 故任何單筆比對都不可作唯一鍵，增量合併改用 `record_merge.dart` 的有序清單對齊。
+/// 鳴潮喚取記錄無唯一 id、無逐筆 uid（身分移至 [BannerStorage] 的 playerId）。
+/// 同一十連的多筆 [time] 完全相同，故任何單筆比對都不可作唯一鍵，
+/// 增量合併改用 `record_merge.dart` 的有序清單對齊。
 class GachaRecord {
   /// 建立 [GachaRecord]。
   const GachaRecord({
@@ -24,6 +24,7 @@ class GachaRecord {
     required this.name,
     required this.count,
     required this.time,
+    this.languageCode = '',
   });
 
   /// 道具資源 ID（角色 4 碼、武器/道具 8 碼），亦作為圖片 API 的 roleGbId。
@@ -47,13 +48,19 @@ class GachaRecord {
   /// 抽取時間（伺服器在地時間語意）。
   final DateTime time;
 
+  /// 該筆紀錄的擷取語言碼（如 `zh-Hant`）。決定 `name`／`resourceType` 字串語言，
+  /// 並供 encore 詳情查詢挑 `detailByLang`。舊存檔無此欄位時由
+  /// [GachaRecord.fromStorageJson] 的 fallback 回填（見 `BannerStorage.fromJson`）。
+  final String languageCode;
+
   /// 從喚取記錄 API 回應的 data[] 元素解析。
   ///
   /// 回應內每筆雖自帶 `cardPoolType` 字串，但一律以呼叫端迭代用的 [cardPoolType]
-  /// 為準，確保存檔 map key 與查詢一致。
+  /// 為準，確保存檔 map key 與查詢一致。[languageCode] 由呼叫端傳入擷取語言。
   factory GachaRecord.fromApiJson(
     Map<String, dynamic> json, {
     required String cardPoolType,
+    required String languageCode,
   }) {
     return GachaRecord(
       resourceId: json['resourceId'] as int,
@@ -63,11 +70,19 @@ class GachaRecord {
       name: json['name'] as String,
       count: json['count'] as int,
       time: parseGachaTime(json['time'] as String),
+      languageCode: languageCode,
     );
   }
 
   /// 從本地存檔的 JSON 還原。
-  factory GachaRecord.fromStorageJson(Map<String, dynamic> json) {
+  ///
+  /// 舊鳴潮存檔每筆無 `language_code`，由 [fallbackLanguageCode]（呼叫端帶帳號級
+  /// `BannerStorage.languageCode`）回填，達成透明遷移。
+  factory GachaRecord.fromStorageJson(
+    Map<String, dynamic> json, {
+    String fallbackLanguageCode = '',
+  }) {
+    final lang = json['language_code'] as String?;
     return GachaRecord(
       resourceId: json['resource_id'] as int,
       qualityLevel: json['quality_level'] as int,
@@ -76,6 +91,9 @@ class GachaRecord {
       name: json['name'] as String,
       count: json['count'] as int,
       time: parseGachaTime(json['time'] as String),
+      languageCode: (lang == null || lang.isEmpty)
+          ? fallbackLanguageCode
+          : lang,
     );
   }
 
@@ -88,5 +106,6 @@ class GachaRecord {
     'name': name,
     'count': count,
     'time': formatGachaTime(time),
+    'language_code': languageCode,
   };
 }

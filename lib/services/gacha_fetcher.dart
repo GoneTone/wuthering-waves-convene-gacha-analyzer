@@ -90,6 +90,7 @@ class GachaFetcher {
           (e) => GachaRecord.fromApiJson(
             e as Map<String, dynamic>,
             cardPoolType: cardPoolTypeKey,
+            languageCode: cred.languageCode,
           ),
         )
         .toList(growable: false);

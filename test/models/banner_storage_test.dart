@@ -96,4 +96,30 @@ void main() {
     expect(updated.languageCode, 'ja');
     expect(updated.lastUpdated, DateTime.utc(2026, 2, 2));
   });
+
+  test(
+    'fromJson backfills per-record languageCode from account-level value',
+    () {
+      final json = {
+        'player_id': '701000000',
+        'language_code': 'zh-Hant',
+        'last_updated': '2026-05-21T00:00:00.000Z',
+        'banners': {
+          '1': [
+            {
+              'resource_id': 1211,
+              'quality_level': 5,
+              'resource_type': '角色',
+              'card_pool_type': '1',
+              'name': '達妮婭',
+              'count': 1,
+              'time': '2026-05-21 10:39:03',
+            },
+          ],
+        },
+      };
+      final storage = BannerStorage.fromJson(json);
+      expect(storage.banners['1']!.single.languageCode, 'zh-Hant');
+    },
+  );
 }

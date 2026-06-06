@@ -12,6 +12,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_pity.dart'
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_row.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/five_star_collection.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/record_filter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
@@ -88,7 +89,8 @@ class BannerPage extends ConsumerWidget {
       );
     }
 
-    final stats = computeGachaStats(records);
+    final imageIndex = ref.watch(itemImageIndexProvider);
+    final stats = computeGachaStats(records, imageIndex);
     final primary = type.primaryPity;
     final secondary = type.secondaryPity;
     final primaryPityData = computePity(
@@ -104,7 +106,11 @@ class BannerPage extends ConsumerWidget {
             rank: secondary.rank,
           );
     final filterState = ref.watch(recordFilterProvider(cardPoolType));
-    final allRows = buildRecordRows(records, mainRank: primary.rank);
+    final allRows = buildRecordRows(
+      records,
+      imageIndex,
+      mainRank: primary.rank,
+    );
     final filtered = filterRecordRows(allRows, filterState.filter);
     final sorted = sortRecordRows(filtered, filterState.sort);
     final availableItemTypes =
@@ -336,6 +342,7 @@ class BannerPage extends ConsumerWidget {
         title: type.resolveName(l),
         records: records,
         targetRank: type.primaryPity.rank,
+        index: ref.read(itemImageIndexProvider),
       ),
     );
   }

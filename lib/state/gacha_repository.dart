@@ -15,7 +15,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http
 import 'package:wuthering_waves_convene_gacha_analyzer/services/concurrent_pool.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/record_merge.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
@@ -113,13 +112,6 @@ final cancellableHttpClientFactoryProvider =
 /// [GachaRepository] 的 Riverpod provider。
 final gachaRepositoryProvider = NotifierProvider<GachaRepository, GachaState>(
   GachaRepository.new,
-);
-
-/// 作用中帳號的擷取語言（無帳號時 null）；dialog 用來查 per-lang 詳情。
-final activeLanguageCodeProvider = Provider<String?>(
-  (ref) => ref.watch(
-    gachaRepositoryProvider.select((s) => s.activeData?.languageCode),
-  ),
 );
 
 // ─── Notifier ───
@@ -874,21 +866,23 @@ class GachaRepository extends Notifier<GachaState> {
   /// 補齊所有帳號喚取記錄聯集物品的 icon 與 dialog 詳情（catalog + prefetch）。
   ///
   /// 流程：
-  ///   1. 逐 [BannerStorage] 收集 `id → (kind, langs)`：kind 由 [itemTypeKeyOf]
-  ///      決定；同 id 跨帳號彙整所有出現過的 `languageCode`。
-  ///   2. worklist：`(id, kind, lang)` —— icon 未就緒（[needsItemImageFetch]），或
-  ///      該 lang 詳情尚未抓（非道具）。
-  ///   3a. 逐 distinct lang 序列抓 encore catalog（icon 來源；同 lang 一次、無
-  ///       race）。
-  ///   3b. 序列解析每個 id 的 icon（catalog 純查表、無 HTTP）：命中 [mergeIcon] 正
-  ///       取並加入 toDownload，否則寫負取（非永久）；收集正取 id。
-  ///   3c. **取得物品資料階段**：並行逐 `(id, lang)` 預抓詳情（icon 正取、非道具、
-  ///       該 lang 未抓）寫 [mergeItemDetail]；對所有 worklist triple 計數 emit
-  ///       `phase: checking`。
-  ///   4. **下載階段**：只下載 toDownload 的 icon（立繪走 dialog lazy）；emit
-  ///       `phase: downloading`。toDownload 為空則直接 return。
+  ///   1. 逐筆收集 `id → 出現過的擷取語言集合`（per-record lang）。
+  ///   2. 工作閘：icon 未就緒、kind 未分類（含既有快取 icon 的升級回填）、某 lang
+  ///      詳情未抓、或角色 hasLuckdraw 尚未評估（legacy backfill）→ 需處理。
+  ///      全無 → early return（不打 catalog）。
+  ///   3. 對每個出現過的語言抓三清單（角色／武器／道具），union 成歸屬表（kind + icon）；
+  ///      icon 語言無關，union 容忍個別語系缺漏。kind 由 catalog 歸屬決定，不依
+  ///      `resourceType` 語言對應表。
+  ///   4. 分類 + icon 正負取：catalog 命中 → [mergeIcon] 正取（含 kind）加入
+  ///      toDownload；既有 icon 但 kind==null → 只補 kind 不重下載；三清單皆無 →
+  ///      負取（kind 維持 null）。
+  ///   5. **取得物品資料階段**：並行逐 `(id, lang)` 預抓詳情（icon 正取、非道具、
+  ///      該 lang 未抓或 luckdraw 尚未評估）寫 [mergeItemDetail]；對所有
+  ///      `id × lang` 計數 emit `phase: checking`（含負取／道具）。
+  ///   6. 角色 icon 升級為詳情提供的 256px HD 版。
+  ///   7. **下載階段**：只下載 toDownload 的 icon（立繪走 dialog lazy）；emit
+  ///      `phase: downloading`。toDownload 為空則直接 return。
   ///
-  /// 不預先用 resourceId/resourceType 篩角色是否有圖（D7：由 catalog 命中決定）。
   /// 每筆獨立 try/catch，單筆失敗不終止整段。取消（`_cancelTriggered` 或
   /// `!ref.mounted`）早退。回傳本次成功寫入磁碟的 icon 張數。
   Future<int> _fetchItemImages(http.Client client) async {
@@ -898,150 +892,177 @@ class GachaRepository extends Notifier<GachaState> {
     final cacheDir = ref.read(itemImageCacheDirProvider);
     await indexNotifier.waitForLoad();
 
-    // (1) 收集 (id → (kind, langs))；同 id 跨帳號彙整所有出現過的 lang。
-    final kindById = <int, String>{};
+    // (1) 逐筆收集 id → 出現過的擷取語言集合（per-record lang）。
     final langsById = <int, Set<String>>{};
     for (final data in state.byUid.values) {
-      final lang = data.languageCode;
-      if (lang.isEmpty) continue;
       for (final list in data.banners.values) {
         for (final r in list) {
-          kindById[r.resourceId] = itemTypeKeyOf(r);
+          final lang = r.languageCode;
+          if (lang.isEmpty) continue;
           langsById.putIfAbsent(r.resourceId, () => {}).add(lang);
         }
       }
     }
+    if (langsById.isEmpty) return downloaded;
 
-    // (2) worklist：(id, kind, lang) —— icon 未就緒，或該 lang 詳情未抓。
-    final index = ref.read(itemImageIndexProvider);
-    final worklist = <(int id, String kind, String lang)>[];
-    for (final entry in langsById.entries) {
-      final id = entry.key;
-      final kind = kindById[id]!;
-      final existing = index.lookupImage(id);
+    // (2) gate：icon 未就緒、kind 未分類（含既有快取 icon 的升級回填）、某 lang
+    //     詳情未抓、或角色 hasLuckdraw 尚未評估（legacy backfill）→ 需處理。
+    //     全無 → early return（不打 catalog）。
+    final idx0 = ref.read(itemImageIndexProvider);
+    bool needsWork(int id) {
+      final existing = idx0.lookupImage(id);
+      if (needsItemImageFetch(
+        existing: existing,
+        cacheDir: cacheDir,
+        resourceId: id,
+      )) {
+        return true;
+      }
+      if (existing?.kind == null) return true;
+      // 既有使用者升級 backfill：角色 kind 已知但 luckdraw 尚未評估（hasLuckdraw==null）
+      // 時，即使詳情已抓也要重新處理一次以評估 hasLuckdraw（評估後為定值，之後不再重抓）。
+      if (existing!.kind == kItemKindCharacter &&
+          existing.hasLuckdraw == null) {
+        return true;
+      }
+      if (existing.kind != kItemKindItem) {
+        for (final lang in langsById[id]!) {
+          if (!existing.detailByLang.containsKey(lang)) return true;
+        }
+      }
+      return false;
+    }
+
+    final workIds = langsById.keys.where(needsWork).toSet();
+    if (workIds.isEmpty) return downloaded;
+
+    bool isAborted() => !ref.mounted || _cancelTriggered;
+
+    // (3) 抓 catalog：對每個出現過的語言抓三清單，union 成歸屬表（kind + icon）。
+    //     icon／歸屬語言無關，union 容忍個別語系缺漏；首個命中語言為準。
+    const allKinds = {kItemKindCharacter, kItemKindWeapon, kItemKindItem};
+    final iconById = <int, String>{};
+    final kindById = <int, String>{};
+    final allLangs = {for (final id in workIds) ...langsById[id]!};
+    for (final lang in allLangs) {
+      if (isAborted()) return downloaded;
+      final catalog = await fetcher.fetchCatalog(
+        lang: lang,
+        kinds: allKinds,
+        client: client,
+      );
+      for (final kind in allKinds) {
+        final m = catalog.iconByKindId[kind];
+        if (m == null) continue;
+        m.forEach((id, url) {
+          if (url.isEmpty) return;
+          iconById.putIfAbsent(id, () => url);
+          kindById.putIfAbsent(id, () => kind);
+        });
+      }
+    }
+
+    // (4) 分類 + icon 正負取。
+    final toDownload = <(int id, String iconUrl)>[];
+    final positiveIds = <int>{};
+    final hdIconById = <int, String>{};
+    for (final id in workIds) {
+      if (isAborted()) return downloaded;
+      final existing = ref.read(itemImageIndexProvider).lookupImage(id);
       final iconNeeded = needsItemImageFetch(
         existing: existing,
         cacheDir: cacheDir,
         resourceId: id,
       );
-      // 既有使用者升級 backfill：角色已快取詳情但 luckdraw 尚未評估（null）時，
-      // 強制重抓一次詳情以評估 hasLuckdraw。評估後變定值，下次更新不再重抓。
-      final luckdrawUnevaluated =
-          kind == kItemKindCharacter &&
-          existing != null &&
-          existing.hasLuckdraw == null;
-      for (final lang in entry.value) {
-        final detailMissing =
-            kind != kItemKindItem &&
-            !(existing?.detailByLang.containsKey(lang) ?? false);
-        if (iconNeeded || detailMissing || luckdrawUnevaluated) {
-          worklist.add((id, kind, lang));
-        }
-      }
-    }
-    if (worklist.isEmpty) return downloaded;
-
-    bool isAborted() => !ref.mounted || _cancelTriggered;
-
-    // (3a) 逐 distinct lang 序列抓 catalog（icon 來源；同 lang 一次，無 race）。
-    final toDownload = <(int id, String iconUrl)>[];
-    final catalogByLang = <String, EncoreCatalog>{};
-    for (final lang in worklist.map((w) => w.$3).toSet()) {
-      if (isAborted()) return downloaded;
-      catalogByLang[lang] = await fetcher.fetchCatalog(
-        lang: lang,
-        kinds: worklist.where((w) => w.$3 == lang).map((w) => w.$2).toSet(),
-        client: client,
-      );
-    }
-
-    // (3b) 序列解析每個 id 的 icon（catalog 純查表、無 HTTP）；收集正取 id。
-    // icon 為 lang-agnostic，任一出現過的 lang 的 catalog 皆可查。
-    final positiveIds = <int>{};
-    for (final id in langsById.keys) {
-      final kind = kindById[id]!;
-      final existing = index.lookupImage(id);
-      if (!needsItemImageFetch(
-        existing: existing,
-        cacheDir: cacheDir,
-        resourceId: id,
-      )) {
-        if (existing?.hasIcon ?? false) positiveIds.add(id);
-        continue;
-      }
-      final lang = langsById[id]!.first;
-      final iconUrl = catalogByLang[lang]?.iconFor(kind: kind, id: id);
-      if (iconUrl != null) {
-        await indexNotifier.mergeIcon(
-          resourceId: id,
-          iconUrl: iconUrl,
-          noImage: false,
-          permanentNoImage: false,
-        );
-        toDownload.add((id, iconUrl));
+      final catKind = kindById[id];
+      final catIcon = iconById[id];
+      if (catKind != null && catIcon != null) {
         positiveIds.add(id);
-      } else {
+        if (iconNeeded) {
+          await indexNotifier.mergeIcon(
+            resourceId: id,
+            iconUrl: catIcon,
+            kind: catKind,
+            noImage: false,
+            permanentNoImage: false,
+          );
+          toDownload.add((id, catIcon));
+        } else if (existing?.kind == null) {
+          // 升級回填：icon 已快取但 kind 未分類 → 只補 kind、不重下載。
+          await indexNotifier.mergeIcon(
+            resourceId: id,
+            iconUrl: existing!.iconUrl,
+            kind: catKind,
+            noImage: existing.noImage,
+            permanentNoImage: existing.permanentNoImage,
+          );
+        }
+      } else if (iconNeeded) {
+        // 三清單皆無 → 負取（保留既有 kind=null；itemTypeKeyOf 退原始字串）。
         await indexNotifier.mergeIcon(
           resourceId: id,
           iconUrl: null,
+          kind: null,
           noImage: true,
           permanentNoImage: false,
         );
       }
     }
 
-    // (3c) 並行：逐 (id, lang) 預抓詳情（icon 正取、非道具、該 lang 未抓），
-    // 並收集角色的 HD icon URL（256px）供 (3c-2) 升級。
-    // checking 進度對所有 worklist triple 計數（全負取情境也會 emit checking）。
-    final hdIconById = <int, String>{};
+    // (5) 取得物品資料階段：對「每個 (id, lang)」計 checking 進度（保留既有語意：
+    //     total = 待查 id×lang 數，含負取／道具）。正取角色／武器且該 lang 詳情未抓
+    //     （或 luckdraw 尚未評估）時抓詳情；其餘只計進度不抓。
+    final checkWorklist = <(int id, String lang)>[
+      for (final id in workIds)
+        for (final lang in langsById[id]!) (id, lang),
+    ];
     var checkedDone = 0;
-    await runConcurrent<(int, String, String)>(
-      items: worklist,
+    await runConcurrent<(int, String)>(
+      items: checkWorklist,
       concurrency: fetcher.downloadConcurrency,
       shouldAbort: isAborted,
       worker: (item) async {
-        final (id, kind, lang) = item;
+        final (id, lang) = item;
+        final kind = kindById[id];
         try {
-          final existingEntry = ref
-              .read(itemImageIndexProvider)
-              .lookupImage(id);
-          final detailAlready =
-              existingEntry?.detailByLang.containsKey(lang) ?? false;
-          // backfill：角色 luckdraw 尚未評估時，即使該 lang 詳情已存在也重抓一次。
-          final luckdrawUnevaluated =
-              kind == kItemKindCharacter && existingEntry?.hasLuckdraw == null;
-          if (positiveIds.contains(id) &&
+          if (kind != null &&
               kind != kItemKindItem &&
-              (!detailAlready || luckdrawUnevaluated)) {
-            final detail = await fetcher.fetchItemDetail(
-              resourceId: id,
-              kind: kind,
-              lang: lang,
-              client: client,
-            );
-            if (detail != null) {
-              await indexNotifier.mergeItemDetail(
+              positiveIds.contains(id)) {
+            final existing = ref.read(itemImageIndexProvider).lookupImage(id);
+            final detailAlready =
+                existing?.detailByLang.containsKey(lang) ?? false;
+            final luckdrawUnevaluated =
+                kind == kItemKindCharacter && existing?.hasLuckdraw == null;
+            if (!detailAlready || luckdrawUnevaluated) {
+              final detail = await fetcher.fetchItemDetail(
                 resourceId: id,
+                kind: kind,
                 lang: lang,
-                detail: ItemDetailL10n(
-                  intro: detail.intro,
-                  elementName: detail.elementName,
-                  weaponTypeName: detail.weaponTypeName,
-                  skins: [
-                    for (final s in detail.skins)
-                      ItemSkin(
-                        formationCard: s.formationCard,
-                        name: s.name,
-                        subDecName: s.subDecName,
-                        bgDescription: s.bgDescription,
-                      ),
-                  ],
-                ),
-                hasLuckdraw: detail.hasLuckdraw,
+                client: client,
               );
-              // 角色 HD icon（256px，lang-agnostic）：多 lang 寫同值、冪等。
-              if (kind == kItemKindCharacter && detail.iconHd.isNotEmpty) {
-                hdIconById[id] = detail.iconHd;
+              if (detail != null) {
+                await indexNotifier.mergeItemDetail(
+                  resourceId: id,
+                  lang: lang,
+                  detail: ItemDetailL10n(
+                    intro: detail.intro,
+                    elementName: detail.elementName,
+                    weaponTypeName: detail.weaponTypeName,
+                    skins: [
+                      for (final s in detail.skins)
+                        ItemSkin(
+                          formationCard: s.formationCard,
+                          name: s.name,
+                          subDecName: s.subDecName,
+                          bgDescription: s.bgDescription,
+                        ),
+                    ],
+                  ),
+                  hasLuckdraw: detail.hasLuckdraw,
+                );
+                if (kind == kItemKindCharacter && detail.iconHd.isNotEmpty) {
+                  hdIconById[id] = detail.iconHd;
+                }
               }
             }
           }
@@ -1054,28 +1075,27 @@ class GachaRepository extends Notifier<GachaState> {
           progress: FetchingItemImages(
             phase: ItemImagePhase.checking,
             doneCount: checkedDone,
-            totalCount: worklist.length,
+            totalCount: checkWorklist.length,
           ),
         );
       },
     );
 
-    // (3c-2) 角色 icon 升級為詳情提供的 256px HD 版（RoleHeadIconLarge）。序列、
-    // 在並行 3c 之後 → 無 race。只動 toDownload 內的角色（武器／道具沿用列表
-    // icon）；詳情無 iconHd（抓失敗或缺欄位）的角色自動退回列表 150px icon。
+    // (6) 角色 icon 升級為詳情提供的 256px HD 版。序列、在並行 5 之後 → 無 race。
     for (var i = 0; i < toDownload.length; i++) {
       final hd = hdIconById[toDownload[i].$1];
       if (hd == null) continue;
       await indexNotifier.mergeIcon(
         resourceId: toDownload[i].$1,
         iconUrl: hd,
+        kind: kItemKindCharacter,
         noImage: false,
         permanentNoImage: false,
       );
       toDownload[i] = (toDownload[i].$1, hd);
     }
 
-    // (4) 下載階段：只下載 icon（立繪走 dialog lazy）。
+    // (7) 下載階段：只下載 icon（立繪走 dialog lazy）。
     if (toDownload.isEmpty || isAborted()) return downloaded;
     var downloadedDone = 0;
     await runConcurrent<(int, String)>(

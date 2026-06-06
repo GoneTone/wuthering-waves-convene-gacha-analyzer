@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_row.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 
 GachaRecord _r({
   required int rank,
@@ -17,41 +19,74 @@ GachaRecord _r({
   time: time,
 );
 
+ItemImageIndex _idx(Map<int, String> kinds) => ItemImageIndex(
+  items: {
+    for (final e in kinds.entries)
+      e.key: ItemImageEntry(
+        iconUrl: 'u',
+        noImage: false,
+        permanentNoImage: false,
+        kind: e.value,
+      ),
+  },
+);
+
+/// id 固定對應表：角色=1211，武器=21010024，道具=21040084。
+const _charId = 1211;
+const _weaponId = 21010024;
+const _itemId = 21040084;
+
+final _fullIdx = _idx({
+  _charId: kItemKindCharacter,
+  _weaponId: kItemKindWeapon,
+  _itemId: kItemKindItem,
+});
+
 void main() {
   group('buildRecordRows', () {
     test('空 list → const []', () {
-      expect(buildRecordRows(const []), isEmpty);
+      expect(buildRecordRows(const [], const ItemImageIndex.empty()), isEmpty);
     });
 
     test('totalIndex 從 1 累計，最舊=1、最新=N，輸出順序與輸入一致 (desc by time)', () {
       final records = [
-        for (var d = 5; d >= 1; d--) _r(rank: 3, time: DateTime(2025, 1, d)),
+        for (var d = 5; d >= 1; d--)
+          _r(rank: 3, time: DateTime(2025, 1, d), resourceId: _charId),
       ];
-      final rows = buildRecordRows(records);
+      final rows = buildRecordRows(
+        records,
+        _idx({_charId: kItemKindCharacter}),
+      );
       expect(rows.map((r) => r.totalIndex).toList(), [5, 4, 3, 2, 1]);
       expect(rows.map((r) => r.record.time.day).toList(), [5, 4, 3, 2, 1]);
     });
 
     test('全無 5★ → mainPityIndex == totalIndex', () {
       final records = [
-        _r(rank: 4, time: DateTime(2025, 1, 3)),
-        _r(rank: 3, time: DateTime(2025, 1, 2)),
-        _r(rank: 4, time: DateTime(2025, 1, 1)),
+        _r(rank: 4, time: DateTime(2025, 1, 3), resourceId: _charId),
+        _r(rank: 3, time: DateTime(2025, 1, 2), resourceId: _charId),
+        _r(rank: 4, time: DateTime(2025, 1, 1), resourceId: _charId),
       ];
-      final rows = buildRecordRows(records);
+      final rows = buildRecordRows(
+        records,
+        _idx({_charId: kItemKindCharacter}),
+      );
       expect(rows.map((r) => r.mainPityIndex).toList(), [3, 2, 1]);
     });
 
     test('5★ 那一抽 = 抵達該 5★ 的累積值，下一抽從 1 重新累計', () {
       // asc：1(3★) 2(3★) 3(5★) 4(3★) 5(5★) → pity asc 1,2,3,1,2
       final records = [
-        _r(rank: 5, time: DateTime(2025, 1, 5)),
-        _r(rank: 3, time: DateTime(2025, 1, 4)),
-        _r(rank: 5, time: DateTime(2025, 1, 3)),
-        _r(rank: 3, time: DateTime(2025, 1, 2)),
-        _r(rank: 3, time: DateTime(2025, 1, 1)),
+        _r(rank: 5, time: DateTime(2025, 1, 5), resourceId: _charId),
+        _r(rank: 3, time: DateTime(2025, 1, 4), resourceId: _charId),
+        _r(rank: 5, time: DateTime(2025, 1, 3), resourceId: _charId),
+        _r(rank: 3, time: DateTime(2025, 1, 2), resourceId: _charId),
+        _r(rank: 3, time: DateTime(2025, 1, 1), resourceId: _charId),
       ];
-      final rows = buildRecordRows(records);
+      final rows = buildRecordRows(
+        records,
+        _idx({_charId: kItemKindCharacter}),
+      );
       final byDay = {for (final r in rows) r.record.time.day: r};
       expect(byDay[1]!.mainPityIndex, 1);
       expect(byDay[2]!.mainPityIndex, 2);
@@ -61,18 +96,35 @@ void main() {
     });
 
     test('首抽即 5★ → 該抽 pity = 1', () {
-      final rows = buildRecordRows([_r(rank: 5, time: DateTime(2025, 1, 1))]);
+      final rows = buildRecordRows([
+        _r(rank: 5, time: DateTime(2025, 1, 1), resourceId: _charId),
+      ], _idx({_charId: kItemKindCharacter}));
       expect(rows.first.totalIndex, 1);
       expect(rows.first.mainPityIndex, 1);
     });
 
-    test('itemTypeKey 依 resourceType 映射 canonical（含道具）', () {
+    test('itemTypeKey 依 index 映射 canonical（含道具）', () {
       final records = [
-        _r(rank: 5, resourceType: '角色', time: DateTime(2025, 1, 3)),
-        _r(rank: 4, resourceType: '武器', time: DateTime(2025, 1, 2)),
-        _r(rank: 4, resourceType: '道具', time: DateTime(2025, 1, 1)),
+        _r(
+          rank: 5,
+          resourceType: '角色',
+          resourceId: _charId,
+          time: DateTime(2025, 1, 3),
+        ),
+        _r(
+          rank: 4,
+          resourceType: '武器',
+          resourceId: _weaponId,
+          time: DateTime(2025, 1, 2),
+        ),
+        _r(
+          rank: 4,
+          resourceType: '道具',
+          resourceId: _itemId,
+          time: DateTime(2025, 1, 1),
+        ),
       ];
-      final rows = buildRecordRows(records);
+      final rows = buildRecordRows(records, _fullIdx);
       expect(rows[0].itemTypeKey, 'kind:character');
       expect(rows[1].itemTypeKey, 'kind:weapon');
       expect(rows[2].itemTypeKey, 'kind:item');

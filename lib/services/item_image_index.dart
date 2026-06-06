@@ -102,6 +102,7 @@ class ItemImageEntry {
     required this.permanentNoImage,
     this.detailByLang = const {},
     this.hasLuckdraw,
+    this.kind,
   });
 
   /// 角色 icon 小圖 CDN URL；負取時為 null。
@@ -121,6 +122,11 @@ class ItemImageEntry {
 
   /// 各語言 dialog 詳情；key 為擷取 languageCode。某 lang 不在 map = 尚未抓。
   final Map<String, ItemDetailL10n> detailByLang;
+
+  /// 該物品的語言無關類型聚合鍵（`kItemKindCharacter`／`kItemKindWeapon`／
+  /// `kItemKindItem`），由 encore catalog 清單歸屬判定；null 代表尚未分類，
+  /// `itemTypeKeyOf` 此時 fallback 回該筆的原始 `resourceType` 字串。
+  final String? kind;
 
   /// 是否有可顯示的成功 icon（D7：是否有圖的權威判定基礎）。
   bool get hasIcon => !noImage && iconUrl != null && iconUrl!.isNotEmpty;
@@ -173,6 +179,7 @@ class ItemImageIndexStorage {
           permanentNoImage: (v['permanent_no_image'] as bool?) ?? false,
           detailByLang: _detailByLangFromJson(v['detail_by_lang']),
           hasLuckdraw: v['has_luckdraw'] as bool?,
+          kind: v['kind'] as String?,
         );
       });
       return ItemImageIndex(items: items);
@@ -195,6 +202,7 @@ class ItemImageIndexStorage {
           'detail_by_lang': v.detailByLang.map(
             (l, d) => MapEntry(l, d.toJson()),
           ),
+          'kind': v.kind,
         }),
       ),
     };

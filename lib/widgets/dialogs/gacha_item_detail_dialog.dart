@@ -13,7 +13,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetch
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
@@ -127,7 +126,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   void _retryEntry(_ImageChipEntry e) {
     setState(() => _loadStates[e.file.path] = const _ImageLoading());
     if (e.kind == _ChipKind.luckdraw) {
-      final lang = ref.read(activeLanguageCodeProvider) ?? '';
+      final lang = widget.record.languageCode;
       unawaited(_captureLuckdraw(file: e.file, lang: lang));
     } else {
       unawaited(_fetchAndCache(url: e.url, file: e.file));
@@ -143,7 +142,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     try {
       final result = await service.capture(
         resourceId: widget.record.resourceId,
-        kind: itemTypeKeyOf(widget.record),
+        kind: itemTypeKeyOf(widget.record, ref.read(itemImageIndexProvider)),
         lang: lang,
       );
       if (!mounted) return;
@@ -324,11 +323,11 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     final cacheDir = ref.watch(itemImageCacheDirProvider);
     final entry = index.lookupImage(record.resourceId);
 
-    // per-lang 詳情：優先取作用中帳號擷取語言；該 lang 未抓時 fallback 第一筆已抓
+    // per-lang 詳情：優先取 record 擷取語言；該 lang 未抓時 fallback 第一筆已抓
     // 語言（總比空白好）。
-    final activeLang = ref.watch(activeLanguageCodeProvider);
+    final lang = record.languageCode;
     final detail =
-        (activeLang == null ? null : entry?.detailByLang[activeLang]) ??
+        (lang.isEmpty ? null : entry?.detailByLang[lang]) ??
         (entry?.detailByLang.isNotEmpty == true
             ? entry!.detailByLang.values.first
             : null);
@@ -351,7 +350,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
 
     // chip 順序：造型（依序，每個 skin 一個）→ 喚取（角色 hasLuckdraw 才有）→ Icon（永遠最後）。
     final chipEntries = <_ImageChipEntry>[];
-    final isCharacter = itemTypeKeyOf(record) == kItemKindCharacter;
+    final isCharacter = itemTypeKeyOf(record, index) == kItemKindCharacter;
     for (final skin in skins) {
       if (skin.formationCard.isEmpty) continue;
       final f = itemIllustrationCacheFile(
@@ -407,7 +406,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
             final theFile = ce.file;
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
-              final lang = ref.read(activeLanguageCodeProvider) ?? '';
+              final lang = widget.record.languageCode;
               unawaited(_captureLuckdraw(file: theFile, lang: lang));
             });
           }
@@ -568,14 +567,14 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
           label: Text(l.actionViewOnEncore),
           onPressed: () {
             _log.info(
-              'open encore kind=${itemTypeKeyOf(record)} id=${record.resourceId}',
+              'open encore kind=${itemTypeKeyOf(record, index)} id=${record.resourceId}',
             );
             openExternalUrl(
               Uri.parse(
                 encoreItemUrl(
-                  kind: itemTypeKeyOf(record),
+                  kind: itemTypeKeyOf(record, index),
                   resourceId: record.resourceId,
-                  lang: activeLang ?? '',
+                  lang: record.languageCode,
                 ),
               ),
             );

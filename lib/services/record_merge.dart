@@ -8,16 +8,17 @@ final _log = Logger('gacha.merge');
 /// anchor 長度：取 existing 開頭連續 N 筆作為對齊指紋。
 const _anchorBase = 3;
 
-/// 判斷兩筆喚取紀錄是否為同一筆。
+/// 判斷兩筆喚取紀錄在「同一抽」意義上是否對齊（語言無關對齊指紋）。
 ///
-/// 比對 (time, resourceId, qualityLevel, name, count) 全等。鳴潮無唯一 id 且同
-/// 十連 time 相同，單欄位皆不足以辨識，故用此五欄位複合比較；仍可能與同批同道具
-/// 碰撞，因此只用於序列對齊輔助，不可單獨當主鍵。
+/// 比對 `(time, resourceId, qualityLevel, count)` 全等，刻意排除 `name`／
+/// `resourceType`／`languageCode` —— 換遊戲語言重抓時這些在地化欄位會變，唯有
+/// 排除它們，舊紀錄才能被辨識為同一抽而保留原語言。`cardPoolType` 由呼叫端分池後
+/// 已隱式保證一致，不需再比。鳴潮無唯一 id 且同十連 time 相同，故只用於序列對齊
+/// 輔助、不可單獨當主鍵。
 bool recordsEqual(GachaRecord a, GachaRecord b) =>
     a.time == b.time &&
     a.resourceId == b.resourceId &&
     a.qualityLevel == b.qualityLevel &&
-    a.name == b.name &&
     a.count == b.count;
 
 /// 比較 [fresh]（API 回的整池全歷史，由新到舊）與 [existing]（舊存檔，由新到舊），

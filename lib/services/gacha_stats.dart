@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 
 /// 單一卡池的喚取統計摘要。
@@ -53,9 +54,10 @@ class GachaStats {
 /// 喚取統計 logger。
 final _log = Logger('gacha.stats');
 
-/// 從 [records] 計算統計摘要；類型聚合改用 record 自帶的 `resourceType`
-/// 直接映射（[itemTypeKeyOf]），消除跨語系分裂，不再依賴外部 index。
-GachaStats computeGachaStats(List<GachaRecord> records) {
+/// 從 [records] 計算統計摘要；類型聚合以 [index] 的 encore catalog 歸屬 kind
+/// 判定（[itemTypeKeyOf]），跨語系天然一致；index 無此 id 或尚未分類時 fallback
+/// 原始 `resourceType` 字串。
+GachaStats computeGachaStats(List<GachaRecord> records, ItemImageIndex index) {
   var five = 0, four = 0, three = 0;
   var canonical = 0, fallback = 0;
   final byItemType = <String, int>{};
@@ -68,7 +70,7 @@ GachaStats computeGachaStats(List<GachaRecord> records) {
       case 3:
         three++;
     }
-    final key = itemTypeKeyOf(r);
+    final key = itemTypeKeyOf(r, index);
     if (key == kItemKindCharacter ||
         key == kItemKindWeapon ||
         key == kItemKindItem) {

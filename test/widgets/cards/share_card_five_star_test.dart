@@ -81,6 +81,7 @@ void main() {
           title: 'Test',
           records: records,
           targetRank: 5,
+          index: const ItemImageIndex.empty(),
         );
       },
     );
@@ -175,6 +176,7 @@ void main() {
           uid: '100000001',
           updatedAt: DateTime(2025, 4, 2),
           banners: banners,
+          index: const ItemImageIndex.empty(),
         );
       },
     );

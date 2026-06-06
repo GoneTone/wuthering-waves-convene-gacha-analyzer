@@ -10,6 +10,7 @@ GachaRecord r(
   String name = 'x',
   int count = 1,
   int sec = 0,
+  String lang = 'zh-Hant',
 }) => GachaRecord(
   resourceId: resourceId,
   qualityLevel: quality,
@@ -18,11 +19,12 @@ GachaRecord r(
   name: name,
   count: count,
   time: DateTime(2026, 5, 21, 11, 0, sec),
+  languageCode: lang,
 );
 
 void main() {
   group('recordsEqual', () {
-    test('五欄位全等 → true', () {
+    test('四欄位全等 → true', () {
       expect(
         recordsEqual(r(1, name: 'a', sec: 3), r(1, name: 'a', sec: 3)),
         isTrue,
@@ -31,8 +33,8 @@ void main() {
     test('resourceId 不同 → false', () {
       expect(recordsEqual(r(1, sec: 3), r(2, sec: 3)), isFalse);
     });
-    test('name 不同 → false', () {
-      expect(recordsEqual(r(1, name: 'a'), r(1, name: 'b')), isFalse);
+    test('name 不同（換語言）→ true（語言無關對齊指紋）', () {
+      expect(recordsEqual(r(1, name: 'a'), r(1, name: 'b')), isTrue);
     });
     test('time 不同 → false', () {
       expect(recordsEqual(r(1, sec: 3), r(1, sec: 4)), isFalse);
@@ -185,6 +187,26 @@ void main() {
       final merged = mergeOrderedRecords(fresh, existing);
       expect(merged.map((e) => e.resourceId), [80, 70, 60, 40, 30]);
       expect(merged.length, 5);
+    });
+
+    test('換語言重抓：existing 語言保留、只前插新筆（新語言）', () {
+      final existing = [
+        r(30, name: '維里奈', sec: 30, lang: 'zh-Hant'),
+        r(20, name: '安可', sec: 20, lang: 'zh-Hant'),
+        r(10, name: '今汐', sec: 10, lang: 'zh-Hant'),
+      ];
+      final fresh = [
+        r(40, name: 'Carlotta', sec: 40, lang: 'en'),
+        r(30, name: 'Verina', sec: 30, lang: 'en'),
+        r(20, name: 'Encore', sec: 20, lang: 'en'),
+        r(10, name: 'Jinhsi', sec: 10, lang: 'en'),
+      ];
+      final merged = mergeOrderedRecords(fresh, existing);
+      expect(merged.map((e) => e.resourceId), [40, 30, 20, 10]);
+      expect(merged[0].languageCode, 'en');
+      expect(merged[1].languageCode, 'zh-Hant');
+      expect(merged[1].name, '維里奈');
+      expect(merged[3].name, '今汐');
     });
   });
 }

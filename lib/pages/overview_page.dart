@@ -11,6 +11,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_stats.dart
 import 'package:wuthering_waves_convene_gacha_analyzer/services/overview_sections.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/stat_format.dart';
@@ -49,7 +50,8 @@ class OverviewPage extends ConsumerWidget {
       return EmptyState.noSync(context);
     }
 
-    final sec = buildOverviewSections(activeData.banners);
+    final imageIndex = ref.watch(itemImageIndexProvider);
+    final sec = buildOverviewSections(activeData.banners, imageIndex);
     final bannerColors = BannerColors.of(Theme.of(context).brightness);
 
     final statCards = <Widget>[
@@ -131,6 +133,7 @@ class OverviewPage extends ConsumerWidget {
         uid: activeData.playerId,
         updatedAt: activeData.lastUpdated.toLocal(),
         banners: activeData.banners,
+        index: ref.read(itemImageIndexProvider),
       ),
     );
   }

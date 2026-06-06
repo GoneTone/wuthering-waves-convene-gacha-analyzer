@@ -190,6 +190,56 @@ void main() {
     expect(e.detailByLang['en']!.intro, 'B');
   });
 
+  test('mergeIcon 寫入 kind；mergeItemDetail 不覆蓋 kind', () async {
+    final notifier = container.read(itemImageIndexProvider.notifier);
+    await notifier.mergeIcon(
+      resourceId: 1211,
+      iconUrl: 'u',
+      noImage: false,
+      permanentNoImage: false,
+      kind: 'kind:character',
+    );
+    expect(
+      container.read(itemImageIndexProvider).lookupImage(1211)!.kind,
+      'kind:character',
+    );
+    await notifier.mergeItemDetail(
+      resourceId: 1211,
+      lang: 'zh-Hant',
+      detail: const ItemDetailL10n(
+        intro: 'i',
+        elementName: '',
+        weaponTypeName: '',
+        skins: [],
+      ),
+    );
+    expect(
+      container.read(itemImageIndexProvider).lookupImage(1211)!.kind,
+      'kind:character',
+    );
+  });
+
+  test('mergeIcon 不帶 kind 時保留既有 kind', () async {
+    final notifier = container.read(itemImageIndexProvider.notifier);
+    await notifier.mergeIcon(
+      resourceId: 1211,
+      iconUrl: 'u',
+      noImage: false,
+      permanentNoImage: false,
+      kind: 'kind:character',
+    );
+    await notifier.mergeIcon(
+      resourceId: 1211,
+      iconUrl: 'u2',
+      noImage: false,
+      permanentNoImage: false,
+    );
+    expect(
+      container.read(itemImageIndexProvider).lookupImage(1211)!.kind,
+      'kind:character',
+    );
+  });
+
   group('resetAll', () {
     test('清空 index + 刪 cache 目錄 + state identity 換新', () async {
       final dir = await Directory.systemTemp.createTemp('item_image_reset_');

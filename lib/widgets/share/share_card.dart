@@ -10,6 +10,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/models/share_image_option
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_pity.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_stats.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/five_star_collection.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/overview_sections.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/share_uid_mask.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
@@ -106,8 +107,9 @@ class ShareCard extends StatelessWidget {
     required String title,
     required List<GachaRecord> records,
     required int targetRank,
+    required ItemImageIndex index,
   }) {
-    final stats = computeGachaStats(records);
+    final stats = computeGachaStats(records, index);
     // threshold: 0 — 此處只取 averageInterval，不需 pity progress/distance
     // （與 gacha_pity.dart 的 averageIntervalAcrossBanners 同一慣例）。
     final fiveAvg = computePity(records, threshold: 0, rank: 5).averageInterval;
@@ -157,8 +159,9 @@ class ShareCard extends StatelessWidget {
     required String uid,
     required DateTime updatedAt,
     required Map<String, List<GachaRecord>> banners,
+    required ItemImageIndex index,
   }) {
-    final s = buildOverviewSections(banners);
+    final s = buildOverviewSections(banners, index);
     return ShareCard._(
       l: l,
       appVersion: appVersion,

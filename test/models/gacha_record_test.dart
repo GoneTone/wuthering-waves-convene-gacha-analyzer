@@ -35,7 +35,11 @@ void main() {
         'count': 1,
         'time': '2026-05-21 10:39:03',
       };
-      final r = GachaRecord.fromApiJson(json, cardPoolType: '1');
+      final r = GachaRecord.fromApiJson(
+        json,
+        cardPoolType: '1',
+        languageCode: 'zh-Hant',
+      );
       expect(r.resourceId, 1211);
       expect(r.qualityLevel, 5);
       expect(r.resourceType, '角色');
@@ -55,7 +59,11 @@ void main() {
         'count': 1,
         'time': '2026-02-07 16:19:41',
       };
-      final r = GachaRecord.fromApiJson(json, cardPoolType: '1');
+      final r = GachaRecord.fromApiJson(
+        json,
+        cardPoolType: '1',
+        languageCode: 'zh-Hant',
+      );
       expect(r.resourceType, '道具');
       expect(r.qualityLevel, 4);
       expect(r.resourceId, 21040084);
@@ -71,7 +79,11 @@ void main() {
         'count': 1,
         'time': '2026-05-21 11:03:18',
       };
-      final r = GachaRecord.fromApiJson(json, cardPoolType: '8');
+      final r = GachaRecord.fromApiJson(
+        json,
+        cardPoolType: '8',
+        languageCode: 'zh-Hant',
+      );
       expect(r.cardPoolType, '8');
     });
   });
@@ -95,6 +107,7 @@ void main() {
       expect(json['name'], '達妮婭');
       expect(json['count'], 1);
       expect(json['time'], '2026-05-21 10:39:03');
+      expect(json['language_code'], '');
     });
 
     test('toStorageJson / fromStorageJson roundtrip', () {
@@ -117,4 +130,80 @@ void main() {
       expect(restored.time, original.time);
     });
   });
+
+  group('GachaRecord per-record languageCode', () {
+    test('toStorageJson/fromStorageJson round-trips languageCode', () {
+      final rec = GachaRecord(
+        resourceId: 1211,
+        qualityLevel: 5,
+        resourceType: '角色',
+        cardPoolType: '1',
+        name: '達妮婭',
+        count: 1,
+        time: _t,
+        languageCode: 'zh-Hant',
+      );
+      final restored = GachaRecord.fromStorageJson(rec.toStorageJson());
+      expect(restored.languageCode, 'zh-Hant');
+    });
+
+    test(
+      'fromStorageJson uses fallbackLanguageCode when language_code missing',
+      () {
+        final legacy = {
+          'resource_id': 1211,
+          'quality_level': 5,
+          'resource_type': '角色',
+          'card_pool_type': '1',
+          'name': '達妮婭',
+          'count': 1,
+          'time': '2026-05-21 10:39:03',
+        };
+        final restored = GachaRecord.fromStorageJson(
+          legacy,
+          fallbackLanguageCode: 'en',
+        );
+        expect(restored.languageCode, 'en');
+      },
+    );
+
+    test(
+      'fromStorageJson uses fallbackLanguageCode when language_code is empty string',
+      () {
+        final record = {
+          'resource_id': 1211,
+          'quality_level': 5,
+          'resource_type': '角色',
+          'card_pool_type': '1',
+          'name': '達妮婭',
+          'count': 1,
+          'time': '2026-05-21 10:39:03',
+          'language_code': '',
+        };
+        final restored = GachaRecord.fromStorageJson(
+          record,
+          fallbackLanguageCode: 'en',
+        );
+        expect(restored.languageCode, 'en');
+      },
+    );
+
+    test('fromApiJson tags record with the given languageCode', () {
+      final rec = GachaRecord.fromApiJson(
+        {
+          'resourceId': 1211,
+          'qualityLevel': 5,
+          'resourceType': '角色',
+          'name': '達妮婭',
+          'count': 1,
+          'time': '2026-05-21 10:39:03',
+        },
+        cardPoolType: '1',
+        languageCode: 'ja',
+      );
+      expect(rec.languageCode, 'ja');
+    });
+  });
 }
+
+final DateTime _t = DateTime(2026, 5, 21, 10, 39, 3);

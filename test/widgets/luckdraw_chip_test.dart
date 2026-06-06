@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
@@ -19,6 +19,7 @@ GachaRecord _charRecord() => GachaRecord(
   name: '測試角色',
   count: 1,
   time: DateTime(2026, 1, 1),
+  languageCode: 'zh-Hant',
 );
 
 void main() {
@@ -50,7 +51,6 @@ void main() {
       ProviderScope(
         overrides: [
           itemImageCacheDirProvider.overrideWithValue(tempDir),
-          activeLanguageCodeProvider.overrideWithValue('zh-Hant'),
           itemImageIndexProvider.overrideWith(
             () => _StubIndexNotifier(ItemImageIndex(items: {1211: entry})),
           ),
@@ -68,6 +68,7 @@ void main() {
   }
 
   testWidgets('hasLuckdraw=true：出現「喚取」chip', (tester) async {
+    // kind 必須設為 kItemKindCharacter，itemTypeKeyOf 才回 character。
     await pump(
       tester,
       const ItemImageEntry(
@@ -75,6 +76,7 @@ void main() {
         noImage: false,
         permanentNoImage: false,
         hasLuckdraw: true,
+        kind: kItemKindCharacter,
       ),
     );
     expect(find.text('喚取'), findsOneWidget);
