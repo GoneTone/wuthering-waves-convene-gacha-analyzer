@@ -73,7 +73,12 @@ class _FakeFetcher extends ItemImageFetcher {
   }
 }
 
-GachaRecord _rec(int resourceId, int q, String type) => GachaRecord(
+GachaRecord _rec(
+  int resourceId,
+  int q,
+  String type, {
+  String lang = 'zh-Hant',
+}) => GachaRecord(
   resourceId: resourceId,
   qualityLevel: q,
   resourceType: type,
@@ -81,6 +86,7 @@ GachaRecord _rec(int resourceId, int q, String type) => GachaRecord(
   name: 'r$resourceId',
   count: 1,
   time: DateTime.utc(2026, 5, 21),
+  languageCode: lang,
 );
 
 void main() {
@@ -315,7 +321,7 @@ void main() {
         languageCode: 'zh-Hant',
         lastUpdated: DateTime.utc(2026),
         banners: {
-          '1': [_rec(1503, 5, '角色')],
+          '1': [_rec(1503, 5, '角色', lang: 'zh-Hant')],
         },
       ),
     );
@@ -325,12 +331,79 @@ void main() {
         languageCode: 'en',
         lastUpdated: DateTime.utc(2026),
         banners: {
-          '1': [_rec(1503, 5, 'Character')],
+          '1': [_rec(1503, 5, 'Character', lang: 'en')],
         },
       ),
     );
     await repo.debugRunItemImagesOnly();
     final e = container.read(itemImageIndexProvider).lookupImage(1503)!;
     expect(e.detailByLang.keys.toSet(), {'zh-Hant', 'en'});
+  });
+
+  test('kind 由 encore catalog 歸屬判定並寫入 index；不在清單者 kind 維持 null', () async {
+    final container = build(characters: {1211}, weapons: {21010024});
+    addTearDown(container.dispose);
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    repo.debugSeedAccount(
+      BannerStorage(
+        playerId: '701000000',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.utc(2026),
+        banners: {
+          '1': [
+            _rec(1211, 5, '角色'),
+            _rec(21010024, 4, '武器'),
+            _rec(21040084, 4, '道具'),
+          ],
+        },
+      ),
+    );
+    await repo.debugRunItemImagesOnly();
+    final idx = container.read(itemImageIndexProvider);
+    expect(idx.lookupImage(1211)!.kind, kItemKindCharacter);
+    expect(idx.lookupImage(21010024)!.kind, kItemKindWeapon);
+    // 道具不在任何 catalog 清單 → 負取、kind 維持 null。
+    expect(idx.lookupImage(21040084)!.noImage, isTrue);
+    expect(idx.lookupImage(21040084)!.kind, isNull);
+  });
+
+  test('既有快取 icon 但 kind==null → 補 kind、不重下載', () async {
+    await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
+    await ItemImageIndexStorage(tempDir).save(
+      const ItemImageIndex(
+        items: {
+          1211: ItemImageEntry(
+            iconUrl: 'https://x/1211.png',
+            noImage: false,
+            permanentNoImage: false,
+          ),
+        },
+      ),
+    );
+    final container = build(characters: {1211});
+    addTearDown(container.dispose);
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    await container.read(itemImageIndexProvider.notifier).waitForLoad();
+    repo.debugSeedAccount(
+      BannerStorage(
+        playerId: '701000000',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.utc(2026),
+        banners: {
+          '1': [_rec(1211, 5, '角色')],
+        },
+      ),
+    );
+    await repo.debugRunItemImagesOnly();
+    final e = container.read(itemImageIndexProvider).lookupImage(1211)!;
+    expect(e.kind, kItemKindCharacter);
+    // 未重下載：磁碟檔仍是預寫的 bytes（重下載會被 MockClient 覆成 [1,2,3]）。
+    expect(await File('${tempDir.path}/1211_icon.png').readAsBytes(), [
+      9,
+      9,
+      9,
+    ]);
   });
 }
