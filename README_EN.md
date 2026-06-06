@@ -40,7 +40,7 @@ The utility may trigger anti-virus software during installation and execution. T
 
 - Auto-intercepts the convene-record page request to the official convene history API via a local interception helper and a self-signed root certificate — no need to paste URLs by hand
 - Supports the Global server (CN server not supported yet)
-- Covers all 8 convene types: Featured Resonator Convene, Featured Weapon Convene, Standard Resonator Convene, Standard Weapon Convene, Beginner Convene, Beginner's Choice Convene, New Voyage Resonator Convene, New Voyage Weapon Convene
+- Covers all 10 convene types: Featured Resonator Convene, Featured Weapon Convene, Standard Resonator Convene, Standard Weapon Convene, Beginner Convene, Beginner's Choice Convene, New Voyage Resonator Convene, New Voyage Weapon Convene, Collab Resonator Convene, Collab Weapon Convene
 - Multi-account (UID) management: custom aliases, drag-to-reorder, one-click switching
 - Incremental updates merge new records without overwriting old ones, so entries that fall off the official history won't disappear
 - Total pulls and 5★ / 4★ / 3★ counts with their share of the total
