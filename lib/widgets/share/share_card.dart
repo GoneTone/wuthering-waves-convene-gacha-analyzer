@@ -392,7 +392,10 @@ class _SectionView extends StatelessWidget {
         : _kShareTimelineMaxEntries;
     final shown = section.timeline.take(n).toList(growable: false);
     return TimelineVertical(
-      title: l.timelineTopRarityTitle(l.rarityStar(rank), shown.length),
+      title: l.timelineTopRarityTitle(
+        l.rarityStar(rank),
+        section.timeline.length,
+      ),
       entries: shown,
       colors: colors,
       targetRank: rank,
