@@ -276,11 +276,12 @@ void main() {
     final leftHeight = _leftColumnHeight(t, l);
     expect(rightHeight, closeTo(leftHeight, 0.5));
 
-    // 標題仍在 TimelineVertical 子樹內（title 保留，至多 10 筆）。
+    // 標題數字為實際總筆數（12），即使時間軸視覺上至多畫 10 筆並裁切；
+    // 與 App overview/banner 標題語意一致。
     expect(
       find.descendant(
         of: find.byType(TimelineVertical),
-        matching: find.text(l.timelineTopRarityTitle(l.rarityStar(5), 10)),
+        matching: find.text(l.timelineTopRarityTitle(l.rarityStar(5), 12)),
       ),
       findsOneWidget,
     );
