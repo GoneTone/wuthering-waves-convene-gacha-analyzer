@@ -165,7 +165,7 @@
   "progressFetching": "抓取中…",
   "progressDone": "更新完成",
   "progressFailed": "失败",
-  "progressOpenGameHint": "请开启鸣潮 → 唤取 → 唤取记录",
+  "progressOpenGameHint": "请打开鸣潮 → 唤取 → 唤取记录",
   "progressFallbackHint": "（先前的拦截已失效，需重新拦截）",
   "progressFetchingBanner": "正在抓取：{name}",
   "@progressFetchingBanner": {
@@ -282,7 +282,7 @@
   "settingsAccountManagement": "账号管理",
   "settingsPrivacySectionTitle": "隐私",
   "settingsMaskUidInUi": "遮蔽界面中的 UID",
-  "settingsMaskUidInUiHint": "开启后，画面与账号清单中的 UID 会以前 3 码搭配 • 显示（例如 123•••••），适合直播或屏幕分享时使用。分享图、导出文件、删除确认框不受影响。",
+  "settingsMaskUidInUiHint": "开启后，画面与账号列表中的 UID 会以前 3 位搭配 • 显示（例如 123•••••），适合直播或屏幕分享时使用。分享图、导出文件、删除确认框不受影响。",
   "settingsAbout": "关于",
   "settingsOtherGamesTitle": "其他游戏版本",
   "settingsOtherGamesGenshin": "原神",
@@ -452,7 +452,7 @@
   "@confirmRefetchItemImagesTitle": {
     "description": "Title of the AlertDialog confirming the refetch action."
   },
-  "confirmRefetchItemImagesBody": "这会清除所有本机物品图片缓存并重新下载角色 icon。详情图会在下次打开物品详情时按需下载。依物品数量，可能花费数分钟的流量与时间。",
+  "confirmRefetchItemImagesBody": "这会清除所有本机物品图片缓存并重新下载角色图标。详情图会在下次打开物品详情时按需下载。依物品数量，可能花费数分钟的流量与时间。",
   "@confirmRefetchItemImagesBody": {
     "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
   },
@@ -484,8 +484,8 @@
   "@settingsImageCacheFailed": {
     "description": "Shown when scanning cache size fails (e.g. permission denied)."
   },
-  "settingsImageCacheClearGallery": "清除详情图",
-  "confirmClearGalleryCacheTitle": "清除详情图？",
+  "settingsImageCacheClearGallery": "清除详情图缓存",
+  "confirmClearGalleryCacheTitle": "清除详情图缓存？",
   "confirmClearGalleryCacheBody": "将删除约 {size} 的物品详情图，小图标缓存保留。下次打开物品详情时会重新下载。",
   "@confirmClearGalleryCacheBody": {
     "placeholders": {
@@ -495,7 +495,7 @@
     }
   },
   "confirmClearGalleryCacheConfirm": "清除",
-  "settingsImageCacheClearGalleryFailed": "清除详情图失败",
+  "settingsImageCacheClearGalleryFailed": "清除详情图缓存失败",
   "settingsExportData": "导出数据",
   "settingsImportData": "导入数据",
   "shareImageButton": "生成分享图",
@@ -725,17 +725,17 @@
   },
   "settingsLogs": "日志调试",
   "@settingsLogs": {},
-  "settingsLogsHint": "遇到问题时，可导出 log 给开发者协助排查。",
+  "settingsLogsHint": "遇到问题时，可导出日志给开发者协助排查。",
   "@settingsLogsHint": {},
   "settingsLogsReport": "报告问题",
   "@settingsLogsReport": {},
-  "settingsLogsExport": "导出 logs",
+  "settingsLogsExport": "导出日志",
   "@settingsLogsExport": {},
-  "settingsLogsOpenFolder": "打开 logs 文件夹",
+  "settingsLogsOpenFolder": "打开日志文件夹",
   "@settingsLogsOpenFolder": {},
-  "settingsLogsClear": "清除所有 logs",
+  "settingsLogsClear": "清除所有日志",
   "@settingsLogsClear": {},
-  "settingsLogsExportSuccess": "已导出 logs：{path}",
+  "settingsLogsExportSuccess": "已导出日志：{path}",
   "@settingsLogsExportSuccess": {
     "placeholders": {
       "path": {
@@ -751,7 +751,7 @@
       }
     }
   },
-  "settingsLogsClearConfirmBody": "这会永久删除 logs/ 内所有文件。若报告问题前需要 logs，请先导出。输入 CLEAR 确认。",
+  "settingsLogsClearConfirmBody": "这会永久删除 logs/ 内所有文件。若报告问题前需要日志，请先导出。输入 CLEAR 确认。",
   "galleryIllustrationLabel": "造型",
   "@galleryIllustrationLabel": {
     "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
