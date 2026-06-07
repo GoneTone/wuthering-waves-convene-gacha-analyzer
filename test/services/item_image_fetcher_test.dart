@@ -255,6 +255,31 @@ void main() {
       expect(d!.hasLuckdraw, isFalse);
     });
 
+    test('角色：Luckdraw 與角色錯位（秧秧→尤諾）→ hasLuckdraw false', () async {
+      final d = await ItemImageFetcher().fetchItemDetail(
+        resourceId: 1402,
+        kind: kItemKindCharacter,
+        lang: 'zh-Hant',
+        client: detailClient({
+          'Id': 1402,
+          'Introduction': {'Content': 'x'},
+          'Skins': const [],
+          // Luckdraw spine 指向尤諾（younuo），其餘欄位皆為秧秧（yangyang）。
+          'Luckdraw': {
+            'LuckdrawSpineSkeletonData':
+                '/Game/Aki/UI/UIResources/UiLuckdraw/Spine/Character/'
+                'C_YouNuo_01/c_younuo_1.skel',
+          },
+          'FormationRoleCard': 'https://x/T_IconRole_Pile_yangyang_UI.webp',
+          'RolePortrait': 'https://x/T_ActivityRoleYangyang.webp',
+          'UiScenePerformanceABP':
+              '/Game/Aki/Character/Role/FemaleM/Yangyang/'
+              'R2T1YangyangMd10011/ABP_Performance_Yangyang_PC',
+        }),
+      );
+      expect(d!.hasLuckdraw, isFalse);
+    });
+
     test('角色缺欄位 → 對應欄空字串、不 throw', () async {
       final d = await ItemImageFetcher().fetchItemDetail(
         resourceId: 1503,
@@ -267,6 +292,135 @@ void main() {
       expect(d.elementName, '衍射');
       expect(d.skins, isEmpty); // 無 Skins → 空
       expect(d.iconHd, ''); // 無 Skins → iconHd 空
+    });
+  });
+
+  group('luckdrawBelongsToCharacter', () {
+    String luck(String code) =>
+        '/Game/Aki/UI/UIResources/UiLuckdraw/Spine/Character/'
+        'C_${code}_01/c_${code.toLowerCase()}_1.skel';
+    String form(String code) => 'https://x/T_IconRole_Pile_${code}_UI.webp';
+    String portrait(String code) => 'https://x/T_ActivityRole$code.webp';
+    String perf(String code) =>
+        '/Game/Aki/Character/Role/FemaleM/$code/R2T1${code}Md10011/'
+        'ABP_Performance_${code}_PC';
+
+    Map<String, dynamic> body({
+      required String luckPath,
+      String? formCard,
+      String? rolePortrait,
+      String? performance,
+      int id = 1,
+    }) => {
+      'Id': id,
+      'Luckdraw': {'LuckdrawSpineSkeletonData': luckPath},
+      'FormationRoleCard': ?formCard,
+      'RolePortrait': ?rolePortrait,
+      'UiScenePerformanceABP': ?performance,
+    };
+
+    test('全部基準一致 → true', () {
+      expect(
+        luckdrawBelongsToCharacter(
+          body(
+            luckPath: luck('DaNiYa'),
+            formCard: form('daniya'),
+            rolePortrait: portrait('Daniya'),
+            performance: perf('Daniya'),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('Luckdraw 對不上全部基準（younuo vs yangyang）→ false', () {
+      expect(
+        luckdrawBelongsToCharacter(
+          body(
+            luckPath: luck('YouNuo'),
+            formCard: form('yangyang'),
+            rolePortrait: portrait('Yangyang'),
+            performance: perf('Yangyang'),
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('英文別名：拼音基準不符但代號系基準相符（lucy/luxi）→ true（不誤殺）', () {
+      expect(
+        luckdrawBelongsToCharacter(
+          body(
+            luckPath: luck('Lucy'),
+            formCard: form('luxi'),
+            rolePortrait: portrait('Luxi'),
+            performance: perf('Lucy'), // 內部代號系對上
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('拼音/代號分裂：代號系基準不符但拼音基準相符（kelaita/kamola）→ true', () {
+      expect(
+        luckdrawBelongsToCharacter(
+          body(
+            luckPath: luck('KeLaiTa'),
+            formCard: form('kelaita'), // 拼音系對上
+            performance: perf('Kamola'),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('純數字尾碼容忍（jiyan vs jiyan1）→ true', () {
+      // perf('Jiyan1') 產生帶數字尾碼的代號 jiyan1，須能被 _performanceCode 解析
+      // （含數字）並經數字尾碼容忍對上 luck=jiyan，而非落入無基準保底。
+      expect(
+        luckdrawBelongsToCharacter(
+          body(luckPath: luck('JiYan'), performance: perf('Jiyan1')),
+        ),
+        isTrue,
+      );
+    });
+
+    test('performance ABP 為唯一基準時仍判錯位（younuo vs yangyang）→ false', () {
+      expect(
+        luckdrawBelongsToCharacter(
+          body(luckPath: luck('YouNuo'), performance: perf('Yangyang')),
+        ),
+        isFalse,
+      );
+    });
+
+    test('字母延伸不視為同角色（ling vs lingyang）→ false（不誤放）', () {
+      expect(
+        luckdrawBelongsToCharacter(
+          body(luckPath: luck('Ling'), formCard: form('lingyang')),
+        ),
+        isFalse,
+      );
+    });
+
+    test('保守：無任何基準可比 → true', () {
+      expect(
+        luckdrawBelongsToCharacter(body(luckPath: luck('DaNiYa'))),
+        isTrue,
+      );
+    });
+
+    test('保守：Luckdraw 路徑無法解析代號 → true', () {
+      expect(
+        luckdrawBelongsToCharacter(
+          body(luckPath: '/Game/.../no_code.skel', formCard: form('yangyang')),
+        ),
+        isTrue,
+      );
+    });
+
+    test('保守：無 Luckdraw 物件 → true', () {
+      expect(luckdrawBelongsToCharacter({'Id': 1}), isTrue);
     });
   });
 
