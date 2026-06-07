@@ -56,6 +56,97 @@ const _kindToSegment = {
   kItemKindItem: 'item',
 };
 
+/// 從 Luckdraw spine 路徑取角色內部代號（`/Character/C_{Code}_.../`，小寫）；
+/// 取不到回 null。
+String? _luckdrawSpineCode(Map<dynamic, dynamic> luckdraw) {
+  final skel = (luckdraw['LuckdrawSpineSkeletonData'] as String?) ?? '';
+  final atlas = (luckdraw['LuckdrawSpineAtlas'] as String?) ?? '';
+  final path = skel.isNotEmpty ? skel : atlas;
+  final m = RegExp(
+    r'/Character/C_([A-Za-z]+)_',
+    caseSensitive: false,
+  ).firstMatch(path);
+  return m?.group(1)?.toLowerCase();
+}
+
+/// 從 `FormationRoleCard` URL 取代號（檔名 `T_IconRole_Pile_{code}_UI`，小寫，
+/// 拼音命名系）；取不到回 null。
+String? _formationCardCode(String url) {
+  final m = RegExp(
+    r'T_IconRole_Pile_([A-Za-z0-9]+)_UI',
+    caseSensitive: false,
+  ).firstMatch(url);
+  return m?.group(1)?.toLowerCase();
+}
+
+/// 從 `RolePortrait` URL 取代號（檔名 `T_ActivityRole{code}`，小寫，拼音命名系）；
+/// 取不到回 null。
+String? _rolePortraitCode(String url) {
+  final m = RegExp(
+    r'T_ActivityRole([A-Za-z0-9]+)',
+    caseSensitive: false,
+  ).firstMatch(url);
+  return m?.group(1)?.toLowerCase();
+}
+
+/// 從 `UiScenePerformanceABP` 路徑取代號（`..._Performance_{Code}_...`，小寫，
+/// 內部代號命名系）；取不到回 null。代號可含數字（與另兩個 extractor 一致），
+/// 以免 `Performance_Jiyan1_` 這類帶尾碼者整段解析失敗。
+String? _performanceCode(String path) {
+  final m = RegExp(
+    r'Performance_([A-Za-z0-9]+)_',
+    caseSensitive: false,
+  ).firstMatch(path);
+  return m?.group(1)?.toLowerCase();
+}
+
+/// 兩個角色代號是否視為同一角色：正規化後相等，或一方為另一方加上「純數字尾碼」
+/// （容忍 `jiyan` / `jiyan1` 這類造型／變體編號差異）。**刻意不接受字母延伸**——
+/// 否則 `ling` 會誤配 `lingyang`、`chang` 誤配 `changli` 等不同角色；任一為空、或
+/// 較短者 < 4 字元一律回 false。
+bool _characterCodeMatches(String a, String b) {
+  if (a.isEmpty || b.isEmpty) return false;
+  if (a == b) return true;
+  final (shorter, longer) = a.length <= b.length ? (a, b) : (b, a);
+  if (shorter.length < 4 || !longer.startsWith(shorter)) return false;
+  return RegExp(r'^[0-9]+$').hasMatch(longer.substring(shorter.length));
+}
+
+/// 判斷角色詳情 [body] 的 Luckdraw（喚取）立繪是否確實屬於該角色。
+///
+/// encore 部分角色的 Luckdraw spine 指向別的角色（資料錯位，如秧秧的 Luckdraw 指向
+/// 尤諾）。本函式比對 Luckdraw 路徑內嵌的代號與角色三個含代號欄位（`FormationRoleCard`
+/// ／`RolePortrait` 為拼音系、`UiScenePerformanceABP` 為內部代號系），**只要對得上
+/// 任一基準即視為正確**——因 encore 各欄位皆各自可能錯、且 Luckdraw 命名慣例本身不
+/// 一致（有時拼音、有時英文代號），三欄位涵蓋兩種命名系才能同時避免「英文別名誤殺」
+/// 與漏判真錯位。
+///
+/// 保守原則：取不到 Luckdraw 代號、或三個基準皆缺時一律回 true（照常顯示）；只有
+/// 「Luckdraw 代號存在＋至少一基準存在＋對不上全部基準」才回 false（隱藏）。
+bool luckdrawBelongsToCharacter(Map<String, dynamic> body) {
+  final lk = body['Luckdraw'];
+  if (lk is! Map) return true;
+  final luckCode = _luckdrawSpineCode(lk);
+  if (luckCode == null || luckCode.isEmpty) return true;
+  final anchors = <String>[
+    for (final c in [
+      _formationCardCode((body['FormationRoleCard'] as String?) ?? ''),
+      _rolePortraitCode((body['RolePortrait'] as String?) ?? ''),
+      _performanceCode((body['UiScenePerformanceABP'] as String?) ?? ''),
+    ])
+      if (c != null && c.isNotEmpty) c,
+  ];
+  if (anchors.isEmpty) return true;
+  final belongs = anchors.any((a) => _characterCodeMatches(luckCode, a));
+  if (!belongs) {
+    _log.warning(
+      'luckdraw mismatch id=${body['Id']} luck=$luckCode anchors=$anchors '
+      '→ hidden',
+    );
+  }
+  return belongs;
+}
+
 /// 單一 lang 的 encore 列表查表結果：kind → (resourceId → icon URL)。
 class EncoreCatalog {
   /// 建立 [EncoreCatalog]。
@@ -242,10 +333,13 @@ class ItemImageFetcher {
         iconHd = '';
       }
       final lk = body['Luckdraw'];
-      final hasLuckdraw =
+      final hasLuckdrawData =
           kind == kItemKindCharacter &&
           lk is Map &&
           ((lk['LuckdrawSpineSkeletonData'] as String?)?.isNotEmpty ?? false);
+      // encore 部分角色的 Luckdraw 指向別的角色（資料錯位）→ 驗證歸屬，錯位即視為
+      // 無喚取立繪（chip 不出現、擷取不觸發）。
+      final hasLuckdraw = hasLuckdrawData && luckdrawBelongsToCharacter(body);
       final detail = EncoreItemDetail(
         intro: intro,
         elementName: body['ElementName'] as String? ?? '',
