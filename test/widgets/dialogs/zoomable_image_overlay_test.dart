@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
 
@@ -107,7 +109,10 @@ void main() {
   });
 
   /// 把 [showZoomableImageOverlay] 開出來的 widget 在乾淨 MaterialApp 內呈現。
-  Future<void> openOverlay(WidgetTester tester) async {
+  Future<void> openOverlay(
+    WidgetTester tester, {
+    String? suggestedFileName,
+  }) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildDarkTheme(),
@@ -116,8 +121,11 @@ void main() {
         home: Builder(
           builder: (ctx) => Scaffold(
             body: ElevatedButton(
-              onPressed: () =>
-                  showZoomableImageOverlay(ctx, imageFile: imageFile),
+              onPressed: () => showZoomableImageOverlay(
+                ctx,
+                imageFile: imageFile,
+                suggestedFileName: suggestedFileName,
+              ),
               child: const Text('open'),
             ),
           ),
@@ -459,6 +467,115 @@ void main() {
       await openOverlay(tester);
       final l = loc(tester);
       expect(find.byTooltip(l.actionCloseImagePreview), findsOneWidget);
+    });
+  });
+
+  group('ZoomableImageOverlay image menu triggers', () {
+    AppLocalizations loc(WidgetTester tester) =>
+        AppLocalizations.of(tester.element(find.byType(ZoomableImageOverlay)))!;
+
+    testWidgets('top-right ... button opens copy/save menu (no refetch)', (
+      tester,
+    ) async {
+      await openOverlay(tester);
+      final l = loc(tester);
+      expect(find.byIcon(Icons.more_vert), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      expect(find.text(l.actionCopyImage), findsOneWidget);
+      expect(find.text(l.actionSaveImage), findsOneWidget);
+      expect(find.text(l.actionRefetchImage), findsNothing);
+    });
+
+    testWidgets('right-click on image opens copy/save menu', (tester) async {
+      await openOverlay(tester);
+      final l = loc(tester);
+      await tester.tapAt(
+        tester.getCenter(find.byType(InteractiveViewer)),
+        buttons: kSecondaryButton,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(l.actionCopyImage), findsOneWidget);
+      expect(find.text(l.actionSaveImage), findsOneWidget);
+    });
+  });
+
+  group('ZoomableImageOverlay copy/save actions', () {
+    AppLocalizations loc(WidgetTester tester) =>
+        AppLocalizations.of(tester.element(find.byType(ZoomableImageOverlay)))!;
+
+    tearDown(resetItemImageSaveSeams);
+
+    /// 開 ... 選單並點選 [itemText]。
+    /// itemImageEncoder seam 已換成同步回傳，故 pumpAndSettle 即可讓所有 future 完成。
+    Future<void> pickMenu(WidgetTester tester, String itemText) async {
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(itemText));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('copy writes PNG to clipboard and shows copied snackbar', (
+      tester,
+    ) async {
+      var copyCalled = false;
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      itemImageClipboardWriter = (bytes) async {
+        copyCalled = true;
+        return true;
+      };
+      await openOverlay(tester);
+      final l = loc(tester);
+      await pickMenu(tester, l.actionCopyImage);
+      expect(copyCalled, isTrue);
+      expect(find.text(l.itemImageCopied), findsOneWidget);
+    });
+
+    testWidgets(
+      'save calls picker with suggestedFileName and shows saved snackbar',
+      (tester) async {
+        String? capturedName;
+        String? writtenPath;
+        final tmp = '${tempDir.path}/saved.png';
+        itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+        itemImageSaveLocationPicker = (name) async {
+          capturedName = name;
+          return FileSaveLocation(tmp);
+        };
+        itemImageFileWriter = (path, png) async {
+          writtenPath = path;
+        };
+        await openOverlay(tester, suggestedFileName: 'Char_Splash.png');
+        final l = loc(tester);
+        await pickMenu(tester, l.actionSaveImage);
+        expect(capturedName, 'Char_Splash.png');
+        expect(writtenPath, tmp);
+        expect(find.text(l.itemImageSavedTo(tmp)), findsOneWidget);
+      },
+    );
+
+    testWidgets('save cancelled shows no snackbar', (tester) async {
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      itemImageSaveLocationPicker = (name) async => null;
+      await openOverlay(tester);
+      final l = loc(tester);
+      await pickMenu(tester, l.actionSaveImage);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('save without suggestedFileName falls back to file basename', (
+      tester,
+    ) async {
+      String? capturedName;
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      itemImageSaveLocationPicker = (name) async {
+        capturedName = name;
+        return null;
+      };
+      await openOverlay(tester);
+      final l = loc(tester);
+      await pickMenu(tester, l.actionSaveImage);
+      expect(capturedName, 'test.png');
     });
   });
 

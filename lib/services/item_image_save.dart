@@ -57,6 +57,10 @@ Future<bool> _defaultClipboardWriter(Uint8List png) async {
 Future<void> _defaultFileWriter(String path, Uint8List png) =>
     File(path).writeAsBytes(png);
 
+/// 圖檔編碼 seam，讓 flutter test 繞過 ui.instantiateImageCodec（需 runAsync 才能完成）。
+/// 預設直接呼叫 [encodeImageFileToPng]；測試可替換成同步返回假資料的 stub。
+Future<Uint8List?> Function(File file) itemImageEncoder = encodeImageFileToPng;
+
 /// 存檔位置選擇器 seam，讓 flutter test 不開啟真實系統 dialog。
 @visibleForTesting
 Future<FileSaveLocation?> Function(String suggestedName)
@@ -75,6 +79,7 @@ Future<void> Function(String path, Uint8List png) itemImageFileWriter =
 /// 將所有 seam 重設為預設實作，供 tearDown 使用。
 @visibleForTesting
 void resetItemImageSaveSeams() {
+  itemImageEncoder = encodeImageFileToPng;
   itemImageSaveLocationPicker = _defaultSaveLocationPicker;
   itemImageClipboardWriter = _defaultClipboardWriter;
   itemImageFileWriter = _defaultFileWriter;
