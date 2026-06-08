@@ -278,7 +278,7 @@ void main() {
     });
   });
 
-  group('ZoomableImageOverlay double-tap toggle', () {
+  group('ZoomableImageOverlay single-tap toggle', () {
     double currentScale(WidgetTester tester) {
       final iv = tester.widget<InteractiveViewer>(
         find.byType(InteractiveViewer),
@@ -286,26 +286,16 @@ void main() {
       return iv.transformationController!.value.getMaxScaleOnAxis();
     }
 
-    Future<void> doubleTapAt(WidgetTester tester, Offset position) async {
-      await tester.tapAt(position);
-      await tester.pump(kDoubleTapMinTime);
-      await tester.tapAt(position);
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-
-    testWidgets('from fit (scale=1), double-tap goes to 2x', (tester) async {
+    testWidgets('from fit (scale=1), single tap goes to 2x', (tester) async {
       await openOverlay(tester);
       expect(currentScale(tester), 1.0);
-      await doubleTapAt(
-        tester,
-        tester.getCenter(find.byType(InteractiveViewer)),
-      );
+      await tester.tapAt(tester.getCenter(find.byType(InteractiveViewer)));
+      await tester.pump(const Duration(milliseconds: 100));
       expect(currentScale(tester), closeTo(2.0, 1e-6));
     });
 
-    testWidgets('from non-fit, double-tap returns to fit (1x)', (tester) async {
+    testWidgets('from non-fit, single tap returns to fit (1x)', (tester) async {
       await openOverlay(tester);
-      // 先用滾輪把它升到 3x 左右。
       final center = tester.getCenter(find.byType(InteractiveViewer));
       final pointer = TestPointer(1, PointerDeviceKind.mouse);
       await tester.sendEventToBinding(pointer.hover(center));
@@ -319,28 +309,29 @@ void main() {
         await tester.pump();
       }
       expect(currentScale(tester), greaterThan(2.5));
-      await doubleTapAt(tester, center);
+      await tester.tapAt(center);
+      await tester.pump(const Duration(milliseconds: 100));
       expect(currentScale(tester), closeTo(1.0, 1e-6));
     });
 
     testWidgets(
-      'double-tap back to fit at off-center clears translation (no out-of-frame residue)',
+      'single tap back to fit at off-center clears translation (identity)',
       (tester) async {
         await openOverlay(tester);
-        // 在偏左上點雙擊放大到 2x — 會產生 focal-centered translation。
+        // 先單擊偏左上放大到 2x（產生 focal-centered translation）。
         final ivRect = tester.getRect(find.byType(InteractiveViewer));
         final offCenter = Offset(
           ivRect.left + ivRect.width * 0.25,
           ivRect.top + ivRect.height * 0.25,
         );
-        await doubleTapAt(tester, offCenter);
+        await tester.tapAt(offCenter);
+        await tester.pump(const Duration(milliseconds: 100));
         expect(currentScale(tester), closeTo(2.0, 1e-6));
 
-        // 再雙擊回 fit — matrix 必須是 identity（scale=1 AND translation=0），
-        // 否則圖片會偏離 viewport，要拖一下才會 snap 回來。
-        await doubleTapAt(tester, offCenter);
+        // 再單擊回 fit — matrix 必須是 identity（scale=1 AND translation=0）。
+        await tester.tapAt(offCenter);
+        await tester.pump(const Duration(milliseconds: 100));
         expect(currentScale(tester), closeTo(1.0, 1e-6));
-
         final iv = tester.widget<InteractiveViewer>(
           find.byType(InteractiveViewer),
         );
@@ -349,6 +340,15 @@ void main() {
         expect(translation.y, closeTo(0, 1e-6));
       },
     );
+  });
+
+  group('ZoomableImageOverlay wheel zoom identity reset', () {
+    double currentScale(WidgetTester tester) {
+      final iv = tester.widget<InteractiveViewer>(
+        find.byType(InteractiveViewer),
+      );
+      return iv.transformationController!.value.getMaxScaleOnAxis();
+    }
 
     testWidgets(
       'wheel-zoom-out clamped to minScale also resets matrix to identity',
@@ -397,14 +397,12 @@ void main() {
     // 可靠的 file codec 同步路徑，因此這裡只測結構，行為由使用者 manual 驗證。
 
     testWidgets(
-      'inner GD (image absorber) carries onTap (empty absorber) and onDoubleTapDown (zoom)',
+      'inner GD (image) carries onTapUp (single-tap zoom), no double-tap',
       (tester) async {
         await openOverlay(tester);
 
-        // Image 外那層 GestureDetector 同時負責：
-        //   (1) 吸收 image 像素上的單擊（onTap 空），避免「想看細節點到圖片就關掉」。
-        //   (2) 承擔雙擊縮放（onDoubleTapDown）。
-        // 雙擊集中在此層才能讓外層 GD 維持單純 onTap、暗區 tap 立即關閉。
+        // Image 外那層 GestureDetector 負責單擊縮放（onTapUp），並吸收 image
+        // 像素上的點擊（不冒泡到外層的 close）。改成單擊後不再掛 onDoubleTap*。
         final innerGd = tester.widget<GestureDetector>(
           find
               .ancestor(
@@ -414,11 +412,12 @@ void main() {
               .first,
         );
         expect(innerGd.behavior, HitTestBehavior.opaque);
-        expect(innerGd.onTap, isNotNull);
-        expect(innerGd.onDoubleTapDown, isNotNull);
+        expect(innerGd.onTapUp, isNotNull);
+        expect(innerGd.onDoubleTapDown, isNull);
+        expect(innerGd.onDoubleTap, isNull);
 
-        // 該 GestureDetector 要在 LayoutBuilder 出來的 SizedBox 內，這樣 hit-test
-        // 範圍才會是 image painted rect 而非整個 viewer。
+        // 該 GestureDetector 要在 LayoutBuilder 出來的 SizedBox 內，hit-test
+        // 範圍才會是 image painted rect。
         expect(
           find.ancestor(
             of: find.byType(Image),

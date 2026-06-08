@@ -48,8 +48,8 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   /// 滑鼠滾輪每一格的縮放係數（×1.1 in / ÷1.1 out）。
   static const double _wheelStep = 1.1;
 
-  /// 雙擊時的目標 scale；fit ↔ 2x 切換。
-  static const double _doubleTapScale = 2.0;
+  /// 放大後的目標 scale；單擊／縮放鈕在 fit ↔ 2x 之間切換。
+  static const double _zoomedScale = 2.0;
 
   /// 控制 InteractiveViewer 的 Matrix4；wheel / double-tap 會手動設置 scale，
   /// InteractiveViewer 自動處理 pan。
@@ -134,12 +134,19 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
     _zoomAt(localFocal: event.localPosition, scaleDelta: delta);
   }
 
-  /// 雙擊：當前接近 fit → 放大到 [_doubleTapScale]；否則回 fit。以 tap 落點為焦點縮放。
-  void _onDoubleTapDown(TapDownDetails details) {
+  /// 單擊圖片：在 fit 時放大到 [_zoomedScale]（焦點 = 落點），否則回 fit。
+  /// 取代雙擊——無 DoubleTapGR 後 tap 立即觸發，不受 kDoubleTapTimeout 影響。
+  void _onTapZoom(TapUpDetails details) {
     final current = _ctrl.value.getMaxScaleOnAxis();
     final atFit = (current - _minScale).abs() < 0.05;
-    final target = atFit ? _doubleTapScale : _minScale;
-    _zoomAt(localFocal: details.localPosition, scaleDelta: target / current);
+    if (atFit) {
+      _zoomAt(
+        localFocal: details.localPosition,
+        scaleDelta: _zoomedScale / current,
+      );
+    } else {
+      _ctrl.value = Matrix4.identity();
+    }
   }
 
   @override
@@ -197,16 +204,12 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
                         width: w,
                         height: h,
                         child: GestureDetector(
-                          // 此層雙重職責：
-                          // (1) 吸收 image 像素上的單擊（onTap 空 callback），
-                          //     避免「想看細節點到圖片就關掉」。
-                          // (2) 承擔雙擊縮放（onDoubleTapDown），讓外層 GD 維持
-                          //     單純 onTap 不受 DoubleTapGR arbitration 拖延。
-                          // 滾輪走 Listener、拖曳走 InteractiveViewer pan，皆不受
-                          // 此處 opaque 影響（pan 在 movement>slop 時贏 arena）。
+                          // 此層承擔單擊縮放（onTapUp），並因 opaque hit-test 吸收
+                          // image 像素上的點擊，避免冒泡到外層 GD 觸發關閉。
+                          // 靜止點擊 → TapGR 贏 → 縮放；有位移 → InteractiveViewer
+                          // pan 贏 → 平移；滾輪走 Listener，互不打架。
                           behavior: HitTestBehavior.opaque,
-                          onTap: () {},
-                          onDoubleTapDown: _onDoubleTapDown,
+                          onTapUp: _onTapZoom,
                           child: Image(
                             image: _imageProvider,
                             fit: BoxFit.contain,
