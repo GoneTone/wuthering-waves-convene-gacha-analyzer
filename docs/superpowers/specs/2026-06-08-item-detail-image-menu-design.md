@@ -39,13 +39,16 @@
 
 ### 選單項目
 
-| 項目 | icon | 行為 |
-|---|---|---|
-| 儲存圖片 | `Icons.save_alt` | 解碼快取檔成 PNG -> `getSaveLocation`（建議檔名 `<物品名>_<chip 標籤>.png`）-> 寫檔。取消則無動作。 |
-| 複製圖片 | `Icons.copy` | 解碼快取檔成 PNG -> 寫入系統剪貼簿（`Formats.png`）。 |
-| 重抓圖片 | `Icons.refresh` | 依 chip 類別重抓，過程切回 loading spinner（見下節）。 |
+由上到下順序固定如下，「複製／儲存」與「重抓」之間以 `PopupMenuDivider` 水平分隔（分隔取／存圖與重抓兩類動作）：
 
-「儲存圖片」與「複製圖片」共用同一條「快取檔解碼 -> PNG bytes」路徑（webp/jpg 自動轉 PNG，輸出格式統一）。
+| 順序 | 項目 | icon | 行為 |
+|---|---|---|---|
+| 1 | 複製圖片 | `Icons.copy` | 解碼快取檔成 PNG -> 寫入系統剪貼簿（`Formats.png`）。 |
+| 2 | 儲存圖片 | `Icons.save_alt` | 解碼快取檔成 PNG -> `getSaveLocation`（建議檔名 `<物品名>_<chip 標籤>.png`）-> 寫檔。取消則無動作。 |
+| -- | （水平分隔線 `PopupMenuDivider`） | | |
+| 3 | 重抓圖片 | `Icons.refresh` | 依 chip 類別重抓，過程切回 loading spinner（見下節）。 |
+
+「複製圖片」與「儲存圖片」共用同一條「快取檔解碼 -> PNG bytes」路徑（webp/jpg 自動轉 PNG，輸出格式統一）。
 
 ## 重抓邏輯
 
