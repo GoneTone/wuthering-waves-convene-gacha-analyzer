@@ -790,7 +790,11 @@
   },
   "itemImageSavedTo": "Image saved to {path}",
   "@itemImageSavedTo": {
-    "placeholders": { "path": { "type": "String" } },
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
     "description": "Snackbar after saving an item detail image to the given path."
   },
   "itemImageSaveFailed": "Failed to save image",
