@@ -488,6 +488,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     final index = ref.watch(itemImageIndexProvider);
     final cacheDir = ref.watch(itemImageCacheDirProvider);
     final entry = index.lookupImage(record.resourceId);
+    final cacheRevision = ref.watch(itemImageCacheRevisionProvider);
 
     // per-lang 詳情：優先取 record 擷取語言；該 lang 未抓時 fallback 第一筆已抓
     // 語言（總比空白好）。
@@ -622,6 +623,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
               borderRadius: BorderRadius.circular(AppRadius.sm),
               child: Image.file(
                 iconFile,
+                key: ValueKey('${iconFile.path}#$cacheRevision'),
                 width: 64,
                 height: 64,
                 fit: BoxFit.cover,

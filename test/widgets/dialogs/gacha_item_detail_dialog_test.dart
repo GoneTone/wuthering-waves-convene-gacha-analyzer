@@ -1204,5 +1204,47 @@ void main() {
       expect(find.byKey(ValueKey(illustFile.path)), findsNothing);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
+
+    testWidgets('icon 重抓成功 → cache revision++、標題縮圖換 key', (tester) async {
+      const iconUrl = 'https://cdn.example.com/w_icon.png';
+      late File iconFile;
+      await tester.runAsync(() async {
+        await container
+            .read(itemImageIndexProvider.notifier)
+            .mergeIcon(
+              resourceId: 77,
+              iconUrl: iconUrl,
+              noImage: false,
+              permanentNoImage: false,
+            );
+        iconFile = itemIconCacheFile(
+          baseDir: tempDir,
+          resourceId: 77,
+          url: iconUrl,
+        );
+        await _touchFile(tempDir, iconFile.uri.pathSegments.last);
+      });
+      rebuildContainer();
+      await tester.runAsync(loadIndex);
+
+      await pumpDialog(
+        tester,
+        _rec(
+          resourceId: 77,
+          name: 'WeaponX',
+          resourceType: '武器',
+          languageCode: 'zh-Hant',
+        ),
+      );
+
+      // 初始 revision 0：標題縮圖 key 帶 #0。
+      expect(find.byKey(ValueKey('${iconFile.path}#0')), findsOneWidget);
+
+      // 直接 bump revision（不實際跑網路），驗證標題縮圖換 key 重建。
+      container.read(itemImageCacheRevisionProvider.notifier).bump();
+      await tester.pump();
+
+      expect(find.byKey(ValueKey('${iconFile.path}#1')), findsOneWidget);
+    });
   });
 }
