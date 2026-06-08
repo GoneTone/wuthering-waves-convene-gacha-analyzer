@@ -134,6 +134,49 @@ void main() {
     expect(find.byType(Image), findsOneWidget);
   });
 
+  testWidgets('icon 存在 → Image.file key 帶 revision；revision++ 後 key 改變', (
+    tester,
+  ) async {
+    const iconUrl = 'https://x/icon.png';
+    late File iconFile;
+    await tester.runAsync(() async {
+      await container
+          .read(itemImageIndexProvider.notifier)
+          .mergeIcon(
+            resourceId: 111,
+            iconUrl: iconUrl,
+            noImage: false,
+            permanentNoImage: false,
+          );
+      iconFile = itemIconCacheFile(
+        baseDir: tempDir,
+        resourceId: 111,
+        url: iconUrl,
+      );
+      await iconFile.writeAsBytes(_minimalPng());
+    });
+
+    await tester.runAsync(() async {
+      await tester.pumpWidget(
+        _wrap(
+          GachaItemIcon(
+            record: _rec(resourceId: 111, name: 'Hu Tao'),
+            size: 48,
+          ),
+          container,
+        ),
+      );
+      await tester.pump();
+    });
+
+    expect(find.byKey(ValueKey('${iconFile.path}#0')), findsOneWidget);
+
+    container.read(itemImageCacheRevisionProvider.notifier).bump();
+    await tester.pump();
+
+    expect(find.byKey(ValueKey('${iconFile.path}#1')), findsOneWidget);
+  });
+
   testWidgets('PreloadedItemImages 命中 → 顯示 RawImage', (tester) async {
     await tester.runAsync(() async {
       await container
