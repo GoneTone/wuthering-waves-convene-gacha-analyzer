@@ -122,14 +122,63 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     }
   }
 
-  /// 由 failed 重試：改回 loading 並依 chip 類別重新取圖。
-  void _retryEntry(_ImageChipEntry e) {
+  /// 重抓某 chip 的圖：先 evict 既有 ImageCache、切回 loading，再依類別重抓。
+  ///
+  /// 路徑不變的重抓必須 evict，否則 ready 圖重建後仍讀到舊快取（見檔頭策略）。
+  /// 同時供失敗狀態的「重試」按鈕與圖片選單的「重抓圖片」共用。
+  void _refetchEntry(_ImageChipEntry e) {
+    PaintingBinding.instance.imageCache.evict(FileImage(e.file));
+    _precachedPaths.remove(e.file.path);
     setState(() => _loadStates[e.file.path] = const _ImageLoading());
-    if (e.kind == _ChipKind.luckdraw) {
-      final lang = widget.record.languageCode;
-      unawaited(_captureLuckdraw(file: e.file, lang: lang));
-    } else {
-      unawaited(_fetchAndCache(url: e.url, file: e.file));
+    switch (e.kind) {
+      case _ChipKind.luckdraw:
+        unawaited(
+          _captureLuckdraw(file: e.file, lang: widget.record.languageCode),
+        );
+      case _ChipKind.skin:
+        unawaited(_fetchAndCache(url: e.url, file: e.file));
+      case _ChipKind.icon:
+        unawaited(_refetchIcon(url: e.url, file: e.file));
+    }
+  }
+
+  /// 重抓 icon：重新下載 [url] 覆蓋 [file]，成功後 evict + bump cache revision，
+  /// 讓 dialog 標題縮圖與記錄列表 [GachaItemIcon] 同步顯示新 icon。
+  ///
+  /// 失敗時保留磁碟既有 icon（writeImageFileAtomic 只在成功時 rename 覆蓋），
+  /// 但 chip 狀態轉 failed（沿用既有失敗 UI 的重試按鈕）。
+  Future<void> _refetchIcon({required String url, required File file}) async {
+    final fetcher = ref.read(itemImageFetcherProvider);
+    try {
+      final bytes = await fetcher.downloadImage(url, _client);
+      if (bytes == null) {
+        if (!mounted) return;
+        setState(() => _loadStates[file.path] = const _ImageFailed());
+        _log.warning(
+          'icon refetch null rid=${widget.record.resourceId} '
+          'url=${sanitizeUrl(url)}',
+        );
+        return;
+      }
+      await writeImageFileAtomic(file, bytes);
+      if (!mounted) return;
+      PaintingBinding.instance.imageCache.evict(FileImage(file));
+      setState(() => _loadStates[file.path] = _ImageReady(file));
+      ref.read(itemImageCacheRevisionProvider.notifier).bump();
+      ref.invalidate(itemImageCacheUsageProvider);
+      _log.info(
+        'icon refetch ok rid=${widget.record.resourceId} '
+        'bytes=${bytes.length} path=${sanitizeFsPath(file.path)}',
+      );
+    } catch (e, st) {
+      if (!mounted) return;
+      setState(() => _loadStates[file.path] = const _ImageFailed());
+      _log.warning(
+        'icon refetch failed rid=${widget.record.resourceId} '
+        'url=${sanitizeUrl(url)}',
+        e,
+        st,
+      );
     }
   }
 
@@ -230,7 +279,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
               ),
               const SizedBox(height: AppSpacing.s),
               TextButton.icon(
-                onPressed: () => _retryEntry(current),
+                onPressed: () => _refetchEntry(current),
                 icon: const Icon(Icons.refresh, size: 18),
                 label: Text(l.actionRetry),
               ),
