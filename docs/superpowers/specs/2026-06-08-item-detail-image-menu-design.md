@@ -64,17 +64,17 @@
 
 重抓 ready 圖時快取路徑不變（skin 由 URL 推導、luckdraw 固定 `<id>_luckdraw.png`、icon 同 URL），但 Flutter `ImageCache` 以 path 為 key，`Image.file` 的 `ValueKey(file.path)` 也不變 -- 不處理會繼續顯示舊圖。既有 `_retryEntry` 只從 `_ImageFailed` 觸發（當時無檔／壞檔），故未踩到此坑；本次重抓 ready 圖必須處理：
 
-1. 新增 `Map<String, int> _imageVersion`（path -> 版本號），重抓時對該 path `++`。
-2. 重抓前 `imageCache.evict(FileImage(file))`，並從 `_precachedPaths` 移除該 path（讓 precache 重排）。
-3. 圖片區的 `Image.file` key 改為 `ValueKey('${file.path}#${version}')`，強制重建並重新解碼。
+> 實作備註：分兩種機制（見最終實作）：
+> - **圖片區**（skin／luckdraw／icon）：重抓前 `imageCache.evict(FileImage(file))` 並從 `_precachedPaths` 移除該 path；切到 `_ImageLoading`（spinner）再回 `_ImageReady`，loading→ready 的 widget 型別變更已使 `Image` element 重建並重解碼。圖片區的 `Image.file` key **維持 `ValueKey(file.path)`**（既有測試靠它定位），不需版本化。
+> - **標題縮圖＋列表縮圖**（僅 icon 重抓需要）：見下節以全域 cache revision 處理。
 
 ### Icon 重抓的連動刷新
 
-icon 快取檔同時用於 dialog 標題縮圖（`title` 區 `Image.file(iconFile)`）與記錄列表縮圖。icon 重抓成功後：
+icon 快取檔同時用於 dialog 標題縮圖（`title` 區 `Image.file(iconFile)`）與記錄列表縮圖（`GachaItemIcon`）。這兩處 `Image` 一直掛載、不經 loading 重建，單純 evict 不會自動重抓。故新增全域 `itemImageCacheRevisionProvider`（`NotifierProvider`，有 `bump()`）：
 
-- `imageCache.evict(FileImage(iconFile))`（標題與列表共用同一 `FileImage` key）。
-- `ref.invalidate(itemImageIndexProvider)`，讓 watch 此 provider 的列表項重建。
-- 標題縮圖的 `Image.file` 同樣納入版本化 key，確保 dialog 內即時更新。
+- 標題與 `GachaItemIcon` 的 `Image.file` key 帶上 revision：`ValueKey('${file.path}#$cacheRevision')`。
+- icon 重抓成功後 `imageCache.evict(FileImage(iconFile))` ＋ `ref.read(itemImageCacheRevisionProvider.notifier).bump()` → 兩處換 key 重建並讀到新檔。
+- 另 `ref.invalidate(itemImageCacheUsageProvider)` 更新設定頁的快取用量顯示（index 內容未變故不需 invalidate `itemImageIndexProvider`）。
 
 ## 新增服務
 
