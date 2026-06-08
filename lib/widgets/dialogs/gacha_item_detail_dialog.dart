@@ -11,6 +11,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
@@ -224,6 +225,113 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     }
   }
 
+  /// 圖片區右上角的溢出選單：複製圖片 / 儲存圖片 / --- / 重抓圖片。
+  /// 沿用 lightbox X 鈕的半透明黑底圓鈕視覺，永遠顯示。
+  Widget _buildImageMenu(BuildContext context, _ImageChipEntry current) {
+    final l = AppLocalizations.of(context)!;
+    return Material(
+      color: Colors.black.withValues(alpha: 0.4),
+      shape: const CircleBorder(),
+      child: PopupMenuButton<String>(
+        icon: const Icon(Icons.more_vert, color: Colors.white),
+        tooltip: '',
+        onSelected: (value) {
+          switch (value) {
+            case 'copy':
+              unawaited(_copyImage(current));
+            case 'save':
+              unawaited(_saveImage(current));
+            case 'refetch':
+              _refetchEntry(current);
+          }
+        },
+        itemBuilder: (_) => [
+          PopupMenuItem(
+            value: 'copy',
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.copy, size: 20),
+              title: Text(l.actionCopyImage),
+            ),
+          ),
+          PopupMenuItem(
+            value: 'save',
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.save_alt, size: 20),
+              title: Text(l.actionSaveImage),
+            ),
+          ),
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: 'refetch',
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.refresh, size: 20),
+              title: Text(l.actionRefetchImage),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 把 record 名稱與 chip 標籤組成存檔建議檔名，並去掉檔名非法字元。
+  String _suggestedFileName(_ImageChipEntry e) {
+    final raw = '${widget.record.name}_${e.label}';
+    // Windows 檔名非法字元（< > : " / \ | ? *）一律換 _，避免存檔對話框拒絕。
+    final safe = raw.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+    return '$safe.png';
+  }
+
+  /// 複製目前圖片到剪貼簿：解碼成 PNG → 寫剪貼簿，結果以 SnackBar 回報。
+  Future<void> _copyImage(_ImageChipEntry e) async {
+    final l = AppLocalizations.of(context)!;
+    final png = await encodeImageFileToPng(e.file);
+    if (!mounted) return;
+    if (png == null) {
+      _showSnack(l.itemImageCopyFailed);
+      return;
+    }
+    final ok = await copyImagePngToClipboard(png);
+    if (!mounted) return;
+    _showSnack(ok ? l.itemImageCopied : l.itemImageCopyFailed);
+  }
+
+  /// 儲存目前圖片：解碼成 PNG → 系統存檔對話框，結果以 SnackBar 回報。
+  /// 使用者取消不提示；寫檔失敗提示失敗。
+  Future<void> _saveImage(_ImageChipEntry e) async {
+    final l = AppLocalizations.of(context)!;
+    final png = await encodeImageFileToPng(e.file);
+    if (!mounted) return;
+    if (png == null) {
+      _showSnack(l.itemImageSaveFailed);
+      return;
+    }
+    try {
+      final saved = await saveImagePng(
+        png,
+        suggestedName: _suggestedFileName(e),
+      );
+      if (!mounted || !saved) return;
+      _showSnack(l.itemImageSavedTo(_suggestedFileName(e)));
+    } catch (_) {
+      if (!mounted) return;
+      _showSnack(l.itemImageSaveFailed);
+    }
+  }
+
+  /// 以 SnackBar 顯示 [message]（dialog 之上找最近的 ScaffoldMessenger）。
+  void _showSnack(String message) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger
+      ?..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   /// 依當前 chip 狀態顯示內容（ready→可縮放圖／loading→spinner／failed→重試）。
   Widget _buildCurrentImageArea(BuildContext context, _ImageChipEntry current) {
     final theme = Theme.of(context);
@@ -233,23 +341,34 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: switch (state) {
-        _ImageReady(:final file) => MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              _log.info('open zoom path=${sanitizeFsPath(file.path)}');
-              showZoomableImageOverlay(context, imageFile: file);
-            },
-            child: Image.file(
-              file,
-              key: ValueKey(file.path),
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-              gaplessPlayback: true,
-              errorBuilder: (_, e, st) => const SizedBox.shrink(),
+        _ImageReady(:final file) => Stack(
+          children: [
+            Positioned.fill(
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    _log.info('open zoom path=${sanitizeFsPath(file.path)}');
+                    showZoomableImageOverlay(context, imageFile: file);
+                  },
+                  child: Image.file(
+                    file,
+                    key: ValueKey(file.path),
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                    gaplessPlayback: true,
+                    errorBuilder: (_, e, st) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
             ),
-          ),
+            Positioned(
+              top: AppSpacing.s,
+              right: AppSpacing.s,
+              child: _buildImageMenu(context, current),
+            ),
+          ],
         ),
         _ImageLoading() => Center(
           child: SizedBox(

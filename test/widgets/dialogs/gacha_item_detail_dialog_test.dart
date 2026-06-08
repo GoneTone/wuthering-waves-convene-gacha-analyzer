@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -8,7 +9,9 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:http/http.dart' as http;
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
@@ -36,6 +39,14 @@ GachaRecord _rec({
 Finder _chipWithText(String text) =>
     find.ancestor(of: find.text(text), matching: find.byType(Chip));
 
+/// 永不解析的 fetcher：[downloadImage] 回傳 never-complete future，讓重抓後
+/// 的 loading 狀態維持不變（測試才能穩定觀察到 spinner，而非瞬間轉 failed）。
+class _HangingFetcher extends ItemImageFetcher {
+  @override
+  Future<Uint8List?> downloadImage(String url, http.Client client) =>
+      Completer<Uint8List?>().future;
+}
+
 /// 在 [dir] 內建立一個指定路徑的假圖檔（內容隨意，僅供 existsSync 命中）。
 Future<File> _touchFile(Directory dir, String relative) async {
   final f = File('${dir.path}/$relative');
@@ -54,13 +65,15 @@ void main() {
   /// 僅建立 container、不 await index 載入：在 `testWidgets` 的 fake-async 區內
   /// 直接 await 真實磁碟 I/O 會卡住，故載入交由呼叫端在 [WidgetTester.runAsync]
   /// 內呼叫 `waitForLoad()`（見 [loadIndex]）。
-  void rebuildContainer() {
+  void rebuildContainer({ItemImageFetcher? fetcher}) {
     container = ProviderContainer(
       overrides: [
         itemImageIndexStorageProvider.overrideWithValue(
           ItemImageIndexStorage(tempDir),
         ),
         itemImageCacheDirProvider.overrideWithValue(tempDir),
+        if (fetcher != null)
+          itemImageFetcherProvider.overrideWithValue(fetcher),
       ],
     );
     addTearDown(container.dispose);
@@ -1070,6 +1083,126 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+    });
+  });
+
+  group('GachaItemDetailDialog 圖片選單與重抓', () {
+    /// seed 一個「角色 icon + 單一造型立繪」並建立兩個 cache 檔，回傳造型檔。
+    /// [fetcher] 非空時覆寫 [itemImageFetcherProvider]（例如塞 [_HangingFetcher]）。
+    Future<File> seedCharacterWithSkin(
+      WidgetTester tester, {
+      ItemImageFetcher? fetcher,
+    }) async {
+      const iconUrl = 'https://cdn.example.com/m_icon.png';
+      const illustUrl = 'https://cdn.example.com/m_illust.png';
+      late File illustFile;
+      await tester.runAsync(() async {
+        final n = container.read(itemImageIndexProvider.notifier);
+        await n.mergeIcon(
+          resourceId: 111,
+          iconUrl: iconUrl,
+          noImage: false,
+          permanentNoImage: false,
+        );
+        await n.mergeItemDetail(
+          resourceId: 111,
+          lang: 'zh-Hant',
+          detail: const ItemDetailL10n(
+            intro: '',
+            elementName: '',
+            weaponTypeName: '',
+            skins: [
+              ItemSkin(
+                formationCard: illustUrl,
+                name: '造型A',
+                subDecName: '',
+                bgDescription: '',
+              ),
+            ],
+          ),
+        );
+        final iconCacheFile = itemIconCacheFile(
+          baseDir: tempDir,
+          resourceId: 111,
+          url: iconUrl,
+        );
+        await _touchFile(tempDir, iconCacheFile.uri.pathSegments.last);
+        illustFile = itemIllustrationCacheFile(
+          baseDir: tempDir,
+          resourceId: 111,
+          url: illustUrl,
+        );
+        await _touchFile(tempDir, illustFile.uri.pathSegments.last);
+      });
+      rebuildContainer(fetcher: fetcher);
+      await tester.runAsync(loadIndex);
+      return illustFile;
+    }
+
+    testWidgets('ready 圖 → 圖片區有溢出選單按鈕（more_vert）', (tester) async {
+      await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      expect(
+        find.descendant(
+          of: find.byType(GachaItemDetailDialog),
+          matching: find.byIcon(Icons.more_vert),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('選單三項：複製圖片 / 儲存圖片 / 重抓圖片', (tester) async {
+      await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await tester.tap(
+        find.descendant(
+          of: find.byType(GachaItemDetailDialog),
+          matching: find.byIcon(Icons.more_vert),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('複製圖片'), findsOneWidget);
+      expect(find.text('儲存圖片'), findsOneWidget);
+      expect(find.text('重抓圖片'), findsOneWidget);
+    });
+
+    testWidgets('點重抓圖片 → 造型圖切回 loading（spinner 出現）', (tester) async {
+      // 用永不解析的 fetcher，重抓後 loading 狀態維持不動，spinner 才穩定可觀察
+      // （真實 fetcher 在 fake test 下 HTTP 回 400 → null → 瞬間轉 failed）。
+      final illustFile = await seedCharacterWithSkin(
+        tester,
+        fetcher: _HangingFetcher(),
+      );
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      expect(find.byKey(ValueKey(illustFile.path)), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(GachaItemDetailDialog),
+          matching: find.byIcon(Icons.more_vert),
+        ),
+      );
+      await tester.pump();
+      // 等 PopupMenu 開場動畫（約 300ms）完整跑完，選單項才完全可命中。
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.text('重抓圖片'));
+      // 等 PopupMenu route 退場動畫結束，dialog 重建為 loading 狀態的 spinner。
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(ValueKey(illustFile.path)), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
   });
 }
