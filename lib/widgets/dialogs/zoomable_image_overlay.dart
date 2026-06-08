@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/gestures.dart';
@@ -5,13 +6,18 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
-/// 開啟全螢幕 lightbox 顯示 [imageFile]，可拖曳平移、滾輪 / 雙擊縮放、ESC / 點背景 / X 關閉。
+/// 開啟全螢幕 lightbox 顯示 [imageFile]，可拖曳平移、滾輪 / 單擊縮放、ESC / 點背景 / X 關閉。
 Future<void> showZoomableImageOverlay(
   BuildContext context, {
   required File imageFile,
+  String? suggestedFileName,
 }) {
-  Logger('gacha.itemimage.zoom').info('overlay open file=${imageFile.path}');
+  Logger(
+    'gacha.itemimage.zoom',
+  ).info('overlay open file=${sanitizeFsPath(imageFile.path)}');
   return showDialog<void>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.75),
@@ -20,7 +26,10 @@ Future<void> showZoomableImageOverlay(
     builder: (_) => Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.zero,
-      child: ZoomableImageOverlay(imageFile: imageFile),
+      child: ZoomableImageOverlay(
+        imageFile: imageFile,
+        suggestedFileName: suggestedFileName,
+      ),
     ),
   );
 }
@@ -28,10 +37,17 @@ Future<void> showZoomableImageOverlay(
 /// 全螢幕 lightbox 圖片檢視器；獨立可重用，不耦合 caller。
 class ZoomableImageOverlay extends StatefulWidget {
   /// 建立 [ZoomableImageOverlay]。
-  const ZoomableImageOverlay({super.key, required this.imageFile});
+  const ZoomableImageOverlay({
+    super.key,
+    required this.imageFile,
+    this.suggestedFileName,
+  });
 
   /// 要顯示的本地圖檔。
   final File imageFile;
+
+  /// 存檔對話框的建議檔名；null 時 fallback 用 [imageFile] 的 basename。
+  final String? suggestedFileName;
 
   @override
   State<ZoomableImageOverlay> createState() => _ZoomableImageOverlayState();
@@ -48,12 +64,21 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   /// 滑鼠滾輪每一格的縮放係數（×1.1 in / ÷1.1 out）。
   static const double _wheelStep = 1.1;
 
-  /// 雙擊時的目標 scale；fit ↔ 2x 切換。
-  static const double _doubleTapScale = 2.0;
+  /// 放大後的目標 scale；單擊／縮放鈕在 fit ↔ 2x 之間切換。
+  static const double _zoomedScale = 2.0;
 
-  /// 控制 InteractiveViewer 的 Matrix4；wheel / double-tap 會手動設置 scale，
+  /// 控制 InteractiveViewer 的 Matrix4；wheel / 單擊會手動設置 scale，
   /// InteractiveViewer 自動處理 pan。
   final TransformationController _ctrl = TransformationController();
+
+  /// InteractiveViewer 的 key；右上縮放鈕用它取 viewport render size，以
+  /// viewport 中心為焦點縮放（按鈕不像點擊那樣有落點）。
+  final GlobalKey _ivKey = GlobalKey();
+
+  /// lightbox 自帶的 ScaffoldMessenger key；copy/save 的 SnackBar 透過它顯示在
+  /// 全螢幕 overlay 內部，而非被覆蓋的 app Scaffold。
+  final GlobalKey<ScaffoldMessengerState> _messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   /// 共用的 [FileImage] provider；同時餵給 [Image] 渲染與 [_stream] 取得 intrinsic size，
   /// 避免兩次 decode。
@@ -125,6 +150,11 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
         _ctrl.value;
   }
 
+  /// 目前矩陣是否已放大（scale 明顯大於 fit）。游標與右上縮放鈕共用此判斷，
+  /// 確保兩者狀態一致。
+  bool _isZoomed(Matrix4 matrix) =>
+      matrix.getMaxScaleOnAxis() > _minScale + 0.01;
+
   /// 處理 mouse wheel：向上（scrollDelta.dy < 0）放大、向下縮小，以游標為中心。
   /// 純水平滾動（dy == 0）忽略，避免 trackpad 兩指水平滑動誤觸發縮放。
   void _onPointerSignal(PointerSignalEvent event) {
@@ -134,115 +164,311 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
     _zoomAt(localFocal: event.localPosition, scaleDelta: delta);
   }
 
-  /// 雙擊：當前接近 fit → 放大到 [_doubleTapScale]；否則回 fit。以 tap 落點為焦點縮放。
-  void _onDoubleTapDown(TapDownDetails details) {
+  /// 單擊圖片：在 fit 時放大到 [_zoomedScale]（焦點 = 落點），否則回 fit。
+  /// 回 fit 直接寫 `Matrix4.identity()`（非走 `_zoomAt`），確保 translation 同步歸零。
+  /// 取代雙擊——無 DoubleTapGR 後 tap 立即觸發，不受 kDoubleTapTimeout 影響。
+  void _onTapZoom(TapUpDetails details) {
+    if (_isZoomed(_ctrl.value)) {
+      _ctrl.value = Matrix4.identity();
+      return;
+    }
     final current = _ctrl.value.getMaxScaleOnAxis();
-    final atFit = (current - _minScale).abs() < 0.05;
-    final target = atFit ? _doubleTapScale : _minScale;
-    _zoomAt(localFocal: details.localPosition, scaleDelta: target / current);
+    _zoomAt(
+      localFocal: details.localPosition,
+      scaleDelta: _zoomedScale / current,
+    );
+  }
+
+  /// 右上縮放鈕：fit 時放大到 [_zoomedScale]（焦點 = viewport 中心），否則回 fit。
+  void _onZoomButtonPressed() {
+    if (_isZoomed(_ctrl.value)) {
+      _ctrl.value = Matrix4.identity();
+      return;
+    }
+    final current = _ctrl.value.getMaxScaleOnAxis();
+    final box = _ivKey.currentContext?.findRenderObject() as RenderBox?;
+    final focal = box != null ? box.size.center(Offset.zero) : Offset.zero;
+    _zoomAt(localFocal: focal, scaleDelta: _zoomedScale / current);
+  }
+
+  /// 影像選單項目（複製圖片 / 儲存圖片）；右鍵與右上 `...` 鈕共用。
+  List<PopupMenuEntry<String>> _imageMenuItems(AppLocalizations l) => [
+    PopupMenuItem(
+      value: 'copy',
+      child: ListTile(
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.copy, size: 20),
+        title: Text(l.actionCopyImage),
+      ),
+    ),
+    PopupMenuItem(
+      value: 'save',
+      child: ListTile(
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.save_alt, size: 20),
+        title: Text(l.actionSaveImage),
+      ),
+    ),
+  ];
+
+  /// 分派影像選單選擇：複製 / 儲存。
+  void _onImageMenuSelected(String value) {
+    switch (value) {
+      case 'copy':
+        unawaited(_copyImage());
+      case 'save':
+        unawaited(_saveImage());
+    }
+  }
+
+  /// 右鍵在圖片上叫出影像選單，位置跟著游標。
+  Future<void> _showImageContextMenu(Offset globalPosition) async {
+    final l = AppLocalizations.of(context)!;
+    Logger('gacha.itemimage.zoom').info('menu open source=rightclick');
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        globalPosition & Size.zero,
+        Offset.zero & overlay.size,
+      ),
+      items: _imageMenuItems(l),
+    );
+    if (selected == null || !mounted) return;
+    _onImageMenuSelected(selected);
+  }
+
+  /// 存檔建議檔名；caller 未帶 [ZoomableImageOverlay.suggestedFileName] 則用檔案 basename。
+  String _suggestedName() =>
+      widget.suggestedFileName ?? widget.imageFile.uri.pathSegments.last;
+
+  /// 複製目前圖片到剪貼簿：解碼 PNG → 寫剪貼簿，結果以 lightbox 內 SnackBar 回報。
+  Future<void> _copyImage() async {
+    final l = AppLocalizations.of(context)!;
+    final png = await encodeImageFileToPng(widget.imageFile);
+    if (!mounted) return;
+    if (png == null) {
+      Logger('gacha.itemimage.zoom').warning('copy encode failed');
+      _showSnack(l.itemImageCopyFailed);
+      return;
+    }
+    final ok = await copyImagePngToClipboard(png);
+    if (!mounted) return;
+    Logger('gacha.itemimage.zoom').info('copy done ok=$ok');
+    _showSnack(ok ? l.itemImageCopied : l.itemImageCopyFailed);
+  }
+
+  /// 儲存目前圖片：解碼 PNG → 系統存檔對話框，結果以 lightbox 內 SnackBar 回報。
+  /// 使用者取消不提示；寫檔失敗提示失敗。
+  Future<void> _saveImage() async {
+    final l = AppLocalizations.of(context)!;
+    final png = await encodeImageFileToPng(widget.imageFile);
+    if (!mounted) return;
+    if (png == null) {
+      Logger('gacha.itemimage.zoom').warning('save encode failed');
+      _showSnack(l.itemImageSaveFailed);
+      return;
+    }
+    try {
+      final savedPath = await saveImagePng(
+        png,
+        suggestedName: _suggestedName(),
+      );
+      if (!mounted || savedPath == null) return;
+      Logger('gacha.itemimage.zoom').info('save done');
+      _showSnack(l.itemImageSavedTo(savedPath));
+    } catch (_) {
+      if (!mounted) return;
+      Logger('gacha.itemimage.zoom').warning('save failed');
+      _showSnack(l.itemImageSaveFailed);
+    }
+  }
+
+  /// 在 lightbox 內部彈 SnackBar（用自帶 [_messengerKey]，不被全螢幕 overlay 蓋住）。
+  void _showSnack(String message) {
+    _messengerKey.currentState
+      ?..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Stack(
-      children: [
-        // backdrop — 滿屏，點任一處（落在 InteractiveViewer 以外）即關閉。
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => _close('backdrop'),
-          ),
-        ),
-        // 中央圖片區 — 留 48px padding 給 backdrop tap 區。
-        Padding(
-          padding: const EdgeInsets.all(48),
-          child: Listener(
-            onPointerSignal: _onPointerSignal,
-            child: GestureDetector(
-              // image 像素外的暗區（BoxFit.contain 留白）也視為背景，點擊立即關閉。
-              // 只掛 onTap（不掛 onDoubleTap），TapGR 不會被 DoubleTapGR
-              // arbitration 卡住 kDoubleTapTimeout（300ms）才 fire；雙擊縮放下放到
-              // image 上的內層 GestureDetector 處理。
-              onTap: () => _close('outside-image'),
-              child: InteractiveViewer(
-                transformationController: _ctrl,
-                panEnabled: true,
-                // wheel / double-tap 自管 scale，避免兩套 scale source 打架。
-                scaleEnabled: false,
-                minScale: _minScale,
-                maxScale: _maxScale,
-                child: Center(
-                  // 把 image 包進 SizedBox 並 size 到 BoxFit.contain 後的 painted
-                  // rect，讓內層 GestureDetector absorber 只覆蓋圖片像素區；image
-                  // 外的 letterbox 暗區留給外層 GestureDetector 處理 onTap 關閉。
-                  // _imageSize 為 null（decode 尚未完成）時退化為填滿可用空間，
-                  // 此時 absorber 暫時覆蓋整個 viewer；本地檔案 decode 通常在
-                  // 第一幀就完成，使用者察覺不到。
-                  child: LayoutBuilder(
-                    builder: (_, constraints) {
-                      final imgSize = _imageSize;
-                      double w = constraints.maxWidth;
-                      double h = constraints.maxHeight;
-                      if (imgSize != null &&
-                          imgSize.width > 0 &&
-                          imgSize.height > 0) {
-                        final scale = (w / imgSize.width) < (h / imgSize.height)
-                            ? w / imgSize.width
-                            : h / imgSize.height;
-                        w = imgSize.width * scale;
-                        h = imgSize.height * scale;
-                      }
-                      return SizedBox(
-                        width: w,
-                        height: h,
-                        child: GestureDetector(
-                          // 此層雙重職責：
-                          // (1) 吸收 image 像素上的單擊（onTap 空 callback），
-                          //     避免「想看細節點到圖片就關掉」。
-                          // (2) 承擔雙擊縮放（onDoubleTapDown），讓外層 GD 維持
-                          //     單純 onTap 不受 DoubleTapGR arbitration 拖延。
-                          // 滾輪走 Listener、拖曳走 InteractiveViewer pan，皆不受
-                          // 此處 opaque 影響（pan 在 movement>slop 時贏 arena）。
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {},
-                          onDoubleTapDown: _onDoubleTapDown,
-                          child: Image(
-                            image: _imageProvider,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, e, st) {
-                              Logger('gacha.itemimage.zoom').warning(
-                                'image errorBuilder file=${widget.imageFile.path}',
-                                e,
-                                st,
-                              );
-                              return const SizedBox.shrink();
-                            },
-                          ),
-                        ),
-                      );
-                    },
+    return ScaffoldMessenger(
+      key: _messengerKey,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            // backdrop — 滿屏，點任一處（落在 InteractiveViewer 以外）即關閉。
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _close('backdrop'),
+              ),
+            ),
+            // 中央圖片區 — 留 48px padding 給 backdrop tap 區。
+            Padding(
+              padding: const EdgeInsets.all(48),
+              child: Listener(
+                onPointerSignal: _onPointerSignal,
+                child: GestureDetector(
+                  // image 像素外的暗區（BoxFit.contain 留白）也視為背景，點擊立即關閉。
+                  // 只掛 onTap（不掛 onDoubleTap），避免日後若有人加 DoubleTapGR 進同一
+                  // arena 會讓此 tap 被 kDoubleTapTimeout（300ms）拖延才 fire。
+                  onTap: () => _close('outside-image'),
+                  child: InteractiveViewer(
+                    key: _ivKey,
+                    transformationController: _ctrl,
+                    panEnabled: true,
+                    // wheel / 單擊自管 scale，避免兩套 scale source 打架。
+                    scaleEnabled: false,
+                    minScale: _minScale,
+                    maxScale: _maxScale,
+                    child: Center(
+                      // 把 image 包進 SizedBox 並 size 到 BoxFit.contain 後的 painted
+                      // rect，讓內層 GestureDetector absorber 只覆蓋圖片像素區；image
+                      // 外的 letterbox 暗區留給外層 GestureDetector 處理 onTap 關閉。
+                      // _imageSize 為 null（decode 尚未完成）時退化為填滿可用空間，
+                      // 此時 absorber 暫時覆蓋整個 viewer；本地檔案 decode 通常在
+                      // 第一幀就完成，使用者察覺不到。
+                      child: LayoutBuilder(
+                        builder: (_, constraints) {
+                          final imgSize = _imageSize;
+                          double w = constraints.maxWidth;
+                          double h = constraints.maxHeight;
+                          if (imgSize != null &&
+                              imgSize.width > 0 &&
+                              imgSize.height > 0) {
+                            final scale =
+                                (w / imgSize.width) < (h / imgSize.height)
+                                ? w / imgSize.width
+                                : h / imgSize.height;
+                            w = imgSize.width * scale;
+                            h = imgSize.height * scale;
+                          }
+                          return SizedBox(
+                            width: w,
+                            height: h,
+                            child: ValueListenableBuilder<Matrix4>(
+                              valueListenable: _ctrl,
+                              child: GestureDetector(
+                                // 此層承擔單擊縮放（onTapUp），並因 opaque hit-test
+                                // 吸收 image 像素上的點擊，避免冒泡到外層 GD 觸發關閉。
+                                // 靜止點擊 → TapGR 贏 → 縮放；有位移 → InteractiveViewer
+                                // pan 贏 → 平移；滾輪走 Listener，互不打架。
+                                behavior: HitTestBehavior.opaque,
+                                onTapUp: _onTapZoom,
+                                onSecondaryTapDown: (d) => unawaited(
+                                  _showImageContextMenu(d.globalPosition),
+                                ),
+                                child: Image(
+                                  image: _imageProvider,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, e, st) {
+                                    Logger('gacha.itemimage.zoom').warning(
+                                      'image errorBuilder '
+                                      'file=${sanitizeFsPath(widget.imageFile.path)}',
+                                      e,
+                                      st,
+                                    );
+                                    return const SizedBox.shrink();
+                                  },
+                                ),
+                              ),
+                              builder: (_, matrix, child) => MouseRegion(
+                                cursor: _isZoomed(matrix)
+                                    ? SystemMouseCursors.zoomOut
+                                    : SystemMouseCursors.zoomIn,
+                                child: child,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-        // X 按鈕 — 半透明黑底圓鈕，永遠最上層。
-        Positioned(
-          top: 16,
-          right: 16,
-          child: Material(
-            color: Colors.black.withValues(alpha: 0.4),
-            shape: const CircleBorder(),
-            child: IconButton(
-              tooltip: l.actionCloseImagePreview,
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: () => _close('button'),
+            // 右上按鈕列 — 縮放切換鈕 + 關閉鈕，半透明黑底圓鈕，永遠最上層。
+            Positioned(
+              top: 16,
+              right: 16,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Material(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    shape: const CircleBorder(),
+                    child: PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, color: Colors.white),
+                      tooltip: '',
+                      onOpened: () => Logger(
+                        'gacha.itemimage.zoom',
+                      ).info('menu open source=button'),
+                      onSelected: _onImageMenuSelected,
+                      itemBuilder: (_) => _imageMenuItems(l),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ValueListenableBuilder<Matrix4>(
+                    valueListenable: _ctrl,
+                    builder: (_, matrix, _) {
+                      final zoomed = _isZoomed(matrix);
+                      return _OverlayCircleButton(
+                        tooltip: zoomed ? l.actionZoomOut : l.actionZoomIn,
+                        icon: zoomed ? Icons.zoom_out : Icons.zoom_in,
+                        onPressed: _onZoomButtonPressed,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _OverlayCircleButton(
+                    tooltip: l.actionCloseImagePreview,
+                    icon: Icons.close,
+                    onPressed: () => _close('button'),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+/// overlay 右上角的半透明黑底圓形按鈕；統一 close／zoom 兩鈕的外觀。
+class _OverlayCircleButton extends StatelessWidget {
+  /// 建立 [_OverlayCircleButton]。
+  const _OverlayCircleButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  /// tooltip 文字，同時擔任 semantic label。
+  final String tooltip;
+
+  /// 按鈕 icon。
+  final IconData icon;
+
+  /// 點擊 callback。
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withValues(alpha: 0.4),
+      shape: const CircleBorder(),
+      child: IconButton(
+        tooltip: tooltip,
+        icon: Icon(icon, color: Colors.white),
+        onPressed: onPressed,
+      ),
     );
   }
 }

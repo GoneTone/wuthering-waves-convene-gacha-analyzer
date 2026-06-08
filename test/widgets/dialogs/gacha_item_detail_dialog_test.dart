@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/luckdraw_capture_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
@@ -1115,6 +1116,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+      final overlay = tester.widget<ZoomableImageOverlay>(
+        find.byType(ZoomableImageOverlay),
+      );
+      expect(overlay.suggestedFileName, isNotNull);
+      expect(overlay.suggestedFileName, startsWith('Char'));
+      expect(overlay.suggestedFileName, endsWith('.png'));
     });
   });
 
@@ -1222,6 +1229,47 @@ void main() {
       expect(find.text('複製圖片'), findsOneWidget);
       expect(find.text('儲存圖片'), findsOneWidget);
       expect(find.text('重抓圖片'), findsOneWidget);
+    });
+
+    testWidgets('點 dialog 外圍 → barrier 仍能關閉（Scaffold 包裹不擋 barrier）', (
+      tester,
+    ) async {
+      await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      expect(find.byType(GachaItemDetailDialog), findsOneWidget);
+      // 點視窗左上角 (5,5)，落在置中 dialog 之外 → barrierDismissible 關閉。
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      expect(find.byType(GachaItemDetailDialog), findsNothing);
+    });
+
+    testWidgets('點複製圖片 → 在 dialog 之上彈出 toast（不被 dialog 蓋住）', (tester) async {
+      addTearDown(resetItemImageSaveSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      itemImageClipboardWriter = (_) async => true;
+      await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await tester.tap(
+        find.descendant(
+          of: find.byType(GachaItemDetailDialog),
+          matching: find.byIcon(Icons.more_vert),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('複製圖片'));
+      await tester.pump();
+      // toast 置於 dialog 之上的 Stack，存在於 dialog 子樹內、不被蓋住。
+      expect(find.byKey(const ValueKey('itemDetailToast')), findsOneWidget);
+      expect(find.text('已複製圖片到剪貼簿'), findsOneWidget);
+      // flush toast 自動消失計時器，避免測試結束時殘留 pending timer。
+      await tester.pump(const Duration(seconds: 3));
     });
 
     testWidgets('點重抓圖片 → 造型圖切回 loading（spinner 出現）', (tester) async {

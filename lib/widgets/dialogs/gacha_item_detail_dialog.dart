@@ -77,6 +77,14 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   /// http client（dispose 時 close 中斷 in-flight 請求）。
   late final http.Client _client;
 
+  /// 目前顯示的 toast 訊息；null 為不顯示。copy/save 結果在 dialog 之上回報。
+  /// 不走 ScaffoldMessenger/SnackBar：那需要 Scaffold 包整個 dialog route，會擋掉
+  /// barrierDismissible 的點外關閉；改用置於 dialog 之上的 Stack toast。
+  String? _toastMessage;
+
+  /// toast 自動消失計時器；[dispose] 內 cancel。
+  Timer? _toastTimer;
+
   @override
   void initState() {
     super.initState();
@@ -85,6 +93,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
 
   @override
   void dispose() {
+    _toastTimer?.cancel();
     _client.close();
     super.dispose();
   }
@@ -360,12 +369,15 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     }
   }
 
-  /// 以 SnackBar 顯示 [message]（dialog 之上找最近的 ScaffoldMessenger）。
+  /// 在 dialog 之上顯示一則 toast（自管、置於 Stack 最上層），不被 dialog 蓋住，
+  /// 也不像 Scaffold 包裹那樣擋掉 barrierDismissible 的點外關閉。
   void _showSnack(String message) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    messenger
-      ?..clearSnackBars()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    _toastTimer?.cancel();
+    setState(() => _toastMessage = message);
+    _toastTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      setState(() => _toastMessage = null);
+    });
   }
 
   /// 依當前 chip 狀態顯示內容（ready→可縮放圖／loading→spinner／failed→重試）。
@@ -386,7 +398,11 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
                     _log.info('open zoom path=${sanitizeFsPath(file.path)}');
-                    showZoomableImageOverlay(context, imageFile: file);
+                    showZoomableImageOverlay(
+                      context,
+                      imageFile: file,
+                      suggestedFileName: _suggestedFileName(current),
+                    );
                   },
                   onSecondaryTapDown: (details) => unawaited(
                     _showImageContextMenu(
@@ -657,146 +673,182 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
       _ => tokens.textPrimary,
     };
 
-    return AppDialog(
-      size: AppDialogSize.md,
-      maxHeight: 880,
-      title: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (iconFile != null) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              child: Image.file(
-                iconFile,
-                key: ValueKey('${iconFile.path}#$cacheRevision'),
-                width: 64,
-                height: 64,
-                fit: BoxFit.cover,
-                errorBuilder: (_, e, st) => const SizedBox.shrink(),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.m),
-          ],
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: AppDialog(
+            size: AppDialogSize.md,
+            maxHeight: 880,
+            title: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  record.name,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: nameColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (intro.trim().isNotEmpty)
-                  Padding(
-                    // 名稱與簡介間留一點間距，避免兩者貼齊（2dp，無對應 token 故用字面值）。
-                    padding: const EdgeInsets.only(top: 2),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 120),
-                      child: SingleChildScrollView(
-                        child: _detailHtml(theme, intro),
-                      ),
+                if (iconFile != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    child: Image.file(
+                      iconFile,
+                      key: ValueKey('${iconFile.path}#$cacheRevision'),
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, e, st) => const SizedBox.shrink(),
                     ),
                   ),
-                if (_tagsFor(
-                  l,
-                  record,
-                  elementName,
-                  weaponTypeName,
-                ).isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.s),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
+                  const SizedBox(width: AppSpacing.m),
+                ],
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      for (final t in _tagsFor(
+                      Text(
+                        record.name,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: nameColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (intro.trim().isNotEmpty)
+                        Padding(
+                          // 名稱與簡介間留一點間距，避免兩者貼齊（2dp，無對應 token 故用字面值）。
+                          padding: const EdgeInsets.only(top: 2),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 120),
+                            child: SingleChildScrollView(
+                              child: _detailHtml(theme, intro),
+                            ),
+                          ),
+                        ),
+                      if (_tagsFor(
                         l,
                         record,
                         elementName,
                         weaponTypeName,
-                      ))
-                        Chip(
-                          label: Text(t),
-                          backgroundColor: tokens.textPrimary.withValues(
-                            alpha: 0.15,
-                          ),
-                          side: BorderSide.none,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(AppRadius.sm),
-                            ),
-                          ),
-                          labelStyle: theme.textTheme.bodySmall?.copyWith(
-                            color: tokens.textPrimary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.s,
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
+                      ).isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.s),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final t in _tagsFor(
+                              l,
+                              record,
+                              elementName,
+                              weaponTypeName,
+                            ))
+                              Chip(
+                                label: Text(t),
+                                backgroundColor: tokens.textPrimary.withValues(
+                                  alpha: 0.15,
+                                ),
+                                side: BorderSide.none,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(AppRadius.sm),
+                                  ),
+                                ),
+                                labelStyle: theme.textTheme.bodySmall?.copyWith(
+                                  color: tokens.textPrimary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.s,
+                                ),
+                                visualDensity: VisualDensity.compact,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: current != null
+                  ? MainAxisSize.max
+                  : MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (chipEntries.length > 1) ...[
+                  Wrap(
+                    spacing: AppSpacing.s,
+                    runSpacing: AppSpacing.s,
+                    children: [
+                      for (var i = 0; i < chipEntries.length; i++)
+                        ChoiceChip(
+                          label: Text(chipEntries[i].label),
+                          selected: i == clampedIndex,
+                          showCheckmark: false,
+                          onSelected: (_) => setState(() => _selectedIndex = i),
                         ),
                     ],
                   ),
+                  const SizedBox(height: AppSpacing.m),
                 ],
+                if (current != null)
+                  Expanded(child: _buildCurrentImageArea(context, current)),
+                if (current?.skin != null)
+                  _buildSkinCaption(context, current!.skin!),
               ],
             ),
+            actions: [
+              TextButton.icon(
+                icon: const Icon(Icons.open_in_new, size: 18),
+                label: Text(l.actionViewOnEncore),
+                onPressed: () {
+                  _log.info(
+                    'open encore kind=${itemTypeKeyOf(record, index)} id=${record.resourceId}',
+                  );
+                  openExternalUrl(
+                    Uri.parse(
+                      encoreItemUrl(
+                        kind: itemTypeKeyOf(record, index),
+                        resourceId: record.resourceId,
+                        lang: record.languageCode,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l.actionClose),
+              ),
+            ],
           ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: current != null ? MainAxisSize.max : MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (chipEntries.length > 1) ...[
-            Wrap(
-              spacing: AppSpacing.s,
-              runSpacing: AppSpacing.s,
-              children: [
-                for (var i = 0; i < chipEntries.length; i++)
-                  ChoiceChip(
-                    label: Text(chipEntries[i].label),
-                    selected: i == clampedIndex,
-                    showCheckmark: false,
-                    onSelected: (_) => setState(() => _selectedIndex = i),
+        ),
+        if (_toastMessage != null)
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 32,
+            child: IgnorePointer(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Material(
+                  key: const ValueKey('itemDetailToast'),
+                  color: Colors.black.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Text(
+                      _toastMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.m),
-          ],
-          if (current != null)
-            Expanded(child: _buildCurrentImageArea(context, current)),
-          if (current?.skin != null) _buildSkinCaption(context, current!.skin!),
-        ],
-      ),
-      actions: [
-        TextButton.icon(
-          icon: const Icon(Icons.open_in_new, size: 18),
-          label: Text(l.actionViewOnEncore),
-          onPressed: () {
-            _log.info(
-              'open encore kind=${itemTypeKeyOf(record, index)} id=${record.resourceId}',
-            );
-            openExternalUrl(
-              Uri.parse(
-                encoreItemUrl(
-                  kind: itemTypeKeyOf(record, index),
-                  resourceId: record.resourceId,
-                  lang: record.languageCode,
                 ),
               ),
-            );
-          },
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l.actionClose),
-        ),
+            ),
+          ),
       ],
     );
   }
