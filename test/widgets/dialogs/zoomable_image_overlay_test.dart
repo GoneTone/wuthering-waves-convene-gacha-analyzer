@@ -412,6 +412,63 @@ void main() {
     });
   });
 
+  group('ZoomableImageOverlay zoom toggle button', () {
+    double currentScale(WidgetTester tester) {
+      final iv = tester.widget<InteractiveViewer>(
+        find.byType(InteractiveViewer),
+      );
+      return iv.transformationController!.value.getMaxScaleOnAxis();
+    }
+
+    AppLocalizations loc(WidgetTester tester) =>
+        AppLocalizations.of(tester.element(find.byType(ZoomableImageOverlay)))!;
+
+    testWidgets('at fit shows zoom-in button; pressing it zooms to 2x', (
+      tester,
+    ) async {
+      await openOverlay(tester);
+      final l = loc(tester);
+      expect(currentScale(tester), 1.0);
+      expect(find.byTooltip(l.actionZoomIn), findsOneWidget);
+      expect(find.byTooltip(l.actionZoomOut), findsNothing);
+
+      await tester.tap(find.byTooltip(l.actionZoomIn));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(currentScale(tester), closeTo(2.0, 1e-6));
+    });
+
+    testWidgets(
+      'when zoomed shows zoom-out button; pressing it returns to fit',
+      (tester) async {
+        await openOverlay(tester);
+        final l = loc(tester);
+        await tester.tap(find.byTooltip(l.actionZoomIn));
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(currentScale(tester), closeTo(2.0, 1e-6));
+
+        expect(find.byTooltip(l.actionZoomOut), findsOneWidget);
+        await tester.tap(find.byTooltip(l.actionZoomOut));
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(currentScale(tester), closeTo(1.0, 1e-6));
+
+        final iv = tester.widget<InteractiveViewer>(
+          find.byType(InteractiveViewer),
+        );
+        final translation = iv.transformationController!.value.getTranslation();
+        expect(translation.x, closeTo(0, 1e-6));
+        expect(translation.y, closeTo(0, 1e-6));
+      },
+    );
+
+    testWidgets('close button still present with its own tooltip', (
+      tester,
+    ) async {
+      await openOverlay(tester);
+      final l = loc(tester);
+      expect(find.byTooltip(l.actionCloseImagePreview), findsOneWidget);
+    });
+  });
+
   group('ZoomableImageOverlay tap-to-close structure', () {
     // 行為層測試（dim 區 tap 真的關 / image 區 tap 真的不關）需要 image
     // 實際 decode 完成才能驗證 SizedBox 縮到 painted rect；testWidgets 沒有

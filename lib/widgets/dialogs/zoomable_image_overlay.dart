@@ -55,6 +55,10 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   /// InteractiveViewer 自動處理 pan。
   final TransformationController _ctrl = TransformationController();
 
+  /// InteractiveViewer 的 key；右上縮放鈕用它取 viewport render size，以
+  /// viewport 中心為焦點縮放（按鈕不像點擊那樣有落點）。
+  final GlobalKey _ivKey = GlobalKey();
+
   /// 共用的 [FileImage] provider；同時餵給 [Image] 渲染與 [_stream] 取得 intrinsic size，
   /// 避免兩次 decode。
   late final FileImage _imageProvider = FileImage(widget.imageFile);
@@ -155,6 +159,18 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
     }
   }
 
+  /// 右上縮放鈕：fit 時放大到 [_zoomedScale]（焦點 = viewport 中心），否則回 fit。
+  void _onZoomButtonPressed() {
+    if (_isZoomed(_ctrl.value)) {
+      _ctrl.value = Matrix4.identity();
+      return;
+    }
+    final current = _ctrl.value.getMaxScaleOnAxis();
+    final box = _ivKey.currentContext?.findRenderObject() as RenderBox?;
+    final focal = box != null ? box.size.center(Offset.zero) : Offset.zero;
+    _zoomAt(localFocal: focal, scaleDelta: _zoomedScale / current);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -178,6 +194,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
               // arena 會讓此 tap 被 kDoubleTapTimeout（300ms）拖延才 fire。
               onTap: () => _close('outside-image'),
               child: InteractiveViewer(
+                key: _ivKey,
                 transformationController: _ctrl,
                 panEnabled: true,
                 // wheel / double-tap 自管 scale，避免兩套 scale source 打架。
@@ -245,21 +262,66 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
             ),
           ),
         ),
-        // X 按鈕 — 半透明黑底圓鈕，永遠最上層。
+        // 右上按鈕列 — 縮放切換鈕 + 關閉鈕，半透明黑底圓鈕，永遠最上層。
         Positioned(
           top: 16,
           right: 16,
-          child: Material(
-            color: Colors.black.withValues(alpha: 0.4),
-            shape: const CircleBorder(),
-            child: IconButton(
-              tooltip: l.actionCloseImagePreview,
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: () => _close('button'),
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ValueListenableBuilder<Matrix4>(
+                valueListenable: _ctrl,
+                builder: (_, matrix, _) {
+                  final zoomed = _isZoomed(matrix);
+                  return _OverlayCircleButton(
+                    tooltip: zoomed ? l.actionZoomOut : l.actionZoomIn,
+                    icon: zoomed ? Icons.zoom_out : Icons.zoom_in,
+                    onPressed: _onZoomButtonPressed,
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+              _OverlayCircleButton(
+                tooltip: l.actionCloseImagePreview,
+                icon: Icons.close,
+                onPressed: () => _close('button'),
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// overlay 右上角的半透明黑底圓形按鈕；統一 close／zoom 兩鈕的外觀。
+class _OverlayCircleButton extends StatelessWidget {
+  /// 建立 [_OverlayCircleButton]。
+  const _OverlayCircleButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  /// tooltip 文字，同時擔任 semantic label。
+  final String tooltip;
+
+  /// 按鈕 icon。
+  final IconData icon;
+
+  /// 點擊 callback。
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withValues(alpha: 0.4),
+      shape: const CircleBorder(),
+      child: IconButton(
+        tooltip: tooltip,
+        icon: Icon(icon, color: Colors.white),
+        onPressed: onPressed,
+      ),
     );
   }
 }
