@@ -304,11 +304,25 @@ git commit -m "feat(item-image): add save/copy/encode service for detail images"
 在 `lib/state/item_image_index.dart` 的 import 區確認已有 `flutter_riverpod`（已有），於 `itemImageFetcherProvider` 宣告之後新增：
 
 ```dart
-/// 物品圖片快取 revision；手動「重抓」覆蓋既有 icon 後 `state++`，讓已掛載、
+/// 物品圖片快取 revision；手動「重抓」覆蓋既有 icon 後 `bump()`，讓已掛載、
 /// 路徑不變的縮圖（dialog 標題、記錄列表 [GachaItemIcon]）以新 key 重建並讀到新檔
 /// （單純 evict 對已掛載 Image 不會自動重抓）。
-final itemImageCacheRevisionProvider = StateProvider<int>((ref) => 0);
+final itemImageCacheRevisionProvider =
+    NotifierProvider<ItemImageCacheRevisionNotifier, int>(
+      ItemImageCacheRevisionNotifier.new,
+    );
+
+/// 維護單調遞增的快取 revision 計數；[bump] 觸發訂閱縮圖以新 key 重建。
+class ItemImageCacheRevisionNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  /// 遞增 revision。
+  void bump() => state = state + 1;
+}
 ```
+
+> 註：Riverpod 3.x 已把 `StateProvider` 移到 deprecated 的 `legacy.dart`，本專案統一用 `NotifierProvider`，故以 `bump()` 取代 `state++`。下游 Task 3／5／7 對 revision 的遞增一律呼叫 `ref.read(itemImageCacheRevisionProvider.notifier).bump()`（測試端同）。
 
 - [ ] **Step 2: analyze 確認無誤**
 
@@ -415,7 +429,7 @@ void main() {
 
     expect(find.byKey(ValueKey('${iconFile.path}#0')), findsOneWidget);
 
-    container.read(itemImageCacheRevisionProvider.notifier).state++;
+    container.read(itemImageCacheRevisionProvider.notifier).bump();
     await tester.pump();
 
     expect(find.byKey(ValueKey('${iconFile.path}#1')), findsOneWidget);
@@ -771,7 +785,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.
       if (!mounted) return;
       PaintingBinding.instance.imageCache.evict(FileImage(file));
       setState(() => _loadStates[file.path] = _ImageReady(file));
-      ref.read(itemImageCacheRevisionProvider.notifier).state++;
+      ref.read(itemImageCacheRevisionProvider.notifier).bump();
       ref.invalidate(itemImageCacheUsageProvider);
       _log.info(
         'icon refetch ok rid=${widget.record.resourceId} '
@@ -1056,7 +1070,7 @@ git commit -m "feat(item-detail): add top-right image menu (copy/save/re-fetch)"
       );
 
       // 直接 bump revision（不實際跑網路），驗證標題縮圖換 key 重建。
-      container.read(itemImageCacheRevisionProvider.notifier).state++;
+      container.read(itemImageCacheRevisionProvider.notifier).bump();
       await tester.pump();
 
       expect(find.byKey(ValueKey('${iconFile.path}#1')), findsOneWidget);
