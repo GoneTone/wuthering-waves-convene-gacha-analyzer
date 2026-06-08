@@ -235,7 +235,51 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     }
   }
 
-  /// 圖片區右上角的溢出選單：複製圖片 / 儲存圖片 / --- / 重抓圖片。
+  /// 圖片選單項目（複製圖片 / 儲存圖片 / --- / 重抓圖片）；右上角按鈕與右鍵選單共用。
+  List<PopupMenuEntry<String>> _imageMenuItems(AppLocalizations l) => [
+    PopupMenuItem(
+      value: 'copy',
+      child: ListTile(
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.copy, size: 20),
+        title: Text(l.actionCopyImage),
+      ),
+    ),
+    PopupMenuItem(
+      value: 'save',
+      child: ListTile(
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.save_alt, size: 20),
+        title: Text(l.actionSaveImage),
+      ),
+    ),
+    const PopupMenuDivider(),
+    PopupMenuItem(
+      value: 'refetch',
+      child: ListTile(
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.refresh, size: 20),
+        title: Text(l.actionRefetchImage),
+      ),
+    ),
+  ];
+
+  /// 分派圖片選單選擇（按鈕與右鍵選單共用）：複製 / 儲存 / 重抓。
+  void _onImageMenuSelected(String value, _ImageChipEntry current) {
+    switch (value) {
+      case 'copy':
+        unawaited(_copyImage(current));
+      case 'save':
+        unawaited(_saveImage(current));
+      case 'refetch':
+        _refetchEntry(current);
+    }
+  }
+
+  /// 圖片區右上角的溢出選單按鈕：複製圖片 / 儲存圖片 / --- / 重抓圖片。
   /// 沿用 lightbox X 鈕的半透明黑底圓鈕視覺；僅在圖片 ready 時疊在圖上顯示。
   Widget _buildImageMenu(BuildContext context, _ImageChipEntry current) {
     final l = AppLocalizations.of(context)!;
@@ -245,48 +289,30 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
       child: PopupMenuButton<String>(
         icon: const Icon(Icons.more_vert, color: Colors.white),
         tooltip: '',
-        onSelected: (value) {
-          switch (value) {
-            case 'copy':
-              unawaited(_copyImage(current));
-            case 'save':
-              unawaited(_saveImage(current));
-            case 'refetch':
-              _refetchEntry(current);
-          }
-        },
-        itemBuilder: (_) => [
-          PopupMenuItem(
-            value: 'copy',
-            child: ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.copy, size: 20),
-              title: Text(l.actionCopyImage),
-            ),
-          ),
-          PopupMenuItem(
-            value: 'save',
-            child: ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.save_alt, size: 20),
-              title: Text(l.actionSaveImage),
-            ),
-          ),
-          const PopupMenuDivider(),
-          PopupMenuItem(
-            value: 'refetch',
-            child: ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.refresh, size: 20),
-              title: Text(l.actionRefetchImage),
-            ),
-          ),
-        ],
+        onSelected: (value) => _onImageMenuSelected(value, current),
+        itemBuilder: (_) => _imageMenuItems(l),
       ),
     );
+  }
+
+  /// 右鍵在圖片上叫出與右上角按鈕相同的選單，位置跟著游標。
+  Future<void> _showImageContextMenu(
+    BuildContext context,
+    Offset globalPosition,
+    _ImageChipEntry current,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        globalPosition & Size.zero,
+        Offset.zero & overlay.size,
+      ),
+      items: _imageMenuItems(l),
+    );
+    if (selected == null || !mounted) return;
+    _onImageMenuSelected(selected, current);
   }
 
   /// 把 record 名稱與 chip 標籤組成存檔建議檔名，並去掉檔名非法字元。
@@ -362,6 +388,13 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                     _log.info('open zoom path=${sanitizeFsPath(file.path)}');
                     showZoomableImageOverlay(context, imageFile: file);
                   },
+                  onSecondaryTapDown: (details) => unawaited(
+                    _showImageContextMenu(
+                      context,
+                      details.globalPosition,
+                      current,
+                    ),
+                  ),
                   child: Image.file(
                     file,
                     key: ValueKey(file.path),

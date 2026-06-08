@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -1199,6 +1200,25 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('複製圖片'), findsOneWidget);
+      expect(find.text('儲存圖片'), findsOneWidget);
+      expect(find.text('重抓圖片'), findsOneWidget);
+    });
+
+    testWidgets('右鍵圖片 → 叫出同一選單（複製 / 儲存 / 重抓）', (tester) async {
+      final illustFile = await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      // 右鍵（secondary button）點圖。
+      await tester.tap(
+        find.byKey(ValueKey(illustFile.path)),
+        buttons: kSecondaryButton,
+      );
+      await tester.pump();
+      // 等 showMenu 開場動畫（約 300ms）完整跑完。
+      await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('複製圖片'), findsOneWidget);
       expect(find.text('儲存圖片'), findsOneWidget);
       expect(find.text('重抓圖片'), findsOneWidget);
