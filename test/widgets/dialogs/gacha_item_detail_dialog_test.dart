@@ -13,7 +13,10 @@ import 'package:http/http.dart' as http;
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/luckdraw_capture_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
@@ -47,6 +50,29 @@ class _HangingFetcher extends ItemImageFetcher {
       Completer<Uint8List?>().future;
 }
 
+/// 記錄 [capture] 收到的 [force] 旗標的假擷取服務；回傳預先給的檔（不開 webview）。
+/// 用來驗證重抓會以 `force: true` 強制重新擷取（而非短路回舊檔）。
+class _RecordingCaptureService extends LuckdrawCaptureService {
+  _RecordingCaptureService(Directory dir, this._fileToReturn)
+    : super(cacheDir: dir);
+
+  final File _fileToReturn;
+
+  /// 最近一次 [capture] 收到的 [force] 值。
+  bool? lastForce;
+
+  @override
+  Future<File?> capture({
+    required int resourceId,
+    required String kind,
+    required String lang,
+    bool force = false,
+  }) async {
+    lastForce = force;
+    return _fileToReturn;
+  }
+}
+
 /// 在 [dir] 內建立一個指定路徑的假圖檔（內容隨意，僅供 existsSync 命中）。
 Future<File> _touchFile(Directory dir, String relative) async {
   final f = File('${dir.path}/$relative');
@@ -65,7 +91,10 @@ void main() {
   /// 僅建立 container、不 await index 載入：在 `testWidgets` 的 fake-async 區內
   /// 直接 await 真實磁碟 I/O 會卡住，故載入交由呼叫端在 [WidgetTester.runAsync]
   /// 內呼叫 `waitForLoad()`（見 [loadIndex]）。
-  void rebuildContainer({ItemImageFetcher? fetcher}) {
+  void rebuildContainer({
+    ItemImageFetcher? fetcher,
+    LuckdrawCaptureService? luckdraw,
+  }) {
     container = ProviderContainer(
       overrides: [
         itemImageIndexStorageProvider.overrideWithValue(
@@ -74,6 +103,8 @@ void main() {
         itemImageCacheDirProvider.overrideWithValue(tempDir),
         if (fetcher != null)
           itemImageFetcherProvider.overrideWithValue(fetcher),
+        if (luckdraw != null)
+          luckdrawCaptureServiceProvider.overrideWithValue(luckdraw),
       ],
     );
     addTearDown(container.dispose);
@@ -1245,6 +1276,80 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(ValueKey('${iconFile.path}#1')), findsOneWidget);
+    });
+
+    testWidgets('重抓 luckdraw → 以 force: true 強制重新擷取（不短路回舊檔）', (tester) async {
+      // 角色含喚取立繪、且 luckdraw 快取檔已存在（chip 為 ready、顯示選單）。
+      // kind 須設為 character，luckdraw chip 才會出現（itemTypeKeyOf 否則 fallback
+      // 回 resourceType 字串、不等於 kItemKindCharacter）。
+      const iconUrl = 'https://cdn.example.com/c_icon.png';
+      late File luckdrawFile;
+      await tester.runAsync(() async {
+        final n = container.read(itemImageIndexProvider.notifier);
+        await n.mergeIcon(
+          resourceId: 1211,
+          iconUrl: iconUrl,
+          noImage: false,
+          permanentNoImage: false,
+          kind: kItemKindCharacter,
+        );
+        await n.mergeItemDetail(
+          resourceId: 1211,
+          lang: 'zh-Hant',
+          detail: const ItemDetailL10n(
+            intro: '',
+            elementName: '',
+            weaponTypeName: '',
+            skins: [],
+          ),
+          hasLuckdraw: true,
+        );
+        // 同時建立 icon 快取檔 → 形成「喚取 + 圖示」兩個 chip（喚取排第一、預設選中），
+        // 使 dialog 高度與選單幾何與其他重抓測試一致、選單項可穩定點擊。
+        final iconFile = itemIconCacheFile(
+          baseDir: tempDir,
+          resourceId: 1211,
+          url: iconUrl,
+        );
+        await _touchFile(tempDir, iconFile.uri.pathSegments.last);
+        luckdrawFile = itemLuckdrawCacheFile(
+          baseDir: tempDir,
+          resourceId: 1211,
+        );
+        await _touchFile(tempDir, luckdrawFile.uri.pathSegments.last);
+      });
+      final recording = _RecordingCaptureService(tempDir, luckdrawFile);
+      rebuildContainer(luckdraw: recording);
+      await tester.runAsync(loadIndex);
+
+      await pumpDialog(
+        tester,
+        _rec(
+          resourceId: 1211,
+          name: 'Char',
+          resourceType: '角色',
+          languageCode: 'zh-Hant',
+        ),
+      );
+
+      // 確認顯示的是 ready 的 luckdraw 圖（選單可用）。
+      expect(find.byKey(ValueKey(luckdrawFile.path)), findsOneWidget);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(GachaItemDetailDialog),
+          matching: find.byIcon(Icons.more_vert),
+        ),
+      );
+      await tester.pump();
+      // 等 PopupMenu 開場動畫（約 300ms）完整跑完，選單項才完全可命中。
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.text('重抓圖片'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // 重抓必須帶 force: true（否則服務短路回舊檔、disk 不變、畫面不變）。
+      expect(recording.lastForce, isTrue);
     });
   });
 }

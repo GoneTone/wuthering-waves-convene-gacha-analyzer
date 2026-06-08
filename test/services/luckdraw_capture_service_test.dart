@@ -42,6 +42,21 @@ void main() {
     expect(got, isNull);
   });
 
+  test('force: true：檔已存在仍略過短路重抓（無 host 故回 null）', () async {
+    // 重抓要真的重新擷取：即使快取檔已存在也不可短路回舊檔。force=true 必須
+    // 略過 existsSync 短路進入擷取路徑，因測試環境無 host webview 而回 null
+    // （對照 force=false 的「cache hit」測試會直接回舊檔）。
+    final f = itemLuckdrawCacheFile(baseDir: tempDir, resourceId: 1211);
+    await f.writeAsBytes([1, 2, 3]);
+    final got = await service.capture(
+      resourceId: 1211,
+      kind: kItemKindCharacter,
+      lang: 'zh-Hant',
+      force: true,
+    );
+    expect(got, isNull);
+  });
+
   test('cacheFileFor：<id>_luckdraw.png', () {
     expect(
       service.cacheFileFor(1211).path,

@@ -67,13 +67,17 @@ class LuckdrawCaptureService {
 
   /// 取得某角色的喚取立繪檔：命中快取直接回；未命中則驅動 webview 擷取後快取。
   /// 失敗（host 未就緒／逾時／頁面無 canvas／解碼錯）一律回 null。
+  ///
+  /// [force] 為 true 時略過「快取檔已存在即回舊檔」短路、強制重新擷取（供使用者手動
+  /// 「重抓」用）；擷取成功才以 [writeImageFileAtomic] 覆蓋，失敗則保留磁碟既有舊檔。
   Future<File?> capture({
     required int resourceId,
     required String kind,
     required String lang,
+    bool force = false,
   }) async {
     final file = cacheFileFor(resourceId);
-    if (file.existsSync()) return file;
+    if (!force && file.existsSync()) return file;
     // 延遲初始化：首次擷取時才請 host 開 WebView2（無 host／缺 runtime 回 null）。
     if (_webview == null) {
       final initializer = _initializer;
@@ -89,7 +93,7 @@ class LuckdrawCaptureService {
       return null;
     }
     return _lock.synchronized(() async {
-      if (file.existsSync()) return file; // 取得鎖後再確認一次
+      if (!force && file.existsSync()) return file; // 取得鎖後再確認一次
       final url = encoreItemUrl(kind: kind, resourceId: resourceId, lang: lang);
       final sw = Stopwatch()..start();
       try {

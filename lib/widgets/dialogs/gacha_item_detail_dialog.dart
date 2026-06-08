@@ -133,8 +133,13 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     setState(() => _loadStates[e.file.path] = const _ImageLoading());
     switch (e.kind) {
       case _ChipKind.luckdraw:
+        // 重抓必須略過服務的快取短路，否則只會回舊檔（disk 不變→畫面不變）。
         unawaited(
-          _captureLuckdraw(file: e.file, lang: widget.record.languageCode),
+          _captureLuckdraw(
+            file: e.file,
+            lang: widget.record.languageCode,
+            force: true,
+          ),
         );
       case _ChipKind.skin:
         unawaited(_fetchAndCache(url: e.url, file: e.file));
@@ -184,9 +189,13 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   }
 
   /// 擷取喚取立繪：呼叫 [LuckdrawCaptureService]，成功 setState ready、失敗 failed。
+  ///
+  /// [force] 為 true（手動「重抓」）時略過服務的「快取檔已存在即回舊檔」短路、強制
+  /// 重新擷取；初始 lazy 載入維持預設 false（命中快取直接用）。
   Future<void> _captureLuckdraw({
     required File file,
     required String lang,
+    bool force = false,
   }) async {
     final service = ref.read(luckdrawCaptureServiceProvider);
     try {
@@ -194,6 +203,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
         resourceId: widget.record.resourceId,
         kind: itemTypeKeyOf(widget.record, ref.read(itemImageIndexProvider)),
         lang: lang,
+        force: force,
       );
       if (!mounted) return;
       if (result == null) {
