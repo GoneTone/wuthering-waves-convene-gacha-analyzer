@@ -413,13 +413,6 @@ void main() {
   });
 
   group('ZoomableImageOverlay zoom toggle button', () {
-    double currentScale(WidgetTester tester) {
-      final iv = tester.widget<InteractiveViewer>(
-        find.byType(InteractiveViewer),
-      );
-      return iv.transformationController!.value.getMaxScaleOnAxis();
-    }
-
     AppLocalizations loc(WidgetTester tester) =>
         AppLocalizations.of(tester.element(find.byType(ZoomableImageOverlay)))!;
 
