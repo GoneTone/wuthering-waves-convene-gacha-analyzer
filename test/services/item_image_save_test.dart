@@ -11,23 +11,23 @@ void main() {
 
   tearDown(resetItemImageSaveSeams);
 
-  test('saveImagePng：使用者選了路徑 → 寫檔並回 true', () async {
+  test('saveImagePng：使用者選了路徑 → 寫檔並回實際路徑', () async {
     final tmp = '${Directory.systemTemp.path}/item_save_a.png';
     itemImageSaveLocationPicker = (name) async => FileSaveLocation(tmp);
 
-    final ok = await saveImagePng(png, suggestedName: 'a.png');
+    final saved = await saveImagePng(png, suggestedName: 'a.png');
 
-    expect(ok, isTrue);
+    expect(saved, tmp);
     expect(await File(tmp).readAsBytes(), png);
     await File(tmp).delete();
   });
 
-  test('saveImagePng：使用者取消 → 回 false、不寫檔', () async {
+  test('saveImagePng：使用者取消 → 回 null、不寫檔', () async {
     itemImageSaveLocationPicker = (name) async => null;
 
-    final ok = await saveImagePng(png, suggestedName: 'a.png');
+    final saved = await saveImagePng(png, suggestedName: 'a.png');
 
-    expect(ok, isFalse);
+    expect(saved, isNull);
   });
 
   test('copyImagePngToClipboard：clipboard 成功 → 回 true', () async {

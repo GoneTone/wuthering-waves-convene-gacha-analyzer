@@ -80,16 +80,16 @@ void resetItemImageSaveSeams() {
   itemImageFileWriter = _defaultFileWriter;
 }
 
-/// 讓使用者選位置存 PNG。成功回 true；使用者取消回 false（非錯誤）；
-/// 已選路徑但寫檔失敗會記 severe log 後 rethrow，由呼叫端提示。
-Future<bool> saveImagePng(
+/// 讓使用者選位置存 PNG。成功回**實際存檔路徑**（供呼叫端在提示顯示完整路徑）；
+/// 使用者取消回 null（非錯誤）；已選路徑但寫檔失敗會記 severe log 後 rethrow。
+Future<String?> saveImagePng(
   Uint8List png, {
   required String suggestedName,
 }) async {
   final loc = await itemImageSaveLocationPicker(suggestedName);
   if (loc == null) {
     _log.info('save cancelled');
-    return false;
+    return null;
   }
   try {
     await itemImageFileWriter(loc.path, png);
@@ -98,7 +98,7 @@ Future<bool> saveImagePng(
     rethrow;
   }
   _log.info('save image ok ${sanitizeFsPath(loc.path)} bytes=${png.length}');
-  return true;
+  return loc.path;
 }
 
 /// 把 PNG 寫入系統剪貼簿。成功回 true；平台不支援回 false；例外記 warning 後回 false。

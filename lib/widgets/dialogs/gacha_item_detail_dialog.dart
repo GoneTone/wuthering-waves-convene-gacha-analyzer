@@ -321,11 +321,13 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
       _showSnack(l.itemImageSaveFailed);
       return;
     }
-    final name = _suggestedFileName(e);
     try {
-      final saved = await saveImagePng(png, suggestedName: name);
-      if (!mounted || !saved) return;
-      _showSnack(l.itemImageSavedTo(name));
+      final savedPath = await saveImagePng(
+        png,
+        suggestedName: _suggestedFileName(e),
+      );
+      if (!mounted || savedPath == null) return;
+      _showSnack(l.itemImageSavedTo(savedPath));
     } catch (_) {
       if (!mounted) return;
       _showSnack(l.itemImageSaveFailed);
