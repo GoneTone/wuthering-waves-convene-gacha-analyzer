@@ -7,6 +7,7 @@ import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
 /// 開啟全螢幕 lightbox 顯示 [imageFile]，可拖曳平移、滾輪 / 單擊縮放、ESC / 點背景 / X 關閉。
 Future<void> showZoomableImageOverlay(
@@ -14,7 +15,9 @@ Future<void> showZoomableImageOverlay(
   required File imageFile,
   String? suggestedFileName,
 }) {
-  Logger('gacha.itemimage.zoom').info('overlay open file=${imageFile.path}');
+  Logger(
+    'gacha.itemimage.zoom',
+  ).info('overlay open file=${sanitizeFsPath(imageFile.path)}');
   return showDialog<void>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.75),
@@ -366,7 +369,8 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
                                   fit: BoxFit.contain,
                                   errorBuilder: (_, e, st) {
                                     Logger('gacha.itemimage.zoom').warning(
-                                      'image errorBuilder file=${widget.imageFile.path}',
+                                      'image errorBuilder '
+                                      'file=${sanitizeFsPath(widget.imageFile.path)}',
                                       e,
                                       st,
                                     );
