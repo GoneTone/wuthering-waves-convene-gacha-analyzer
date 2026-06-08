@@ -79,6 +79,12 @@ const List<int> _onePxPng = <int>[
   0x82,
 ];
 
+/// 取得目前 InteractiveViewer 的 scale（最大軸）。
+double currentScale(WidgetTester tester) {
+  final iv = tester.widget<InteractiveViewer>(find.byType(InteractiveViewer));
+  return iv.transformationController!.value.getMaxScaleOnAxis();
+}
+
 void main() {
   late Directory tempDir;
   late File imageFile;
@@ -194,14 +200,6 @@ void main() {
   });
 
   group('ZoomableImageOverlay wheel zoom', () {
-    /// 抓取當前 InteractiveViewer 的 scale。
-    double currentScale(WidgetTester tester) {
-      final iv = tester.widget<InteractiveViewer>(
-        find.byType(InteractiveViewer),
-      );
-      return iv.transformationController!.value.getMaxScaleOnAxis();
-    }
-
     /// 對 [position] 派發一次滾輪事件。[deltaY] 為 scrollDelta.dy；負值 = 向上 = 放大。
     Future<void> sendWheel(
       WidgetTester tester,
@@ -279,13 +277,6 @@ void main() {
   });
 
   group('ZoomableImageOverlay single-tap toggle', () {
-    double currentScale(WidgetTester tester) {
-      final iv = tester.widget<InteractiveViewer>(
-        find.byType(InteractiveViewer),
-      );
-      return iv.transformationController!.value.getMaxScaleOnAxis();
-    }
-
     testWidgets('from fit (scale=1), single tap goes to 2x', (tester) async {
       await openOverlay(tester);
       expect(currentScale(tester), 1.0);
@@ -343,13 +334,6 @@ void main() {
   });
 
   group('ZoomableImageOverlay wheel zoom identity reset', () {
-    double currentScale(WidgetTester tester) {
-      final iv = tester.widget<InteractiveViewer>(
-        find.byType(InteractiveViewer),
-      );
-      return iv.transformationController!.value.getMaxScaleOnAxis();
-    }
-
     testWidgets(
       'wheel-zoom-out clamped to minScale also resets matrix to identity',
       (tester) async {

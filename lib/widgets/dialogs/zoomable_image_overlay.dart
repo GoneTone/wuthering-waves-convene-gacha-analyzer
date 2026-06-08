@@ -135,10 +135,11 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   }
 
   /// 單擊圖片：在 fit 時放大到 [_zoomedScale]（焦點 = 落點），否則回 fit。
+  /// 回 fit 直接寫 `Matrix4.identity()`（非走 `_zoomAt`），確保 translation 同步歸零。
   /// 取代雙擊——無 DoubleTapGR 後 tap 立即觸發，不受 kDoubleTapTimeout 影響。
   void _onTapZoom(TapUpDetails details) {
     final current = _ctrl.value.getMaxScaleOnAxis();
-    final atFit = (current - _minScale).abs() < 0.05;
+    final atFit = (current - _minScale).abs() < 0.01;
     if (atFit) {
       _zoomAt(
         localFocal: details.localPosition,
@@ -168,9 +169,8 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
             onPointerSignal: _onPointerSignal,
             child: GestureDetector(
               // image 像素外的暗區（BoxFit.contain 留白）也視為背景，點擊立即關閉。
-              // 只掛 onTap（不掛 onDoubleTap），TapGR 不會被 DoubleTapGR
-              // arbitration 卡住 kDoubleTapTimeout（300ms）才 fire；雙擊縮放下放到
-              // image 上的內層 GestureDetector 處理。
+              // 只掛 onTap（不掛 onDoubleTap），避免日後若有人加 DoubleTapGR 進同一
+              // arena 會讓此 tap 被 kDoubleTapTimeout（300ms）拖延才 fire。
               onTap: () => _close('outside-image'),
               child: InteractiveViewer(
                 transformationController: _ctrl,
