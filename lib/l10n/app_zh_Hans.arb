@@ -1,5 +1,5 @@
 {
-  "@@locale": "zh_Hans",
+  "@@locale": "zh-CN",
   "localeNativeName": "简体中文",
   "localeTranslatorLabel": "翻译者：{translator}",
   "@localeNativeName": {
@@ -786,7 +786,11 @@
   },
   "itemImageSavedTo": "已保存图片至 {path}",
   "@itemImageSavedTo": {
-    "placeholders": { "path": { "type": "String" } },
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
     "description": "Snackbar after saving an item detail image to the given path."
   },
   "itemImageSaveFailed": "保存图片失败",
