@@ -1115,6 +1115,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+      final overlay = tester.widget<ZoomableImageOverlay>(
+        find.byType(ZoomableImageOverlay),
+      );
+      expect(overlay.suggestedFileName, isNotNull);
+      expect(overlay.suggestedFileName, startsWith('Char'));
+      expect(overlay.suggestedFileName, endsWith('.png'));
     });
   });
 

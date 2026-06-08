@@ -386,7 +386,11 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
                     _log.info('open zoom path=${sanitizeFsPath(file.path)}');
-                    showZoomableImageOverlay(context, imageFile: file);
+                    showZoomableImageOverlay(
+                      context,
+                      imageFile: file,
+                      suggestedFileName: _suggestedFileName(current),
+                    );
                   },
                   onSecondaryTapDown: (details) => unawaited(
                     _showImageContextMenu(
