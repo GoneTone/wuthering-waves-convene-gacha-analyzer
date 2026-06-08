@@ -790,7 +790,11 @@
   },
   "itemImageSavedTo": "画像を保存しました：{path}",
   "@itemImageSavedTo": {
-    "placeholders": { "path": { "type": "String" } },
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
     "description": "Snackbar after saving an item detail image to the given path."
   },
   "itemImageSaveFailed": "画像の保存に失敗しました",
