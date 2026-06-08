@@ -244,7 +244,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   /// 複製目前圖片到剪貼簿：解碼 PNG → 寫剪貼簿，結果以 lightbox 內 SnackBar 回報。
   Future<void> _copyImage() async {
     final l = AppLocalizations.of(context)!;
-    final png = await itemImageEncoder(widget.imageFile);
+    final png = await encodeImageFileToPng(widget.imageFile);
     if (!mounted) return;
     if (png == null) {
       Logger('gacha.itemimage.zoom').warning('copy encode failed');
@@ -261,7 +261,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   /// 使用者取消不提示；寫檔失敗提示失敗。
   Future<void> _saveImage() async {
     final l = AppLocalizations.of(context)!;
-    final png = await itemImageEncoder(widget.imageFile);
+    final png = await encodeImageFileToPng(widget.imageFile);
     if (!mounted) return;
     if (png == null) {
       Logger('gacha.itemimage.zoom').warning('save encode failed');
