@@ -776,6 +776,35 @@
   "@actionRetry": {
     "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
   },
+  "actionCopyImage": "Copy image",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
+  "actionSaveImage": "Save image",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
+  "actionRefetchImage": "Re-fetch image",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
+  "itemImageSavedTo": "Image saved to {path}",
+  "@itemImageSavedTo": {
+    "placeholders": { "path": { "type": "String" } },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
+  "itemImageSaveFailed": "Failed to save image",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
+  "itemImageCopied": "Image copied to clipboard",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
+  "itemImageCopyFailed": "Failed to copy image",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "Close image preview",
   "@actionCloseImagePreview": {
     "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."

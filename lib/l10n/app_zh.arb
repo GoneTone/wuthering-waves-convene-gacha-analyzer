@@ -588,6 +588,36 @@
     "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
   },
 
+  "actionCopyImage": "複製圖片",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
+  "actionSaveImage": "儲存圖片",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
+  "actionRefetchImage": "重抓圖片",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
+  "itemImageSavedTo": "已儲存圖片至 {path}",
+  "@itemImageSavedTo": {
+    "placeholders": { "path": { "type": "String" } },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
+  "itemImageSaveFailed": "儲存圖片失敗",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
+  "itemImageCopied": "已複製圖片到剪貼簿",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
+  "itemImageCopyFailed": "複製圖片失敗",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
+
   "actionCloseImagePreview": "關閉圖片預覽",
   "@actionCloseImagePreview": {
     "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
