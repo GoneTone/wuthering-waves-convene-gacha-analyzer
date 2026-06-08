@@ -6,7 +6,7 @@ import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
-/// 開啟全螢幕 lightbox 顯示 [imageFile]，可拖曳平移、滾輪 / 雙擊縮放、ESC / 點背景 / X 關閉。
+/// 開啟全螢幕 lightbox 顯示 [imageFile]，可拖曳平移、滾輪 / 單擊縮放、ESC / 點背景 / X 關閉。
 Future<void> showZoomableImageOverlay(
   BuildContext context, {
   required File imageFile,
@@ -51,7 +51,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   /// 放大後的目標 scale；單擊／縮放鈕在 fit ↔ 2x 之間切換。
   static const double _zoomedScale = 2.0;
 
-  /// 控制 InteractiveViewer 的 Matrix4；wheel / double-tap 會手動設置 scale，
+  /// 控制 InteractiveViewer 的 Matrix4；wheel / 單擊會手動設置 scale，
   /// InteractiveViewer 自動處理 pan。
   final TransformationController _ctrl = TransformationController();
 
@@ -147,16 +147,15 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   /// 回 fit 直接寫 `Matrix4.identity()`（非走 `_zoomAt`），確保 translation 同步歸零。
   /// 取代雙擊——無 DoubleTapGR 後 tap 立即觸發，不受 kDoubleTapTimeout 影響。
   void _onTapZoom(TapUpDetails details) {
-    final current = _ctrl.value.getMaxScaleOnAxis();
-    final atFit = (current - _minScale).abs() < 0.01;
-    if (atFit) {
-      _zoomAt(
-        localFocal: details.localPosition,
-        scaleDelta: _zoomedScale / current,
-      );
-    } else {
+    if (_isZoomed(_ctrl.value)) {
       _ctrl.value = Matrix4.identity();
+      return;
     }
+    final current = _ctrl.value.getMaxScaleOnAxis();
+    _zoomAt(
+      localFocal: details.localPosition,
+      scaleDelta: _zoomedScale / current,
+    );
   }
 
   /// 右上縮放鈕：fit 時放大到 [_zoomedScale]（焦點 = viewport 中心），否則回 fit。
@@ -197,7 +196,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
                 key: _ivKey,
                 transformationController: _ctrl,
                 panEnabled: true,
-                // wheel / double-tap 自管 scale，避免兩套 scale source 打架。
+                // wheel / 單擊自管 scale，避免兩套 scale source 打架。
                 scaleEnabled: false,
                 minScale: _minScale,
                 maxScale: _maxScale,
