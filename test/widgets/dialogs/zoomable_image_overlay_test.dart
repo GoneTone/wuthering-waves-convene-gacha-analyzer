@@ -375,6 +375,43 @@ void main() {
     );
   });
 
+  group('ZoomableImageOverlay cursor state', () {
+    /// 取得包住 Image 的最近一層 MouseRegion 的 cursor。
+    MouseCursor imageCursor(WidgetTester tester) {
+      final mr = tester.widget<MouseRegion>(
+        find
+            .ancestor(
+              of: find.byType(Image),
+              matching: find.byType(MouseRegion),
+            )
+            .first,
+      );
+      return mr.cursor;
+    }
+
+    testWidgets('at fit, image cursor is zoomIn', (tester) async {
+      await openOverlay(tester);
+      expect(imageCursor(tester), SystemMouseCursors.zoomIn);
+    });
+
+    testWidgets('when zoomed (via wheel), image cursor is zoomOut', (
+      tester,
+    ) async {
+      await openOverlay(tester);
+      final center = tester.getCenter(find.byType(InteractiveViewer));
+      final pointer = TestPointer(1, PointerDeviceKind.mouse);
+      await tester.sendEventToBinding(pointer.hover(center));
+      await tester.sendEventToBinding(
+        PointerScrollEvent(
+          position: center,
+          scrollDelta: const Offset(0, -100),
+        ),
+      );
+      await tester.pump();
+      expect(imageCursor(tester), SystemMouseCursors.zoomOut);
+    });
+  });
+
   group('ZoomableImageOverlay tap-to-close structure', () {
     // 行為層測試（dim 區 tap 真的關 / image 區 tap 真的不關）需要 image
     // 實際 decode 完成才能驗證 SizedBox 縮到 painted rect；testWidgets 沒有

@@ -125,6 +125,11 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
         _ctrl.value;
   }
 
+  /// 目前矩陣是否已放大（scale 明顯大於 fit）。游標與右上縮放鈕共用此判斷，
+  /// 確保兩者狀態一致。
+  bool _isZoomed(Matrix4 matrix) =>
+      matrix.getMaxScaleOnAxis() > _minScale + 0.01;
+
   /// 處理 mouse wheel：向上（scrollDelta.dy < 0）放大、向下縮小，以游標為中心。
   /// 純水平滾動（dy == 0）忽略，避免 trackpad 兩指水平滑動誤觸發縮放。
   void _onPointerSignal(PointerSignalEvent event) {
@@ -203,24 +208,33 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
                       return SizedBox(
                         width: w,
                         height: h,
-                        child: GestureDetector(
-                          // 此層承擔單擊縮放（onTapUp），並因 opaque hit-test 吸收
-                          // image 像素上的點擊，避免冒泡到外層 GD 觸發關閉。
-                          // 靜止點擊 → TapGR 贏 → 縮放；有位移 → InteractiveViewer
-                          // pan 贏 → 平移；滾輪走 Listener，互不打架。
-                          behavior: HitTestBehavior.opaque,
-                          onTapUp: _onTapZoom,
-                          child: Image(
-                            image: _imageProvider,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, e, st) {
-                              Logger('gacha.itemimage.zoom').warning(
-                                'image errorBuilder file=${widget.imageFile.path}',
-                                e,
-                                st,
-                              );
-                              return const SizedBox.shrink();
-                            },
+                        child: ValueListenableBuilder<Matrix4>(
+                          valueListenable: _ctrl,
+                          child: GestureDetector(
+                            // 此層承擔單擊縮放（onTapUp），並因 opaque hit-test
+                            // 吸收 image 像素上的點擊，避免冒泡到外層 GD 觸發關閉。
+                            // 靜止點擊 → TapGR 贏 → 縮放；有位移 → InteractiveViewer
+                            // pan 贏 → 平移；滾輪走 Listener，互不打架。
+                            behavior: HitTestBehavior.opaque,
+                            onTapUp: _onTapZoom,
+                            child: Image(
+                              image: _imageProvider,
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, e, st) {
+                                Logger('gacha.itemimage.zoom').warning(
+                                  'image errorBuilder file=${widget.imageFile.path}',
+                                  e,
+                                  st,
+                                );
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                          ),
+                          builder: (_, matrix, child) => MouseRegion(
+                            cursor: _isZoomed(matrix)
+                                ? SystemMouseCursors.zoomOut
+                                : SystemMouseCursors.zoomIn,
+                            child: child,
                           ),
                         ),
                       );
