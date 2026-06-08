@@ -27,6 +27,23 @@ final itemImageFetcherProvider = Provider<ItemImageFetcher>(
   (ref) => ItemImageFetcher(),
 );
 
+/// 物品圖片快取 revision；手動「重抓」覆蓋既有 icon 後 `bump()`，讓已掛載、
+/// 路徑不變的縮圖（dialog 標題、記錄列表 [GachaItemIcon]）以新 key 重建並讀到新檔
+/// （單純 evict 對已掛載 Image 不會自動重抓）。
+final itemImageCacheRevisionProvider =
+    NotifierProvider<ItemImageCacheRevisionNotifier, int>(
+      ItemImageCacheRevisionNotifier.new,
+    );
+
+/// 維護單調遞增的快取 revision 計數；[bump] 觸發訂閱縮圖以新 key 重建。
+class ItemImageCacheRevisionNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  /// 遞增 revision。
+  void bump() => state = state + 1;
+}
+
 /// 當前載入的 [ItemImageIndex]；透過 [ItemImageIndexNotifier] 變更。
 final itemImageIndexProvider =
     NotifierProvider<ItemImageIndexNotifier, ItemImageIndex>(

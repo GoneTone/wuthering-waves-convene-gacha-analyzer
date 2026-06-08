@@ -39,6 +39,7 @@ class GachaItemIcon extends ConsumerWidget {
     final index = ref.watch(itemImageIndexProvider);
     final cacheDir = ref.watch(itemImageCacheDirProvider);
     final tokens = Theme.of(context).gacha;
+    final cacheRevision = ref.watch(itemImageCacheRevisionProvider);
 
     final entry = index.lookupImage(record.resourceId);
     final iconUrl = entry?.iconUrl;
@@ -63,7 +64,13 @@ class GachaItemIcon extends ConsumerWidget {
         return SizedBox(
           width: size,
           height: size,
-          child: _clipIcon(Image.file(file, fit: BoxFit.cover)),
+          child: _clipIcon(
+            Image.file(
+              file,
+              key: ValueKey('${file.path}#$cacheRevision'),
+              fit: BoxFit.cover,
+            ),
+          ),
         );
       }
     }

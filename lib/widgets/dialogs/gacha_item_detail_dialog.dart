@@ -11,6 +11,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
@@ -122,21 +123,79 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     }
   }
 
-  /// 由 failed 重試：改回 loading 並依 chip 類別重新取圖。
-  void _retryEntry(_ImageChipEntry e) {
+  /// 重抓某 chip 的圖：先 evict 既有 ImageCache、切回 loading，再依類別重抓。
+  ///
+  /// 路徑不變的重抓必須 evict，否則 ready 圖重建後仍讀到舊快取（見檔頭策略）。
+  /// 同時供失敗狀態的「重試」按鈕與圖片選單的「重抓圖片」共用。
+  void _refetchEntry(_ImageChipEntry e) {
+    PaintingBinding.instance.imageCache.evict(FileImage(e.file));
+    _precachedPaths.remove(e.file.path);
     setState(() => _loadStates[e.file.path] = const _ImageLoading());
-    if (e.kind == _ChipKind.luckdraw) {
-      final lang = widget.record.languageCode;
-      unawaited(_captureLuckdraw(file: e.file, lang: lang));
-    } else {
-      unawaited(_fetchAndCache(url: e.url, file: e.file));
+    switch (e.kind) {
+      case _ChipKind.luckdraw:
+        // 重抓必須略過服務的快取短路，否則只會回舊檔（disk 不變→畫面不變）。
+        unawaited(
+          _captureLuckdraw(
+            file: e.file,
+            lang: widget.record.languageCode,
+            force: true,
+          ),
+        );
+      case _ChipKind.skin:
+        unawaited(_fetchAndCache(url: e.url, file: e.file));
+      case _ChipKind.icon:
+        unawaited(_refetchIcon(url: e.url, file: e.file));
+    }
+  }
+
+  /// 重抓 icon：重新下載 [url] 覆蓋 [file]，成功後 evict + bump cache revision，
+  /// 讓 dialog 標題縮圖與記錄列表 [GachaItemIcon] 同步顯示新 icon。
+  ///
+  /// 失敗時保留磁碟既有 icon（writeImageFileAtomic 只在成功時 rename 覆蓋），
+  /// 但 chip 狀態轉 failed（沿用既有失敗 UI 的重試按鈕）。
+  Future<void> _refetchIcon({required String url, required File file}) async {
+    final fetcher = ref.read(itemImageFetcherProvider);
+    try {
+      final bytes = await fetcher.downloadImage(url, _client);
+      if (bytes == null) {
+        if (!mounted) return;
+        setState(() => _loadStates[file.path] = const _ImageFailed());
+        _log.warning(
+          'icon refetch null rid=${widget.record.resourceId} '
+          'url=${sanitizeUrl(url)}',
+        );
+        return;
+      }
+      await writeImageFileAtomic(file, bytes);
+      if (!mounted) return;
+      PaintingBinding.instance.imageCache.evict(FileImage(file));
+      setState(() => _loadStates[file.path] = _ImageReady(file));
+      ref.read(itemImageCacheRevisionProvider.notifier).bump();
+      ref.invalidate(itemImageCacheUsageProvider);
+      _log.info(
+        'icon refetch ok rid=${widget.record.resourceId} '
+        'bytes=${bytes.length} path=${sanitizeFsPath(file.path)}',
+      );
+    } catch (e, st) {
+      if (!mounted) return;
+      setState(() => _loadStates[file.path] = const _ImageFailed());
+      _log.warning(
+        'icon refetch failed rid=${widget.record.resourceId} '
+        'url=${sanitizeUrl(url)}',
+        e,
+        st,
+      );
     }
   }
 
   /// 擷取喚取立繪：呼叫 [LuckdrawCaptureService]，成功 setState ready、失敗 failed。
+  ///
+  /// [force] 為 true（手動「重抓」）時略過服務的「快取檔已存在即回舊檔」短路、強制
+  /// 重新擷取；初始 lazy 載入維持預設 false（命中快取直接用）。
   Future<void> _captureLuckdraw({
     required File file,
     required String lang,
+    bool force = false,
   }) async {
     final service = ref.read(luckdrawCaptureServiceProvider);
     try {
@@ -144,6 +203,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
         resourceId: widget.record.resourceId,
         kind: itemTypeKeyOf(widget.record, ref.read(itemImageIndexProvider)),
         lang: lang,
+        force: force,
       );
       if (!mounted) return;
       if (result == null) {
@@ -175,6 +235,139 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     }
   }
 
+  /// 圖片選單項目（複製圖片 / 儲存圖片 / --- / 重抓圖片）；右上角按鈕與右鍵選單共用。
+  List<PopupMenuEntry<String>> _imageMenuItems(AppLocalizations l) => [
+    PopupMenuItem(
+      value: 'copy',
+      child: ListTile(
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.copy, size: 20),
+        title: Text(l.actionCopyImage),
+      ),
+    ),
+    PopupMenuItem(
+      value: 'save',
+      child: ListTile(
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.save_alt, size: 20),
+        title: Text(l.actionSaveImage),
+      ),
+    ),
+    const PopupMenuDivider(),
+    PopupMenuItem(
+      value: 'refetch',
+      child: ListTile(
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.refresh, size: 20),
+        title: Text(l.actionRefetchImage),
+      ),
+    ),
+  ];
+
+  /// 分派圖片選單選擇（按鈕與右鍵選單共用）：複製 / 儲存 / 重抓。
+  void _onImageMenuSelected(String value, _ImageChipEntry current) {
+    switch (value) {
+      case 'copy':
+        unawaited(_copyImage(current));
+      case 'save':
+        unawaited(_saveImage(current));
+      case 'refetch':
+        _refetchEntry(current);
+    }
+  }
+
+  /// 圖片區右上角的溢出選單按鈕：複製圖片 / 儲存圖片 / --- / 重抓圖片。
+  /// 沿用 lightbox X 鈕的半透明黑底圓鈕視覺；僅在圖片 ready 時疊在圖上顯示。
+  Widget _buildImageMenu(BuildContext context, _ImageChipEntry current) {
+    final l = AppLocalizations.of(context)!;
+    return Material(
+      color: Colors.black.withValues(alpha: 0.4),
+      shape: const CircleBorder(),
+      child: PopupMenuButton<String>(
+        icon: const Icon(Icons.more_vert, color: Colors.white),
+        tooltip: '',
+        onSelected: (value) => _onImageMenuSelected(value, current),
+        itemBuilder: (_) => _imageMenuItems(l),
+      ),
+    );
+  }
+
+  /// 右鍵在圖片上叫出與右上角按鈕相同的選單，位置跟著游標。
+  Future<void> _showImageContextMenu(
+    BuildContext context,
+    Offset globalPosition,
+    _ImageChipEntry current,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        globalPosition & Size.zero,
+        Offset.zero & overlay.size,
+      ),
+      items: _imageMenuItems(l),
+    );
+    if (selected == null || !mounted) return;
+    _onImageMenuSelected(selected, current);
+  }
+
+  /// 把 record 名稱與 chip 標籤組成存檔建議檔名，並去掉檔名非法字元。
+  String _suggestedFileName(_ImageChipEntry e) {
+    final raw = '${widget.record.name}_${e.label}';
+    // Windows 檔名非法字元（< > : " / \ | ? *）一律換 _，避免存檔對話框拒絕。
+    final safe = raw.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+    return '$safe.png';
+  }
+
+  /// 複製目前圖片到剪貼簿：解碼成 PNG → 寫剪貼簿，結果以 SnackBar 回報。
+  Future<void> _copyImage(_ImageChipEntry e) async {
+    final l = AppLocalizations.of(context)!;
+    final png = await encodeImageFileToPng(e.file);
+    if (!mounted) return;
+    if (png == null) {
+      _showSnack(l.itemImageCopyFailed);
+      return;
+    }
+    final ok = await copyImagePngToClipboard(png);
+    if (!mounted) return;
+    _showSnack(ok ? l.itemImageCopied : l.itemImageCopyFailed);
+  }
+
+  /// 儲存目前圖片：解碼成 PNG → 系統存檔對話框，結果以 SnackBar 回報。
+  /// 使用者取消不提示；寫檔失敗提示失敗。
+  Future<void> _saveImage(_ImageChipEntry e) async {
+    final l = AppLocalizations.of(context)!;
+    final png = await encodeImageFileToPng(e.file);
+    if (!mounted) return;
+    if (png == null) {
+      _showSnack(l.itemImageSaveFailed);
+      return;
+    }
+    try {
+      final savedPath = await saveImagePng(
+        png,
+        suggestedName: _suggestedFileName(e),
+      );
+      if (!mounted || savedPath == null) return;
+      _showSnack(l.itemImageSavedTo(savedPath));
+    } catch (_) {
+      if (!mounted) return;
+      _showSnack(l.itemImageSaveFailed);
+    }
+  }
+
+  /// 以 SnackBar 顯示 [message]（dialog 之上找最近的 ScaffoldMessenger）。
+  void _showSnack(String message) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger
+      ?..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   /// 依當前 chip 狀態顯示內容（ready→可縮放圖／loading→spinner／failed→重試）。
   Widget _buildCurrentImageArea(BuildContext context, _ImageChipEntry current) {
     final theme = Theme.of(context);
@@ -184,23 +377,41 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: switch (state) {
-        _ImageReady(:final file) => MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              _log.info('open zoom path=${sanitizeFsPath(file.path)}');
-              showZoomableImageOverlay(context, imageFile: file);
-            },
-            child: Image.file(
-              file,
-              key: ValueKey(file.path),
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-              gaplessPlayback: true,
-              errorBuilder: (_, e, st) => const SizedBox.shrink(),
+        _ImageReady(:final file) => Stack(
+          children: [
+            Positioned.fill(
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    _log.info('open zoom path=${sanitizeFsPath(file.path)}');
+                    showZoomableImageOverlay(context, imageFile: file);
+                  },
+                  onSecondaryTapDown: (details) => unawaited(
+                    _showImageContextMenu(
+                      context,
+                      details.globalPosition,
+                      current,
+                    ),
+                  ),
+                  child: Image.file(
+                    file,
+                    key: ValueKey(file.path),
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                    gaplessPlayback: true,
+                    errorBuilder: (_, e, st) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
             ),
-          ),
+            Positioned(
+              top: AppSpacing.s,
+              right: AppSpacing.s,
+              child: _buildImageMenu(context, current),
+            ),
+          ],
         ),
         _ImageLoading() => Center(
           child: SizedBox(
@@ -230,7 +441,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
               ),
               const SizedBox(height: AppSpacing.s),
               TextButton.icon(
-                onPressed: () => _retryEntry(current),
+                onPressed: () => _refetchEntry(current),
                 icon: const Icon(Icons.refresh, size: 18),
                 label: Text(l.actionRetry),
               ),
@@ -322,6 +533,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     final index = ref.watch(itemImageIndexProvider);
     final cacheDir = ref.watch(itemImageCacheDirProvider);
     final entry = index.lookupImage(record.resourceId);
+    final cacheRevision = ref.watch(itemImageCacheRevisionProvider);
 
     // per-lang 詳情：優先取 record 擷取語言；該 lang 未抓時 fallback 第一筆已抓
     // 語言（總比空白好）。
@@ -456,6 +668,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
               borderRadius: BorderRadius.circular(AppRadius.sm),
               child: Image.file(
                 iconFile,
+                key: ValueKey('${iconFile.path}#$cacheRevision'),
                 width: 64,
                 height: 64,
                 fit: BoxFit.cover,
