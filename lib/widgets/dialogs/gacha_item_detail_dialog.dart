@@ -226,7 +226,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   }
 
   /// 圖片區右上角的溢出選單：複製圖片 / 儲存圖片 / --- / 重抓圖片。
-  /// 沿用 lightbox X 鈕的半透明黑底圓鈕視覺，永遠顯示。
+  /// 沿用 lightbox X 鈕的半透明黑底圓鈕視覺；僅在圖片 ready 時疊在圖上顯示。
   Widget _buildImageMenu(BuildContext context, _ImageChipEntry current) {
     final l = AppLocalizations.of(context)!;
     return Material(
@@ -311,13 +311,11 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
       _showSnack(l.itemImageSaveFailed);
       return;
     }
+    final name = _suggestedFileName(e);
     try {
-      final saved = await saveImagePng(
-        png,
-        suggestedName: _suggestedFileName(e),
-      );
+      final saved = await saveImagePng(png, suggestedName: name);
       if (!mounted || !saved) return;
-      _showSnack(l.itemImageSavedTo(_suggestedFileName(e)));
+      _showSnack(l.itemImageSavedTo(name));
     } catch (_) {
       if (!mounted) return;
       _showSnack(l.itemImageSaveFailed);
