@@ -13,7 +13,7 @@ The first time you press *Update*, the utility loads your full convene history, 
 Rest assured: this utility does not read or modify any game file or game memory, and does not affect how the game runs. It only intercepts and parses that single request to the official convene history API to obtain the query parameters; all other traffic passes through untouched. So there is no risk of being banned for using it. If you have been banned, it was likely for a different reason. Please do not blame us, thanks.
 
 Posts:
-- 巴哈姆特 (Bahamut): <https://forum.gamer.com.tw/Co.php?bsn=74934&sn=132523>
+- 巴哈姆特 (Bahamut): <https://forum.gamer.com.tw/C.php?bsn=74934&snA=17364>
 
 ## Multiple Language
 
