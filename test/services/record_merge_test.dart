@@ -209,4 +209,214 @@ void main() {
       expect(merged[3].name, '今汐');
     });
   });
+
+  group('mergeBackupRecords', () {
+    /// 斷言 [sub] 為 [full] 的子序列（保序、可不連續）。
+    bool isSubseq(List<GachaRecord> sub, List<GachaRecord> full) {
+      var i = 0;
+      for (final f in full) {
+        if (i < sub.length && recordsEqual(sub[i], f)) i++;
+      }
+      return i == sub.length;
+    }
+
+    test('incoming 較新且完全重疊 → 接上新頭、保留本機', () {
+      final local = [r(30, sec: 30), r(20, sec: 20), r(10, sec: 10)];
+      final incoming = [
+        r(50, sec: 50),
+        r(40, sec: 40),
+        r(30, sec: 30),
+        r(20, sec: 20),
+        r(10, sec: 10),
+      ];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [50, 40, 30, 20, 10]);
+    });
+
+    test('incoming 較舊（補回更舊尾段）→ 保留本機、接上舊尾', () {
+      final local = [r(30, sec: 30), r(20, sec: 20)];
+      final incoming = [r(20, sec: 20), r(10, sec: 10), r(5, sec: 5)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [30, 20, 10, 5]);
+    });
+
+    test('incoming 完全包住 local（兩端都更長）→ 縫成完整聯集', () {
+      final local = [r(4, sec: 4), r(3, sec: 3)];
+      final incoming = [
+        r(6, sec: 6),
+        r(5, sec: 5),
+        r(4, sec: 4),
+        r(3, sec: 3),
+        r(2, sec: 2),
+        r(1, sec: 1),
+      ];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [6, 5, 4, 3, 2, 1]);
+    });
+
+    test('local 完全包住 incoming → 回 local、不漏不重', () {
+      final local = [
+        r(5, sec: 5),
+        r(4, sec: 4),
+        r(3, sec: 3),
+        r(2, sec: 2),
+        r(1, sec: 1),
+      ];
+      final incoming = [r(4, sec: 4), r(3, sec: 3), r(2, sec: 2)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [5, 4, 3, 2, 1]);
+    });
+
+    test('完全不相交（incoming 較舊）→ 全部保留、較新在前', () {
+      final local = [r(30, sec: 30), r(20, sec: 20)];
+      final incoming = [r(10, sec: 10), r(5, sec: 5)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [30, 20, 10, 5]);
+    });
+
+    test('完全不相交（incoming 較新）→ 全部保留、incoming 在前', () {
+      final local = [r(10, sec: 10), r(5, sec: 5)];
+      final incoming = [r(30, sec: 30), r(20, sec: 20)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [30, 20, 10, 5]);
+    });
+
+    test('重疊落在同十連同 time 連續段 → 段內順序不被打亂', () {
+      // t=30 的十連有兩筆（resourceId 31/32，sec 皆 30）
+      final local = [
+        r(40, sec: 40),
+        r(31, sec: 30),
+        r(32, sec: 30),
+        r(20, sec: 20),
+      ];
+      final incoming = [
+        r(50, sec: 50),
+        r(40, sec: 40),
+        r(31, sec: 30),
+        r(32, sec: 30),
+      ];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [50, 40, 31, 32, 20]);
+    });
+
+    test('同十連同道具重複兩筆 → 多重數保留、不誤併', () {
+      final local = [r(99, name: 'A', sec: 20), r(99, name: 'A', sec: 20)];
+      final incoming = [r(99, name: 'A', sec: 20), r(99, name: 'A', sec: 20)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [99, 99]);
+      expect(merged.length, 2);
+    });
+
+    test('空 local → 回 incoming；空 incoming → 回 local', () {
+      final incoming = [r(2, sec: 2), r(1, sec: 1)];
+      expect(mergeBackupRecords(const [], incoming).map((e) => e.resourceId), [
+        2,
+        1,
+      ]);
+      final local = [r(3, sec: 3)];
+      expect(mergeBackupRecords(local, const []).map((e) => e.resourceId), [3]);
+    });
+
+    test('不漏資料：local 與 incoming 皆為輸出子序列', () {
+      final local = [r(30, sec: 30), r(20, sec: 20)];
+      final incoming = [r(20, sec: 20), r(10, sec: 10), r(5, sec: 5)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(isSubseq(local, merged), isTrue);
+      expect(isSubseq(incoming, merged), isTrue);
+    });
+
+    test('錨點對齊但整段驗證失敗 → 退回序列合併、去重不複製', () {
+      // 前 3 筆對齊（錨點命中），第 4 筆不一致（模擬損毀／非同源備份），整段驗證失敗。
+      // 退回 _mergeBySupersequence：共同骨幹 t10/t9/t8 只一份，t7 與 t99 各自獨有。
+      final local = [r(10, sec: 10), r(9, sec: 9), r(8, sec: 8), r(7, sec: 7)];
+      final incoming = [
+        r(10, sec: 10),
+        r(9, sec: 9),
+        r(8, sec: 8),
+        r(99, sec: 7),
+      ];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [10, 9, 8, 7, 99]);
+      expect(isSubseq(local, merged), isTrue);
+      expect(isSubseq(incoming, merged), isTrue);
+    });
+
+    test('重疊中段缺一筆（incoming 少 t8）→ 去重不複製', () {
+      final local = [
+        r(10, sec: 10),
+        r(9, sec: 9),
+        r(8, sec: 8),
+        r(7, sec: 7),
+        r(6, sec: 6),
+      ];
+      final incoming = [
+        r(10, sec: 10),
+        r(9, sec: 9),
+        r(7, sec: 7),
+        r(6, sec: 6),
+      ];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [10, 9, 8, 7, 6]);
+      expect(isSubseq(local, merged), isTrue);
+      expect(isSubseq(incoming, merged), isTrue);
+    });
+
+    test('同十連 incoming 多一筆（本機中段缺）→ 補齊不複製', () {
+      final local = [
+        r(30, sec: 30),
+        r(91, sec: 20),
+        r(92, sec: 20),
+        r(10, sec: 10),
+      ];
+      final incoming = [
+        r(30, sec: 30),
+        r(91, sec: 20),
+        r(92, sec: 20),
+        r(93, sec: 20),
+        r(10, sec: 10),
+      ];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [30, 91, 92, 93, 10]);
+      expect(isSubseq(local, merged), isTrue);
+      expect(isSubseq(incoming, merged), isTrue);
+    });
+
+    test('Case 1 同 time 順序不一 → 封頂後不重複', () {
+      // 兩份對同一 time(sec8) 的兩筆順序相反；走 Case 1 對齊但會複製，封頂後去重。
+      final local = [r(1, sec: 8), r(2, sec: 8)];
+      final incoming = [r(2, sec: 8), r(1, sec: 8)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.length, 2);
+      expect(
+        merged.where((e) => e.resourceId == 1 && e.time.second == 8).length,
+        1,
+      );
+      expect(
+        merged.where((e) => e.resourceId == 2 && e.time.second == 8).length,
+        1,
+      );
+    });
+
+    test('Case 3 重複指紋 + 兩份順序不一 → 多重數封頂、無條件不重複', () {
+      // 同十連 t6 內 4@6 於兩份備份順序不一致，且整體非連續（落到序列合併）。
+      // SCS 本會把 4@6 複製成兩筆；封頂後每個指紋只依 max 次數輸出。
+      final local = [r(4, sec: 15), r(1, sec: 12), r(4, sec: 6), r(0, sec: 6)];
+      final incoming = [
+        r(4, sec: 15),
+        r(1, sec: 12),
+        r(2, sec: 9),
+        r(0, sec: 6),
+        r(4, sec: 6),
+      ];
+      final merged = mergeBackupRecords(local, incoming);
+      int countFp(int id, int sec) => merged
+          .where((e) => e.resourceId == id && e.time.second == sec)
+          .length;
+      expect(merged.map((e) => e.resourceId), [4, 1, 2, 4, 0]);
+      expect(merged.length, 5); // 無複製
+      expect(countFp(4, 6), 1); // 重複指紋只一份（非兩份）
+      expect(countFp(0, 6), 1);
+      expect(countFp(2, 9), 1); // incoming 獨有，補入
+    });
+  });
 }

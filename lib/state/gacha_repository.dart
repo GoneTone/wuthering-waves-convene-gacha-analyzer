@@ -622,7 +622,8 @@ class GachaRepository extends Notifier<GachaState> {
   ) async {
     const emptyResult = ImportResult(
       successAccounts: 0,
-      totalRecords: 0,
+      addedRecords: 0,
+      duplicateRecords: 0,
       failedUids: [],
     );
     if (state.progress != null) {
@@ -657,7 +658,7 @@ class GachaRepository extends Notifier<GachaState> {
       _importLog.info(
         'import done: success=${result.successAccounts} '
         'failed=[${result.failedUids.map(sanitizeUid).join(",")}] '
-        'records=${result.totalRecords}',
+        'added=${result.addedRecords} duplicate=${result.duplicateRecords}',
       );
 
       if (result.successAccounts == 0) {
@@ -734,62 +735,67 @@ class GachaRepository extends Notifier<GachaState> {
 
     final newByUid = Map<String, BannerStorage>.from(state.byUid);
     final failed = <String>[];
-    var totalRecords = 0;
+    var addedRecords = 0;
+    var duplicateRecords = 0;
     var successCount = 0;
 
     for (final account in bundle.accounts) {
+      final incoming = account.data;
       try {
-        await storage.save(account.data);
+        final localBefore = newByUid[incoming.playerId];
+        final toSave = localBefore == null
+            ? incoming
+            : localBefore.mergeWith(incoming);
+        await storage.save(toSave);
+        final added =
+            toSave.allRecords.length - (localBefore?.allRecords.length ?? 0);
+        addedRecords += added;
+        duplicateRecords += incoming.allRecords.length - added;
+        newByUid[incoming.playerId] = toSave;
+        successCount++;
         if (!ref.mounted) {
           return ImportResult(
             successAccounts: successCount,
-            totalRecords: totalRecords,
+            addedRecords: addedRecords,
+            duplicateRecords: duplicateRecords,
             failedUids: failed,
           );
         }
-        newByUid[account.data.playerId] = account.data;
-        successCount++;
-        for (final list in account.data.banners.values) {
-          totalRecords += list.length;
-        }
       } catch (_) {
-        failed.add(account.data.playerId);
+        failed.add(incoming.playerId);
       }
     }
 
     final currentSettings = ref.read(settingsProvider);
     final mergedAliases = Map<String, String>.from(currentSettings.uidAliases);
     for (final account in bundle.accounts) {
-      if (failed.contains(account.data.playerId)) continue;
+      final uid = account.data.playerId;
+      if (failed.contains(uid)) continue;
+      if (mergedAliases.containsKey(uid)) continue; // 本機已有別名 → 保留
       final a = account.alias?.trim();
-      if (a == null || a.isEmpty) {
-        mergedAliases.remove(account.data.playerId);
-      } else {
-        mergedAliases[account.data.playerId] = a;
+      if (a != null && a.isNotEmpty) {
+        mergedAliases[uid] = a;
       }
     }
 
-    final exportedOrder = bundle.accounts
+    final localOrder = currentSettings.uidOrder;
+    final localSet = localOrder.toSet();
+    final appended = bundle.accounts
         .where((a) => !failed.contains(a.data.playerId))
         .map((a) => a.data.playerId)
-        .toList();
-    final exportedSet = exportedOrder.toSet();
-    final remaining = currentSettings.uidOrder
-        .where((u) => !exportedSet.contains(u))
-        .toList();
-    final newOrder = [...exportedOrder, ...remaining];
+        .where((uid) => !localSet.contains(uid))
+        .toList(growable: false);
+    final newOrder = [...localOrder, ...appended];
 
+    final localActive = state.activeUid;
     final desiredActive = bundle.lastActiveUid;
-    final fallback =
-        state.activeUid != null && newByUid.containsKey(state.activeUid)
-        ? state.activeUid
+    final newActive = (localActive != null && newByUid.containsKey(localActive))
+        ? localActive
+        : (desiredActive != null && newByUid.containsKey(desiredActive))
+        ? desiredActive
         : (newByUid.isEmpty
               ? null
               : (newOrder.isEmpty ? newByUid.keys.first : newOrder.first));
-    final newActive =
-        (desiredActive != null && newByUid.containsKey(desiredActive))
-        ? desiredActive
-        : fallback;
 
     await settingsNotifier.applyImportedPreferences(
       aliases: mergedAliases,
@@ -799,7 +805,8 @@ class GachaRepository extends Notifier<GachaState> {
     if (!ref.mounted) {
       return ImportResult(
         successAccounts: successCount,
-        totalRecords: totalRecords,
+        addedRecords: addedRecords,
+        duplicateRecords: duplicateRecords,
         failedUids: failed,
       );
     }
@@ -812,12 +819,13 @@ class GachaRepository extends Notifier<GachaState> {
 
     _log.info(
       'import: success=$successCount '
-      'failed=[${failed.join(",")}] '
-      'records=$totalRecords',
+      'failed=[${failed.map(sanitizeUid).join(",")}] '
+      'added=$addedRecords duplicate=$duplicateRecords',
     );
     return ImportResult(
       successAccounts: successCount,
-      totalRecords: totalRecords,
+      addedRecords: addedRecords,
+      duplicateRecords: duplicateRecords,
       failedUids: failed,
     );
   }

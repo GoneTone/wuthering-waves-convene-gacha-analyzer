@@ -1,4 +1,5 @@
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/record_merge.dart';
 
 /// 單一帳號（playerId）的全卡池喚取存檔。
 ///
@@ -77,6 +78,28 @@ class BannerStorage {
     lastUpdated: lastUpdated ?? this.lastUpdated,
     banners: banners ?? this.banners,
   );
+
+  /// 將 [incoming]（同一 playerId 的另一份存檔）合併進本份，回傳新的 [BannerStorage]。
+  ///
+  /// 逐卡池以 [mergeBackupRecords] 對齊去重；本機既有紀錄一律保留（含重疊那筆保留
+  /// 本機版本）。[lastUpdated] 與帳號級 [languageCode] 取較新者（[incoming] 的
+  /// lastUpdated 較新時採用 incoming 的）。playerId 不變。
+  BannerStorage mergeWith(BannerStorage incoming) {
+    final keys = {...banners.keys, ...incoming.banners.keys};
+    final mergedBanners = <String, List<GachaRecord>>{
+      for (final key in keys)
+        key: mergeBackupRecords(
+          banners[key] ?? const [],
+          incoming.banners[key] ?? const [],
+        ),
+    };
+    final incomingNewer = incoming.lastUpdated.isAfter(lastUpdated);
+    return copyWith(
+      languageCode: incomingNewer ? incoming.languageCode : null,
+      lastUpdated: incomingNewer ? incoming.lastUpdated : null,
+      banners: mergedBanners,
+    );
+  }
 
   /// 全 banner 串成一條 list（OverviewPage 用）。
   List<GachaRecord> get allRecords =>

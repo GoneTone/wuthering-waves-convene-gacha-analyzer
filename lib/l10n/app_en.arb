@@ -218,16 +218,13 @@
       }
     }
   },
-  "progressDoneImportSummary": "{accounts, plural, =1{Imported 1 account ({records} records)} other{Imported {accounts} accounts ({records} records)}}",
+  "progressDoneImportSummary": "{accounts, plural, =1{Imported 1 account} other{Imported {accounts} accounts}}: {added} new, {duplicate} already present",
   "@progressDoneImportSummary": {
-    "description": "Completion dialog line shown when the import-then-fetch flow finishes: how many accounts and total records were imported in this run.",
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts merged, plus newly added vs already-present record counts.",
     "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
+      "accounts": { "type": "int" },
+      "added": { "type": "int" },
+      "duplicate": { "type": "int" }
     }
   },
   "progressPartialImportFailed": "⚠ Partial import failure: {uids}",
@@ -566,7 +563,7 @@
       }
     }
   },
-  "settingsImportConfirmOverwriteHeader": "The following UIDs already have data and will be overwritten:",
+  "settingsImportConfirmMergeHeader": "The following accounts will be merged with local data; existing records won't be deleted:",
   "settingsImportConfirmNoConflict": "No data conflicts.",
   "settingsImportConfirmPreserveFooter": "Other existing accounts ({uids}) will be preserved.",
   "@settingsImportConfirmPreserveFooter": {
@@ -576,7 +573,6 @@
       }
     }
   },
-  "settingsImportConfirmWarning": "This action cannot be undone. Type IMPORT to confirm.",
   "settingsImportFailed": "Import failed: {reason}",
   "@settingsImportFailed": {
     "placeholders": {
@@ -587,7 +583,7 @@
   },
   "settingsExportSelectTitle": "Select accounts to export",
   "settingsImportSelectTitle": "Select accounts to import",
-  "settingsImportOverwriteBadge": "Overwrite",
+  "settingsImportMergeBadge": "Merge",
   "accountsPickerSelectAll": "Select all",
   "accountRecordCount": "{n} records",
   "@accountRecordCount": {

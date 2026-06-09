@@ -12,6 +12,16 @@ GachaRecord _r(int id) => GachaRecord(
   time: DateTime(2026, 5, 21, 10, 39, 3),
 );
 
+GachaRecord _rt(int id, int sec) => GachaRecord(
+  resourceId: id,
+  qualityLevel: 5,
+  resourceType: '角色',
+  cardPoolType: '1',
+  name: 'x',
+  count: 1,
+  time: DateTime(2026, 5, 21, 10, 39, sec),
+);
+
 void main() {
   test('toJson 落 player_id / language_code / 10 個 cardPoolType key', () {
     final storage = BannerStorage(
@@ -122,4 +132,106 @@ void main() {
       expect(storage.banners['1']!.single.languageCode, 'zh-Hant');
     },
   );
+
+  test('mergeWith: 逐池對齊去重，保留本機並接上 incoming 較舊尾段', () {
+    final local = BannerStorage(
+      playerId: 'p',
+      languageCode: 'zh-Hant',
+      lastUpdated: DateTime.utc(2026, 5, 12),
+      banners: {
+        '1': [_rt(3, 30), _rt(2, 20)],
+      },
+    );
+    final incoming = BannerStorage(
+      playerId: 'p',
+      languageCode: 'zh-Hant',
+      lastUpdated: DateTime.utc(2026, 1, 1),
+      banners: {
+        '1': [_rt(2, 20), _rt(1, 10)],
+      },
+    );
+    final merged = local.mergeWith(incoming);
+    expect(merged.banners['1']!.map((r) => r.resourceId).toList(), [3, 2, 1]);
+  });
+
+  test('mergeWith: banner key 取聯集', () {
+    final local = BannerStorage(
+      playerId: 'p',
+      languageCode: 'zh-Hant',
+      lastUpdated: DateTime.utc(2026, 1, 1),
+      banners: {
+        '1': [_rt(1, 10)],
+      },
+    );
+    final incoming = BannerStorage(
+      playerId: 'p',
+      languageCode: 'zh-Hant',
+      lastUpdated: DateTime.utc(2026, 1, 1),
+      banners: {
+        '8': [_rt(2, 20)],
+      },
+    );
+    final merged = local.mergeWith(incoming);
+    expect(merged.banners.keys.toSet(), {'1', '8'});
+    expect(merged.banners['1']!.single.resourceId, 1);
+    expect(merged.banners['8']!.single.resourceId, 2);
+  });
+
+  test('mergeWith: lastUpdated 與 languageCode 取較新一方', () {
+    final older = BannerStorage(
+      playerId: 'p',
+      languageCode: 'zh-Hant',
+      lastUpdated: DateTime.utc(2026, 1, 1),
+      banners: const {'1': []},
+    );
+    final newer = BannerStorage(
+      playerId: 'p',
+      languageCode: 'en',
+      lastUpdated: DateTime.utc(2026, 5, 12),
+      banners: const {'1': []},
+    );
+    final mergedA = older.mergeWith(newer);
+    expect(mergedA.lastUpdated, DateTime.utc(2026, 5, 12));
+    expect(mergedA.languageCode, 'en');
+    final mergedB = newer.mergeWith(older);
+    expect(mergedB.lastUpdated, DateTime.utc(2026, 5, 12));
+    expect(mergedB.languageCode, 'en');
+  });
+
+  test('mergeWith: lastUpdated 相同 → languageCode 保留本機', () {
+    final local = BannerStorage(
+      playerId: 'p',
+      languageCode: 'zh-Hant',
+      lastUpdated: DateTime.utc(2026, 1, 1),
+      banners: const {'1': []},
+    );
+    final incoming = BannerStorage(
+      playerId: 'p',
+      languageCode: 'ja',
+      lastUpdated: DateTime.utc(2026, 1, 1),
+      banners: const {'1': []},
+    );
+    final merged = local.mergeWith(incoming);
+    expect(merged.languageCode, 'zh-Hant'); // 時間相同 → 保留本機
+    expect(merged.lastUpdated, DateTime.utc(2026, 1, 1));
+  });
+
+  test('mergeWith: 空本機 → 合併為 incoming 內容', () {
+    final local = BannerStorage(
+      playerId: 'p',
+      languageCode: 'zh-Hant',
+      lastUpdated: DateTime.utc(2026, 1, 1),
+      banners: const {},
+    );
+    final incoming = BannerStorage(
+      playerId: 'p',
+      languageCode: 'zh-Hant',
+      lastUpdated: DateTime.utc(2026, 5, 12),
+      banners: {
+        '1': [_rt(2, 20), _rt(1, 10)],
+      },
+    );
+    final merged = local.mergeWith(incoming);
+    expect(merged.banners['1']!.map((r) => r.resourceId).toList(), [2, 1]);
+  });
 }
