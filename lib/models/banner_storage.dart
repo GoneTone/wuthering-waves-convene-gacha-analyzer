@@ -94,10 +94,9 @@ class BannerStorage {
         ),
     };
     final incomingNewer = incoming.lastUpdated.isAfter(lastUpdated);
-    return BannerStorage(
-      playerId: playerId,
-      languageCode: incomingNewer ? incoming.languageCode : languageCode,
-      lastUpdated: incomingNewer ? incoming.lastUpdated : lastUpdated,
+    return copyWith(
+      languageCode: incomingNewer ? incoming.languageCode : null,
+      lastUpdated: incomingNewer ? incoming.lastUpdated : null,
       banners: mergedBanners,
     );
   }

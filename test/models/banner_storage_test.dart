@@ -198,6 +198,24 @@ void main() {
     expect(mergedB.languageCode, 'en');
   });
 
+  test('mergeWith: lastUpdated 相同 → languageCode 保留本機', () {
+    final local = BannerStorage(
+      playerId: 'p',
+      languageCode: 'zh-Hant',
+      lastUpdated: DateTime.utc(2026, 1, 1),
+      banners: const {'1': []},
+    );
+    final incoming = BannerStorage(
+      playerId: 'p',
+      languageCode: 'ja',
+      lastUpdated: DateTime.utc(2026, 1, 1),
+      banners: const {'1': []},
+    );
+    final merged = local.mergeWith(incoming);
+    expect(merged.languageCode, 'zh-Hant'); // 時間相同 → 保留本機
+    expect(merged.lastUpdated, DateTime.utc(2026, 1, 1));
+  });
+
   test('mergeWith: 空本機 → 合併為 incoming 內容', () {
     final local = BannerStorage(
       playerId: 'p',
