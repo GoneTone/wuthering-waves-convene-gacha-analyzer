@@ -42,7 +42,7 @@ Future<bool?> showConfirmDialog({
 }) {
   return showDialog<bool>(
     context: context,
-    barrierDismissible: false,
+    barrierDismissible: true,
     builder: (ctx) {
       final tokens = Theme.of(ctx).gacha;
       final confirmStyle = isDanger
