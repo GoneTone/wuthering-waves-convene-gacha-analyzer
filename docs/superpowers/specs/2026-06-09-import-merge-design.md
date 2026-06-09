@@ -27,8 +27,8 @@
 | 別名 | 只補空缺：本機該 playerId 已有別名則保留；僅當本機無別名且備份非空時採用備份；備份空別名不清掉本機別名 |
 | 上次選取帳號（active） | 本機已有有效 active 則保留；否則採用備份 `lastActiveUid`（須存在）；再否則 fallback 到 `newOrder.first`（皆無則 null） |
 | 帳號顯示順序（`uidOrder`） | 本機既有順序原封不動；這次新出現的 playerId 依備份檔順序接在最後 |
-| 確認流程 | 移除打字閘，改一般確認；badge／文案改合併語意；非 danger 配色 |
-| 結果回報 | 顯示「已合併 N 個帳號：新增 X 筆、已存在 Y 筆」 |
+| 確認流程 | 移除打字閘，改一般確認；badge／衝突段標頭改合併語意（intro／結果回報維持「匯入」動作語意）；非 danger 配色 |
+| 結果回報 | 顯示「已匯入 N 個帳號：新增 X 筆、已存在 Y 筆」（動作詞用「匯入」，合併結果由「新增／已存在」筆數呈現） |
 | i18n 範圍 | 只手改核心 4 個 ARB（`app_zh` / `app_en` / `app_ja` / `app_zh_Hans`），其餘 26 個 Crowdin 空殼交 pipeline |
 
 ## 設計
@@ -185,7 +185,7 @@ Future<bool?> showConfirmDialog({
 
 **內文改寫**（`_import` 約 `581-621`）：
 
-- 前言改合併語意（改寫 `settingsImportConfirmIntro`：「即將匯入…」→「即將合併…」），沿用既有 `• playerId (別名)` 清單格式。
+- 前言維持「即將匯入」動作語意（`settingsImportConfirmIntro` 用詞不改；合併／非破壞語意改放衝突段標頭與 badge），沿用既有 `• playerId (別名)` 清單格式。對齊原神姊妹版實際出貨字串（動作用「匯入」，非「合併」）。
 - 衝突區塊：把「覆蓋」標頭（`settingsImportConfirmOverwriteHeader`）改為新 key `settingsImportConfirmMergeHeader`（「下列帳號將與本機資料合併，不會刪除既有紀錄：」），列出衝突 playerId。
 - 移除危險警告句（刪 `_import` 對 `settingsImportConfirmWarning` 的引用與該 ARB key）。
 - 保留「未匯入的帳號維持不動」footer（`settingsImportConfirmPreserveFooter`）與「無資料衝突」（`settingsImportConfirmNoConflict`）。
@@ -193,7 +193,7 @@ Future<bool?> showConfirmDialog({
 ### 4. 結果回報「新增 / 已存在」（`lib/state/update_progress.dart` 與 `lib/widgets/update_progress_dialog.dart`）
 
 - `ImportResult` 欄位（約 `49-65`）改為：`successAccounts`、`addedRecords`、`duplicateRecords`、`failedUids`（移除 `totalRecords`）。`_runImport` 三處建構一併改用新欄位；計數公式見段 2。
-- `progressDoneImportSummary`（呼叫點 `update_progress_dialog.dart` 約 `229-235`）由 2 個 placeholder（accounts、records）改為 3 個（successAccounts、addedRecords、duplicateRecords），文案如「已合併 {accounts} 個帳號：新增 {added} 筆、已存在 {duplicate} 筆」。
+- `progressDoneImportSummary`（呼叫點 `update_progress_dialog.dart` 約 `229-235`）由 2 個 placeholder（accounts、records）改為 3 個（successAccounts、addedRecords、duplicateRecords），文案如「已匯入 {accounts} 個帳號：新增 {added} 筆、已存在 {duplicate} 筆」（動作詞用「匯入」，合併結果由「新增／已存在」筆數呈現；對齊原神姊妹版）。
 - `progressPartialImportFailed`（失敗 playerId 警示，約 `249-258`）維持不動。
 
 ### 5. 受影響檔案清單
@@ -244,8 +244,8 @@ ARB key 異動（先寫 `lib/l10n/app_zh.arb`，再以中文為基準翻核心�
   - `settingsImportMergeBadge`：zh `合併` / en `Merge` / ja `結合` / zh_Hans `合并`
   - `settingsImportConfirmMergeHeader`：zh `下列帳號將與本機資料合併，不會刪除既有紀錄：` / en `The following accounts will be merged with local data; existing records won't be deleted:` / ja `以下のアカウントはローカルデータと結合されます。既存の記録は削除されません：` / zh_Hans `以下账号将与本机数据合并，不会删除既有记录：`
 - **改寫**：
-  - `settingsImportConfirmIntro`：「即將匯入 {accounts} 個帳號（共 {records} 筆紀錄）：」→「即將合併 {accounts} 個帳號（共 {records} 筆紀錄）：」（en `About to merge {accounts} accounts ({records} records total):` / ja `{accounts} 個のアカウントを結合します（合計 {records} 件の記録）：` / zh_Hans `即将合并 {accounts} 个账号（共 {records} 条记录）：`）
-  - `progressDoneImportSummary`：2 → 3 placeholder（successAccounts、addedRecords、duplicateRecords）。zh `已合併 {accounts} 個帳號：新增 {added} 筆、已存在 {duplicate} 筆` / en `{accounts, plural, =1{Merged 1 account} other{Merged {accounts} accounts}}: {added} new, {duplicate} already present` / ja `{accounts} 個のアカウントを結合しました：新規 {added} 件、既存 {duplicate} 件` / zh_Hans `已合并 {accounts} 个账号：新增 {added} 条、已存在 {duplicate} 条`
+  - `progressDoneImportSummary`：2 → 3 placeholder（accounts、added、duplicate）。對齊原神姊妹版實際字串（動作用「匯入」）：zh `已匯入 {accounts} 個帳號：新增 {added} 筆、已存在 {duplicate} 筆` / en `{accounts, plural, =1{Imported 1 account} other{Imported {accounts} accounts}}: {added} new, {duplicate} already present` / ja `{accounts} 個のアカウントをインポートしました：新規 {added} 件、既存 {duplicate} 件` / zh_Hans `已导入 {accounts} 个账号：新增 {added} 条、已存在 {duplicate} 条`
+- **維持「匯入」動作語意（不改 intro 用詞）**：`settingsImportConfirmIntro` 保留原本「即將匯入 {accounts} 個帳號（共 {records} 筆紀錄）：」（en `About to import...` / ja `...をインポートします：` / zh_Hans `即将导入...`）。合併／非破壞語意只放在 `settingsImportConfirmMergeHeader`、badge 與結果回報的「新增／已存在」明細——因 picker 清單同時含全新帳號，對它們稱「合併」不準確。
 - **刪除**（核心四語系；刪前再全域 grep 確認 `lib/`、`test/` 無其他引用）：`settingsImportOverwriteBadge`、`settingsImportConfirmWarning`、`settingsImportConfirmOverwriteHeader`
 - **保留**：`settingsImportConfirmNoConflict`、`settingsImportConfirmPreserveFooter`、`settingsImportConfirmTitle`、`confirmImport`、`actionCancel`
 - CJK 全形標點；結尾省略號一律半形 `...`。

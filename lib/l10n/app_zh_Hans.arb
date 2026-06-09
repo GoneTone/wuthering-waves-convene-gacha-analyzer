@@ -214,7 +214,7 @@
       }
     }
   },
-  "progressDoneImportSummary": "已合并 {accounts} 个账号：新增 {added} 条、已存在 {duplicate} 条",
+  "progressDoneImportSummary": "已导入 {accounts} 个账号：新增 {added} 条、已存在 {duplicate} 条",
   "@progressDoneImportSummary": {
     "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts merged, plus newly added vs already-present record counts.",
     "placeholders": {
@@ -548,7 +548,7 @@
     }
   },
   "settingsImportConfirmTitle": "导入确认",
-  "settingsImportConfirmIntro": "即将合并 {accounts} 个账号（共 {records} 条记录）：",
+  "settingsImportConfirmIntro": "即将导入 {accounts} 个账号（共 {records} 条记录）：",
   "@settingsImportConfirmIntro": {
     "placeholders": {
       "accounts": {
