@@ -1264,12 +1264,13 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       await tester.tap(find.text('複製圖片'));
-      await tester.pump();
-      // toast 置於 dialog 之上的 Stack，存在於 dialog 子樹內、不被蓋住。
-      expect(find.byKey(const ValueKey('itemDetailToast')), findsOneWidget);
+      await tester.pump(); // 啟動 overlay toast 淡入
+      // toast 為 overlay entry，疊在 dialog／modal barrier 之上、不被蓋住。
+      expect(find.byKey(const ValueKey('dialogToast')), findsOneWidget);
       expect(find.text('已複製圖片到剪貼簿'), findsOneWidget);
-      // flush toast 自動消失計時器，避免測試結束時殘留 pending timer。
-      await tester.pump(const Duration(seconds: 3));
+      // flush 停留計時器與淡出動畫，避免測試結束時殘留 pending timer。
+      await tester.pump(const Duration(milliseconds: 2200));
+      await tester.pumpAndSettle();
     });
 
     testWidgets('點重抓圖片 → 造型圖切回 loading（spinner 出現）', (tester) async {
