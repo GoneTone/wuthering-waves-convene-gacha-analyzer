@@ -554,13 +554,13 @@ void main() {
       },
     );
 
-    testWidgets('save cancelled shows no snackbar', (tester) async {
+    testWidgets('save cancelled shows no toast', (tester) async {
       itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
       itemImageSaveLocationPicker = (name) async => null;
       await openOverlay(tester);
       final l = loc(tester);
       await pickMenu(tester, l.actionSaveImage);
-      expect(find.byType(SnackBar), findsNothing);
+      expect(find.byKey(const ValueKey('dialogToast')), findsNothing);
     });
 
     testWidgets('save without suggestedFileName falls back to file basename', (
