@@ -74,10 +74,9 @@ for anchorLen = min(incoming.length, 3) downTo 1:
             olderStart = min(local.length - i, incoming.length)
             return [...local, ...incoming.sublist(olderStart)]
 
-// Case 3：找不到一致重疊（不相交／中間斷層）→ 全部保留（不漏），較新者在前，寫 warning log
-return incoming.first.time.isAfter(local.first.time)
-    ? [...incoming, ...local]
-    : [...local, ...incoming];
+// Case 3：對不到「連續」重疊（不相交／重疊中段缺筆／非連續輸入）→ 改用 gap-tolerant
+// 序列合併（見 1c）：以 LCS 找共同骨幹去重、只補各自真正缺的筆、依 time 交錯，永不重複。
+return _mergeBySupersequence(local, incoming);
 ```
 
 `_overlapEquals(a, aStart, b, bStart, len)` = 對 `k ∈ [0, len)` 全部 `recordsEqual(a[aStart+k], b[bStart+k])`。
@@ -87,8 +86,24 @@ return incoming.first.time.isAfter(local.first.time)
 - **逐筆驗證整段重疊**：錨點只比對開頭 1~3 筆，命中後**必須**驗證整段重疊逐筆相等才縫合，否則退而試更短錨點。避免「短錨點在重複片段誤命中錯位置」導致縫錯（漏或重）。
 - **保留 `local` 整段**：兩個 Case 都讓 `local` 原封出現在輸出，只把 `incoming` 不重疊的兩端接上 → 對本機**結構性不漏**，且重疊那筆自然保留本機版本（與既有 `mergeOrderedRecords` 行為一致）。
 - **containment 正確**：`olderStart` 的 `min(..., length)` clamp 同時涵蓋「`incoming` 更舊（接尾）」與「`incoming` 被 `local` 完全包含（接空）」兩種。
-- **不漏優先於不重**：Case 3 與「驗證失敗」一律保留兩段（最多重複，絕不漏）並寫 warning，符合「安全網」訴求。真正不相交時不會重複；只有在輸入損毀／非同一段歷史（自家匯出檔不會發生）才可能重複，且可診斷。
-- **絕不做全域時間排序**：同一十連 10 筆共用同一 `time`，全域排序會打亂十連內順序、破壞日後對齊。Case 3 僅以兩段 head 的 `time` 決定誰在前，不重排段內。此為 WHY 註解重點。
+- **快路徑 + gap-tolerant fallback（不漏且不重）**：Cases 1-2 是 O(n) 快路徑，處理「連續重疊」（自家連續匯出檔恆走這裡）。一旦對不到連續重疊（不相交、或重疊中段缺筆、或非連續輸入），落到 Case 3 的 [1c] LCS 序列合併——即使中段有洞也能去重共同筆、只補真正缺的、永不重複，故 `added`／`duplicate` 計數正確（不會「整批算新增」）。對 WuWa 這種無 id 的脆弱資料是 defense-in-depth。
+- **絕不做全域時間排序**：同一十連 10 筆共用同一 `time`，全域 sort 會打亂十連內順序、破壞日後對齊。Cases 1-2 保留 `local` 整段；Case 3 的 SCS 沿兩份既有的「新到舊」子序列順序縫合，僅在 LCS 不偏好任一邊的平手點以 `time` 決定先後（同 time 保留本機），不做全域排序。
+
+#### 1c. gap-tolerant fallback：`_mergeBySupersequence`（private，同檔）
+
+當 Cases 1-2 對不到「連續」重疊時，`mergeBackupRecords` 不再盲目把兩段接起來（會在重疊中段缺筆時複製共同筆、把整批算成新增），改呼叫此 private 函式做「最短共同超序列」(SCS) 合併：
+
+```dart
+List<GachaRecord> _mergeBySupersequence(
+  List<GachaRecord> local,
+  List<GachaRecord> incoming,
+)
+```
+
+- 兩份皆由新到舊、且同為某條真實歷史的子序列。先以 `recordsEqual` 跑 LCS DP（`dp[i][j] = LCS(local[i..], incoming[j..])`），再回溯產生 SCS：共同筆只輸出一次（取本機那份）、各自獨有的筆按子序列順序插入；LCS 平手點以 `time` 較新者先（同 time 保留本機）。
+- 性質：`local`、`incoming` 皆為輸出的子序列（**不漏**）；共同子序列只出現一次（**不重**）；長度 = `local.length + incoming.length − LCS`，故 `added = 輸出 − local.length` 恰為「incoming 有而 local 沒有的筆數」、`duplicate` 不會虛報。
+- 對不相交（LCS 為 0）退化為依 `time` 交錯接合（等同舊 Case 3 的「較新在前」，但不複製）。
+- 複雜度 O(n·m)：僅在「非連續」這個少見 fallback 才付出（自家連續匯出檔走 Cases 1-2）；匯入為一次性操作，可接受。落到此路徑時寫一筆 `info` log（帶兩段長度）供診斷。
 
 #### 1b. 帳號級：`BannerStorage.mergeWith`
 
@@ -203,8 +218,10 @@ Future<bool?> showConfirmDialog({
 ## 測試計畫
 
 - **`mergeBackupRecords` 單元測試**（加在既有 `test/services/record_merge_test.dart`）：
-  - incoming 較新（接頭）；incoming 較舊（補尾）；containment（一段包另一段，兩個方向）；完全不相交（Case 3，全保留、較新在前）；partial 十連邊界（重疊落在同 `time` 連續段中段）；同十連同 `time` 多筆（含同道具重複，多重數正確、不誤併）；空 local／空 incoming。
-  - **不漏資料性質測試**：對隨機/構造輸入，斷言 `local` 與 `incoming` 皆為輸出的子序列，且輸出為 newest→oldest。
+  - incoming 較新（接頭）；incoming 較舊（補尾）；containment（一段包另一段，兩個方向）；完全不相交（退化為依 time 交錯、不複製）；partial 十連邊界（重疊落在同 `time` 連續段中段）；同十連同 `time` 多筆（含同道具重複，多重數正確、不誤併）；空 local／空 incoming。
+  - **gap-tolerant fallback（`_mergeBySupersequence`）**：重疊中段缺一筆（incoming 少 t8）→ 去重不複製、共同筆只一份；同十連 incoming 缺幾筆 → 補齊不複製；「錨點對齊但整段驗證失敗」→ 退回序列合併、去重（取代舊版「兩段全保留」的長度斷言）。
+  - **不漏資料性質測試**：構造重疊／含洞／不相交輸入，斷言 `local` 與 `incoming` 皆為輸出的子序列、輸出為 newest→oldest、且長度 = `local + incoming − 共同筆`（不重複）。
+- **`_runImport` gap 計數測試**（`test/state/gacha_repository_test.dart`）：既有 UID 重匯入一份「重疊中段缺筆」的池 → `addedRecords` 只計真正新筆、無「整批新增」、存檔無複製。
 - **`BannerStorage.mergeWith` 單元測試**（加在既有 `test/models/banner_storage_test.dart`）：banner key 聯集（其中一邊缺某卡池）；逐 banner 走 `mergeBackupRecords`；`lastUpdated` 取較新；`languageCode` 隨較新方；空本機 / 空備份邊界。
 - **`_runImport`（`debugImportOnly`）測試**（`test/state/gacha_repository_test.dart`，改既有四個匯入測試到合併語意 + 新增）：
   - 既有 playerId **合併不覆蓋**：本機某池對齊重疊、補上備份新筆 → 本機原紀錄全在、`addedRecords`/`duplicateRecords` 計數正確。
