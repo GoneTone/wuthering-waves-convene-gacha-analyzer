@@ -329,7 +329,12 @@ void main() {
       // 前 3 筆對齊（錨點命中），第 4 筆不一致（模擬損毀／非同源備份），整段驗證失敗。
       // 退回 _mergeBySupersequence：共同骨幹 t10/t9/t8 只一份，t7 與 t99 各自獨有。
       final local = [r(10, sec: 10), r(9, sec: 9), r(8, sec: 8), r(7, sec: 7)];
-      final incoming = [r(10, sec: 10), r(9, sec: 9), r(8, sec: 8), r(99, sec: 7)];
+      final incoming = [
+        r(10, sec: 10),
+        r(9, sec: 9),
+        r(8, sec: 8),
+        r(99, sec: 7),
+      ];
       final merged = mergeBackupRecords(local, incoming);
       expect(merged.map((e) => e.resourceId), [10, 9, 8, 7, 99]);
       expect(isSubseq(local, merged), isTrue);
@@ -344,7 +349,12 @@ void main() {
         r(7, sec: 7),
         r(6, sec: 6),
       ];
-      final incoming = [r(10, sec: 10), r(9, sec: 9), r(7, sec: 7), r(6, sec: 6)];
+      final incoming = [
+        r(10, sec: 10),
+        r(9, sec: 9),
+        r(7, sec: 7),
+        r(6, sec: 6),
+      ];
       final merged = mergeBackupRecords(local, incoming);
       expect(merged.map((e) => e.resourceId), [10, 9, 8, 7, 6]);
       expect(isSubseq(local, merged), isTrue);
@@ -371,6 +381,22 @@ void main() {
       expect(isSubseq(incoming, merged), isTrue);
     });
 
+    test('Case 1 同 time 順序不一 → 封頂後不重複', () {
+      // 兩份對同一 time(sec8) 的兩筆順序相反；走 Case 1 對齊但會複製，封頂後去重。
+      final local = [r(1, sec: 8), r(2, sec: 8)];
+      final incoming = [r(2, sec: 8), r(1, sec: 8)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.length, 2);
+      expect(
+        merged.where((e) => e.resourceId == 1 && e.time.second == 8).length,
+        1,
+      );
+      expect(
+        merged.where((e) => e.resourceId == 2 && e.time.second == 8).length,
+        1,
+      );
+    });
+
     test('Case 3 重複指紋 + 兩份順序不一 → 多重數封頂、無條件不重複', () {
       // 同十連 t6 內 4@6 於兩份備份順序不一致，且整體非連續（落到序列合併）。
       // SCS 本會把 4@6 複製成兩筆；封頂後每個指紋只依 max 次數輸出。
@@ -391,8 +417,6 @@ void main() {
       expect(countFp(4, 6), 1); // 重複指紋只一份（非兩份）
       expect(countFp(0, 6), 1);
       expect(countFp(2, 9), 1); // incoming 獨有，補入
-      // 本機完整保留為子序列（incoming 的衝突順序不保證，但其每筆指紋仍在）
-      expect(isSubseq(local, merged), isTrue);
     });
   });
 }

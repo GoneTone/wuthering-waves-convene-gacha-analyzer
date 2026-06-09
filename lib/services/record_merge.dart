@@ -90,10 +90,15 @@ int? _findAlignment(
 /// 將兩份同 UID、同卡池的喚取紀錄（皆由新到舊）做非破壞性雙向合併，回傳合併後
 /// 的完整有序清單（由新到舊）。
 ///
-/// [local] 整段一律保留（含重疊那筆保留本機版本），只把 [incoming] 比 [local]
-/// 「更新的頭」與「更舊的尾」接上。錨點命中後**逐筆驗證整段重疊**才縫合，避免短
-/// 錨點在重複片段誤命中錯位置。完全對不到一致重疊時（不相交／斷層／輸入損毀）
-/// 保留兩段、不漏，較新者在前並 log warning。
+/// 先以 [_alignedMerge] 縫合（連續重疊走 O(n) 快路徑，對不齊則退回 gap-tolerant
+/// 序列合併），再以 [_capMultiplicity] 對每個指紋封頂多重數。
+///
+/// 保證：(1) **不漏**——任一來源每個指紋的數量都保留（輸出數量 = max(local, incoming)）；
+/// (2) **無條件不重複**——沒有任何指紋輸出超過 max(local, incoming) 次（含 Cases 1-2 在
+/// 「同 time 順序不一」時可能產生的複本）；(3) `added`／`duplicate` 計數正確，不會
+/// 「整批算新增」。重疊區共同筆取本機那份；當兩份對「同一十連內重複道具」的順序不一致
+/// （只可能來自手改／第三方）時，以不重複為先、十連內順序不保證與本機完全一致（但不漏
+/// 任何指紋的數量）。
 ///
 /// 與 [mergeOrderedRecords]（更新流程的單向增量）刻意分開：匯入的備份可能比本機
 /// 更舊（補回早期段），單向版對不到錨點會丟掉另一段。
@@ -103,7 +108,15 @@ List<GachaRecord> mergeBackupRecords(
 ) {
   if (local.isEmpty) return List<GachaRecord>.from(incoming);
   if (incoming.isEmpty) return List<GachaRecord>.from(local);
+  return _capMultiplicity(_alignedMerge(local, incoming), local, incoming);
+}
 
+/// 縫合兩份紀錄（未封頂）：Cases 1-2 為連續重疊的 O(n) 對齊快路徑，對不到一致重疊
+/// 則退回 [_mergeBySupersequence]。多重數封頂由呼叫端 [mergeBackupRecords] 統一處理。
+List<GachaRecord> _alignedMerge(
+  List<GachaRecord> local,
+  List<GachaRecord> incoming,
+) {
   // Case 1：local 的開頭出現在 incoming 中（incoming 較新或頭部對齊）。
   final maxAnchor1 = local.length < _anchorBase ? local.length : _anchorBase;
   for (var anchorLen = maxAnchor1; anchorLen >= 1; anchorLen--) {
@@ -145,8 +158,7 @@ List<GachaRecord> mergeBackupRecords(
   }
 
   // Case 3：對不到「連續」重疊（不相交／重疊中段缺筆／非連續輸入）→ gap-tolerant
-  // 序列合併：以 LCS 找共同骨幹去重、只補各自真正缺的筆、依 time 交錯，永不重複。
-  // 自家連續匯出檔走 Cases 1-2，不會到這裡；此路徑專防非連續（手改／第三方）輸入。
+  // 序列合併。自家連續匯出檔走 Cases 1-2，不會到這裡；此路徑專防非連續（手改／第三方）輸入。
   _log.info(
     'mergeBackupRecords: no contiguous overlap; supersequence-merging '
     '(local=${local.length} incoming=${incoming.length})',
@@ -167,18 +179,12 @@ bool _overlapEquals(
   return true;
 }
 
-/// 以「最短共同超序列」(SCS) 合併兩份皆由新到舊、且同為某條真實歷史子序列的清單，
-/// 再對每個指紋封頂多重數，達成無條件「不漏且不重」。
+/// 以「最短共同超序列」(SCS) 縫合兩份皆由新到舊、且同為某條真實歷史子序列的清單。
 ///
-/// 供 [mergeBackupRecords] 在對不到「連續」重疊時使用（重疊中段缺筆／非連續輸入）。
-/// (1) 以 [recordsEqual] 跑 LCS、回溯產生 SCS（共同筆取本機那份、各自獨有的筆按子
-/// 序列順序插入、LCS 平手點以 [GachaRecord.time] 較新者先、同 time 保留本機）；
-/// (2) 將每個指紋（time/resourceId/qualityLevel/count）的輸出次數封頂為
-/// max(在 local 的次數, 在 incoming 的次數)。
-///
-/// 性質：每個指紋的輸出數量 = max(local, incoming) → 任一來源的紀錄數量都不漏，且
-/// 無多餘複本。兩份若對「同一十連內重複道具」的順序不一致（只可能來自手改／第三方），
-/// 無法同時滿足兩種順序 → 以本機順序為準、取不重複者。
+/// 供 [_alignedMerge] 在對不到「連續」重疊時使用（重疊中段缺筆／非連續輸入）：以
+/// [recordsEqual] 跑 LCS、回溯產生 SCS（共同筆取本機那份、各自獨有的筆按子序列順序
+/// 插入、LCS 平手點以 [GachaRecord.time] 較新者先、同 time 保留本機）。多重數封頂由
+/// 呼叫端 [mergeBackupRecords] 的 [_capMultiplicity] 統一處理（此處不封頂）。
 List<GachaRecord> _mergeBySupersequence(
   List<GachaRecord> local,
   List<GachaRecord> incoming,
@@ -227,7 +233,7 @@ List<GachaRecord> _mergeBySupersequence(
   while (j < m) {
     merged.add(incoming[j++]);
   }
-  return _capMultiplicity(merged, local, incoming);
+  return merged;
 }
 
 /// 指紋字串（對齊 [recordsEqual] 的四欄位：time/resourceId/qualityLevel/count），
