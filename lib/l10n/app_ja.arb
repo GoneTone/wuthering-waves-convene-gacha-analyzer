@@ -220,11 +220,17 @@
   },
   "progressDoneImportSummary": "{accounts} 個のアカウントをインポートしました：新規 {added} 件、既存 {duplicate} 件",
   "@progressDoneImportSummary": {
-    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts merged, plus newly added vs already-present record counts.",
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
     "placeholders": {
-      "accounts": { "type": "int" },
-      "added": { "type": "int" },
-      "duplicate": { "type": "int" }
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
     }
   },
   "progressPartialImportFailed": "⚠ 一部のインポートに失敗：{uids}",
