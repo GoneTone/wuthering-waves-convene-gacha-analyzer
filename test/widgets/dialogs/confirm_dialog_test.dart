@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
 
 void main() {
@@ -181,5 +182,43 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
     await tester.pumpAndSettle();
     expect(confirmed, isFalse);
+  });
+
+  testWidgets('showConfirmDialog: isDanger uses danger color for confirm', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildDarkTheme(),
+        home: Scaffold(
+          body: Builder(
+            builder: (ctx) => Center(
+              child: ElevatedButton(
+                onPressed: () => showConfirmDialog(
+                  context: ctx,
+                  title: 'Clear',
+                  body: 'About to clear',
+                  cancelLabel: 'Cancel',
+                  confirmLabel: 'Delete',
+                  confirmIcon: Icons.delete_outline,
+                  isDanger: true,
+                ),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    final btn = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Delete'),
+    );
+    expect(
+      btn.style?.backgroundColor?.resolve(<WidgetState>{}),
+      buildDarkTheme().gacha.stateDanger,
+    );
   });
 }
