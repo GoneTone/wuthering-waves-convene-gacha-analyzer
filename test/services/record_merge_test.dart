@@ -283,8 +283,18 @@ void main() {
 
     test('重疊落在同十連同 time 連續段 → 段內順序不被打亂', () {
       // t=30 的十連有兩筆（resourceId 31/32，sec 皆 30）
-      final local = [r(40, sec: 40), r(31, sec: 30), r(32, sec: 30), r(20, sec: 20)];
-      final incoming = [r(50, sec: 50), r(40, sec: 40), r(31, sec: 30), r(32, sec: 30)];
+      final local = [
+        r(40, sec: 40),
+        r(31, sec: 30),
+        r(32, sec: 30),
+        r(20, sec: 20),
+      ];
+      final incoming = [
+        r(50, sec: 50),
+        r(40, sec: 40),
+        r(31, sec: 30),
+        r(32, sec: 30),
+      ];
       final merged = mergeBackupRecords(local, incoming);
       expect(merged.map((e) => e.resourceId), [50, 40, 31, 32, 20]);
     });
@@ -299,15 +309,12 @@ void main() {
 
     test('空 local → 回 incoming；空 incoming → 回 local', () {
       final incoming = [r(2, sec: 2), r(1, sec: 1)];
-      expect(
-        mergeBackupRecords(const [], incoming).map((e) => e.resourceId),
-        [2, 1],
-      );
+      expect(mergeBackupRecords(const [], incoming).map((e) => e.resourceId), [
+        2,
+        1,
+      ]);
       final local = [r(3, sec: 3)];
-      expect(
-        mergeBackupRecords(local, const []).map((e) => e.resourceId),
-        [3],
-      );
+      expect(mergeBackupRecords(local, const []).map((e) => e.resourceId), [3]);
     });
 
     test('不漏資料：local 與 incoming 皆為輸出子序列', () {
@@ -322,7 +329,12 @@ void main() {
       // 前 3 筆對齊（錨點命中），但第 4 筆不一致（模擬損毀／非同源備份），
       // 整段重疊驗證失敗，不可誤縫 → 退回 Case 3 保留兩段、不漏資料。
       final local = [r(10, sec: 10), r(9, sec: 9), r(8, sec: 8), r(7, sec: 7)];
-      final incoming = [r(10, sec: 10), r(9, sec: 9), r(8, sec: 8), r(99, sec: 7)];
+      final incoming = [
+        r(10, sec: 10),
+        r(9, sec: 9),
+        r(8, sec: 8),
+        r(99, sec: 7),
+      ];
       final merged = mergeBackupRecords(local, incoming);
       expect(merged.length, local.length + incoming.length);
       expect(isSubseq(local, merged), isTrue);
