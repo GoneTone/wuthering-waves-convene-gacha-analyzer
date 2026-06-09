@@ -324,7 +324,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     return '$safe.png';
   }
 
-  /// 複製目前圖片到剪貼簿：解碼成 PNG → 寫剪貼簿，結果以 SnackBar 回報。
+  /// 複製目前圖片到剪貼簿：解碼成 PNG → 寫剪貼簿，結果以 toast 回報。
   Future<void> _copyImage(_ImageChipEntry e) async {
     final l = AppLocalizations.of(context)!;
     final png = await encodeImageFileToPng(e.file);
@@ -338,7 +338,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     _showSnack(ok ? l.itemImageCopied : l.itemImageCopyFailed);
   }
 
-  /// 儲存目前圖片：解碼成 PNG → 系統存檔對話框，結果以 SnackBar 回報。
+  /// 儲存目前圖片：解碼成 PNG → 系統存檔對話框，結果以 toast 回報。
   /// 使用者取消不提示；寫檔失敗提示失敗。
   Future<void> _saveImage(_ImageChipEntry e) async {
     final l = AppLocalizations.of(context)!;
