@@ -100,8 +100,9 @@ List<GachaRecord> _mergeBySupersequence(
 )
 ```
 
-- 兩份皆由新到舊、且同為某條真實歷史的子序列。先以 `recordsEqual` 跑 LCS DP（`dp[i][j] = LCS(local[i..], incoming[j..])`），再回溯產生 SCS：共同筆只輸出一次（取本機那份）、各自獨有的筆按子序列順序插入；LCS 平手點以 `time` 較新者先（同 time 保留本機）。
-- 性質：`local`、`incoming` 皆為輸出的子序列（**不漏**）；共同子序列只出現一次（**不重**）；長度 = `local.length + incoming.length − LCS`，故 `added = 輸出 − local.length` 恰為「incoming 有而 local 沒有的筆數」、`duplicate` 不會虛報。
+- 兩份皆由新到舊、且同為某條真實歷史的子序列。步驟：(1) 以 `recordsEqual` 跑 LCS DP（`dp[i][j] = LCS(local[i..], incoming[j..])`），回溯產生 SCS（共同筆取本機那份、各自獨有的筆按子序列順序插入、LCS 平手點以 `time` 較新者先、同 time 保留本機）；(2) **多重數封頂**：對每個指紋（time/resourceId/qualityLevel/count）將輸出次數上限設為 `max(在 local 的次數, 在 incoming 的次數)`。
+- 性質：每個指紋的輸出數量 = `max(local 次數, incoming 次數)` → 任一來源的紀錄「數量」都不漏（**不漏**），且**無條件不重複**（SCS 為同時滿足兩序列順序而生的多餘複本被封頂移除）。`added = 輸出筆數 − local 筆數` 恰為「incoming 有而 local 沒有的筆數」，不會虛報「整批新增」。
+- 兩份若對「同一十連內重複道具」的順序不一致（只可能來自手改／第三方），無法同時滿足兩種順序 → 以本機順序為準、取不重複的那份（仍不漏任何指紋的數量）。
 - 對不相交（LCS 為 0）退化為依 `time` 交錯接合（等同舊 Case 3 的「較新在前」，但不複製）。
 - 複雜度 O(n·m)：僅在「非連續」這個少見 fallback 才付出（自家連續匯出檔走 Cases 1-2）；匯入為一次性操作，可接受。落到此路徑時寫一筆 `info` log（帶兩段長度）供診斷。
 
