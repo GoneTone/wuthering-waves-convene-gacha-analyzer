@@ -240,7 +240,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   String _suggestedName() =>
       widget.suggestedFileName ?? widget.imageFile.uri.pathSegments.last;
 
-  /// 複製目前圖片到剪貼簿：解碼 PNG → 寫剪貼簿，結果以 lightbox 內 SnackBar 回報。
+  /// 複製目前圖片到剪貼簿：解碼 PNG → 寫剪貼簿，結果以 toast 回報。
   Future<void> _copyImage() async {
     final l = AppLocalizations.of(context)!;
     final png = await encodeImageFileToPng(widget.imageFile);
@@ -256,7 +256,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
     _showSnack(ok ? l.itemImageCopied : l.itemImageCopyFailed);
   }
 
-  /// 儲存目前圖片：解碼 PNG → 系統存檔對話框，結果以 lightbox 內 SnackBar 回報。
+  /// 儲存目前圖片：解碼 PNG → 系統存檔對話框，結果以 toast 回報。
   /// 使用者取消不提示；寫檔失敗提示失敗。
   Future<void> _saveImage() async {
     final l = AppLocalizations.of(context)!;
