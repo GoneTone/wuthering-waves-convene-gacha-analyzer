@@ -515,7 +515,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('copy writes PNG to clipboard and shows copied snackbar', (
+    testWidgets('copy writes PNG to clipboard and shows copied toast', (
       tester,
     ) async {
       var copyCalled = false;
@@ -532,7 +532,7 @@ void main() {
     });
 
     testWidgets(
-      'save calls picker with suggestedFileName and shows saved snackbar',
+      'save calls picker with suggestedFileName and shows saved toast',
       (tester) async {
         String? capturedName;
         String? writtenPath;
