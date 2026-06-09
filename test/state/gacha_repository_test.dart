@@ -1368,6 +1368,82 @@ void main() {
     },
   );
 
+  test(
+    'importAccounts: multi-banner merge counts added/duplicate across pools',
+    () async {
+      GachaRecord gr(int id, int sec) => GachaRecord(
+        resourceId: id,
+        qualityLevel: 5,
+        resourceType: '角色',
+        cardPoolType: '1',
+        name: 'x',
+        count: 1,
+        time: DateTime(2026, 5, 21, 11, 0, sec),
+      );
+
+      final storage = GachaStorage(tempDir);
+      await storage.save(
+        BannerStorage(
+          playerId: '100000001',
+          languageCode: 'zh-Hant',
+          lastUpdated: DateTime.utc(2026, 1, 1),
+          banners: {
+            '1': [gr(3, 30), gr(2, 20)],
+            '2': [gr(50, 50)],
+          },
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          gachaStorageProvider.overrideWithValue(storage),
+          gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
+          cancellableHttpClientFactoryProvider.overrideWithValue(
+            () => CancellableHttpClient(
+              client: MockClient((_) async => http.Response('{}', 200)),
+              cancel: () {},
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(gachaRepositoryProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final bundle = AccountsBundle(
+        exportedAt: DateTime.utc(2026, 5, 12),
+        appVersion: 'x',
+        lastActiveUid: null,
+        accounts: [
+          ExportedAccount(
+            data: BannerStorage(
+              playerId: '100000001',
+              languageCode: 'zh-Hant',
+              lastUpdated: DateTime.utc(2026, 5, 12),
+              banners: {
+                '1': [gr(2, 20), gr(1, 10)],
+                '2': [gr(50, 50)],
+                '3': [gr(70, 70)],
+              },
+            ),
+          ),
+        ],
+      );
+
+      final result = await container
+          .read(gachaRepositoryProvider.notifier)
+          .debugImportOnly(bundle);
+
+      // '1': 新增 id1（id2 重複）；'2': id50 重複；'3': 新增 id70（全新池）
+      expect(result.addedRecords, 2);
+      expect(result.duplicateRecords, 2);
+      final merged = container.read(gachaRepositoryProvider).byUid['100000001']!;
+      expect(merged.banners['1']!.map((r) => r.resourceId).toList(), [3, 2, 1]);
+      expect(merged.banners['2']!.map((r) => r.resourceId).toList(), [50]);
+      expect(merged.banners['3']!.map((r) => r.resourceId).toList(), [70]);
+    },
+  );
+
   group('logging instrumentation', () {
     setUp(() {
       Logger.root.level = Level.ALL;

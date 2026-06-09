@@ -747,6 +747,12 @@ class GachaRepository extends Notifier<GachaState> {
             ? incoming
             : localBefore.mergeWith(incoming);
         await storage.save(toSave);
+        final added =
+            toSave.allRecords.length - (localBefore?.allRecords.length ?? 0);
+        addedRecords += added;
+        duplicateRecords += incoming.allRecords.length - added;
+        newByUid[incoming.playerId] = toSave;
+        successCount++;
         if (!ref.mounted) {
           return ImportResult(
             successAccounts: successCount,
@@ -755,12 +761,6 @@ class GachaRepository extends Notifier<GachaState> {
             failedUids: failed,
           );
         }
-        final added =
-            toSave.allRecords.length - (localBefore?.allRecords.length ?? 0);
-        addedRecords += added;
-        duplicateRecords += incoming.allRecords.length - added;
-        newByUid[incoming.playerId] = toSave;
-        successCount++;
       } catch (_) {
         failed.add(incoming.playerId);
       }
