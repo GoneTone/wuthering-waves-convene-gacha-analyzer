@@ -218,16 +218,13 @@
       }
     }
   },
-  "progressDoneImportSummary": "{accounts} 件のアカウントをインポート（{records} 件の記録）",
+  "progressDoneImportSummary": "{accounts} 件のアカウントを結合：新規 {added} 件、既存 {duplicate} 件",
   "@progressDoneImportSummary": {
-    "description": "Completion dialog line shown when the import-then-fetch flow finishes: how many accounts and total records were imported in this run.",
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts merged, plus newly added vs already-present record counts.",
     "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
+      "accounts": { "type": "int" },
+      "added": { "type": "int" },
+      "duplicate": { "type": "int" }
     }
   },
   "progressPartialImportFailed": "⚠ 一部のインポートに失敗：{uids}",
