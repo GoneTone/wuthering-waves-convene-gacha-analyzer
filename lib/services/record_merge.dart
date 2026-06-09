@@ -112,7 +112,7 @@ List<GachaRecord> mergeBackupRecords(
       final overlapLen = local.length < incoming.length - j
           ? local.length
           : incoming.length - j;
-      if (_overlapEquals(incoming, j, local, 0, overlapLen)) {
+      if (_overlapEquals(incoming, j, local, overlapLen)) {
         final olderStart = j + local.length < incoming.length
             ? j + local.length
             : incoming.length;
@@ -135,7 +135,7 @@ List<GachaRecord> mergeBackupRecords(
       final overlapLen = incoming.length < local.length - i
           ? incoming.length
           : local.length - i;
-      if (_overlapEquals(local, i, incoming, 0, overlapLen)) {
+      if (_overlapEquals(local, i, incoming, overlapLen)) {
         final olderStart = local.length - i < incoming.length
             ? local.length - i
             : incoming.length;
@@ -155,16 +155,15 @@ List<GachaRecord> mergeBackupRecords(
       : [...local, ...incoming];
 }
 
-/// 逐筆比較 [a] 從 [aStart] 起與 [b] 從 [bStart] 起連續 [len] 筆是否全部 [recordsEqual]。
+/// 逐筆比較 [a] 從 [aStart] 起與 [b] 從頭起連續 [len] 筆是否全部 [recordsEqual]。
 bool _overlapEquals(
   List<GachaRecord> a,
   int aStart,
   List<GachaRecord> b,
-  int bStart,
   int len,
 ) {
   for (var k = 0; k < len; k++) {
-    if (!recordsEqual(a[aStart + k], b[bStart + k])) return false;
+    if (!recordsEqual(a[aStart + k], b[k])) return false;
   }
   return true;
 }

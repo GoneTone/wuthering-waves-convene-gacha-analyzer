@@ -317,5 +317,16 @@ void main() {
       expect(isSubseq(local, merged), isTrue);
       expect(isSubseq(incoming, merged), isTrue);
     });
+
+    test('錨點命中但整段重疊驗證失敗 → 退回 Case 3、兩段全保留', () {
+      // 前 3 筆對齊（錨點命中），但第 4 筆不一致（模擬損毀／非同源備份），
+      // 整段重疊驗證失敗，不可誤縫 → 退回 Case 3 保留兩段、不漏資料。
+      final local = [r(10, sec: 10), r(9, sec: 9), r(8, sec: 8), r(7, sec: 7)];
+      final incoming = [r(10, sec: 10), r(9, sec: 9), r(8, sec: 8), r(99, sec: 7)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.length, local.length + incoming.length);
+      expect(isSubseq(local, merged), isTrue);
+      expect(isSubseq(incoming, merged), isTrue);
+    });
   });
 }
