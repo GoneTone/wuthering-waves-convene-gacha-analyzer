@@ -86,3 +86,85 @@ int? _findAlignment(
   }
   return null;
 }
+
+/// 將兩份同 UID、同卡池的喚取紀錄（皆由新到舊）做非破壞性雙向合併，回傳合併後
+/// 的完整有序清單（由新到舊）。
+///
+/// [local] 整段一律保留（含重疊那筆保留本機版本），只把 [incoming] 比 [local]
+/// 「更新的頭」與「更舊的尾」接上。錨點命中後**逐筆驗證整段重疊**才縫合，避免短
+/// 錨點在重複片段誤命中錯位置。完全對不到一致重疊時（不相交／斷層／輸入損毀）
+/// 保留兩段、不漏，較新者在前並 log warning。
+///
+/// 與 [mergeOrderedRecords]（更新流程的單向增量）刻意分開：匯入的備份可能比本機
+/// 更舊（補回早期段），單向版對不到錨點會丟掉另一段。
+List<GachaRecord> mergeBackupRecords(
+  List<GachaRecord> local,
+  List<GachaRecord> incoming,
+) {
+  if (local.isEmpty) return List<GachaRecord>.from(incoming);
+  if (incoming.isEmpty) return List<GachaRecord>.from(local);
+
+  // Case 1：local 的開頭出現在 incoming 中（incoming 較新或頭部對齊）。
+  final maxAnchor1 = local.length < _anchorBase ? local.length : _anchorBase;
+  for (var anchorLen = maxAnchor1; anchorLen >= 1; anchorLen--) {
+    final j = _findAlignment(incoming, local, anchorLen);
+    if (j != null) {
+      final overlapLen = local.length < incoming.length - j
+          ? local.length
+          : incoming.length - j;
+      if (_overlapEquals(incoming, j, local, 0, overlapLen)) {
+        final olderStart = j + local.length < incoming.length
+            ? j + local.length
+            : incoming.length;
+        return [
+          ...incoming.sublist(0, j),
+          ...local,
+          ...incoming.sublist(olderStart),
+        ];
+      }
+    }
+  }
+
+  // Case 2：incoming 的開頭出現在 local 中（incoming 較舊或被 local 包含）。
+  final maxAnchor2 = incoming.length < _anchorBase
+      ? incoming.length
+      : _anchorBase;
+  for (var anchorLen = maxAnchor2; anchorLen >= 1; anchorLen--) {
+    final i = _findAlignment(local, incoming, anchorLen);
+    if (i != null) {
+      final overlapLen = incoming.length < local.length - i
+          ? incoming.length
+          : local.length - i;
+      if (_overlapEquals(local, i, incoming, 0, overlapLen)) {
+        final olderStart = local.length - i < incoming.length
+            ? local.length - i
+            : incoming.length;
+        return [...local, ...incoming.sublist(olderStart)];
+      }
+    }
+  }
+
+  // Case 3：找不到一致重疊 → 全部保留（不漏優先於不重），較新者在前。
+  // 不做全域 time 排序：同十連多筆共用同一 time，排序會打亂十連內順序、破壞日後對齊。
+  _log.warning(
+    'mergeBackupRecords: no consistent overlap; keeping both '
+    '(local=${local.length} incoming=${incoming.length})',
+  );
+  return incoming.first.time.isAfter(local.first.time)
+      ? [...incoming, ...local]
+      : [...local, ...incoming];
+}
+
+/// 逐筆比較 [a] 從 [aStart] 起與 [b] 從 [bStart] 起連續 [len] 筆是否全部 [recordsEqual]。
+bool _overlapEquals(
+  List<GachaRecord> a,
+  int aStart,
+  List<GachaRecord> b,
+  int bStart,
+  int len,
+) {
+  for (var k = 0; k < len; k++) {
+    if (!recordsEqual(a[aStart + k], b[bStart + k])) return false;
+  }
+  return true;
+}
