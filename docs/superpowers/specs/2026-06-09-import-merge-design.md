@@ -86,7 +86,7 @@ return _mergeBySupersequence(local, incoming);
 - **逐筆驗證整段重疊**：錨點只比對開頭 1~3 筆，命中後**必須**驗證整段重疊逐筆相等才縫合，否則退而試更短錨點。避免「短錨點在重複片段誤命中錯位置」導致縫錯（漏或重）。
 - **保留 `local` 整段**：兩個 Case 都讓 `local` 原封出現在輸出，只把 `incoming` 不重疊的兩端接上 → 對本機**結構性不漏**，且重疊那筆自然保留本機版本（與既有 `mergeOrderedRecords` 行為一致）。
 - **containment 正確**：`olderStart` 的 `min(..., length)` clamp 同時涵蓋「`incoming` 更舊（接尾）」與「`incoming` 被 `local` 完全包含（接空）」兩種。
-- **快路徑 + gap-tolerant fallback（不漏且不重）**：Cases 1-2 是 O(n) 快路徑，處理「連續重疊」（自家連續匯出檔恆走這裡）。一旦對不到連續重疊（不相交、或重疊中段缺筆、或非連續輸入），落到 Case 3 的 [1c] LCS 序列合併——即使中段有洞也能去重共同筆、只補真正缺的、永不重複，故 `added`／`duplicate` 計數正確（不會「整批算新增」）。對 WuWa 這種無 id 的脆弱資料是 defense-in-depth。
+- **快路徑 + gap-tolerant fallback + 多重數封頂（不漏且無條件不重）**：Cases 1-2 是 O(n) 快路徑，處理「連續重疊」（自家連續匯出檔恆走這裡）；對不到連續重疊（不相交／重疊中段缺筆／非連續輸入）則退回 Case 3 的 [1c] LCS 序列合併。**最後 `mergeBackupRecords` 對所有 case 的輸出統一做「多重數封頂」**（見 1c）：把每個指紋的輸出次數封頂為 `max(local 次數, incoming 次數)`——這同時修掉 Cases 1-2 在「同 time 順序不一」時可能產生的複本，達成**無條件不重複**，且 `added`／`duplicate` 計數正確（不會「整批算新增」）。對 WuWa 這種無 id 的脆弱資料是 defense-in-depth。
 - **絕不做全域時間排序**：同一十連 10 筆共用同一 `time`，全域 sort 會打亂十連內順序、破壞日後對齊。Cases 1-2 保留 `local` 整段；Case 3 的 SCS 沿兩份既有的「新到舊」子序列順序縫合，僅在 LCS 不偏好任一邊的平手點以 `time` 決定先後（同 time 保留本機），不做全域排序。
 
 #### 1c. gap-tolerant fallback：`_mergeBySupersequence`（private，同檔）
@@ -100,9 +100,10 @@ List<GachaRecord> _mergeBySupersequence(
 )
 ```
 
-- 兩份皆由新到舊、且同為某條真實歷史的子序列。步驟：(1) 以 `recordsEqual` 跑 LCS DP（`dp[i][j] = LCS(local[i..], incoming[j..])`），回溯產生 SCS（共同筆取本機那份、各自獨有的筆按子序列順序插入、LCS 平手點以 `time` 較新者先、同 time 保留本機）；(2) **多重數封頂**：對每個指紋（time/resourceId/qualityLevel/count）將輸出次數上限設為 `max(在 local 的次數, 在 incoming 的次數)`。
-- 性質：每個指紋的輸出數量 = `max(local 次數, incoming 次數)` → 任一來源的紀錄「數量」都不漏（**不漏**），且**無條件不重複**（SCS 為同時滿足兩序列順序而生的多餘複本被封頂移除）。`added = 輸出筆數 − local 筆數` 恰為「incoming 有而 local 沒有的筆數」，不會虛報「整批新增」。
-- 兩份若對「同一十連內重複道具」的順序不一致（只可能來自手改／第三方），無法同時滿足兩種順序 → 以本機順序為準、取不重複的那份（仍不漏任何指紋的數量）。
+- `_mergeBySupersequence`（Case 3 用）：兩份皆由新到舊、且同為某條真實歷史的子序列。以 `recordsEqual` 跑 LCS DP（`dp[i][j] = LCS(local[i..], incoming[j..])`），回溯產生 SCS（共同筆取本機那份、各自獨有的筆按子序列順序插入、LCS 平手點以 `time` 較新者先、同 time 保留本機）。**不在此處封頂**。
+- `_capMultiplicity`：由 `mergeBackupRecords` 對**所有 case 的輸出**統一套用——對每個指紋（time/resourceId/qualityLevel/count）將輸出次數封頂為 `max(在 local 的次數, 在 incoming 的次數)`。
+- 性質：每個指紋的輸出數量 = `max(local 次數, incoming 次數)` → 任一來源的紀錄「數量」都不漏（**不漏**），且**無條件不重複**（不論走哪個 case，多餘複本都被封頂移除）。`added = 輸出筆數 − local 筆數` 恰為「incoming 有而 local 沒有的筆數」，不會虛報「整批新增」。
+- 兩份若對「同一十連內重複道具」的順序不一致（只可能來自手改／第三方），無法同時滿足兩種順序 → **以不重複為先**；該十連內順序不保證與本機完全一致，但**不漏任何指紋的數量**。
 - 對不相交（LCS 為 0）退化為依 `time` 交錯接合（等同舊 Case 3 的「較新在前」，但不複製）。
 - 複雜度 O(n·m)：僅在「非連續」這個少見 fallback 才付出（自家連續匯出檔走 Cases 1-2）；匯入為一次性操作，可接受。落到此路徑時寫一筆 `info` log（帶兩段長度）供診斷。
 
