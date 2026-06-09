@@ -325,18 +325,48 @@ void main() {
       expect(isSubseq(incoming, merged), isTrue);
     });
 
-    test('錨點命中但整段重疊驗證失敗 → 退回 Case 3、兩段全保留', () {
-      // 前 3 筆對齊（錨點命中），但第 4 筆不一致（模擬損毀／非同源備份），
-      // 整段重疊驗證失敗，不可誤縫 → 退回 Case 3 保留兩段、不漏資料。
+    test('錨點對齊但整段驗證失敗 → 退回序列合併、去重不複製', () {
+      // 前 3 筆對齊（錨點命中），第 4 筆不一致（模擬損毀／非同源備份），整段驗證失敗。
+      // 退回 _mergeBySupersequence：共同骨幹 t10/t9/t8 只一份，t7 與 t99 各自獨有。
       final local = [r(10, sec: 10), r(9, sec: 9), r(8, sec: 8), r(7, sec: 7)];
-      final incoming = [
+      final incoming = [r(10, sec: 10), r(9, sec: 9), r(8, sec: 8), r(99, sec: 7)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [10, 9, 8, 7, 99]);
+      expect(isSubseq(local, merged), isTrue);
+      expect(isSubseq(incoming, merged), isTrue);
+    });
+
+    test('重疊中段缺一筆（incoming 少 t8）→ 去重不複製', () {
+      final local = [
         r(10, sec: 10),
         r(9, sec: 9),
         r(8, sec: 8),
-        r(99, sec: 7),
+        r(7, sec: 7),
+        r(6, sec: 6),
+      ];
+      final incoming = [r(10, sec: 10), r(9, sec: 9), r(7, sec: 7), r(6, sec: 6)];
+      final merged = mergeBackupRecords(local, incoming);
+      expect(merged.map((e) => e.resourceId), [10, 9, 8, 7, 6]);
+      expect(isSubseq(local, merged), isTrue);
+      expect(isSubseq(incoming, merged), isTrue);
+    });
+
+    test('同十連 incoming 多一筆（本機中段缺）→ 補齊不複製', () {
+      final local = [
+        r(30, sec: 30),
+        r(91, sec: 20),
+        r(92, sec: 20),
+        r(10, sec: 10),
+      ];
+      final incoming = [
+        r(30, sec: 30),
+        r(91, sec: 20),
+        r(92, sec: 20),
+        r(93, sec: 20),
+        r(10, sec: 10),
       ];
       final merged = mergeBackupRecords(local, incoming);
-      expect(merged.length, local.length + incoming.length);
+      expect(merged.map((e) => e.resourceId), [30, 91, 92, 93, 10]);
       expect(isSubseq(local, merged), isTrue);
       expect(isSubseq(incoming, merged), isTrue);
     });

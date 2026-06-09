@@ -1443,6 +1443,84 @@ void main() {
     },
   );
 
+  test(
+    'importAccounts: re-import with a mid-batch gap counts only new records, no duplication',
+    () async {
+      GachaRecord gr(int id, int sec) => GachaRecord(
+        resourceId: id,
+        qualityLevel: 5,
+        resourceType: '角色',
+        cardPoolType: '1',
+        name: 'x',
+        count: 1,
+        time: DateTime(2026, 5, 21, 11, 0, sec),
+      );
+
+      final storage = GachaStorage(tempDir);
+      // 本機完整：t10..t7
+      await storage.save(
+        BannerStorage(
+          playerId: '100000001',
+          languageCode: 'zh-Hant',
+          lastUpdated: DateTime.utc(2026, 1, 1),
+          banners: {
+            '1': [gr(10, 10), gr(9, 9), gr(8, 8), gr(7, 7)],
+          },
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          gachaStorageProvider.overrideWithValue(storage),
+          gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
+          cancellableHttpClientFactoryProvider.overrideWithValue(
+            () => CancellableHttpClient(
+              client: MockClient((_) async => http.Response('{}', 200)),
+              cancel: () {},
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(gachaRepositoryProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      // 匯入同 UID，但該池「中段缺 t8」
+      final bundle = AccountsBundle(
+        exportedAt: DateTime.utc(2026, 5, 12),
+        appVersion: 'x',
+        lastActiveUid: null,
+        accounts: [
+          ExportedAccount(
+            data: BannerStorage(
+              playerId: '100000001',
+              languageCode: 'zh-Hant',
+              lastUpdated: DateTime.utc(2026, 5, 12),
+              banners: {
+                '1': [gr(10, 10), gr(9, 9), gr(7, 7)],
+              },
+            ),
+          ),
+        ],
+      );
+
+      final result = await container
+          .read(gachaRepositoryProvider.notifier)
+          .debugImportOnly(bundle);
+
+      // 匯入的三筆本機都已有 → 0 新增、3 已存在；絕非「整批新增」
+      expect(result.addedRecords, 0);
+      expect(result.duplicateRecords, 3);
+      final merged = container
+          .read(gachaRepositoryProvider)
+          .byUid['100000001']!
+          .banners['1']!
+          .map((r) => r.resourceId)
+          .toList();
+      expect(merged, [10, 9, 8, 7]); // 無複製、t8 仍在
+    },
+  );
+
   group('logging instrumentation', () {
     setUp(() {
       Logger.root.level = Level.ALL;
