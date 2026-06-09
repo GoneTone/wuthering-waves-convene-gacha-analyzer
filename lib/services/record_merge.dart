@@ -167,12 +167,18 @@ bool _overlapEquals(
   return true;
 }
 
-/// 以「最短共同超序列」(SCS) 合併兩份皆由新到舊、且同為某條真實歷史子序列的清單。
+/// 以「最短共同超序列」(SCS) 合併兩份皆由新到舊、且同為某條真實歷史子序列的清單，
+/// 再對每個指紋封頂多重數，達成無條件「不漏且不重」。
 ///
-/// 供 [mergeBackupRecords] 在對不到「連續」重疊時使用（重疊中段缺筆／非連續輸入）：
-/// 先以 [recordsEqual] 跑 LCS，找出共同骨幹去重，僅補上各自真正缺少的筆，依
-/// [GachaRecord.time] 交錯（新到舊）。共同筆只輸出一次（取本機那份）—— 兩份皆為
-/// 輸出子序列（不漏），共同子序列只出現一次（不重）。LCS 為 0 時退化為依 time 交錯。
+/// 供 [mergeBackupRecords] 在對不到「連續」重疊時使用（重疊中段缺筆／非連續輸入）。
+/// (1) 以 [recordsEqual] 跑 LCS、回溯產生 SCS（共同筆取本機那份、各自獨有的筆按子
+/// 序列順序插入、LCS 平手點以 [GachaRecord.time] 較新者先、同 time 保留本機）；
+/// (2) 將每個指紋（time/resourceId/qualityLevel/count）的輸出次數封頂為
+/// max(在 local 的次數, 在 incoming 的次數)。
+///
+/// 性質：每個指紋的輸出數量 = max(local, incoming) → 任一來源的紀錄數量都不漏，且
+/// 無多餘複本。兩份若對「同一十連內重複道具」的順序不一致（只可能來自手改／第三方），
+/// 無法同時滿足兩種順序 → 以本機順序為準、取不重複者。
 List<GachaRecord> _mergeBySupersequence(
   List<GachaRecord> local,
   List<GachaRecord> incoming,
@@ -221,5 +227,47 @@ List<GachaRecord> _mergeBySupersequence(
   while (j < m) {
     merged.add(incoming[j++]);
   }
-  return merged;
+  return _capMultiplicity(merged, local, incoming);
+}
+
+/// 指紋字串（對齊 [recordsEqual] 的四欄位：time/resourceId/qualityLevel/count），
+/// 供多重數封頂統計用。
+String _fingerprint(GachaRecord r) =>
+    '${r.time.microsecondsSinceEpoch}|${r.time.isUtc}|${r.resourceId}'
+    '|${r.qualityLevel}|${r.count}';
+
+/// 將 [merged] 中每個指紋的出現次數封頂為 max(在 [local] 的次數, 在 [incoming] 的次數)，
+/// 移除 SCS 為同時滿足兩序列順序而生的多餘複本。封頂值不低於任一來源的次數，故任何
+/// 指紋的「數量」都不漏；超出上限的複本（僅在兩份對同十連內重複道具順序不一致時出現）
+/// 被丟棄，達成無條件不重複。
+List<GachaRecord> _capMultiplicity(
+  List<GachaRecord> merged,
+  List<GachaRecord> local,
+  List<GachaRecord> incoming,
+) {
+  final localCount = <String, int>{};
+  for (final r in local) {
+    final k = _fingerprint(r);
+    localCount[k] = (localCount[k] ?? 0) + 1;
+  }
+  final incomingCount = <String, int>{};
+  for (final r in incoming) {
+    final k = _fingerprint(r);
+    incomingCount[k] = (incomingCount[k] ?? 0) + 1;
+  }
+
+  final emitted = <String, int>{};
+  final capped = <GachaRecord>[];
+  for (final r in merged) {
+    final k = _fingerprint(r);
+    final lc = localCount[k] ?? 0;
+    final ic = incomingCount[k] ?? 0;
+    final limit = lc > ic ? lc : ic;
+    final used = emitted[k] ?? 0;
+    if (used < limit) {
+      capped.add(r);
+      emitted[k] = used + 1;
+    }
+  }
+  return capped;
 }

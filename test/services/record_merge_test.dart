@@ -370,5 +370,29 @@ void main() {
       expect(isSubseq(local, merged), isTrue);
       expect(isSubseq(incoming, merged), isTrue);
     });
+
+    test('Case 3 重複指紋 + 兩份順序不一 → 多重數封頂、無條件不重複', () {
+      // 同十連 t6 內 4@6 於兩份備份順序不一致，且整體非連續（落到序列合併）。
+      // SCS 本會把 4@6 複製成兩筆；封頂後每個指紋只依 max 次數輸出。
+      final local = [r(4, sec: 15), r(1, sec: 12), r(4, sec: 6), r(0, sec: 6)];
+      final incoming = [
+        r(4, sec: 15),
+        r(1, sec: 12),
+        r(2, sec: 9),
+        r(0, sec: 6),
+        r(4, sec: 6),
+      ];
+      final merged = mergeBackupRecords(local, incoming);
+      int countFp(int id, int sec) => merged
+          .where((e) => e.resourceId == id && e.time.second == sec)
+          .length;
+      expect(merged.map((e) => e.resourceId), [4, 1, 2, 4, 0]);
+      expect(merged.length, 5); // 無複製
+      expect(countFp(4, 6), 1); // 重複指紋只一份（非兩份）
+      expect(countFp(0, 6), 1);
+      expect(countFp(2, 9), 1); // incoming 獨有，補入
+      // 本機完整保留為子序列（incoming 的衝突順序不保證，但其每筆指紋仍在）
+      expect(isSubseq(local, merged), isTrue);
+    });
   });
 }
