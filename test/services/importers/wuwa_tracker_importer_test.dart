@@ -82,4 +82,26 @@ void main() {
     const bad = '{"playerId": "701146588", "pulls": {}}';
     expect(() => importer.parse(bad), throwsA(isA<ForeignBundleException>()));
   });
+
+  test('empty pulls → valid bundle with no banners', () {
+    const empty = '{"playerId": "701146588", "pulls": []}';
+    final bundle = importer.parse(empty);
+    expect(bundle.accounts.single.data.playerId, '701146588');
+    expect(bundle.accounts.single.data.banners, isEmpty);
+  });
+
+  test('same-timestamp records keep original array order (stable)', () {
+    const sameTime = '''
+{
+  "playerId": "701146588",
+  "pulls": [
+    {"cardPoolType": 1, "resourceId": 1101, "qualityLevel": 4, "name": "First", "time": "2026-05-21T03:03:18+00:00"},
+    {"cardPoolType": 1, "resourceId": 1102, "qualityLevel": 4, "name": "Second", "time": "2026-05-21T03:03:18+00:00"},
+    {"cardPoolType": 1, "resourceId": 1103, "qualityLevel": 4, "name": "Third", "time": "2026-05-21T03:03:18+00:00"}
+  ]
+}
+''';
+    final pool = importer.parse(sameTime).accounts.single.data.banners['1']!;
+    expect(pool.map((r) => r.name).toList(), ['First', 'Second', 'Third']);
+  });
 }
