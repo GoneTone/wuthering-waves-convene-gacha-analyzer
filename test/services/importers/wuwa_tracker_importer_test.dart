@@ -38,18 +38,21 @@ void main() {
     expect(banners['1'], hasLength(2));
   });
 
-  test('converts UTC time to CST (+8) wall-clock matching official capture', () {
-    final banners = importer.parse(_sample).accounts.single.data.banners;
-    // 由新到舊：Sword 11:03:18 在前，Denia 10:39:03 在後。
-    final sword = banners['1']![0];
-    final denia = banners['1']![1];
-    expect(sword.name, 'Sword of Night');
-    expect(sword.time, parseGachaTime('2026-05-21 11:03:18'));
-    expect(denia.name, 'Denia');
-    expect(denia.time, parseGachaTime('2026-05-21 10:39:03'));
-    // 與官方擷取一致：local-kind DateTime（isUtc=false）。
-    expect(sword.time.isUtc, isFalse);
-  });
+  test(
+    'converts UTC time to CST (+8) wall-clock matching official capture',
+    () {
+      final banners = importer.parse(_sample).accounts.single.data.banners;
+      // 由新到舊：Sword 11:03:18 在前，Denia 10:39:03 在後。
+      final sword = banners['1']![0];
+      final denia = banners['1']![1];
+      expect(sword.name, 'Sword of Night');
+      expect(sword.time, parseGachaTime('2026-05-21 11:03:18'));
+      expect(denia.name, 'Denia');
+      expect(denia.time, parseGachaTime('2026-05-21 10:39:03'));
+      // 與官方擷取一致：local-kind DateTime（isUtc=false）。
+      expect(sword.time.isUtc, isFalse);
+    },
+  );
 
   test('fills count=1, languageCode=en, and canonical kind resourceType', () {
     final banners = importer.parse(_sample).accounts.single.data.banners;

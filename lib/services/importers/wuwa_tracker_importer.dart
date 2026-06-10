@@ -68,7 +68,9 @@ class WuwaTrackerImporter implements PlatformImporter {
     final playerId = raw['playerId'];
     final pulls = raw['pulls'];
     if (playerId is! String || playerId.isEmpty || pulls is! List) {
-      _log.warning('wuwa_tracker import: missing playerId/pulls (foreign file)');
+      _log.warning(
+        'wuwa_tracker import: missing playerId/pulls (foreign file)',
+      );
       // 缺頂層 playerId / pulls：不是 WuWa Tracker 的 pulls 匯出。
       throw const ForeignBundleException();
     }
@@ -86,35 +88,37 @@ class WuwaTrackerImporter implements PlatformImporter {
           continue;
         }
         final resourceId = (entry['resourceId'] as num).toInt();
-        banners.putIfAbsent(cardPoolType, () => <GachaRecord>[]).add(
-          GachaRecord(
-            resourceId: resourceId,
-            qualityLevel: (entry['qualityLevel'] as num).toInt(),
-            // resourceType 缺：存 canonical kind 鍵（4 碼角色、8 碼武器）。匯入後
-            // encore 分類接手，少數 8 碼道具會被修正為 kItemKindItem。見 spec §3。
-            resourceType: resourceId.toString().length <= 4
-                ? kItemKindCharacter
-                : kItemKindWeapon,
-            cardPoolType: cardPoolType,
-            name: entry['name'] as String,
-            count: 1,
-            // WHY：WuWa Tracker 的 time 是帶 `+00:00` 後綴的 UTC instant（已驗證全
-            // 檔皆然），鳴潮全球統一 CST(+8)。因輸入帶時區後綴，DateTime.parse 取到
-            // 絕對 instant、toUtc() 規範化後 +8 → format 成牆鐘字串 → parse 回
-            // local-kind DateTime，與官方擷取的 time 表示法（local-kind、相同欄位）
-            // 完全一致；recordsEqual 依 DateTime==（含 isUtc 旗標）比對，唯有同表示
-            // 法才對得齊。註：本還原依賴輸入帶時區後綴；若未來變體改給 naive 字串，
-            // toUtc() 會改用裝置時區轉換，屆時需另行處理。
-            time: parseGachaTime(
-              formatGachaTime(
-                DateTime.parse(entry['time'] as String)
-                    .toUtc()
-                    .add(kWuwaServerUtcOffset),
+        banners
+            .putIfAbsent(cardPoolType, () => <GachaRecord>[])
+            .add(
+              GachaRecord(
+                resourceId: resourceId,
+                qualityLevel: (entry['qualityLevel'] as num).toInt(),
+                // resourceType 缺：存 canonical kind 鍵（4 碼角色、8 碼武器）。匯入後
+                // encore 分類接手，少數 8 碼道具會被修正為 kItemKindItem。見 spec §3。
+                resourceType: resourceId.toString().length <= 4
+                    ? kItemKindCharacter
+                    : kItemKindWeapon,
+                cardPoolType: cardPoolType,
+                name: entry['name'] as String,
+                count: 1,
+                // WHY：WuWa Tracker 的 time 是帶 `+00:00` 後綴的 UTC instant（已驗證全
+                // 檔皆然），鳴潮全球統一 CST(+8)。因輸入帶時區後綴，DateTime.parse 取到
+                // 絕對 instant、toUtc() 規範化後 +8 → format 成牆鐘字串 → parse 回
+                // local-kind DateTime，與官方擷取的 time 表示法（local-kind、相同欄位）
+                // 完全一致；recordsEqual 依 DateTime==（含 isUtc 旗標）比對，唯有同表示
+                // 法才對得齊。註：本還原依賴輸入帶時區後綴；若未來變體改給 naive 字串，
+                // toUtc() 會改用裝置時區轉換，屆時需另行處理。
+                time: parseGachaTime(
+                  formatGachaTime(
+                    DateTime.parse(
+                      entry['time'] as String,
+                    ).toUtc().add(kWuwaServerUtcOffset),
+                  ),
+                ),
+                languageCode: 'en',
               ),
-            ),
-            languageCode: 'en',
-          ),
-        );
+            );
       }
 
       // 每池由新到舊；同 time 以原陣列順序穩定 tiebreak（decorate-sort 保決定性）。
@@ -132,7 +136,7 @@ class WuwaTrackerImporter implements PlatformImporter {
       final rawDate = raw['date'];
       final exportedAt =
           (rawDate is String ? DateTime.tryParse(rawDate)?.toUtc() : null) ??
-              DateTime.now().toUtc();
+          DateTime.now().toUtc();
 
       final total = banners.values.fold<int>(0, (a, b) => a + b.length);
       _log.info(

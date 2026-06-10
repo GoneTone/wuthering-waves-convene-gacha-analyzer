@@ -661,7 +661,9 @@ class _DataManagement extends ConsumerWidget {
   /// 從第三方平台匯入：選平台 → 選檔 → 解析 → 共用下游 [_runBundleImport]。
   Future<void> _importFromPlatform(BuildContext ctx, WidgetRef ref) async {
     final l = AppLocalizations.of(ctx)!;
-    final PlatformImporter? platform = await showPlatformPickerDialog(context: ctx);
+    final PlatformImporter? platform = await showPlatformPickerDialog(
+      context: ctx,
+    );
     if (platform == null) return;
     if (!ctx.mounted) return;
 
@@ -676,7 +678,9 @@ class _DataManagement extends ConsumerWidget {
     try {
       text = await file.readAsString();
     } catch (e, st) {
-      Logger('wish.import.platform').warning('platform import: unable to read file', e, st);
+      Logger(
+        'wish.import.platform',
+      ).warning('platform import: unable to read file', e, st);
       if (!ctx.mounted) return;
       _showSnack(ctx, l.settingsImportFailed(l.importReasonUnreadable));
       return;
