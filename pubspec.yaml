@@ -1,7 +1,7 @@
 name: wuthering_waves_convene_gacha_analyzer
 description: "鳴潮喚取卡池分析 Wuthering Waves Convene Gacha Analyzer | A utility for analyzing gacha history, where all data and numbers are well-organized in a convenient manner!"
 publish_to: 'none'
-version: 1.1.0+4
+version: 1.2.0+5
 
 environment:
   sdk: ^3.11.5
