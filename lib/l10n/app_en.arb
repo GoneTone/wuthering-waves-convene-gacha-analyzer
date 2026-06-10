@@ -507,7 +507,7 @@
   "settingsImageCacheClearGalleryFailed": "Failed to clear detail images",
   "settingsExportData": "Export data",
   "settingsImportData": "Import data",
-  "settingsImportOtherPlatform": "Import data (other platforms)",
+  "settingsImportOtherPlatform": "Import from other platforms",
   "platformPickerTitle": "Select a source platform",
   "platformWuwaTracker": "WuWa Tracker",
   "platformWuwaTrackerSubtitle": "wuwatracker.com・pulls JSON",
@@ -590,6 +590,13 @@
   "importReasonUnreadable": "Unable to read the file",
   "importReasonForeignApp": "This file was not exported by this app",
   "importReasonNotPlatformFile": "This file is not a valid {platform} export",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "Unable to write the file, please check the save location and permissions",
   "settingsImportFailed": "Import failed: {reason}",
   "@settingsImportFailed": {
