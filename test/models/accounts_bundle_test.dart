@@ -45,7 +45,7 @@ void main() {
     expect(back.accounts[1].alias, isNull);
   });
 
-  test('schema_version != 2（不相容的舊備份 version=1）→ 友善訊息', () {
+  test('schema_version != 2（version=1）→ UnsupportedSchemaVersionException', () {
     final json = {
       'schema_version': 1,
       'exported_at': '2026-05-21T00:00:00.000Z',
@@ -55,16 +55,16 @@ void main() {
     expect(
       () => AccountsBundle.fromJson(json),
       throwsA(
-        isA<FormatException>().having(
-          (e) => e.message,
-          'message',
-          contains('不相容'),
+        isA<UnsupportedSchemaVersionException>().having(
+          (e) => e.version,
+          'version',
+          1,
         ),
       ),
     );
   });
 
-  test('schema_version 為較新版本（999）→ 同樣拒絕', () {
+  test('schema_version 為較新版本（999）→ UnsupportedSchemaVersionException', () {
     final json = {
       'schema_version': 999,
       'exported_at': '2026-05-21T00:00:00.000Z',
@@ -72,7 +72,7 @@ void main() {
     };
     expect(
       () => AccountsBundle.fromJson(json),
-      throwsA(isA<FormatException>()),
+      throwsA(isA<UnsupportedSchemaVersionException>()),
     );
   });
 
