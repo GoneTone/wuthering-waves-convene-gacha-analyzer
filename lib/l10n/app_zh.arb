@@ -384,6 +384,10 @@
   "settingsImageCacheClearGalleryFailed": "清除詳情圖快取失敗",
   "settingsExportData": "匯出資料",
   "settingsImportData": "匯入資料",
+  "settingsImportOtherPlatform": "匯入資料（其他平台）",
+  "platformPickerTitle": "選擇匯入來源平台",
+  "platformWuwaTracker": "WuWa Tracker",
+  "platformWuwaTrackerSubtitle": "wuwatracker.com・pulls JSON",
   "shareImageButton": "生成分享圖",
   "shareImageDialogTitle": "分享圖設定",
   "shareImageThemeLabel": "主題",
@@ -434,6 +438,10 @@
   "importReasonIncompatibleVersion": "此備份的資料版本與目前 App 不相容，無法匯入",
   "importReasonUnreadable": "無法讀取檔案",
   "importReasonForeignApp": "此檔案不是由本軟體匯出的備份",
+  "importReasonNotPlatformFile": "此檔案不是有效的 {platform} 匯出檔",
+  "@importReasonNotPlatformFile": {
+    "placeholders": { "platform": { "type": "String" } }
+  },
   "exportReasonWriteFailed": "無法寫入檔案，請確認儲存位置與權限",
   "settingsImportFailed": "匯入失敗：{reason}",
   "@settingsImportFailed": {

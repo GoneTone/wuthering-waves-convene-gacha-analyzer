@@ -505,6 +505,10 @@
   "settingsImageCacheClearGalleryFailed": "詳細画像のクリアに失敗しました",
   "settingsExportData": "データをエクスポート",
   "settingsImportData": "データをインポート",
+  "settingsImportOtherPlatform": "データをインポート（他プラットフォーム）",
+  "platformPickerTitle": "インポート元のプラットフォームを選択",
+  "platformWuwaTracker": "WuWa Tracker",
+  "platformWuwaTrackerSubtitle": "wuwatracker.com・pulls JSON",
   "shareImageButton": "シェア画像を生成",
   "shareImageDialogTitle": "シェア画像の設定",
   "shareImageThemeLabel": "テーマ",
@@ -582,6 +586,7 @@
   "importReasonInvalidFormat": "ファイル形式が正しくないか、ファイルが破損しています",
   "importReasonUnreadable": "ファイルを読み込めません",
   "importReasonForeignApp": "このファイルは本ツールでエクスポートされたバックアップではありません",
+  "importReasonNotPlatformFile": "このファイルは有効な {platform} のエクスポートではありません",
   "exportReasonWriteFailed": "ファイルを書き込めません。保存先と権限を確認してください",
   "settingsImportFailed": "インポートに失敗しました：{reason}",
   "@settingsImportFailed": {

@@ -501,6 +501,10 @@
   "settingsImageCacheClearGalleryFailed": "清除详情图缓存失败",
   "settingsExportData": "导出数据",
   "settingsImportData": "导入数据",
+  "settingsImportOtherPlatform": "导入数据（其他平台）",
+  "platformPickerTitle": "选择导入来源平台",
+  "platformWuwaTracker": "WuWa Tracker",
+  "platformWuwaTrackerSubtitle": "wuwatracker.com・pulls JSON",
   "shareImageButton": "生成分享图",
   "shareImageDialogTitle": "分享图设置",
   "shareImageThemeLabel": "主题",
@@ -578,6 +582,7 @@
   "importReasonInvalidFormat": "文件格式不正确或已损坏",
   "importReasonUnreadable": "无法读取文件",
   "importReasonForeignApp": "此文件不是由本软件导出的备份",
+  "importReasonNotPlatformFile": "此文件不是有效的 {platform} 导出文件",
   "exportReasonWriteFailed": "无法写入文件，请确认保存位置与权限",
   "settingsImportFailed": "导入失败：{reason}",
   "@settingsImportFailed": {

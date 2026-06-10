@@ -17,6 +17,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_export.
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/file_reveal.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/platform_import.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/localization_metadata.dart';
@@ -36,6 +37,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/accounts_
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/current_release_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/platform_picker_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/other_game_versions.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/page_header.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/translator_text.dart';
@@ -380,6 +382,13 @@ class _DataManagement extends ConsumerWidget {
           icon: const Icon(Icons.upload_outlined, size: 18),
           label: Text(l.settingsImportData),
         ),
+        OutlinedButton.icon(
+          onPressed: progress != null
+              ? null
+              : () => _importFromPlatform(context, ref),
+          icon: const Icon(Icons.cloud_sync_outlined, size: 18),
+          label: Text(l.settingsImportOtherPlatform),
+        ),
         FilledButton.icon(
           style: FilledButton.styleFrom(
             backgroundColor: Theme.of(context).gacha.stateDanger,
@@ -541,6 +550,19 @@ class _DataManagement extends ConsumerWidget {
       return;
     }
 
+    if (!ctx.mounted) return;
+    await _runBundleImport(ctx, ref, bundle);
+  }
+
+  /// 拿到（已解析的）[bundle] 後的共用匯入下游：帳號挑選 → 確認 → 寫入＋補圖。
+  /// 由本軟體備份匯入（[_import]）與第三方平台匯入（[_importFromPlatform]）共用。
+  Future<void> _runBundleImport(
+    BuildContext ctx,
+    WidgetRef ref,
+    AccountsBundle bundle,
+  ) async {
+    final l = AppLocalizations.of(ctx)!;
+
     // Picker：列出檔案內的帳號讓使用者勾選。
     final existing = ref.read(gachaRepositoryProvider).byUid.keys.toSet();
     final entries = [
@@ -634,6 +656,56 @@ class _DataManagement extends ConsumerWidget {
             jsonEncode(filteredBundle.toJson()),
           ),
     );
+  }
+
+  /// 從第三方平台匯入：選平台 → 選檔 → 解析 → 共用下游 [_runBundleImport]。
+  Future<void> _importFromPlatform(BuildContext ctx, WidgetRef ref) async {
+    final l = AppLocalizations.of(ctx)!;
+    final PlatformImporter? platform = await showPlatformPickerDialog(
+      context: ctx,
+    );
+    if (platform == null) return;
+    if (!ctx.mounted) return;
+
+    final file = await openFile(
+      acceptedTypeGroups: [
+        XTypeGroup(label: 'JSON', extensions: platform.fileExtensions),
+      ],
+    );
+    if (file == null) return;
+
+    final String text;
+    try {
+      text = await file.readAsString();
+    } catch (e, st) {
+      Logger(
+        'wish.import.platform',
+      ).warning('platform import: unable to read file', e, st);
+      if (!ctx.mounted) return;
+      _showSnack(ctx, l.settingsImportFailed(l.importReasonUnreadable));
+      return;
+    }
+
+    final AccountsBundle bundle;
+    try {
+      bundle = platform.parse(text);
+    } on ForeignBundleException {
+      if (!ctx.mounted) return;
+      _showSnack(
+        ctx,
+        l.settingsImportFailed(
+          l.importReasonNotPlatformFile(platform.displayName(l)),
+        ),
+      );
+      return;
+    } on FormatException {
+      if (!ctx.mounted) return;
+      _showSnack(ctx, l.settingsImportFailed(l.importReasonInvalidFormat));
+      return;
+    }
+
+    if (!ctx.mounted) return;
+    await _runBundleImport(ctx, ref, bundle);
   }
 
   /// 清除當前 UID [uid] 的所有資料，需使用者輸入 UID 確認。

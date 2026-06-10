@@ -129,4 +129,56 @@ void main() {
       reason: 'progress 非 null 時匯入按鈕應 disabled',
     );
   });
+
+  testWidgets('progress 為 null：其他平台匯入按鈕 enabled', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    late ProviderContainer container;
+    await tester.runAsync(() async {
+      container = await _setupContainer(
+        storage: GachaStorage(tempDir),
+        tempDir: tempDir,
+      );
+    });
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_wrap(container));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final btn = find.widgetWithText(OutlinedButton, '匯入資料（其他平台）');
+    expect(btn, findsOneWidget);
+    expect(
+      tester.widget<OutlinedButton>(btn).onPressed,
+      isNotNull,
+      reason: '其他平台匯入按鈕在 progress 為 null 時應 enabled',
+    );
+  });
+
+  testWidgets('progress 非 null：其他平台匯入按鈕 disabled', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    late ProviderContainer container;
+    await tester.runAsync(() async {
+      container = await _setupContainer(
+        storage: GachaStorage(tempDir),
+        tempDir: tempDir,
+      );
+    });
+    addTearDown(container.dispose);
+
+    container
+        .read(gachaRepositoryProvider.notifier)
+        .debugSetProgress(const Preparing());
+
+    await tester.pumpWidget(_wrap(container));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final btn = find.widgetWithText(OutlinedButton, '匯入資料（其他平台）');
+    expect(btn, findsOneWidget);
+    expect(
+      tester.widget<OutlinedButton>(btn).onPressed,
+      isNull,
+      reason: 'progress 非 null 時其他平台匯入按鈕應 disabled',
+    );
+  });
 }
