@@ -1,5 +1,5 @@
 {
-  "@@locale": "zh_Hans",
+  "@@locale": "zh-CN",
   "localeNativeName": "简体中文",
   "localeTranslatorLabel": "翻译者：{translator}",
   "@localeNativeName": {
@@ -501,7 +501,7 @@
   "settingsImageCacheClearGalleryFailed": "清除详情图缓存失败",
   "settingsExportData": "导出数据",
   "settingsImportData": "导入数据",
-  "settingsImportOtherPlatform": "导入数据（其他平台）",
+  "settingsImportOtherPlatform": "从其他平台导入",
   "platformPickerTitle": "选择导入来源平台",
   "platformWuwaTracker": "WuWa Tracker",
   "platformWuwaTrackerSubtitle": "wuwatracker.com・pulls JSON",
@@ -583,6 +583,13 @@
   "importReasonUnreadable": "无法读取文件",
   "importReasonForeignApp": "此文件不是由本软件导出的备份",
   "importReasonNotPlatformFile": "此文件不是有效的 {platform} 导出文件",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "无法写入文件，请确认保存位置与权限",
   "settingsImportFailed": "导入失败：{reason}",
   "@settingsImportFailed": {
