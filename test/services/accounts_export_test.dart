@@ -55,6 +55,20 @@ void main() {
     expect(out.contains('\n  '), isTrue);
   });
 
+  test('export writes the app identifier', () {
+    final byUid = {'A': _bs('A', DateTime.utc(2026, 5, 10))};
+    final out = exportAccounts(
+      byUid: byUid,
+      uidOrder: const ['A'],
+      uidAliases: const {},
+      lastActiveUid: null,
+      appVersion: '9.9.9',
+      now: DateTime.utc(2026, 5, 12),
+    );
+    final decoded = jsonDecode(out) as Map<String, dynamic>;
+    expect(decoded['app'], 'wuthering_waves_convene_gacha_analyzer');
+  });
+
   test('exports only the byUid subset it was given', () {
     // byUid 只塞兩個，模擬 picker 過濾後的子集
     final byUid = {

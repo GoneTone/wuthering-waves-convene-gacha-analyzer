@@ -1,5 +1,10 @@
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 
+/// 本軟體的匯出識別字串，寫入備份檔的 `app` 欄位供匯入端辨識來源。
+///
+/// 值對齊 pubspec 套件名；姐妹專案（原神）為 `genshin_impact_wish_gacha_analyzer`，天生相異。
+const String accountsBundleAppId = 'wuthering_waves_convene_gacha_analyzer';
+
 /// 匯入檔的 schema 版本與目前 App 支援版本不符時拋出，供 UI 給出「版本不相容」訊息。
 class UnsupportedSchemaVersionException implements Exception {
   /// 建立 [UnsupportedSchemaVersionException]。
@@ -67,6 +72,7 @@ class AccountsBundle {
   /// 序列化為 JSON。
   Map<String, dynamic> toJson() => {
     'schema_version': schemaVersion,
+    'app': accountsBundleAppId,
     'exported_at': exportedAt.toUtc().toIso8601String(),
     'app_version': appVersion,
     'last_active_uid': lastActiveUid,
