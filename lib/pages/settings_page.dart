@@ -16,8 +16,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.da
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_export.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/file_reveal.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/platform_picker_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/platform_import.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/localization_metadata.dart';
@@ -37,6 +37,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/accounts_
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/current_release_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/platform_picker_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/other_game_versions.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/page_header.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/translator_text.dart';
@@ -660,7 +661,7 @@ class _DataManagement extends ConsumerWidget {
   /// 從第三方平台匯入：選平台 → 選檔 → 解析 → 共用下游 [_runBundleImport]。
   Future<void> _importFromPlatform(BuildContext ctx, WidgetRef ref) async {
     final l = AppLocalizations.of(ctx)!;
-    final platform = await showPlatformPickerDialog(context: ctx);
+    final PlatformImporter? platform = await showPlatformPickerDialog(context: ctx);
     if (platform == null) return;
     if (!ctx.mounted) return;
 
@@ -675,7 +676,7 @@ class _DataManagement extends ConsumerWidget {
     try {
       text = await file.readAsString();
     } catch (e, st) {
-      Logger('wish.import.platform').warning('read failed', e, st);
+      Logger('wish.import.platform').warning('platform import: unable to read file', e, st);
       if (!ctx.mounted) return;
       _showSnack(ctx, l.settingsImportFailed(l.importReasonUnreadable));
       return;
