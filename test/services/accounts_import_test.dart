@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
 
 void main() {
@@ -42,4 +43,15 @@ void main() {
       ),
     );
   });
+
+  test(
+    'schema_version 不符 → UnsupportedSchemaVersionException（不被吞成 FormatException）',
+    () {
+      const text = '{"schema_version": 1, "accounts": []}';
+      expect(
+        () => importAccounts(text),
+        throwsA(isA<UnsupportedSchemaVersionException>()),
+      );
+    },
+  );
 }

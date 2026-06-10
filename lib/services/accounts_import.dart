@@ -23,6 +23,9 @@ AccountsBundle importAccounts(String text) {
   }
   try {
     return AccountsBundle.fromJson(raw);
+  } on UnsupportedSchemaVersionException catch (e) {
+    _log.warning('import failed: unsupported schema version ${e.version}');
+    rethrow;
   } on FormatException catch (e) {
     _log.warning('import failed: ${e.message}');
     rethrow;
