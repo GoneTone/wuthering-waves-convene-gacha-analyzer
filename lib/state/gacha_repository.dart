@@ -1168,11 +1168,8 @@ class GachaRepository extends Notifier<GachaState> {
       code,
       message,
     ),
-    FormatException(:final message) => UpdateErrorOther(message),
-    http.ClientException(:final message, :final uri) => UpdateErrorOther(
-      uri != null ? '$message ($uri)' : message,
-    ),
-    _ => UpdateErrorOther(e.toString()),
+    http.ClientException() => const UpdateErrorNetwork(),
+    _ => const UpdateErrorUnexpected(),
   };
 
   /// 強制覆寫 progress 狀態，僅供測試使用。

@@ -318,7 +318,7 @@ void main() {
 
     final progress = container.read(gachaRepositoryProvider).progress;
     expect(progress, isA<UpdateFailed>());
-    expect((progress as UpdateFailed).error, isA<UpdateErrorOther>());
+    expect((progress as UpdateFailed).error, isA<UpdateErrorNetwork>());
   });
 
   test('clearProgress 把 progress 重設為 null', () async {
@@ -340,7 +340,7 @@ void main() {
     // 等 bootstrap 完成，避免 async 工作洩漏到測試邊界後
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
-    notifier.debugSetProgress(const UpdateFailed(UpdateErrorOther('test')));
+    notifier.debugSetProgress(const UpdateFailed(UpdateErrorUnexpected()));
     expect(
       container.read(gachaRepositoryProvider).progress,
       isA<UpdateFailed>(),

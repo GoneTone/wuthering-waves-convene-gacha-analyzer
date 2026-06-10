@@ -198,6 +198,8 @@
 
   "errorGachaFailed": "重新擷取後仍無法取得記錄，伺服器可能暫時異常，請稍後再試",
   "errorNoRecords": "此帳號尚無任何卡池紀錄",
+  "errorNetwork": "網路連線失敗，請檢查網路後重試",
+  "errorUnexpected": "發生未預期的錯誤，請稍後再試",
 
   "pageOverviewTitle": "綜合數據（全卡池合計）",
   "pageOverviewGachaSection": "喚取綜合",
@@ -428,6 +430,10 @@
   "@settingsImportConfirmPreserveFooter": {
     "placeholders": { "uids": { "type": "String" } }
   },
+  "importReasonInvalidFormat": "檔案格式不正確或已損毀",
+  "importReasonIncompatibleVersion": "此備份的資料版本與目前 App 不相容，無法匯入",
+  "importReasonUnreadable": "無法讀取檔案",
+  "exportReasonWriteFailed": "無法寫入檔案，請確認儲存位置與權限",
   "settingsImportFailed": "匯入失敗：{reason}",
   "@settingsImportFailed": {
     "placeholders": { "reason": { "type": "String" } }

@@ -575,6 +575,9 @@
       }
     }
   },
+  "importReasonInvalidFormat": "文件格式不正确或已损坏",
+  "importReasonUnreadable": "无法读取文件",
+  "exportReasonWriteFailed": "无法写入文件，请确认保存位置与权限",
   "settingsImportFailed": "导入失败：{reason}",
   "@settingsImportFailed": {
     "placeholders": {

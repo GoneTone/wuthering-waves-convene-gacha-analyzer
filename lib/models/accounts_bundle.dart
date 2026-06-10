@@ -1,5 +1,14 @@
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 
+/// 匯入檔的 schema 版本與目前 App 支援版本不符時拋出，供 UI 給出「版本不相容」訊息。
+class UnsupportedSchemaVersionException implements Exception {
+  /// 建立 [UnsupportedSchemaVersionException]。
+  const UnsupportedSchemaVersionException(this.version);
+
+  /// 匯入檔宣告的 schema 版本（與 [AccountsBundle.currentSchemaVersion] 不符）。
+  final int version;
+}
+
 /// 單一匯出帳號：包含喚取資料與選填別名。
 class ExportedAccount {
   /// 建立 [ExportedAccount]。
@@ -64,17 +73,15 @@ class AccountsBundle {
     'accounts': accounts.map((a) => a.toJson()).toList(growable: false),
   };
 
-  /// 從 JSON 還原 [AccountsBundle]，schema 版本不相容時丟 [FormatException]。
+  /// 從 JSON 還原 [AccountsBundle]，schema 版本不符時丟
+  /// [UnsupportedSchemaVersionException]，其餘格式錯誤丟 [FormatException]。
   factory AccountsBundle.fromJson(Map<String, dynamic> json) {
     final version = json['schema_version'];
     if (version is! int) {
       throw const FormatException('Missing or invalid "schema_version"');
     }
     if (version != currentSchemaVersion) {
-      throw FormatException(
-        'schema_version=$version 與本版（$currentSchemaVersion）不相容：'
-        '此備份來自不相容的舊版本，無法匯入。',
-      );
+      throw UnsupportedSchemaVersionException(version);
     }
 
     final rawAccounts = json['accounts'];

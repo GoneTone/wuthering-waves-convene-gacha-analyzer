@@ -7,8 +7,9 @@ import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.da
 /// Logger 實例（帳號匯入/匯出）。
 final _log = Logger('accounts.io');
 
-/// 把 JSON 文字解析回 [AccountsBundle]。任何結構或型別不符都會
-/// 統一拋出 [FormatException]，給 UI 顯示用。
+/// 把 JSON 文字解析回 [AccountsBundle]。schema 版本不符時原樣上拋
+/// [UnsupportedSchemaVersionException]；其餘結構或型別不符統一拋出
+/// [FormatException]，皆供 UI 挑在地化文案顯示。
 AccountsBundle importAccounts(String text) {
   Object? raw;
   try {
@@ -23,6 +24,9 @@ AccountsBundle importAccounts(String text) {
   }
   try {
     return AccountsBundle.fromJson(raw);
+  } on UnsupportedSchemaVersionException catch (e) {
+    _log.warning('import failed: unsupported schema version ${e.version}');
+    rethrow;
   } on FormatException catch (e) {
     _log.warning('import failed: ${e.message}');
     rethrow;

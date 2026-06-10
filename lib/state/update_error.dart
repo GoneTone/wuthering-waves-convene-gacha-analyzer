@@ -22,13 +22,16 @@ class UpdateErrorNoRecords extends UpdateError {
   const UpdateErrorNoRecords();
 }
 
-/// fallback：訊息已是 user-readable（多半來自 FormatException 等），直接顯示。
-class UpdateErrorOther extends UpdateError {
-  /// 建立 [UpdateErrorOther]，[message] 為直接顯示給使用者的錯誤訊息。
-  const UpdateErrorOther(this.message);
+/// 網路層失敗（連線中斷／逾時等）。技術細節（含脫敏 URL）只進 log。
+class UpdateErrorNetwork extends UpdateError {
+  /// 建立 [UpdateErrorNetwork]。
+  const UpdateErrorNetwork();
+}
 
-  /// 直接顯示給使用者的錯誤訊息。
-  final String message;
+/// 未預期的錯誤（解析失敗等非可行動原因的收斂桶）。技術細節只進 log。
+class UpdateErrorUnexpected extends UpdateError {
+  /// 建立 [UpdateErrorUnexpected]。
+  const UpdateErrorUnexpected();
 }
 
 /// 強制重抓物品圖片時，清空 index 或 cache 目錄階段失敗。

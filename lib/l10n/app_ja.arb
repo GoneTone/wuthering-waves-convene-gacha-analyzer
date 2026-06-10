@@ -579,6 +579,9 @@
       }
     }
   },
+  "importReasonInvalidFormat": "ファイル形式が正しくないか、ファイルが破損しています",
+  "importReasonUnreadable": "ファイルを読み込めません",
+  "exportReasonWriteFailed": "ファイルを書き込めません。保存先と権限を確認してください",
   "settingsImportFailed": "インポートに失敗しました：{reason}",
   "@settingsImportFailed": {
     "placeholders": {

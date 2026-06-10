@@ -8,4 +8,14 @@ void main() {
     expect(e.code, -1);
     expect(e.message, '请求游戏获取日志异常!');
   });
+
+  test('UpdateErrorNetwork is a const UpdateError', () {
+    const e = UpdateErrorNetwork();
+    expect(e, isA<UpdateError>());
+  });
+
+  test('UpdateErrorUnexpected is a const UpdateError', () {
+    const e = UpdateErrorUnexpected();
+    expect(e, isA<UpdateError>());
+  });
 }
