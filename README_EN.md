@@ -65,6 +65,13 @@ The utility may trigger anti-virus software during installation and execution. T
 - Automatic update check on launch, with a manual trigger in Settings
 - All data stays on your machine — nothing is uploaded
 
+## Supported Third-Party Import Platforms
+
+Besides importing this utility's own backup files, you can also import convene history data exported from the following third-party platforms (Settings → *Import data (other platforms)*):
+
+- [WuWa Tracker](https://wuwatracker.com/)
+- More platforms may be supported in the future...
+
 ## Screenshot
 
 ![Overview page](docs/images/en/1.png)
