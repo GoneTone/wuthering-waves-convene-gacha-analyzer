@@ -86,7 +86,7 @@ class AccountsBundle {
     if (version is! int) {
       throw const FormatException('Missing or invalid "schema_version"');
     }
-    if (version != currentSchemaVersion) {
+    if (version > currentSchemaVersion) {
       throw UnsupportedSchemaVersionException(version);
     }
 

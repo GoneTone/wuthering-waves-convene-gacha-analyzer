@@ -44,10 +44,16 @@ void main() {
     );
   });
 
+  test('schema_version older than current is accepted', () {
+    const text = '{"schema_version": 1, "accounts": []}';
+    final bundle = importAccounts(text);
+    expect(bundle.accounts, isEmpty);
+  });
+
   test(
-    'schema_version 不符 → UnsupportedSchemaVersionException（不被吞成 FormatException）',
+    'schema_version newer than current → UnsupportedSchemaVersionException',
     () {
-      const text = '{"schema_version": 1, "accounts": []}';
+      const text = '{"schema_version": 3, "accounts": []}';
       expect(
         () => importAccounts(text),
         throwsA(isA<UnsupportedSchemaVersionException>()),
