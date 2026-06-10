@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:logging/logging.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 
 /// Logger 實例（帳號匯入/匯出）。
@@ -41,7 +42,7 @@ AccountsBundle importAccounts(String text) {
     }
     prepared = raw; // 本軟體自己的檔，完整信任、不過濾
   } else {
-    prepared = raw; // 暫時直通；legacy screening 於 Task 4 接上
+    prepared = _screenLegacyBundle(raw);
   }
   try {
     return AccountsBundle.fromJson(prepared);
@@ -55,4 +56,49 @@ AccountsBundle importAccounts(String text) {
     _log.warning('import failed: parse error', e, st);
     throw FormatException('Failed to parse: $e');
   }
+}
+
+/// 處理無 `app` 欄位的舊備份：依卡池代碼判別是否為本軟體（鳴潮）檔，並濾掉非鳴潮 banner。
+///
+/// 蒐集 `accounts[*].banners` 的 key 與 [gachaTypes] 已知集合比對：確有卡池資料但無一是
+/// 鳴潮代碼 → 丟 [ForeignBundleException]（純外來，如原神檔）；否則回傳濾除未知 banner 後的
+/// raw（未知代碼的 banner 整條跳過、濾空的帳號一併移除），只留可辨識的鳴潮 banner。
+/// 讀不出任何卡池資料（空檔／結構模糊）→ 原樣交回，由 [AccountsBundle.fromJson] 後續處理。
+Map<String, dynamic> _screenLegacyBundle(Map<String, dynamic> raw) {
+  final known = {for (final t in gachaTypes) t.key};
+  final accountsRaw = raw['accounts'];
+  if (accountsRaw is! List) return raw;
+
+  var sawAnyCode = false;
+  var keptAnyKnown = false;
+  // 非預期型別的 entry 原樣保留，讓 AccountsBundle.fromJson 拋出帶位置的結構錯誤。
+  final filteredAccounts = <dynamic>[];
+  for (final entry in accountsRaw) {
+    if (entry is! Map<String, dynamic>) {
+      filteredAccounts.add(entry);
+      continue;
+    }
+    final bannersRaw = entry['banners'];
+    if (bannersRaw is! Map<String, dynamic>) {
+      filteredAccounts.add(entry);
+      continue;
+    }
+    final keptBanners = <String, dynamic>{};
+    for (final code in bannersRaw.keys) {
+      sawAnyCode = true;
+      if (known.contains(code)) {
+        keptBanners[code] = bannersRaw[code];
+        keptAnyKnown = true;
+      }
+    }
+    if (keptBanners.isNotEmpty) {
+      filteredAccounts.add({...entry, 'banners': keptBanners});
+    }
+  }
+
+  if (sawAnyCode && !keptAnyKnown) {
+    _log.warning('import failed: foreign bundle (no WuWa pools)');
+    throw const ForeignBundleException();
+  }
+  return {...raw, 'accounts': filteredAccounts};
 }
