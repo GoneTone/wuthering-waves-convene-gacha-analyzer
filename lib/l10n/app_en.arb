@@ -590,6 +590,13 @@
   "importReasonUnreadable": "Unable to read the file",
   "importReasonForeignApp": "This file was not exported by this app",
   "importReasonNotPlatformFile": "This file is not a valid {platform} export",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "Unable to write the file, please check the save location and permissions",
   "settingsImportFailed": "Import failed: {reason}",
   "@settingsImportFailed": {

@@ -587,6 +587,13 @@
   "importReasonUnreadable": "ファイルを読み込めません",
   "importReasonForeignApp": "このファイルは本ツールでエクスポートされたバックアップではありません",
   "importReasonNotPlatformFile": "このファイルは有効な {platform} のエクスポートではありません",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "ファイルを書き込めません。保存先と権限を確認してください",
   "settingsImportFailed": "インポートに失敗しました：{reason}",
   "@settingsImportFailed": {
