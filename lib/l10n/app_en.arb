@@ -266,6 +266,8 @@
   },
   "errorGachaFailed": "Still couldn't fetch records after re-capturing. The server may be temporarily unavailable — please try again later.",
   "errorNoRecords": "This account has no Convene records yet",
+  "errorNetwork": "Network connection failed. Please check your connection and try again.",
+  "errorUnexpected": "An unexpected error occurred. Please try again later.",
   "pageOverviewTitle": "Overview (all banners)",
   "pageOverviewGachaSection": "Convene Overview",
   "pageBannerRecordList": "Record list",
@@ -579,6 +581,10 @@
       }
     }
   },
+  "importReasonInvalidFormat": "The file format is invalid or the file is corrupted",
+  "importReasonIncompatibleVersion": "This backup's data version is incompatible with the current app and cannot be imported",
+  "importReasonUnreadable": "Unable to read the file",
+  "exportReasonWriteFailed": "Unable to write the file, please check the save location and permissions",
   "settingsImportFailed": "Import failed: {reason}",
   "@settingsImportFailed": {
     "placeholders": {
