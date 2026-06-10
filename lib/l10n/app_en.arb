@@ -507,6 +507,10 @@
   "settingsImageCacheClearGalleryFailed": "Failed to clear detail images",
   "settingsExportData": "Export data",
   "settingsImportData": "Import data",
+  "settingsImportOtherPlatform": "Import data (other platforms)",
+  "platformPickerTitle": "Select a source platform",
+  "platformWuwaTracker": "WuWa Tracker",
+  "platformWuwaTrackerSubtitle": "wuwatracker.com・pulls JSON",
   "shareImageButton": "Generate share image",
   "shareImageDialogTitle": "Share image options",
   "shareImageThemeLabel": "Theme",
@@ -585,6 +589,7 @@
   "importReasonIncompatibleVersion": "This backup's data version is incompatible with the current app and cannot be imported",
   "importReasonUnreadable": "Unable to read the file",
   "importReasonForeignApp": "This file was not exported by this app",
+  "importReasonNotPlatformFile": "This file is not a valid {platform} export",
   "exportReasonWriteFailed": "Unable to write the file, please check the save location and permissions",
   "settingsImportFailed": "Import failed: {reason}",
   "@settingsImportFailed": {
