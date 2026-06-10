@@ -33,7 +33,10 @@ class GachaRecord {
   /// 稀有度（觀測值 5 / 4 / 3，鳴潮喚取無 1★/2★）。
   final int qualityLevel;
 
-  /// 道具類型字串（`角色` / `武器` / `道具`，隨 languageCode 變化）。
+  /// 道具類型字串（官方 API 來源為 `角色` / `武器` / `道具`，隨 languageCode 變化）。
+  ///
+  /// 第三方平台匯入（缺此欄）改存 canonical kind 鍵（見 `item_type_kind.dart`）；
+  /// 唯一消費點 `itemTypeKeyOf` / `itemTypeKeyLabel` 本就以 canonical 鍵為主分支。
   final String resourceType;
 
   /// 所屬卡池類型（字串，如 `'1'`），對應 [GachaType.key]。
