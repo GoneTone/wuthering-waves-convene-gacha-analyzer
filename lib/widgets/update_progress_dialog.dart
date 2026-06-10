@@ -269,7 +269,8 @@ class _Body extends StatelessWidget {
       switch (error) {
         UpdateErrorGachaFailed() => l.errorGachaFailed,
         UpdateErrorNoRecords() => l.errorNoRecords,
-        UpdateErrorOther(:final message) => message,
+        UpdateErrorNetwork() => l.errorNetwork,
+        UpdateErrorUnexpected() => l.errorUnexpected,
         UpdateErrorWipeItemImageCache(:final detail) =>
           l.updateErrorWipeItemImageCache(detail),
       };
