@@ -1,11 +1,16 @@
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 
-/// 匯入檔的 schema 版本與目前 App 支援版本不符時拋出，供 UI 給出「版本不相容」訊息。
+/// 本軟體的匯出識別字串，寫入備份檔的 `app` 欄位供匯入端辨識來源。
+///
+/// 值對齊 pubspec 套件名；姐妹專案（原神）為 `genshin_impact_wish_gacha_analyzer`，天生相異。
+const String accountsBundleAppId = 'wuthering_waves_convene_gacha_analyzer';
+
+/// 匯入檔的 schema 版本高於目前 App 支援版本時拋出，供 UI 給出「版本過新，請更新 App」訊息。
 class UnsupportedSchemaVersionException implements Exception {
   /// 建立 [UnsupportedSchemaVersionException]。
   const UnsupportedSchemaVersionException(this.version);
 
-  /// 匯入檔宣告的 schema 版本（與 [AccountsBundle.currentSchemaVersion] 不符）。
+  /// 匯入檔宣告的 schema 版本（高於 [AccountsBundle.currentSchemaVersion]）。
   final int version;
 }
 
@@ -67,20 +72,21 @@ class AccountsBundle {
   /// 序列化為 JSON。
   Map<String, dynamic> toJson() => {
     'schema_version': schemaVersion,
+    'app': accountsBundleAppId,
     'exported_at': exportedAt.toUtc().toIso8601String(),
     'app_version': appVersion,
     'last_active_uid': lastActiveUid,
     'accounts': accounts.map((a) => a.toJson()).toList(growable: false),
   };
 
-  /// 從 JSON 還原 [AccountsBundle]，schema 版本不符時丟
+  /// 從 JSON 還原 [AccountsBundle]，schema 版本過新時丟
   /// [UnsupportedSchemaVersionException]，其餘格式錯誤丟 [FormatException]。
   factory AccountsBundle.fromJson(Map<String, dynamic> json) {
     final version = json['schema_version'];
     if (version is! int) {
       throw const FormatException('Missing or invalid "schema_version"');
     }
-    if (version != currentSchemaVersion) {
+    if (version > currentSchemaVersion) {
       throw UnsupportedSchemaVersionException(version);
     }
 

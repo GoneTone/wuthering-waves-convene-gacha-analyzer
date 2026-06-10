@@ -433,6 +433,7 @@
   "importReasonInvalidFormat": "檔案格式不正確或已損毀",
   "importReasonIncompatibleVersion": "此備份的資料版本與目前 App 不相容，無法匯入",
   "importReasonUnreadable": "無法讀取檔案",
+  "importReasonForeignApp": "此檔案不是由本軟體匯出的備份",
   "exportReasonWriteFailed": "無法寫入檔案，請確認儲存位置與權限",
   "settingsImportFailed": "匯入失敗：{reason}",
   "@settingsImportFailed": {
