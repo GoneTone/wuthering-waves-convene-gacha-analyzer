@@ -524,6 +524,10 @@ class _DataManagement extends ConsumerWidget {
     final AccountsBundle bundle;
     try {
       bundle = importAccounts(text);
+    } on ForeignBundleException {
+      if (!ctx.mounted) return;
+      _showSnack(ctx, l.settingsImportFailed(l.importReasonForeignApp));
+      return;
     } on UnsupportedSchemaVersionException {
       if (!ctx.mounted) return;
       _showSnack(

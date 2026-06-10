@@ -584,6 +584,7 @@
   "importReasonInvalidFormat": "The file format is invalid or the file is corrupted",
   "importReasonIncompatibleVersion": "This backup's data version is incompatible with the current app and cannot be imported",
   "importReasonUnreadable": "Unable to read the file",
+  "importReasonForeignApp": "This file was not exported by the app",
   "exportReasonWriteFailed": "Unable to write the file, please check the save location and permissions",
   "settingsImportFailed": "Import failed: {reason}",
   "@settingsImportFailed": {
