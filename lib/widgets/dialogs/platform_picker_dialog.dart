@@ -31,9 +31,10 @@ class _PlatformPickerDialog extends StatelessWidget {
             ListTile(
               leading: Icon(importer.icon),
               title: Text(importer.displayName(l)),
-              subtitle: importer.subtitle(l) == null
-                  ? null
-                  : Text(importer.subtitle(l)!),
+              subtitle: switch (importer.subtitle(l)) {
+                final s? => Text(s),
+                _ => null,
+              },
               onTap: () => Navigator.of(context).pop(importer),
             ),
         ],

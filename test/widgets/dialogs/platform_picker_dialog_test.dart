@@ -45,6 +45,7 @@ Future<void> _open(WidgetTester tester) async {
 void main() {
   testWidgets('lists WuWa Tracker and returns it on tap', (tester) async {
     await _open(tester);
+    expect(find.text('選擇匯入來源平台'), findsOneWidget);
     expect(find.text('WuWa Tracker'), findsOneWidget);
 
     await tester.tap(find.text('WuWa Tracker'));
