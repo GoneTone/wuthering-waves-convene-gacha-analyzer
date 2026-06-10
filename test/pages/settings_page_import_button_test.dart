@@ -145,7 +145,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    final btn = find.widgetWithText(OutlinedButton, '匯入資料（其他平台）');
+    final btn = find.widgetWithText(OutlinedButton, '從其他平台匯入');
     expect(btn, findsOneWidget);
     expect(
       tester.widget<OutlinedButton>(btn).onPressed,
@@ -173,7 +173,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    final btn = find.widgetWithText(OutlinedButton, '匯入資料（其他平台）');
+    final btn = find.widgetWithText(OutlinedButton, '從其他平台匯入');
     expect(btn, findsOneWidget);
     expect(
       tester.widget<OutlinedButton>(btn).onPressed,

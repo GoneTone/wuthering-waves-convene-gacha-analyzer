@@ -505,7 +505,7 @@
   "settingsImageCacheClearGalleryFailed": "詳細画像のクリアに失敗しました",
   "settingsExportData": "データをエクスポート",
   "settingsImportData": "データをインポート",
-  "settingsImportOtherPlatform": "データをインポート（他プラットフォーム）",
+  "settingsImportOtherPlatform": "他のプラットフォームからインポート",
   "platformPickerTitle": "インポート元のプラットフォームを選択",
   "platformWuwaTracker": "WuWa Tracker",
   "platformWuwaTrackerSubtitle": "wuwatracker.com・pulls JSON",

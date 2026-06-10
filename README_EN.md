@@ -67,7 +67,7 @@ The utility may trigger anti-virus software during installation and execution. T
 
 ## Supported Third-Party Import Platforms
 
-Besides importing this utility's own backup files, you can also import convene history data exported from the following third-party platforms (Settings → *Import data (other platforms)*):
+Besides importing this utility's own backup files, you can also import convene history data exported from the following third-party platforms (Settings → *Import from other platforms*):
 
 - [WuWa Tracker](https://wuwatracker.com/)
 - More platforms may be supported in the future...

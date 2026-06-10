@@ -501,7 +501,7 @@
   "settingsImageCacheClearGalleryFailed": "清除详情图缓存失败",
   "settingsExportData": "导出数据",
   "settingsImportData": "导入数据",
-  "settingsImportOtherPlatform": "导入数据（其他平台）",
+  "settingsImportOtherPlatform": "从其他平台导入",
   "platformPickerTitle": "选择导入来源平台",
   "platformWuwaTracker": "WuWa Tracker",
   "platformWuwaTrackerSubtitle": "wuwatracker.com・pulls JSON",
