@@ -45,23 +45,15 @@ void main() {
     expect(back.accounts[1].alias, isNull);
   });
 
-  test('schema_version != 2（version=1）→ UnsupportedSchemaVersionException', () {
+  test('schema_version 較舊（version=1）→ 接受並還原', () {
     final json = {
       'schema_version': 1,
       'exported_at': '2026-05-21T00:00:00.000Z',
       'app_version': '1.0.0',
       'accounts': <Map<String, dynamic>>[],
     };
-    expect(
-      () => AccountsBundle.fromJson(json),
-      throwsA(
-        isA<UnsupportedSchemaVersionException>().having(
-          (e) => e.version,
-          'version',
-          1,
-        ),
-      ),
-    );
+    final bundle = AccountsBundle.fromJson(json);
+    expect(bundle.accounts, isEmpty);
   });
 
   test('schema_version 為較新版本（999）→ UnsupportedSchemaVersionException', () {
