@@ -2,7 +2,7 @@
 
 - 日期：2026-06-14
 - 狀態：設計待審
-- 範圍：`lib/services/importers/wuwa_tracker_importer.dart`、`lib/services/item_image_fetcher.dart`（`EncoreCatalog` 擴充）、`lib/services/platform_import.dart`（介面）、`lib/pages/settings_page.dart`（匯入接線）、對應測試
+- 範圍：`lib/services/importers/wuwa_tracker_importer.dart`、`lib/models/gacha_record.dart`（合成 id 工具）、`lib/services/item_image_fetcher.dart`（`EncoreCatalog` 擴充）、`lib/services/platform_import.dart`（介面）、`lib/pages/settings_page.dart`（匯入接線）、`lib/services/record_merge.dart`（跨來源去重防護）、對應測試
 
 ## 問題
 
@@ -82,16 +82,31 @@ abstract interface class PlatformImporter {
   1. 不與 encore 真實 id（正整數）碰撞；
   2. 同名→同 id（跨次匯入、跨平台穩定——**不可用 Dart `String.hashCode`，其每次執行 seed 隨機**）；
   3. 不同名→不同 id（合併不誤併；殘餘規模數十筆，31-bit 空間碰撞機率可忽略）。
-- 新增純函式 `int syntheticResourceIdForName(String name)`（公開於 importer 檔或共用 util，供測試）。
+- 兩個純函式收斂於 `lib/models/gacha_record.dart`（模型層中立，讓 importer 與 `record_merge` 都只依賴模型，不互相依賴）：
+  - `int syntheticResourceIdForName(String name)`：FNV-1a 32-bit over UTF-8，映射到負數空間 `-(hash & 0x7fffffff) - 1`（恆為負、永不為 0、不與真實正 id 碰撞）。
+  - `bool isSyntheticResourceId(int id) => id < 0`：判定是否為合成 id（真實遊戲／encore id 皆正）。供去重防護辨識。
 - 此類紀錄 `resourceType` 存空字串 `''`（下游 `itemTypeKeyLabel('')` 顯示「未知」）——誠實標示，不臆測角色／武器。合成負 id 不會命中 encore 清單，故 icon 落佔位圖（符合「離線無法取圖」的事實）。
 
 ### 解析優先序
 
 每筆 `resourceId == null` 的紀錄：同檔回填 → encore 解析 → 合成 id。同檔 id 為該檔自身權威值，優先於 encore（兩者正常情況一致）。
 
+## 跨來源去重防護（name 清理）
+
+合成負 id 與真實正 id 不相等，故「同一筆古老紀錄在一次匯入取得合成 id、另一次取得真實 id」（情境：同檔先離線、後線上各匯一次）會被 `record_merge` 視為兩筆而重複。加一道 name 清理防護根治之。
+
+- 在 `mergeBackupRecords`（匯入合併路徑）的最後一步、`_capMultiplicity` 之後，加 `_dropSupersededSynthetic(merged)`：
+  - 以 `(time.microsecondsSinceEpoch, time.isUtc, qualityLevel, count, name)` 為 heal 鍵。
+  - 收集所有**真實 id**（`!isSyntheticResourceId`）紀錄的 heal 鍵集合。
+  - 移除「合成 id 且 heal 鍵命中該集合」的紀錄——真實 id 那份取代之。
+- count 不漏：合成與真實源自**同一份實體抽卡**（同檔不同連線狀態），同 heal 鍵的數量本就相等，丟合成、留真實即等量取代。這是全流程**唯一一次刻意丟棄**，僅作用於「已有真實 id 雙胞」的合成筆，故安全。
+- heal 鍵刻意比 `recordsEqual` 多帶 `name`、少帶 `resourceId`：跨「合成↔真實」配對需用 `name`（id 本就不同），而 `name` 僅用於此清理、不污染通用 `recordsEqual`（後者仍排除 `name` 以保跨語言對齊）。
+- 只掛在 `mergeBackupRecords`（匯入）；`mergeOrderedRecords`（官方擷取更新）全為真實 id、不產生合成筆，無需處理。
+
 ## 已知限制
 
-- **與官方擷取的跨來源去重**：第 3 層合成負 id 與官方擷取的真實正 id 不相等，`record_merge` 不會把兩者視為同一筆。但此限制本就存在於 WuWa Tracker 匯入（語言 `en` 與官方擷取字串不同等），且這些殘餘為官方喚取歷史視窗外的早期紀錄，影響極小，列為已知行為。
+- **同檔離線↔線上各匯一次的重複**：由上節 name 清理防護根治（合成筆被真實 id 雙胞取代）。
+- **與官方軟體內擷取（`mergeOrderedRecords`）的跨來源去重**：合成負 id 與官方擷取真實正 id 不相等。但這些殘餘為官方喚取歷史視窗外的早期紀錄，官方擷取通常抓不回，實務上無重疊、不重複；不另為此路徑加防護（YAGNI）。
 - 第 2 層名稱比對為精確比對（必要時 `trim`）；encore 與 WuWa Tracker 皆採官方英文名，角色／武器命中率高，道具理論上可能有命名差異而落第 3 層。
 
 ## 記錄（log）
@@ -104,13 +119,23 @@ wuwa_tracker null-resourceId resolution: inFile=2131 encore=23 synthetic=0 (tota
 
 encore 預抓失敗於 `_importFromPlatform` 記 warning（脫敏 URL）。沿用既有命名樹，敏感資料經 `sanitizeUrl`／`sanitizeUid`。
 
-## 測試（延伸 `test/services/importers/wuwa_tracker_importer_test.dart`）
+## 測試
+
+**`test/services/importers/wuwa_tracker_importer_test.dart`（延伸）**
 
 1. 同檔回填：fixture 含一筆 `resourceId:null` 且同檔另有同名帶 id 紀錄 → 回填為該真實 id。
 2. encore 解析：注入假 `ItemNameResolver`（如 `{'Jinhsi': (id: 1304, kind: kItemKindCharacter)}`），null 紀錄名稱僅靠 resolver 命中 → 取真實 id 與 `resourceType == kind`。
 3. 合成 fallback：不注入 resolver、且同檔無同名帶 id → 取負 id；同名兩筆解析兩次得**相同** id；不同名得**不同** id；`buildFiveStarCollection` 對兩個不同名五星正確分成兩格、同名合一格。
-4. 決定性：`syntheticResourceIdForName('Camellya')` 兩次呼叫相等且為負。
-5. 回歸：既有 8 個測試（含「skips unknown pools」「CST +8」「stable order」）維持綠燈。
+4. 回歸：既有 8 個測試（含「skips unknown pools」「CST +8」「stable order」）維持綠燈。
+
+**`test/models/gacha_record_test.dart`（合成 id 工具）**
+
+5. 決定性：`syntheticResourceIdForName('Camellya')` 兩次呼叫相等且為負；不同 name 不相等；`isSyntheticResourceId` 對其回 true、對正 id 回 false。
+
+**`test/services/record_merge_test.dart`（去重防護）**
+
+6. 同 `(time, quality, count, name)` 同時有合成負 id 與真實正 id → `mergeBackupRecords` 後只留真實那份（數量不漏、不重複）。
+7. 合成筆無真實雙胞 → 原樣保留（防護不誤刪離線匯入的單純殘餘）。
 
 ## 範圍外（YAGNI）
 
