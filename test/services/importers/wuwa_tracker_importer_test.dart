@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/five_star_collection.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/importers/wuwa_tracker_importer.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 
@@ -106,5 +107,60 @@ void main() {
 ''';
     final pool = importer.parse(sameTime).accounts.single.data.banners['1']!;
     expect(pool.map((r) => r.name).toList(), ['First', 'Second', 'Third']);
+  });
+
+  test('回填 null resourceId：同檔同名帶 id', () {
+    const sample = '''
+{
+  "playerId": "700050216",
+  "pulls": [
+    {"cardPoolType": 1, "resourceId": 1211, "qualityLevel": 5, "name": "Denia", "time": "2026-05-21T02:39:03+00:00"},
+    {"cardPoolType": 1, "resourceId": null, "qualityLevel": 5, "name": "Denia", "time": "2024-11-17T08:20:26Z"}
+  ]
+}
+''';
+    final pool = importer.parse(sample).accounts.single.data.banners['1']!;
+    expect(pool, hasLength(2));
+    expect(pool.every((r) => r.resourceId == 1211), isTrue);
+    expect(pool.every((r) => r.resourceType == kItemKindCharacter), isTrue);
+  });
+
+  test('回填 null resourceId：注入 encore 解析器', () {
+    const sample = '''
+{
+  "playerId": "700050216",
+  "pulls": [
+    {"cardPoolType": 1, "resourceId": null, "qualityLevel": 5, "name": "Jinhsi", "time": "2024-11-17T08:20:26Z"}
+  ]
+}
+''';
+    final bundle = importer.parse(
+      sample,
+      nameResolver: (name) =>
+          name == 'Jinhsi' ? (id: 1304, kind: kItemKindCharacter) : null,
+    );
+    final rec = bundle.accounts.single.data.banners['1']!.single;
+    expect(rec.resourceId, 1304);
+    expect(rec.resourceType, kItemKindCharacter);
+  });
+
+  test('解不掉 → 合成穩定負 id，五星一覽依名分格', () {
+    const sample = '''
+{
+  "playerId": "700050216",
+  "pulls": [
+    {"cardPoolType": 1, "resourceId": null, "qualityLevel": 5, "name": "Camellya", "time": "2024-11-17T08:20:26Z"},
+    {"cardPoolType": 1, "resourceId": null, "qualityLevel": 5, "name": "Jinhsi", "time": "2024-11-16T08:20:26Z"}
+  ]
+}
+''';
+    final pool = importer.parse(sample).accounts.single.data.banners['1']!;
+    final camellya = pool.firstWhere((r) => r.name == 'Camellya');
+    final jinhsi = pool.firstWhere((r) => r.name == 'Jinhsi');
+    expect(camellya.resourceId, isNegative);
+    expect(camellya.resourceId, syntheticResourceIdForName('Camellya'));
+    expect(jinhsi.resourceId, isNot(camellya.resourceId));
+    expect(camellya.resourceType, '');
+    expect(buildFiveStarCollection(pool), hasLength(2));
   });
 }

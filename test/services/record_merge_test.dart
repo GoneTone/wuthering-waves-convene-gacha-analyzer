@@ -419,4 +419,49 @@ void main() {
       expect(countFp(2, 9), 1); // incoming 獨有，補入
     });
   });
+
+  group('mergeBackupRecords 合成 id 去重防護', () {
+    test('同 (time, quality, count, name) 有真實雙胞 → 丟合成、留真實', () {
+      final synthetic = r(
+        syntheticResourceIdForName('Camellya'),
+        quality: 5,
+        name: 'Camellya',
+        sec: 3,
+      );
+      final real = r(1605, quality: 5, name: 'Camellya', sec: 3);
+      final merged = mergeBackupRecords([synthetic], [real]);
+      expect(merged, hasLength(1));
+      expect(merged.single.resourceId, 1605);
+    });
+
+    test('合成筆無真實雙胞 → 原樣保留', () {
+      final synthetic = r(
+        syntheticResourceIdForName('Camellya'),
+        quality: 5,
+        name: 'Camellya',
+        sec: 3,
+      );
+      final realOther = r(1304, quality: 5, name: 'Jinhsi', sec: 5);
+      final merged = mergeBackupRecords([synthetic], [realOther]);
+      expect(merged.where((x) => x.name == 'Camellya'), hasLength(1));
+      expect(
+        merged.where((x) => isSyntheticResourceId(x.resourceId)),
+        hasLength(1),
+      );
+    });
+
+    test('多重數：2 合成 + 2 真實雙胞 → 留 2 真實、count 不漏', () {
+      final synthetic = r(
+        syntheticResourceIdForName('Camellya'),
+        quality: 5,
+        name: 'Camellya',
+        sec: 3,
+      );
+      final real = r(1605, quality: 5, name: 'Camellya', sec: 3);
+      final merged = mergeBackupRecords([synthetic, synthetic], [real, real]);
+      expect(merged, hasLength(2));
+      expect(merged.every((x) => x.resourceId == 1605), isTrue);
+      expect(merged.where((x) => isSyntheticResourceId(x.resourceId)), isEmpty);
+    });
+  });
 }

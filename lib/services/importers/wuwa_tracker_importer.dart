@@ -52,8 +52,11 @@ class WuwaTrackerImporter implements PlatformImporter {
   List<String> get fileExtensions => const ['json'];
 
   /// 解析 WuWa Tracker 的 wuwatracker-pulls JSON 匯出為 [AccountsBundle]。
+  ///
+  /// 缺 `resourceId` 的紀錄（早期版本）依序回填：同檔 name→id 表 → [nameResolver]
+  /// （如 encore 清單）→ 決定性合成負 id（[syntheticResourceIdForName]），零資料遺失。
   @override
-  AccountsBundle parse(String content) {
+  AccountsBundle parse(String content, {ItemNameResolver? nameResolver}) {
     Object? raw;
     try {
       raw = jsonDecode(content);
@@ -71,13 +74,26 @@ class WuwaTrackerImporter implements PlatformImporter {
       _log.warning(
         'wuwa_tracker import: missing playerId/pulls (foreign file)',
       );
-      // 缺頂層 playerId / pulls：不是 WuWa Tracker 的 pulls 匯出。
       throw const ForeignBundleException();
     }
 
     try {
+      // 第 1 層基礎：以同檔所有帶真實 id 的紀錄建 name→id 表（回填缺 id 用）。
+      final inFileNameToId = <String, int>{};
+      for (final entry in pulls) {
+        if (entry is! Map<String, dynamic>) continue;
+        final rid = entry['resourceId'];
+        final name = entry['name'];
+        if (rid is num && name is String) {
+          inFileNameToId.putIfAbsent(name, () => rid.toInt());
+        }
+      }
+
       final banners = <String, List<GachaRecord>>{};
       var skipped = 0;
+      var fromInFile = 0;
+      var fromEncore = 0;
+      var fromSynthetic = 0;
       for (final entry in pulls) {
         if (entry is! Map<String, dynamic>) {
           throw const FormatException('pulls[] entry must be an object');
@@ -87,28 +103,47 @@ class WuwaTrackerImporter implements PlatformImporter {
           skipped++;
           continue;
         }
-        final resourceId = (entry['resourceId'] as num).toInt();
+        final name = entry['name'] as String;
+
+        // resourceId 解析：直接帶 → 同檔回填 → encore 解析器 → 合成負 id。
+        // resourceType：有真實 id 時用位數推測（下游 encore 分類再校正）；encore
+        // 命中用其 kind；合成 fallback 存空字串（顯示「未知」，不臆測類型）。
+        final int resourceId;
+        final String resourceType;
+        final rawId = entry['resourceId'];
+        if (rawId is num) {
+          resourceId = rawId.toInt();
+          resourceType = _kindByIdLength(resourceId);
+        } else if (inFileNameToId.containsKey(name)) {
+          resourceId = inFileNameToId[name]!;
+          resourceType = _kindByIdLength(resourceId);
+          fromInFile++;
+        } else if (nameResolver?.call(name) case final r?) {
+          resourceId = r.id;
+          resourceType = r.kind;
+          fromEncore++;
+        } else {
+          resourceId = syntheticResourceIdForName(name);
+          resourceType = '';
+          fromSynthetic++;
+        }
+
         banners
             .putIfAbsent(cardPoolType, () => <GachaRecord>[])
             .add(
               GachaRecord(
                 resourceId: resourceId,
                 qualityLevel: (entry['qualityLevel'] as num).toInt(),
-                // resourceType 缺：存 canonical kind 鍵（4 碼角色、8 碼武器）。匯入後
-                // encore 分類接手，少數 8 碼道具會被修正為 kItemKindItem。見 spec §3。
-                resourceType: resourceId.toString().length <= 4
-                    ? kItemKindCharacter
-                    : kItemKindWeapon,
+                resourceType: resourceType,
                 cardPoolType: cardPoolType,
-                name: entry['name'] as String,
+                name: name,
                 count: 1,
-                // WHY：WuWa Tracker 的 time 是帶 `+00:00` 後綴的 UTC instant（已驗證全
-                // 檔皆然），鳴潮全球統一 CST(+8)。因輸入帶時區後綴，DateTime.parse 取到
-                // 絕對 instant、toUtc() 規範化後 +8 → format 成牆鐘字串 → parse 回
-                // local-kind DateTime，與官方擷取的 time 表示法（local-kind、相同欄位）
-                // 完全一致；recordsEqual 依 DateTime==（含 isUtc 旗標）比對，唯有同表示
-                // 法才對得齊。註：本還原依賴輸入帶時區後綴；若未來變體改給 naive 字串，
-                // toUtc() 會改用裝置時區轉換，屆時需另行處理。
+                // WHY：WuWa Tracker 的 time 帶時區後綴（新紀錄 `+00:00`、舊紀錄
+                // `Z`，皆 UTC instant），鳴潮全球統一 CST(+8)。toUtc() 規範化後 +8
+                // → format 成牆鐘字串 → parse 回 local-kind DateTime，與官方擷取的
+                // time 表示法完全一致；recordsEqual 依 DateTime==（含 isUtc）比對，
+                // 唯同表示法才對齊。若未來變體改給 naive 字串，toUtc() 會改用裝置
+                // 時區轉換，屆時需另行處理。
                 time: parseGachaTime(
                   formatGachaTime(
                     DateTime.parse(
@@ -143,6 +178,13 @@ class WuwaTrackerImporter implements PlatformImporter {
         'wuwa_tracker import parsed: player=${sanitizeUid(playerId)} '
         'pools=${banners.length} records=$total skipped=$skipped',
       );
+      final nullResolved = fromInFile + fromEncore + fromSynthetic;
+      if (nullResolved > 0) {
+        _log.info(
+          'wuwa_tracker null-resourceId resolution: inFile=$fromInFile '
+          'encore=$fromEncore synthetic=$fromSynthetic (total null=$nullResolved)',
+        );
+      }
 
       final storage = BannerStorage(
         playerId: playerId,
@@ -163,4 +205,9 @@ class WuwaTrackerImporter implements PlatformImporter {
       throw FormatException('Failed to parse WuWa Tracker file: $e');
     }
   }
+
+  /// 依 resourceId 位數推測 canonical kind：≤4 碼角色、否則武器。第三方匯入缺
+  /// `resourceType` 欄位時的暫定值，匯入後 encore 分類會以真實 id 校正（見 spec §3）。
+  String _kindByIdLength(int resourceId) =>
+      resourceId.toString().length <= 4 ? kItemKindCharacter : kItemKindWeapon;
 }

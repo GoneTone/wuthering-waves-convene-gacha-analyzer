@@ -147,17 +147,24 @@ bool luckdrawBelongsToCharacter(Map<String, dynamic> body) {
   return belongs;
 }
 
-/// 單一 lang 的 encore 列表查表結果：kind → (resourceId → icon URL)。
+/// 單一 lang 的 encore 列表查表結果：icon（kind → id → URL）與 name→(id, kind)。
 class EncoreCatalog {
   /// 建立 [EncoreCatalog]。
-  const EncoreCatalog({required this.iconByKindId});
+  const EncoreCatalog({required this.iconByKindId, this.idByName = const {}});
 
   /// kind（`kItemKind*`）→ `{resourceId → iconUrl}`。
   final Map<String, Map<int, String>> iconByKindId;
 
+  /// 物品名稱 → (resourceId, kind)；跨 kind union，同名以首個命中為準。
+  /// 供第三方匯入回填缺 id 紀錄（見 `wuwa_tracker_importer`）。
+  final Map<String, ({int id, String kind})> idByName;
+
   /// 查 [kind] 的 [id] 對應 icon URL；查無回 null。
   String? iconFor({required String kind, required int id}) =>
       iconByKindId[kind]?[id];
+
+  /// 以物品名稱查 (resourceId, kind)；查無回 null。
+  ({int id, String kind})? resolveByName(String name) => idByName[name];
 }
 
 /// 單一造型（skin）的 encore 原始欄位（fetcher 暫態，repo 映射為 `ItemSkin`）。
@@ -216,37 +223,44 @@ class ItemImageFetcher {
   /// 單次 HTTP 請求超時。
   final Duration timeout;
 
-  /// 對 [kinds] 內每個 kind 打 encore 列表端點一次，組 [EncoreCatalog]。
+  /// 對 [kinds] 內每個 kind 打 encore 列表端點一次，組 [EncoreCatalog]
+  /// （icon 與 name→(id, kind) 兩表）。
   ///
-  /// 單一 kind 端點失敗（非 2xx／逾時／解析爛）→ 該 kind 回空 map（不 throw），
-  /// 該 kind 物品交由呼叫端落負取。
+  /// 單一 kind 端點失敗（非 2xx／逾時／解析爛）→ 該 kind 回空（不 throw），
+  /// 該 kind 物品交由呼叫端落負取／解析器無命中。
   Future<EncoreCatalog> fetchCatalog({
     required String lang,
     required Set<String> kinds,
     required http.Client client,
   }) async {
-    final out = <String, Map<int, String>>{};
+    final iconByKindId = <String, Map<int, String>>{};
+    final idByName = <String, ({int id, String kind})>{};
     final encLang = encoreLang(lang);
     for (final kind in kinds) {
       final seg = _kindToSegment[kind];
       if (seg == null) continue;
-      out[kind] = await _fetchCatalogKind(
+      final parsed = await _fetchCatalogKind(
         lang: encLang,
         kind: kind,
         seg: seg,
         client: client,
       );
+      iconByKindId[kind] = parsed.icons;
+      parsed.names.forEach((name, id) {
+        idByName.putIfAbsent(name, () => (id: id, kind: kind));
+      });
     }
-    return EncoreCatalog(iconByKindId: out);
+    return EncoreCatalog(iconByKindId: iconByKindId, idByName: idByName);
   }
 
-  /// 抓單一 kind 的列表並解析 `{id → iconUrl}`；任何失敗回空 map。
-  Future<Map<int, String>> _fetchCatalogKind({
+  /// 抓單一 kind 的列表並解析 `{id → iconUrl}` 與 `{name → id}`；任何失敗回兩空 map。
+  Future<({Map<int, String> icons, Map<String, int> names})> _fetchCatalogKind({
     required String lang,
     required String kind,
     required String seg,
     required http.Client client,
   }) async {
+    const empty = (icons: <int, String>{}, names: <String, int>{});
     final url = Uri.parse('$_encoreApiBase/$lang/$seg');
     try {
       final res = await client.get(url).timeout(timeout);
@@ -254,7 +268,7 @@ class ItemImageFetcher {
         _log.warning(
           'catalog kind=$seg non-2xx status=${res.statusCode} lang=$lang',
         );
-        return const {};
+        return empty;
       }
       final body = jsonDecode(res.body) as Map<String, dynamic>;
       final (listKey, iconKey) = switch (kind) {
@@ -263,19 +277,27 @@ class ItemImageFetcher {
         _ => ('itemList', 'Icon'),
       };
       final list = body[listKey];
-      if (list is! List) return const {};
-      final map = <int, String>{};
+      if (list is! List) return empty;
+      final icons = <int, String>{};
+      final names = <String, int>{};
       for (final e in list) {
         if (e is! Map<String, dynamic>) continue;
         final id = e['Id'];
+        if (id is! int) continue;
         final icon = e[iconKey];
-        if (id is int && icon is String && icon.isNotEmpty) map[id] = icon;
+        if (icon is String && icon.isNotEmpty) icons[id] = icon;
+        final name = e['Name'];
+        if (name is String && name.isNotEmpty) {
+          names.putIfAbsent(name, () => id);
+        }
       }
-      _log.info('catalog kind=$seg lang=$lang n=${map.length}');
-      return map;
+      _log.info(
+        'catalog kind=$seg lang=$lang icons=${icons.length} names=${names.length}',
+      );
+      return (icons: icons, names: names);
     } catch (e) {
       _log.warning('catalog kind=$seg failed lang=$lang err=$e');
-      return const {};
+      return empty;
     }
   }
 

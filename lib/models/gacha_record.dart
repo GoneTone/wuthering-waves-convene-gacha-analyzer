@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// 把 API/存檔的 `YYYY-MM-DD HH:mm:ss` 字串解析為本地語意 [DateTime]。
 DateTime parseGachaTime(String raw) =>
     DateTime.parse(raw.replaceFirst(' ', 'T'));
@@ -112,3 +114,20 @@ class GachaRecord {
     'language_code': languageCode,
   };
 }
+
+/// 第三方匯入缺 `resourceId` 時，依物品名稱決定性產生的「合成」資源 id。
+///
+/// 一律為負（真實遊戲／encore id 皆正），確保不與真實 id 碰撞；同 name 必得同 id
+/// （跨次匯入穩定）。**不可改用 Dart `String.hashCode`** —— 其每次程式執行 seed
+/// 隨機，會破壞跨次匯入穩定性。採 FNV-1a 32-bit（over UTF-8）後映射到負數空間。
+int syntheticResourceIdForName(String name) {
+  var hash = 0x811c9dc5; // FNV-1a 32-bit offset basis
+  for (final byte in utf8.encode(name)) {
+    hash = (hash ^ byte) & 0xffffffff;
+    hash = (hash * 0x01000193) & 0xffffffff; // FNV prime
+  }
+  return -(hash & 0x7fffffff) - 1; // [-2^31, -1]，恆負、永不為 0
+}
+
+/// 判斷 [resourceId] 是否為 [syntheticResourceIdForName] 產生的合成 id（負值）。
+bool isSyntheticResourceId(int resourceId) => resourceId < 0;
