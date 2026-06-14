@@ -95,6 +95,12 @@ if ($LASTEXITCODE -ne 0) { throw "flutter pub get failed" }
 
 Write-Host ""
 Write-Host "==> flutter build windows --release" -ForegroundColor Green
+# webview_windows 第三方 plugin 仍引用已棄用的 <experimental/coroutine>，新版 MSVC
+# （VS 18 / MSVC 14.51）已把它從警告升級成硬錯誤（C2338 / STL1011），導致建置中斷。
+# 在 plugin 上游修正前，透過 MSVC 的 CL 環境變數全域注入官方建議的抑制巨集讓建置通過。
+$SilenceCoroutine = '/D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS'
+$env:CL = if ($env:CL) { "$env:CL $SilenceCoroutine" } else { $SilenceCoroutine }
+Write-Host "CL=$env:CL" -ForegroundColor DarkGray
 flutter build windows --release
 if ($LASTEXITCODE -ne 0) { throw "flutter build failed" }
 
