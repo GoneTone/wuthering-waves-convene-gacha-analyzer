@@ -79,12 +79,13 @@ class WuwaTrackerImporter implements PlatformImporter {
 
     try {
       // 第 1 層基礎：以同檔所有帶真實 id 的紀錄建 name→id 表（回填缺 id 用）。
+      // 真實遊戲 id 恆為正；只收正值，避免外部給的非正值污染回填、誤觸「負＝合成」不變式。
       final inFileNameToId = <String, int>{};
       for (final entry in pulls) {
         if (entry is! Map<String, dynamic>) continue;
         final rid = entry['resourceId'];
         final name = entry['name'];
-        if (rid is num && name is String) {
+        if (rid is num && name is String && rid.toInt() > 0) {
           inFileNameToId.putIfAbsent(name, () => rid.toInt());
         }
       }
@@ -105,14 +106,17 @@ class WuwaTrackerImporter implements PlatformImporter {
         }
         final name = entry['name'] as String;
 
-        // resourceId 解析：直接帶 → 同檔回填 → encore 解析器 → 合成負 id。
+        // resourceId 解析：直接帶（正值）→ 同檔回填 → encore 解析器 → 合成負 id。
+        // 只接受正值為直接 id：真實遊戲 id 恆正，非正（負／0／缺）一律當缺 id 走解析鏈，
+        // 以保護「負＝合成」不變式（外部負值不得偽裝成合成或真實 id）。
         // resourceType：有真實 id 時用位數推測（下游 encore 分類再校正）；encore
         // 命中用其 kind；合成 fallback 存空字串（顯示「未知」，不臆測類型）。
         final int resourceId;
         final String resourceType;
         final rawId = entry['resourceId'];
-        if (rawId is num) {
-          resourceId = rawId.toInt();
+        final directId = rawId is num ? rawId.toInt() : null;
+        if (directId != null && directId > 0) {
+          resourceId = directId;
           resourceType = _kindByIdLength(resourceId);
         } else if (inFileNameToId.containsKey(name)) {
           resourceId = inFileNameToId[name]!;

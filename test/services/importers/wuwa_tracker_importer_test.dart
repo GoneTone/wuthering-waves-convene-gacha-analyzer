@@ -163,4 +163,45 @@ void main() {
     expect(camellya.resourceType, '');
     expect(buildFiveStarCollection(pool), hasLength(2));
   });
+
+  test('非正 resourceId（負／0）視為缺 id，不沿用外部值', () {
+    const sample = '''
+{
+  "playerId": "700050216",
+  "pulls": [
+    {"cardPoolType": 1, "resourceId": -999, "qualityLevel": 5, "name": "Foo", "time": "2024-11-17T08:20:26Z"}
+  ]
+}
+''';
+    final rec = importer
+        .parse(sample)
+        .accounts
+        .single
+        .data
+        .banners['1']!
+        .single;
+    // 不沿用外部負 id，改以 name 產生我們自己的合成 id（保護「負＝合成」不變式）。
+    expect(rec.resourceId, isNot(-999));
+    expect(rec.resourceId, syntheticResourceIdForName('Foo'));
+    expect(rec.resourceType, '');
+  });
+
+  test('非正 resourceId 不污染同檔 name→id 回填', () {
+    const sample = '''
+{
+  "playerId": "700050216",
+  "pulls": [
+    {"cardPoolType": 1, "resourceId": -5, "qualityLevel": 5, "name": "Bar", "time": "2024-11-17T08:20:26Z"},
+    {"cardPoolType": 1, "resourceId": null, "qualityLevel": 5, "name": "Bar", "time": "2024-11-16T08:20:26Z"}
+  ]
+}
+''';
+    final pool = importer.parse(sample).accounts.single.data.banners['1']!;
+    // null 那筆不應被外部的 -5 回填；兩筆同名皆走合成 → 同一個我們的合成 id。
+    expect(pool.any((r) => r.resourceId == -5), isFalse);
+    expect(
+      pool.every((r) => r.resourceId == syntheticResourceIdForName('Bar')),
+      isTrue,
+    );
+  });
 }
