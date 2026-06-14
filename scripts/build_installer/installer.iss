@@ -33,6 +33,10 @@ DefaultGroupName={#MyAppName}
 DisableDirPage=no
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
+; 升級覆蓋前透過 Restart Manager 偵測並關閉執行中的主程式（GUI exe / dll）。
+; 注意：這只能關 user-mode 行程，管不到 kernel 驅動服務；WinDivert 驅動的卸載另在
+; [Code] PrepareToInstall 處理（見該段註解）。
+CloseApplications=yes
 SetupIconFile=..\..\windows\runner\resources\app_icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 UninstallDisplayName={#MyAppName}
@@ -141,6 +145,32 @@ begin
         Result := False;
 end;
 
+// 釋放 WinDivert64.sys 的核心驅動鎖：先結束殘留的提權 helper（capture_helper.exe，
+// 仍持有 WinDivert handle 時驅動不會卸載），再停止並移除 WinDivert 驅動服務。
+// 否則升級覆蓋時 .sys 仍被 kernel 載入而鎖住，DeleteFile 會以代碼 5（存取被拒）失敗。
+// sc/taskkill 的退出碼一律忽略：服務不存在、helper 未在跑都屬正常狀況。
+procedure ReleaseWinDivertLock;
+var
+  ResultCode: Integer;
+begin
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM capture_helper.exe', '',
+    SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(ExpandConstant('{sys}\sc.exe'), 'stop WinDivert', '',
+    SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(ExpandConstant('{sys}\sc.exe'), 'delete WinDivert', '',
+    SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  // 驅動卸載與檔案解鎖在 sc 回傳後可能略有延遲，短暫等待再放行檔案複製。
+  Sleep(500);
+end;
+
+// 檔案複製前的最後鉤子：覆蓋 {app} 前先卸載 WinDivert 驅動、結束 helper，
+// 避免 WinDivert64.sys 被鎖。回傳空字串＝成功放行安裝。
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  ReleaseWinDivertLock;
+  Result := '';
+end;
+
 // 解除安裝流程：usUninstall 階段詢問使用者是否同時移除使用者資料，
 // usPostUninstall 階段依旗標執行 DelTree（主程式檔已被卸載，避免 file lock）。
 // silent 模式（/VERYSILENT、/SILENT）下 MsgBox 自動回傳預設按鈕值 = IDNO，
@@ -153,6 +183,8 @@ begin
   case CurUninstallStep of
     usUninstall:
       begin
+        // 移除程式檔前先卸載 WinDivert 驅動，否則 WinDivert64.sys 被鎖會刪不掉。
+        ReleaseWinDivertLock;
         ShouldRemoveUserData :=
           MsgBox(
             FmtMessage(CustomMessage('UninstallRemoveDataBody'), [UserDataDir]),
