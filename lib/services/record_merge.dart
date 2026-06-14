@@ -108,7 +108,9 @@ List<GachaRecord> mergeBackupRecords(
 ) {
   if (local.isEmpty) return List<GachaRecord>.from(incoming);
   if (incoming.isEmpty) return List<GachaRecord>.from(local);
-  return _capMultiplicity(_alignedMerge(local, incoming), local, incoming);
+  return _dropSupersededSynthetic(
+    _capMultiplicity(_alignedMerge(local, incoming), local, incoming),
+  );
 }
 
 /// 縫合兩份紀錄（未封頂）：Cases 1-2 為連續重疊的 O(n) 對齊快路徑，對不到一致重疊
@@ -276,4 +278,28 @@ List<GachaRecord> _capMultiplicity(
     }
   }
   return capped;
+}
+
+/// heal 鍵：對齊「合成↔真實」雙胞所需欄位。刻意含 [GachaRecord.name]（跨合成／
+/// 真實配對需要，兩者 resourceId 本就不同）、排除 resourceId。僅供
+/// [_dropSupersededSynthetic]，不污染通用 [recordsEqual]（後者排除 name 保跨語言對齊）。
+String _healKey(GachaRecord r) =>
+    '${r.time.microsecondsSinceEpoch}|${r.time.isUtc}|${r.qualityLevel}'
+    '|${r.count}|${r.name}';
+
+/// 去除「已有真實 id 雙胞」的合成 id 紀錄：同 [_healKey] 若同時存在真實 id 與合成
+/// id 紀錄，丟棄合成那份（真實 id 取代）。根治「同檔先離線（合成）、後線上（encore
+/// 真實 id）各匯一次」的重複。count 不漏 —— 合成與真實源自同份實體抽卡、同鍵數量相等。
+List<GachaRecord> _dropSupersededSynthetic(List<GachaRecord> records) {
+  final realKeys = <String>{
+    for (final r in records)
+      if (!isSyntheticResourceId(r.resourceId)) _healKey(r),
+  };
+  if (realKeys.isEmpty) return records;
+  return [
+    for (final r in records)
+      if (!isSyntheticResourceId(r.resourceId) ||
+          !realKeys.contains(_healKey(r)))
+        r,
+  ];
 }
