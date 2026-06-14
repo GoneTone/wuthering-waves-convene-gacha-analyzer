@@ -106,7 +106,8 @@ abstract interface class PlatformImporter {
 ## 已知限制
 
 - **同檔離線↔線上各匯一次的重複**：由上節 name 清理防護根治（合成筆被真實 id 雙胞取代）。
-- **與官方軟體內擷取（`mergeOrderedRecords`）的跨來源去重**：合成負 id 與官方擷取真實正 id 不相等。但這些殘餘為官方喚取歷史視窗外的早期紀錄，官方擷取通常抓不回，實務上無重疊、不重複；不另為此路徑加防護（YAGNI）。
+- **與官方軟體內擷取（`mergeOrderedRecords`）的後續合併**：官方更新以 existing **最新筆**為 anchor 對齊。99%+ 經回填／encore 取得真實 id 的紀錄帶真實 id、且 +8 CST `time` 表示法與官方擷取逐位元一致（既有不變式），正常對齊去重。合成負 id 僅存在於**最舊端**，不進入 anchor 比對、亦在官方視窗外，故被原樣保留（不重複、不遺失；代價僅這幾筆維持佔位 icon，不被官方擷取升級）。
+  - 退化邊界：若某帳號**整份**匯入歷史皆合成 id（離線匯入＋全檔 null＋同檔回填全失敗），則 existing 最新筆為合成 id，官方更新 anchor 對不上 → 觸發 `mergeOrderedRecords` **既有**「anchor not found → 以 fresh 取代」分支，可能丟視窗外老歷史。此為既有行為（非合成 id 引入）、線上匯入不會發生（encore 解真實 id）、且可重新匯入（`mergeBackupRecords`）救回；不另加防護（YAGNI）。
 - 第 2 層名稱比對為精確比對（必要時 `trim`）；encore 與 WuWa Tracker 皆採官方英文名，角色／武器命中率高，道具理論上可能有命名差異而落第 3 層。
 
 ## 記錄（log）
