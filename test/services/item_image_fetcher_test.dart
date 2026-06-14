@@ -586,5 +586,50 @@ void main() {
         expect(cat.resolveByName('Unknown Name'), isNull);
       },
     );
+
+    test('跨 kind 同名不同 id → 自 idByName 剔除（resolveByName 回 null）', () async {
+      // 'Echo' 同時出現在角色(1601)與武器(21099999)，名稱無法判定歸屬 → 剔除。
+      final client = MockClient((req) async {
+        final kindSeg = req.url.pathSegments.length >= 3
+            ? req.url.pathSegments[2]
+            : '';
+        final body = switch (kindSeg) {
+          'character' => {
+            'roleList': [
+              {
+                'Id': 1601,
+                'RoleHeadIcon': 'https://x/role_1601.webp',
+                'Name': 'Echo',
+              },
+              {
+                'Id': 1304,
+                'RoleHeadIcon': 'https://x/role_1304.webp',
+                'Name': 'Jinhsi',
+              },
+            ],
+          },
+          'weapon' => {
+            'weapons': [
+              {'Id': 21099999, 'Icon': 'https://x/wpn.webp', 'Name': 'Echo'},
+            ],
+          },
+          _ => <String, dynamic>{},
+        };
+        return http.Response.bytes(
+          utf8.encode(jsonEncode(body)),
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
+      });
+      final cat = await ItemImageFetcher().fetchCatalog(
+        lang: 'en',
+        kinds: {kItemKindCharacter, kItemKindWeapon},
+        client: client,
+      );
+      // 歧義名稱剔除，不臆測錯誤的 (id, kind)。
+      expect(cat.resolveByName('Echo'), isNull);
+      // 非歧義名稱不受影響，仍可解析。
+      expect(cat.resolveByName('Jinhsi'), (id: 1304, kind: kItemKindCharacter));
+    });
   });
 }

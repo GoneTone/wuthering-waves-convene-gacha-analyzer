@@ -228,6 +228,9 @@ class ItemImageFetcher {
   ///
   /// 單一 kind 端點失敗（非 2xx／逾時／解析爛）→ 該 kind 回空（不 throw），
   /// 該 kind 物品交由呼叫端落負取／解析器無命中。
+  ///
+  /// `idByName` 對「跨 kind 同名但不同 id」（如某角色與某武器同名）一律剔除該名稱：
+  /// 名稱無法判定歸屬時寧可不解析（呼叫端落合成 fallback），也不臆測錯誤的 (id, kind)。
   Future<EncoreCatalog> fetchCatalog({
     required String lang,
     required Set<String> kinds,
@@ -235,6 +238,7 @@ class ItemImageFetcher {
   }) async {
     final iconByKindId = <String, Map<int, String>>{};
     final idByName = <String, ({int id, String kind})>{};
+    final ambiguousNames = <String>{};
     final encLang = encoreLang(lang);
     for (final kind in kinds) {
       final seg = _kindToSegment[kind];
@@ -247,8 +251,23 @@ class ItemImageFetcher {
       );
       iconByKindId[kind] = parsed.icons;
       parsed.names.forEach((name, id) {
-        idByName.putIfAbsent(name, () => (id: id, kind: kind));
+        if (ambiguousNames.contains(name)) return;
+        final existing = idByName[name];
+        if (existing == null) {
+          idByName[name] = (id: id, kind: kind);
+        } else if (existing.id != id) {
+          // 同名跨 kind 對到不同 id → 無法由名稱判定，剔除並標記，後續同名一律略過。
+          idByName.remove(name);
+          ambiguousNames.add(name);
+        }
       });
+    }
+    if (ambiguousNames.isNotEmpty) {
+      _log.warning(
+        'catalog: ${ambiguousNames.length} ambiguous name(s) excluded from '
+        'idByName (same name across kinds) e.g. '
+        '${ambiguousNames.take(5).toList()}',
+      );
     }
     return EncoreCatalog(iconByKindId: iconByKindId, idByName: idByName);
   }
