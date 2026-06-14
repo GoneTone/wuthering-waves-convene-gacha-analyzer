@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -25,6 +26,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/format_bytes.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
@@ -686,9 +688,12 @@ class _DataManagement extends ConsumerWidget {
       return;
     }
 
+    final nameResolver = await _buildEncoreNameResolver(ref);
+    if (!ctx.mounted) return;
+
     final AccountsBundle bundle;
     try {
-      bundle = platform.parse(text);
+      bundle = platform.parse(text, nameResolver: nameResolver);
     } on ForeignBundleException {
       if (!ctx.mounted) return;
       _showSnack(
@@ -706,6 +711,30 @@ class _DataManagement extends ConsumerWidget {
 
     if (!ctx.mounted) return;
     await _runBundleImport(ctx, ref, bundle);
+  }
+
+  /// 為第三方匯入預抓 encore 清單（lang `en`，WuWa Tracker 名稱為英文），組
+  /// name→(id, kind) 解析器供回填缺 id 紀錄；離線／失敗回 null（importer 落合成
+  /// id）。best-effort，不阻斷匯入。
+  Future<ItemNameResolver?> _buildEncoreNameResolver(WidgetRef ref) async {
+    final fetcher = ref.read(itemImageFetcherProvider);
+    final client = http.Client();
+    try {
+      final catalog = await fetcher.fetchCatalog(
+        lang: 'en',
+        kinds: const {kItemKindCharacter, kItemKindWeapon, kItemKindItem},
+        client: client,
+      );
+      if (catalog.idByName.isEmpty) return null;
+      return catalog.resolveByName;
+    } catch (e, st) {
+      Logger(
+        'wish.import.platform',
+      ).warning('platform import: encore name resolver fetch failed', e, st);
+      return null;
+    } finally {
+      client.close();
+    }
   }
 
   /// 清除當前 UID [uid] 的所有資料，需使用者輸入 UID 確認。
