@@ -449,5 +449,19 @@ void main() {
         hasLength(1),
       );
     });
+
+    test('多重數：2 合成 + 2 真實雙胞 → 留 2 真實、count 不漏', () {
+      final synthetic = r(
+        syntheticResourceIdForName('Camellya'),
+        quality: 5,
+        name: 'Camellya',
+        sec: 3,
+      );
+      final real = r(1605, quality: 5, name: 'Camellya', sec: 3);
+      final merged = mergeBackupRecords([synthetic, synthetic], [real, real]);
+      expect(merged, hasLength(2));
+      expect(merged.every((x) => x.resourceId == 1605), isTrue);
+      expect(merged.where((x) => isSyntheticResourceId(x.resourceId)), isEmpty);
+    });
   });
 }
