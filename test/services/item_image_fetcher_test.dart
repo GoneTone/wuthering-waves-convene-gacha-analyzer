@@ -455,6 +455,27 @@ void main() {
     });
   });
 
+  group('EncoreCatalog.resolveByName', () {
+    test('以名稱查回 (id, kind)，查無回 null', () {
+      const catalog = EncoreCatalog(
+        iconByKindId: {},
+        idByName: {
+          'Jinhsi': (id: 1304, kind: kItemKindCharacter),
+          'Cosmic Ripples': (id: 21010024, kind: kItemKindWeapon),
+        },
+      );
+      expect(catalog.resolveByName('Jinhsi'), (
+        id: 1304,
+        kind: kItemKindCharacter,
+      ));
+      expect(catalog.resolveByName('Cosmic Ripples'), (
+        id: 21010024,
+        kind: kItemKindWeapon,
+      ));
+      expect(catalog.resolveByName('Unknown Name'), isNull);
+    });
+  });
+
   group('ItemImageFetcher.fetchCatalog', () {
     test('解析 character/weapon/item 的 icon URL，iconFor 命中', () async {
       final cat = await ItemImageFetcher().fetchCatalog(
