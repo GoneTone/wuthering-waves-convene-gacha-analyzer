@@ -204,6 +204,31 @@ void main() {
       expect(rec.languageCode, 'ja');
     });
   });
+
+  group('syntheticResourceIdForName / isSyntheticResourceId', () {
+    test('同名決定性且為負', () {
+      final a = syntheticResourceIdForName('Camellya');
+      final b = syntheticResourceIdForName('Camellya');
+      expect(a, b);
+      expect(a, isNegative);
+    });
+
+    test('不同名得不同 id', () {
+      expect(
+        syntheticResourceIdForName('Camellya'),
+        isNot(syntheticResourceIdForName('Jinhsi')),
+      );
+    });
+
+    test('isSyntheticResourceId 區分合成（負）與真實（正）', () {
+      expect(
+        isSyntheticResourceId(syntheticResourceIdForName('Yinlin')),
+        isTrue,
+      );
+      expect(isSyntheticResourceId(1211), isFalse);
+      expect(isSyntheticResourceId(21010023), isFalse);
+    });
+  });
 }
 
 final DateTime _t = DateTime(2026, 5, 21, 10, 39, 3);
