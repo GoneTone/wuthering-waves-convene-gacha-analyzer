@@ -287,8 +287,9 @@ class ItemImageFetcher {
         final icon = e[iconKey];
         if (icon is String && icon.isNotEmpty) icons[id] = icon;
         final name = e['Name'];
-        if (name is String && name.isNotEmpty)
+        if (name is String && name.isNotEmpty) {
           names.putIfAbsent(name, () => id);
+        }
       }
       _log.info(
         'catalog kind=$seg lang=$lang icons=${icons.length} names=${names.length}',
