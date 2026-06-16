@@ -34,7 +34,8 @@ GachaRecord _rec(int resourceId, String name, {String lang = 'zh-Hant'}) =>
 
 // ─── Fake GachaLanguageConverter ─────────────────────────────────────────────
 
-/// 假轉換器：把每筆紀錄的 [name] 附上 `@$targetLang` 後綴，並更新 [languageCode]。
+/// 假轉換器：把每筆紀錄的 [name] 附上 `@$targetLang` 後綴並更新該筆 `languageCode`；
+/// 比照 production 不動帳號級 `BannerStorage.languageCode`。
 ///
 /// 不呼叫任何網路，藉此隔離 unify 轉換邏輯與圖片補抓。
 class _FakeConverter extends GachaLanguageConverter {
@@ -68,7 +69,7 @@ class _FakeConverter extends GachaLanguageConverter {
       newBanners[key] = out;
     });
     return (
-      data: data.copyWith(banners: newBanners, languageCode: targetLang),
+      data: data.copyWith(banners: newBanners),
       result: LangConvertResult(total: total, converted: converted),
     );
   }
@@ -241,9 +242,9 @@ void main() {
     expect(storedA.banners['1']![1].name, '角色B@en');
     expect(storedB.banners['1']!.first.name, '角色C@en');
 
-    // languageCode 更新為目標語言。
-    expect(storedA.languageCode, 'en');
-    expect(storedB.languageCode, 'en');
+    // 每筆紀錄的 languageCode 更新為目標語言（帳號級 languageCode 比照 production 不動）。
+    expect(storedA.banners['1']!.first.languageCode, 'en');
+    expect(storedB.banners['1']!.first.languageCode, 'en');
 
     // 驗證 storage 已持久化（重新載入並比較第一筆名稱）。
     final reloadedA = await storage.load('100000001');

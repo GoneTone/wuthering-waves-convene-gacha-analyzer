@@ -26,7 +26,8 @@ class LangCatalogService {
   /// 建立 http client 的工廠（每次抓取用後即關）。
   final http.Client Function() clientFactory;
 
-  /// 單次執行的記憶體快取。
+  /// 單次執行的記憶體快取；刻意不設過期／刷新路徑（disk 為真相，spec 非目標），
+  /// 來回切換資料語言會重用已抓的目錄而不重抓。
   final Map<String, LangCatalog> _memo = {};
 
   /// 抓三清單時用的 kind 集合。
