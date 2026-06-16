@@ -24,7 +24,7 @@
 2. 設定後，未來不論資料來源是什麼語言，更新／匯入完成都**自動轉換**成設定語言。
 3. 提供「統一資料語言」按鈕，把**既有**歷史資料一次轉成設定語言。
 4. 各語言資料**本地持久化快取**，切換語言再切回不重抓。
-5. 轉換涵蓋**物品名稱 + 類型字串 + 詳情**（簡介／元素／武器類型）。
+5. 轉換涵蓋**物品名稱 + 詳情**（簡介／元素／武器類型）；**類型標籤（角色／武器／道具）跟 UI 語言**（維持現狀，見 D8）。
 6. 預設值＝最新資料的語言（自動播種），新用戶於首次更新／匯入時播種；「未設定」可手動選回以停用轉換。
 
 ## 非目標（YAGNI）
@@ -57,8 +57,8 @@
 | **D5** | 語言目錄快取 | 新增持久化 `lang_catalog/<lang>.json`（`resourceId → {name, kind}`）。缺該語言才 `fetchCatalog` 補抓並寫檔。 |
 | **D6** | EncoreCatalog 擴充 | `EncoreCatalog` 多帶 `nameByKindId`（id→name per kind，與既有 `iconByKindId` 平行），**複用 `fetchCatalog`**，不另寫抓取。 |
 | **D7** | 名稱回查補 ID | 合成／負值 ID 或目標目錄查無者，用「原名 + 原語言」目錄做 `name→id` 回查真實 ID；查到→採用真實 `resourceId`（寫回，順手修圖）再轉；查不到→該筆 `name`/`languageCode`/`resourceId` 完全保持原狀。 |
-| **D8** | 類型字串 | `resourceType` 由語言無關 `kind`（character/weapon/item）經靜態 `kind × lang → 標籤` 表推得（27 筆固定遊戲術語，屬資料語言、**非** UI ARB）。 |
-| **D9** | 詳情跟資料語言 | 詳情 dialog 顯示改讀 `detailByLang[dataLanguage]`（已設定時）；缺則觸發既有詳情抓取補上。 |
+| **D8** | 類型標籤跟 UI 語言 | 類型顯示走既有 `itemTypeKeyLabel(kind, l)`（`l`=App UI ARB），**轉換不動 `resourceType`**。已轉物品必有 `kind`（靠 catalog 查到才轉得動）→ 類型由 ARB 決定、不顯示存檔 `resourceType`。**不需** kind×lang 標籤表。 |
+| **D9** | 詳情自動跟資料語言 | 轉換改寫 `record.languageCode = target` 後，詳情 dialog 既有 `detailByLang[record.languageCode]` 查詢即自動跟上；`_fetchItemImages` 既有 `langsById`（逐筆 `r.languageCode`）會以 target 語言補抓 `detailByLang`。**詳情 dialog 與 `_fetchItemImages` 皆無須改**。 |
 | **D10** | 更新／匯入後置轉換 | `update()` 與各 importer 完成後，若 `dataLanguage` 已設定，對該帳號 `BannerStorage` 跑一次轉換再落地。忠實沿用既有流程，轉換為附加後置步驟。 |
 | **D11** | 失敗不毀資料 | 補抓目錄網路失敗→轉換優雅中止、既有資料不動；更新／匯入本身仍成功（未轉 + warning log）。 |
 
@@ -135,17 +135,13 @@ Future<LangConvertResult> convert(BannerStorage data, String targetLang)
 
 1. `ensure(targetLang)` 取得目標語言目錄。
 2. 蒐集需回查的紀錄（`resourceId<=0` 或目標目錄查無 `resourceId`）之**原語言集合**，逐一 `ensure(srcLang)`（沿用 `langsById` 模式）。
-3. 逐筆：
-   - `resourceId>0` 且目標目錄有名 → `name`=目標名、`resourceType`=`kind→targetLang` 標籤、`languageCode`=targetLang。`converted++`。
+3. 逐筆（只改 `name` 與 `languageCode`，**不動 `resourceType`**，見 D8）：
+   - `resourceId>0` 且目標目錄有名 → `name`=目標名、`languageCode`=targetLang。`converted++`。
    - 否則用該筆「原名 + 原 `languageCode`」目錄 `idByName` 回查真實 id：
-     - 查到 → 採用真實 `resourceId`（寫回）、以目標目錄轉名與類型、`languageCode`=targetLang。`converted++`、`backfilledId++`。
+     - 查到 → 採用真實 `resourceId`（寫回）、以目標目錄轉名、`languageCode`=targetLang。`converted++`、`backfilledId++`。
      - 查不到 → `name`/`languageCode`/`resourceId` **完全不動**。`unresolved++`。
-4. 詳情：對轉換後出現的 `(resourceId, kind, targetLang)` 觸發既有詳情抓取補 `detailByLang[targetLang]`（缺才抓；幾乎免費）。
+4. 詳情無須在轉換引擎內處理：轉換改寫 `languageCode` 後，後續 `update()`／unify 流程既有的 `_fetchItemImages` 會以 target 語言補 `detailByLang`，詳情 dialog 自動跟上（D9）。
 5. 回傳摘要。
-
-### 類型標籤表（D8）
-
-靜態 `const Map<String, Map<String, String>>`：`kind`（`kItemKindCharacter`/`Weapon`/`Item`）→ 9 語言 → 官方術語（如 `character`：zh-Hant「角色」、ja「キャラクター」…）。實作時以官方遊戲術語填入；置於轉換引擎或 `item_type_kind.dart` 旁。
 
 ### 日誌
 
@@ -187,7 +183,7 @@ Future<LangConvertResult> convert(BannerStorage data, String targetLang)
 
 ## 測試
 
-- **轉換引擎**：真實 id 對應；合成／負值 id 回查成功（採真實 id + 轉名）；回查失敗保持原狀（name/lang/id 不變）；多原語言蒐集；`resourceType` 由 kind 推得；摘要計數正確。
+- **轉換引擎**：真實 id 對應；合成／負值 id 回查成功（採真實 id + 轉名）；回查失敗保持原狀（name/lang/id 不變）；`resourceType` 不被改動；多原語言蒐集；摘要計數正確。
 - **語言目錄快取**：save/load round-trip；缺檔→抓取→落地；壞檔回退 null 後重抓。
 - **EncoreCatalog**：`nameByKindId` 由 fake API 回應正確填入。
 - **設定三態**：pref 不存在／`"none"`／語言碼三種讀寫；`setDataLanguage(null)` 標記 seeded；`seedDataLanguageIfUnset` 僅未 seeded 且 ∈9 才生效。
@@ -200,6 +196,5 @@ Future<LangConvertResult> convert(BannerStorage data, String targetLang)
 
 ## 開放實作細節（寫計畫時定）
 
-- 類型標籤表 9 語言官方術語字串的確切值（可參考既有各語言紀錄之 `resourceType` 或官方術語）。
 - 轉換在 `update()` 中插入的精確位置（存檔前轉一次，或存檔後重寫；以最少改動既有合併流程為準）。
 - 「統一」按鈕多帳號跑轉換的進度呈現粒度（逐帳號／逐 banner）。
