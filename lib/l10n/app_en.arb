@@ -287,6 +287,20 @@
   "settingsThemeLight": "Light",
   "settingsLanguage": "Language",
   "settingsLocaleSystem": "Follow system",
+  "settingsDataLanguage": "Data language",
+  "settingsDataLanguageDesc": "Unify the display language of your gacha history, independent of the app interface language. Once set, updating or importing data converts it to this language.",
+  "settingsDataLanguageUnset": "Not set (no conversion)",
+  "settingsDataLanguageUnify": "Unify data language",
+  "settingsDataLanguageUnifying": "Converting...",
+  "settingsDataLanguageUnifyDone": "Converted {converted}, recovered {backfilled} IDs, {unresolved} could not be converted.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": { "type": "int" },
+      "backfilled": { "type": "int" },
+      "unresolved": { "type": "int" }
+    }
+  },
+  "settingsDataLanguageUnifyFailed": "Conversion failed; data unchanged. Check your connection and try again.",
   "settingsDataManagement": "Data management",
   "settingsAccountManagement": "Account management",
   "settingsPrivacySectionTitle": "Privacy",

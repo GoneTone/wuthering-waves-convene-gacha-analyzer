@@ -281,6 +281,20 @@
   "settingsThemeLight": "浅色",
   "settingsLanguage": "语言",
   "settingsLocaleSystem": "跟随系统",
+  "settingsDataLanguage": "数据语言",
+  "settingsDataLanguageDesc": "统一卡池历史数据的显示语言，独立于应用程序界面语言。设定后更新或导入数据会自动转换成此语言。",
+  "settingsDataLanguageUnset": "未设定（不转换）",
+  "settingsDataLanguageUnify": "统一数据语言",
+  "settingsDataLanguageUnifying": "转换中...",
+  "settingsDataLanguageUnifyDone": "已转换 {converted} 笔，回查补 ID {backfilled} 笔，{unresolved} 笔无法转换。",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": { "type": "int" },
+      "backfilled": { "type": "int" },
+      "unresolved": { "type": "int" }
+    }
+  },
+  "settingsDataLanguageUnifyFailed": "转换失败，数据未变更。请检查网络后重试。",
   "settingsDataManagement": "数据管理",
   "settingsAccountManagement": "账号管理",
   "settingsPrivacySectionTitle": "隐私",
