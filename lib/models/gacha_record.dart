@@ -113,6 +113,27 @@ class GachaRecord {
     'time': formatGachaTime(time),
     'language_code': languageCode,
   };
+
+  /// 複製並選擇性覆蓋欄位（資料語言轉換用：改 name／resourceId／languageCode）。
+  GachaRecord copyWith({
+    int? resourceId,
+    int? qualityLevel,
+    String? resourceType,
+    String? cardPoolType,
+    String? name,
+    int? count,
+    DateTime? time,
+    String? languageCode,
+  }) => GachaRecord(
+    resourceId: resourceId ?? this.resourceId,
+    qualityLevel: qualityLevel ?? this.qualityLevel,
+    resourceType: resourceType ?? this.resourceType,
+    cardPoolType: cardPoolType ?? this.cardPoolType,
+    name: name ?? this.name,
+    count: count ?? this.count,
+    time: time ?? this.time,
+    languageCode: languageCode ?? this.languageCode,
+  );
 }
 
 /// 第三方匯入缺 `resourceId` 時，依物品名稱決定性產生的「合成」資源 id。
