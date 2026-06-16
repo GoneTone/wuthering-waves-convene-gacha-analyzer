@@ -34,20 +34,15 @@ class LangCatalogService {
   static const _allKinds = {kItemKindCharacter, kItemKindWeapon, kItemKindItem};
 
   /// 取得 [lang] 目錄：memo → 本地 → 抓取並落地。網路失敗時拋出（呼叫端決定如何處理）。
-  ///
-  /// [forceRefresh] 為 true 時略過 memo／本地快取，強制重抓並覆寫（供「目錄過期、
-  /// 出現新物品」時刷新；見 `GachaLanguageConverter` 的未命中自動刷新）。
-  Future<LangCatalog> ensure(String lang, {bool forceRefresh = false}) async {
-    if (!forceRefresh) {
-      final memo = _memo[lang];
-      if (memo != null) return memo;
+  Future<LangCatalog> ensure(String lang) async {
+    final memo = _memo[lang];
+    if (memo != null) return memo;
 
-      final cached = await storage.load(lang);
-      if (cached != null) {
-        _memo[lang] = cached;
-        _log.fine('lang catalog from disk lang=$lang');
-        return cached;
-      }
+    final cached = await storage.load(lang);
+    if (cached != null) {
+      _memo[lang] = cached;
+      _log.fine('lang catalog from disk lang=$lang');
+      return cached;
     }
 
     final client = clientFactory();

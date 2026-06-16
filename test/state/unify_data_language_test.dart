@@ -42,7 +42,7 @@ class _FakeConverter extends GachaLanguageConverter {
   /// 建立 [_FakeConverter]。
   _FakeConverter()
     : super(
-        ensureCatalog: (_, {bool forceRefresh = false}) async => LangCatalog(
+        ensureCatalog: (_) async => LangCatalog(
           lang: 'fake',
           fetchedAt: DateTime.utc(2026),
           byId: const {},

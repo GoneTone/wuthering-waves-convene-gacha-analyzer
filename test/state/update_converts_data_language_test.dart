@@ -144,7 +144,7 @@ void main() {
         byId: const {},
       );
       final fakeConverter = GachaLanguageConverter(
-        ensureCatalog: (_, {bool forceRefresh = false}) async => fakeCatalog,
+        ensureCatalog: (_) async => fakeCatalog,
       );
 
       final container = _makeContainer(
@@ -187,7 +187,7 @@ void main() {
         byId: {1211: (name: 'Danjin', kind: 'character')},
       );
       final fakeConverter = GachaLanguageConverter(
-        ensureCatalog: (lang, {bool forceRefresh = false}) async {
+        ensureCatalog: (lang) async {
           if (lang == 'en') return enCatalog;
           // 其他語言（src lang zh-Hant）回空 catalog（backfill 不需要，resourceId 已知）。
           return LangCatalog(

@@ -39,7 +39,7 @@ void main() {
         'ja': cat('ja', {1304: (name: '今汐', kind: kItemKindCharacter)}),
       };
       final conv = GachaLanguageConverter(
-        ensureCatalog: (l, {bool forceRefresh = false}) async => catalogs[l]!,
+        ensureCatalog: (l) async => catalogs[l]!,
       );
       final out = await conv.convert(
         store([rec(id: 1304, name: 'Jinhsi', lang: 'en')]),
@@ -60,7 +60,7 @@ void main() {
       'en': cat('en', {1304: (name: 'Jinhsi', kind: kItemKindCharacter)}),
     };
     final conv = GachaLanguageConverter(
-      ensureCatalog: (l, {bool forceRefresh = false}) async => catalogs[l]!,
+      ensureCatalog: (l) async => catalogs[l]!,
     );
     final out = await conv.convert(
       store([rec(id: -42, name: 'Jinhsi', lang: 'en')]),
@@ -77,7 +77,7 @@ void main() {
   test('unresolved record left fully untouched', () async {
     final catalogs = {'ja': cat('ja', const {}), 'en': cat('en', const {})};
     final conv = GachaLanguageConverter(
-      ensureCatalog: (l, {bool forceRefresh = false}) async => catalogs[l]!,
+      ensureCatalog: (l) async => catalogs[l]!,
     );
     final original = rec(id: -7, name: 'Mystery', lang: 'en');
     final out = await conv.convert(store([original]), 'ja');
@@ -95,7 +95,7 @@ void main() {
       'en': cat('en', {1304: (name: 'Jinhsi', kind: kItemKindCharacter)}),
     };
     final conv = GachaLanguageConverter(
-      ensureCatalog: (l, {bool forceRefresh = false}) async => catalogs[l]!,
+      ensureCatalog: (l) async => catalogs[l]!,
     );
     final out = await conv.convert(
       store([
@@ -112,39 +112,6 @@ void main() {
     expect(records[1].name, '今汐'); // en → ja 已轉換
     expect(records[1].languageCode, 'ja');
   });
-
-  test(
-    'stale target catalog auto-refreshed when positive id missing',
-    () async {
-      // 過期目標目錄缺 1304；強制刷新後才有。
-      final staleJa = cat('ja', const {});
-      final freshJa = cat('ja', {1304: (name: '今汐', kind: kItemKindCharacter)});
-      var refreshCount = 0;
-      final conv = GachaLanguageConverter(
-        ensureCatalog: (lang, {bool forceRefresh = false}) async {
-          if (lang == 'ja') {
-            if (forceRefresh) {
-              refreshCount++;
-              return freshJa;
-            }
-            return staleJa;
-          }
-          return cat(lang, const {});
-        },
-      );
-      // 正值 id 1304、擷取語言 en（≠ 目標 ja）→ 目標目錄查無 → 觸發刷新。
-      final out = await conv.convert(
-        store([rec(id: 1304, name: 'Jinhsi', lang: 'en')]),
-        'ja',
-      );
-      final r = out.data.banners['1']!.single;
-      expect(refreshCount, 1); // 強制刷新一次
-      expect(r.name, '今汐'); // 用刷新後目錄轉成功
-      expect(r.languageCode, 'ja');
-      expect(out.result.converted, 1);
-      expect(out.result.unresolved, 0);
-    },
-  );
 
   test('LangConvertResult sums', () {
     const a = LangConvertResult(total: 1, converted: 1);
