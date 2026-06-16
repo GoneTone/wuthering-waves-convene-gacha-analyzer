@@ -51,6 +51,7 @@ GachaRecord _record(int id, String name, String lang) => GachaRecord(
   name: name,
   count: 1,
   time: DateTime(2026, 5, 21, 11, 0, 0),
+  languageCode: lang,
 );
 
 void main() {
