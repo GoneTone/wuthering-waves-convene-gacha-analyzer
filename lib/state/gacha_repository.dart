@@ -956,6 +956,11 @@ class GachaRepository extends Notifier<GachaState> {
     } finally {
       cancellable.client.close();
     }
+    // 清掉 _fetchItemImages 期間 emit 的進度：unify 不是 update，沒有 UpdateCompleted
+    // 終止狀態，若不清空 app_shell 監聽的 progress 會卡在非終止的 FetchingItemImages
+    // （該 dialog 無關閉鈕、barrierDismissible:false），unify 結果改由設定頁的結果
+    // dialog 回報。
+    if (ref.mounted) state = state.copyWith(clearProgress: true);
 
     _log.info(
       'unifyDataLanguage target=$target total=${agg.total} '

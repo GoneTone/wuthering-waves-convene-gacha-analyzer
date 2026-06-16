@@ -253,6 +253,36 @@ void main() {
     expect(reloadedB!.banners['1']!.first.name, '角色C@en');
   });
 
+  test('unifyDataLanguage: 結束後清掉進度（避免 UpdateProgressDialog 卡住）', () async {
+    // _fetchItemImages 會 emit FetchingItemImages 進度，app_shell 監聽 progress
+    // 非 null 即彈出 UpdateProgressDialog（barrierDismissible:false、無關閉鈕）。
+    // unify 結束必須把 progress 清回 null，否則該 dialog 永久卡在「取得物品資料」。
+    SharedPreferences.setMockInitialValues({'pref.dataLanguage': 'en'});
+
+    final storage = GachaStorage(tempDir);
+    await storage.save(
+      BannerStorage(
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.utc(2026, 1, 1),
+        banners: {
+          '1': [_rec(1001, '角色A')],
+        },
+      ),
+    );
+
+    final container = _buildContainer(tempDir: tempDir);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(gachaRepositoryProvider.notifier);
+    await notifier.waitForBootstrap();
+
+    await notifier.unifyDataLanguage();
+
+    // 補圖階段結束後，progress 必須清空，否則進度 dialog 卡住不關。
+    expect(container.read(gachaRepositoryProvider).progress, isNull);
+  });
+
   test('unifyDataLanguage: dataLanguage 未設定時回零結果，不轉換', () async {
     // pref.dataLanguage = 'none' → dataLanguage = null、dataLanguageSeeded = true
     // （防止 bootstrap seeding 自動播種帳號語言覆蓋測試前提）。
