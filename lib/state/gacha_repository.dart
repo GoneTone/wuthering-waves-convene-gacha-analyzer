@@ -462,12 +462,15 @@ class GachaRepository extends Notifier<GachaState> {
     }
 
     final updatedAt = DateTime.now().toUtc();
-    final newData = BannerStorage(
+    var newData = BannerStorage(
       playerId: playerId,
       languageCode: cred.languageCode,
       lastUpdated: updatedAt,
       banners: mergedBanners,
     );
+    // 資料語言轉換（已設定時）：轉失敗回原樣，不中斷更新（D11）。
+    newData = await _convertAccountToDataLanguage(newData);
+    if (!ref.mounted) return;
     await storage.save(newData);
     if (!ref.mounted) return;
     await storage.saveCapturedCredential(playerId, cred.toJsonString());
@@ -481,6 +484,11 @@ class GachaRepository extends Notifier<GachaState> {
     state = state.copyWith(byUid: newByUid, activeUid: playerId);
     if (!ref.mounted) return;
     await ref.read(settingsProvider.notifier).setLastActiveUid(playerId);
+    if (!ref.mounted) return;
+    // 首次更新自動播種資料語言（以本次擷取語言；落在 9 選項外則 no-op）。
+    await ref
+        .read(settingsProvider.notifier)
+        .seedDataLanguageIfUnset(cred.languageCode);
     if (!ref.mounted) return;
 
     // 圖片補抓階段（best-effort，不影響 UpdateCompleted）。
@@ -876,7 +884,6 @@ class GachaRepository extends Notifier<GachaState> {
   ///
   /// 轉換失敗（如 catalog 補抓網路錯）不可中斷更新／匯入：吞例外、記 warning、
   /// 回傳未轉資料（D11）。
-  // ignore: unused_element
   Future<BannerStorage> _convertAccountToDataLanguage(
     BannerStorage data,
   ) async {
