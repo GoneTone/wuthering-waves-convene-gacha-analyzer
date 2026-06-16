@@ -20,10 +20,11 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/record_merge.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 
 export 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
 
@@ -869,6 +870,31 @@ class GachaRepository extends Notifier<GachaState> {
       state = state.copyWith(byUid: newByUid);
     }
     _log.info('cleared uid=${sanitizeUid(uid)}');
+  }
+
+  /// 若已設定資料語言，將 [data] 轉成該語言後回傳；未設定或轉換失敗則回原樣。
+  ///
+  /// 轉換失敗（如 catalog 補抓網路錯）不可中斷更新／匯入：吞例外、記 warning、
+  /// 回傳未轉資料（D11）。
+  // ignore: unused_element
+  Future<BannerStorage> _convertAccountToDataLanguage(
+    BannerStorage data,
+  ) async {
+    final target = ref.read(dataLanguageProvider);
+    if (target == null) return data;
+    try {
+      final converter = ref.read(gachaLanguageConverterProvider);
+      final out = await converter.convert(data, target);
+      return out.data;
+    } catch (e, st) {
+      Logger('wish.langconvert').warning(
+        'convert failed for playerId=${sanitizeUid(data.playerId)} '
+        'target=$target, keeping original data',
+        e,
+        st,
+      );
+      return data;
+    }
   }
 
   /// 補齊所有帳號喚取記錄聯集物品的 icon 與 dialog 詳情（catalog + prefetch）。
