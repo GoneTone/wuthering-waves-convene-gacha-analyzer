@@ -20,10 +20,12 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/record_merge.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_language_converter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 
 export 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
 
@@ -183,6 +185,14 @@ class GachaRepository extends Notifier<GachaState> {
 
       if (saved != activeUid) {
         await settingsNotifier.setLastActiveUid(activeUid);
+        if (!ref.mounted) return;
+      }
+
+      // Bootstrap 自動播種：取既有帳號中 last_updated 最新者的語言
+      // （落在 9 選項內才播；settings 已於上方 waitForLoad 就緒）。
+      final seedLang = _latestLanguageOf(byUid.values);
+      if (seedLang != null) {
+        await settingsNotifier.seedDataLanguageIfUnset(seedLang);
         if (!ref.mounted) return;
       }
     } finally {
@@ -461,12 +471,15 @@ class GachaRepository extends Notifier<GachaState> {
     }
 
     final updatedAt = DateTime.now().toUtc();
-    final newData = BannerStorage(
+    var newData = BannerStorage(
       playerId: playerId,
       languageCode: cred.languageCode,
       lastUpdated: updatedAt,
       banners: mergedBanners,
     );
+    // 資料語言轉換（已設定時）：轉失敗回原樣，不中斷更新（D11）。
+    newData = await _convertAccountToDataLanguage(newData);
+    if (!ref.mounted) return;
     await storage.save(newData);
     if (!ref.mounted) return;
     await storage.saveCapturedCredential(playerId, cred.toJsonString());
@@ -480,6 +493,11 @@ class GachaRepository extends Notifier<GachaState> {
     state = state.copyWith(byUid: newByUid, activeUid: playerId);
     if (!ref.mounted) return;
     await ref.read(settingsProvider.notifier).setLastActiveUid(playerId);
+    if (!ref.mounted) return;
+    // 首次更新自動播種資料語言（以本次擷取語言；落在 9 選項外則 no-op）。
+    await ref
+        .read(settingsProvider.notifier)
+        .seedDataLanguageIfUnset(cred.languageCode);
     if (!ref.mounted) return;
 
     // 圖片補抓階段（best-effort，不影響 UpdateCompleted）。
@@ -743,9 +761,10 @@ class GachaRepository extends Notifier<GachaState> {
       final incoming = account.data;
       try {
         final localBefore = newByUid[incoming.playerId];
-        final toSave = localBefore == null
+        var toSave = localBefore == null
             ? incoming
             : localBefore.mergeWith(incoming);
+        toSave = await _convertAccountToDataLanguage(toSave);
         await storage.save(toSave);
         final added =
             toSave.allRecords.length - (localBefore?.allRecords.length ?? 0);
@@ -811,6 +830,20 @@ class GachaRepository extends Notifier<GachaState> {
       );
     }
 
+    // 首次匯入自動播種資料語言：取 bundle 中 last_updated 最新帳號的語言。
+    final seedLang = _latestLanguageOf(bundle.accounts.map((a) => a.data));
+    if (seedLang != null) {
+      await settingsNotifier.seedDataLanguageIfUnset(seedLang);
+      if (!ref.mounted) {
+        return ImportResult(
+          successAccounts: successCount,
+          addedRecords: addedRecords,
+          duplicateRecords: duplicateRecords,
+          failedUids: failed,
+        );
+      }
+    }
+
     state = state.copyWith(
       byUid: newByUid,
       activeUid: newActive,
@@ -869,6 +902,101 @@ class GachaRepository extends Notifier<GachaState> {
       state = state.copyWith(byUid: newByUid);
     }
     _log.info('cleared uid=${sanitizeUid(uid)}');
+  }
+
+  /// 回傳 [stores] 中 `lastUpdated` 最新者的帳號級語言；空集合回 null。
+  String? _latestLanguageOf(Iterable<BannerStorage> stores) {
+    BannerStorage? latest;
+    for (final s in stores) {
+      if (latest == null || s.lastUpdated.isAfter(latest.lastUpdated)) {
+        latest = s;
+      }
+    }
+    return latest?.languageCode;
+  }
+
+  /// 將所有已知帳號的資料統一成目前設定的資料語言，存檔並刷新 state 與圖片。
+  ///
+  /// 未設定資料語言時直接回零結果（呼叫端按鈕應已禁用）。逐帳號轉換，單一帳號
+  /// 轉換失敗（吞例外）回原樣、不中斷其他帳號；最後 best-effort 補抓目標語言的
+  /// icon／詳情（含 backfill 到的真實 id）。
+  Future<LangConvertResult> unifyDataLanguage() async {
+    final target = ref.read(dataLanguageProvider);
+    if (target == null) return const LangConvertResult();
+
+    // 立刻設 Preparing：讓 app_shell 的進度 dialog 即時彈出，覆蓋「轉換 + 補圖
+    // catalog 抓取」這段在第一個 FetchingItemImages emit 之前的空窗（否則點按鈕後
+    // 要等數秒 dialog 才出現）。結尾統一 clearProgress 收尾。
+    state = state.copyWith(progress: const Preparing());
+
+    final storage = ref.read(gachaStorageProvider);
+    final converter = ref.read(gachaLanguageConverterProvider);
+    var agg = const LangConvertResult();
+    final newByUid = Map<String, BannerStorage>.from(state.byUid);
+    for (final entry in state.byUid.entries) {
+      try {
+        final out = await converter.convert(entry.value, target);
+        await storage.save(out.data);
+        newByUid[entry.key] = out.data;
+        agg = agg + out.result;
+      } catch (e, st) {
+        Logger('wish.langconvert').warning(
+          'unify skip playerId=${sanitizeUid(entry.key)} target=$target',
+          e,
+          st,
+        );
+      }
+      if (!ref.mounted) return agg;
+    }
+    state = state.copyWith(byUid: newByUid);
+    if (!ref.mounted) return agg;
+
+    // best-effort 補抓目標語言 icon／詳情（backfill 的真實 id 也順帶補圖）。
+    _cancelTriggered = false;
+    final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
+    try {
+      await _fetchItemImages(cancellable.client);
+    } catch (e, st) {
+      Logger('wish.langconvert').warning('unify image fetch failed', e, st);
+    } finally {
+      cancellable.client.close();
+    }
+    // 清掉 _fetchItemImages 期間 emit 的進度：unify 不是 update，沒有 UpdateCompleted
+    // 終止狀態，若不清空 app_shell 監聽的 progress 會卡在非終止的 FetchingItemImages
+    // （該 dialog 無關閉鈕、barrierDismissible:false），unify 結果改由設定頁的結果
+    // dialog 回報。
+    if (ref.mounted) state = state.copyWith(clearProgress: true);
+
+    _log.info(
+      'unifyDataLanguage target=$target total=${agg.total} '
+      'converted=${agg.converted} backfilledId=${agg.backfilledId} '
+      'unresolved=${agg.unresolved}',
+    );
+    return agg;
+  }
+
+  /// 若已設定資料語言，將 [data] 轉成該語言後回傳；未設定或轉換失敗則回原樣。
+  ///
+  /// 轉換失敗（如 catalog 補抓網路錯）不可中斷更新／匯入：吞例外、記 warning、
+  /// 回傳未轉資料（D11）。
+  Future<BannerStorage> _convertAccountToDataLanguage(
+    BannerStorage data,
+  ) async {
+    final target = ref.read(dataLanguageProvider);
+    if (target == null) return data;
+    try {
+      final converter = ref.read(gachaLanguageConverterProvider);
+      final out = await converter.convert(data, target);
+      return out.data;
+    } catch (e, st) {
+      Logger('wish.langconvert').warning(
+        'convert failed for playerId=${sanitizeUid(data.playerId)} '
+        'target=$target, keeping original data',
+        e,
+        st,
+      );
+      return data;
+    }
   }
 
   /// 補齊所有帳號喚取記錄聯集物品的 icon 與 dialog 詳情（catalog + prefetch）。
