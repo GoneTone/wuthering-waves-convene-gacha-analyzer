@@ -21,6 +21,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
@@ -184,6 +185,14 @@ class GachaRepository extends Notifier<GachaState> {
 
       if (saved != activeUid) {
         await settingsNotifier.setLastActiveUid(activeUid);
+        if (!ref.mounted) return;
+      }
+
+      // Bootstrap 自動播種：取既有帳號中 last_updated 最新者的語言
+      // （落在 9 選項內才播；settings 已於上方 waitForLoad 就緒）。
+      final seedLang = _latestLanguageOf(byUid.values);
+      if (seedLang != null) {
+        await settingsNotifier.seedDataLanguageIfUnset(seedLang);
         if (!ref.mounted) return;
       }
     } finally {
@@ -904,6 +913,56 @@ class GachaRepository extends Notifier<GachaState> {
       }
     }
     return latest?.languageCode;
+  }
+
+  /// 將所有已知帳號的資料統一成目前設定的資料語言，存檔並刷新 state 與圖片。
+  ///
+  /// 未設定資料語言時直接回零結果（呼叫端按鈕應已禁用）。逐帳號轉換，單一帳號
+  /// 轉換失敗（吞例外）回原樣、不中斷其他帳號；最後 best-effort 補抓目標語言的
+  /// icon／詳情（含 backfill 到的真實 id）。
+  Future<LangConvertResult> unifyDataLanguage() async {
+    final target = ref.read(dataLanguageProvider);
+    if (target == null) return const LangConvertResult();
+
+    final storage = ref.read(gachaStorageProvider);
+    final converter = ref.read(gachaLanguageConverterProvider);
+    var agg = const LangConvertResult();
+    final newByUid = Map<String, BannerStorage>.from(state.byUid);
+    for (final entry in state.byUid.entries) {
+      try {
+        final out = await converter.convert(entry.value, target);
+        await storage.save(out.data);
+        newByUid[entry.key] = out.data;
+        agg = agg + out.result;
+      } catch (e, st) {
+        Logger('wish.langconvert').warning(
+          'unify skip playerId=${sanitizeUid(entry.key)} target=$target',
+          e,
+          st,
+        );
+      }
+      if (!ref.mounted) return agg;
+    }
+    state = state.copyWith(byUid: newByUid);
+    if (!ref.mounted) return agg;
+
+    // best-effort 補抓目標語言 icon／詳情（backfill 的真實 id 也順帶補圖）。
+    _cancelTriggered = false;
+    final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
+    try {
+      await _fetchItemImages(cancellable.client);
+    } catch (e, st) {
+      Logger('wish.langconvert').warning('unify image fetch failed', e, st);
+    } finally {
+      cancellable.client.close();
+    }
+
+    _log.info(
+      'unifyDataLanguage target=$target total=${agg.total} '
+      'converted=${agg.converted} backfilledId=${agg.backfilledId} '
+      'unresolved=${agg.unresolved}',
+    );
+    return agg;
   }
 
   /// 若已設定資料語言，將 [data] 轉成該語言後回傳；未設定或轉換失敗則回原樣。
