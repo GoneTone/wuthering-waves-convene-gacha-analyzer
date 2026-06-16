@@ -290,7 +290,7 @@
   "settingsDataLanguage": "Data language",
   "settingsDataLanguageDesc": "Unify the display language of your gacha history, independent of the app interface language. Once set, updating or importing data converts it to this language.",
   "settingsDataLanguageUnset": "Not set (no conversion)",
-  "settingsDataLanguageUnify": "Unify data language",
+  "settingsDataLanguageUnify": "Convert data language now",
   "settingsDataLanguageUnifying": "Converting...",
   "settingsDataLanguageUnifyDone": "Converted {converted}, recovered {backfilled} IDs, {unresolved} could not be converted.",
   "@settingsDataLanguageUnifyDone": {
