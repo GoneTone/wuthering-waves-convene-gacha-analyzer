@@ -136,6 +136,7 @@ Future<LangConvertResult> convert(BannerStorage data, String targetLang)
 1. `ensure(targetLang)` 取得目標語言目錄。
 2. 蒐集需回查的紀錄（`resourceId<=0` 或目標目錄查無 `resourceId`）之**原語言集合**，逐一 `ensure(srcLang)`（沿用 `langsById` 模式）。
 3. 逐筆（只改 `name` 與 `languageCode`，**不動 `resourceType`**，見 D8）：
+   - **`languageCode` 已等於 targetLang → 免轉、原樣保留、不計入任何計數**（同語言不算「已轉換」，避免結果摘要灌水）。
    - `resourceId>0` 且目標目錄有名 → `name`=目標名、`languageCode`=targetLang。`converted++`。
    - 否則用該筆「原名 + 原 `languageCode`」目錄 `idByName` 回查真實 id：
      - 查到 → 採用真實 `resourceId`（寫回）、以目標目錄轉名、`languageCode`=targetLang。`converted++`、`backfilledId++`。
