@@ -150,10 +150,18 @@ bool luckdrawBelongsToCharacter(Map<String, dynamic> body) {
 /// 單一 lang 的 encore 列表查表結果：icon（kind → id → URL）與 name→(id, kind)。
 class EncoreCatalog {
   /// 建立 [EncoreCatalog]。
-  const EncoreCatalog({required this.iconByKindId, this.idByName = const {}});
+  const EncoreCatalog({
+    required this.iconByKindId,
+    this.nameByKindId = const {},
+    this.idByName = const {},
+  });
 
   /// kind（`kItemKind*`）→ `{resourceId → iconUrl}`。
   final Map<String, Map<int, String>> iconByKindId;
+
+  /// kind（`kItemKind*`）→ `{resourceId → 物品名稱}`，與 [iconByKindId] 平行，
+  /// 供資料語言轉換以 `resourceId` 取該語言名稱。
+  final Map<String, Map<int, String>> nameByKindId;
 
   /// 物品名稱 → (resourceId, kind)；跨 kind union，同名以首個命中為準。
   /// 供第三方匯入回填缺 id 紀錄（見 `wuwa_tracker_importer`）。
@@ -237,6 +245,7 @@ class ItemImageFetcher {
     required http.Client client,
   }) async {
     final iconByKindId = <String, Map<int, String>>{};
+    final nameByKindId = <String, Map<int, String>>{};
     final idByName = <String, ({int id, String kind})>{};
     final ambiguousNames = <String>{};
     final encLang = encoreLang(lang);
@@ -250,6 +259,9 @@ class ItemImageFetcher {
         client: client,
       );
       iconByKindId[kind] = parsed.icons;
+      nameByKindId[kind] = {
+        for (final e in parsed.names.entries) e.value: e.key,
+      };
       parsed.names.forEach((name, id) {
         if (ambiguousNames.contains(name)) return;
         final existing = idByName[name];
@@ -269,7 +281,11 @@ class ItemImageFetcher {
         '${ambiguousNames.take(5).toList()}',
       );
     }
-    return EncoreCatalog(iconByKindId: iconByKindId, idByName: idByName);
+    return EncoreCatalog(
+      iconByKindId: iconByKindId,
+      nameByKindId: nameByKindId,
+      idByName: idByName,
+    );
   }
 
   /// 抓單一 kind 的列表並解析 `{id → iconUrl}` 與 `{name → id}`；任何失敗回兩空 map。
