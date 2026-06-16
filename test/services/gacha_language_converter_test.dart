@@ -89,6 +89,30 @@ void main() {
     expect(out.result.converted, 0);
   });
 
+  test('records already in target language are not counted', () async {
+    final catalogs = {
+      'ja': cat('ja', {1304: (name: '今汐', kind: kItemKindCharacter)}),
+      'en': cat('en', {1304: (name: 'Jinhsi', kind: kItemKindCharacter)}),
+    };
+    final conv = GachaLanguageConverter(
+      ensureCatalog: (l) async => catalogs[l]!,
+    );
+    final out = await conv.convert(
+      store([
+        rec(id: 1304, name: '今汐', lang: 'ja'), // 已是目標語言 → 不計、不動
+        rec(id: 1304, name: 'Jinhsi', lang: 'en'), // 需轉換 → 計 1
+      ]),
+      'ja',
+    );
+    expect(out.result.converted, 1); // 只算真正換語言的那筆
+    expect(out.result.unresolved, 0);
+    final records = out.data.banners['1']!;
+    expect(records[0].name, '今汐'); // 同語言原樣保留
+    expect(records[0].languageCode, 'ja');
+    expect(records[1].name, '今汐'); // en → ja 已轉換
+    expect(records[1].languageCode, 'ja');
+  });
+
   test('LangConvertResult sums', () {
     const a = LangConvertResult(total: 1, converted: 1);
     const b = LangConvertResult(total: 1, unresolved: 1);

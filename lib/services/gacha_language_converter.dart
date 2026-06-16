@@ -58,9 +58,11 @@ class GachaLanguageConverter {
     final targetCat = await ensureCatalog(targetLang);
 
     // 蒐集需回查的紀錄之原語言（合成／負值 id，或目標目錄查無 id）。
+    // 已是目標語言者免轉、不需來源目錄。
     final srcLangs = <String>{};
     for (final list in data.banners.values) {
       for (final r in list) {
+        if (r.languageCode == targetLang) continue;
         final needsBackfill =
             r.resourceId <= 0 || !targetCat.byId.containsKey(r.resourceId);
         if (needsBackfill && r.languageCode.isNotEmpty) {
@@ -79,6 +81,12 @@ class GachaLanguageConverter {
       final out = <GachaRecord>[];
       for (final r in list) {
         result = result + const LangConvertResult(total: 1);
+
+        // 已是目標語言：免轉、原樣保留、不計入「已轉換」（同語言不記錄）。
+        if (r.languageCode == targetLang) {
+          out.add(r);
+          continue;
+        }
 
         // 直接以 resourceId 對應目標名。
         final direct = r.resourceId > 0 ? targetCat.byId[r.resourceId] : null;
