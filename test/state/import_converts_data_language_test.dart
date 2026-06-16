@@ -214,7 +214,7 @@ void main() {
         byId: {1211: (name: 'Danjin', kind: 'character')},
       );
       final fakeConverter = GachaLanguageConverter(
-        ensureCatalog: (lang) async {
+        ensureCatalog: (lang, {bool forceRefresh = false}) async {
           if (lang == 'en') return enCatalog;
           return LangCatalog(
             lang: lang,
@@ -305,7 +305,7 @@ void main() {
         },
       );
       final fakeConverter = GachaLanguageConverter(
-        ensureCatalog: (lang) async {
+        ensureCatalog: (lang, {bool forceRefresh = false}) async {
           if (lang == 'en') return enCatalog;
           return LangCatalog(
             lang: lang,

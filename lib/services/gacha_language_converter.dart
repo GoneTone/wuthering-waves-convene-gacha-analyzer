@@ -47,15 +47,17 @@ class GachaLanguageConverter {
   /// Logger 實例。
   static final _log = Logger('wish.langconvert');
 
-  /// 取得某語言目錄的解析器。
-  final Future<LangCatalog> Function(String lang) ensureCatalog;
+  /// 取得某語言目錄的解析器；[forceRefresh] 為 true 時略過快取重抓
+  /// （供未命中自動刷新）。
+  final Future<LangCatalog> Function(String lang, {bool forceRefresh})
+  ensureCatalog;
 
   /// 轉換 [data] 為 [targetLang]，回傳新的存檔與計數摘要。
   Future<({BannerStorage data, LangConvertResult result})> convert(
     BannerStorage data,
     String targetLang,
   ) async {
-    final targetCat = await ensureCatalog(targetLang);
+    var targetCat = await ensureCatalog(targetLang);
 
     // 蒐集需回查的紀錄之原語言（合成／負值 id，或目標目錄查無 id）。
     // 已是目標語言者免轉、不需來源目錄。
@@ -73,6 +75,25 @@ class GachaLanguageConverter {
     final srcCats = <String, LangCatalog>{};
     for (final lang in srcLangs) {
       srcCats[lang] = await ensureCatalog(lang);
+    }
+
+    // 未命中自動刷新：若有「需轉換的正值 resourceId 在目標目錄查無」，視為目錄過期
+    // （遊戲新版新增物品），強制重抓目標＋來源目錄一次再轉。正值 id 是強訊號、
+    // 誤判率低；單次刷新有界（encore 真的尚未收錄時下次轉換才會再試）。
+    final staleDetected = data.banners.values.any(
+      (list) => list.any(
+        (r) =>
+            r.languageCode != targetLang &&
+            r.resourceId > 0 &&
+            !targetCat.byId.containsKey(r.resourceId),
+      ),
+    );
+    if (staleDetected) {
+      _log.info('stale catalog detected, refreshing target=$targetLang');
+      targetCat = await ensureCatalog(targetLang, forceRefresh: true);
+      for (final lang in srcLangs) {
+        srcCats[lang] = await ensureCatalog(lang, forceRefresh: true);
+      }
     }
 
     var result = const LangConvertResult();

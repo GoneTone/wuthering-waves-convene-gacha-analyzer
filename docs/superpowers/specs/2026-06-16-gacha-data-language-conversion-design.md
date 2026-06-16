@@ -29,7 +29,7 @@
 
 ## 非目標（YAGNI）
 
-- **不**做語言目錄的自動過期／定期刷新：encore 名稱極少變動，缺該語言才抓；日後要手動重抓再加。
+- **不**做語言目錄的「時間／定期過期」：encore 名稱極少變動。但**有未命中觸發刷新**——轉換時若有「需轉換的正值 `resourceId` 在目標目錄查無」（遊戲新版新增物品的強訊號），即強制重抓該語言目錄一次再轉（見 Part C）。
 - **不**改 `rust/` MITM 擷取邏輯：`cred.languageCode` 沿用。
 - **不**移除逐筆 `languageCode`：它仍是每筆紀錄的權威來源語言，轉換成功才改寫。
 - **不**為「未設定」狀態保留原始名稱以外的額外備份：轉換成功直接改寫存檔（突變模型），轉不了的保持原狀即為備援。
@@ -135,6 +135,7 @@ Future<LangConvertResult> convert(BannerStorage data, String targetLang)
 
 1. `ensure(targetLang)` 取得目標語言目錄。
 2. 蒐集需回查的紀錄（`resourceId<=0` 或目標目錄查無 `resourceId`）之**原語言集合**，逐一 `ensure(srcLang)`（沿用 `langsById` 模式）。
+2.5. **未命中自動刷新**：若有「需轉換的正值 `resourceId` 在目標目錄查無」（目錄過期、遊戲新版新增物品），以 `ensure(lang, forceRefresh: true)` 強制重抓目標＋來源目錄各一次（單次、有界；encore 真的尚未收錄時下次轉換才會再試）。
 3. 逐筆（只改 `name` 與 `languageCode`，**不動 `resourceType`**，見 D8）：
    - **`languageCode` 已等於 targetLang → 免轉、原樣保留、不計入任何計數**（同語言不算「已轉換」，避免結果摘要灌水）。
    - `resourceId>0` 且目標目錄有名 → `name`=目標名、`languageCode`=targetLang。`converted++`。
