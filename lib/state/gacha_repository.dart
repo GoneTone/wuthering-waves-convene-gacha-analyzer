@@ -924,6 +924,11 @@ class GachaRepository extends Notifier<GachaState> {
     final target = ref.read(dataLanguageProvider);
     if (target == null) return const LangConvertResult();
 
+    // 立刻設 Preparing：讓 app_shell 的進度 dialog 即時彈出，覆蓋「轉換 + 補圖
+    // catalog 抓取」這段在第一個 FetchingItemImages emit 之前的空窗（否則點按鈕後
+    // 要等數秒 dialog 才出現）。結尾統一 clearProgress 收尾。
+    state = state.copyWith(progress: const Preparing());
+
     final storage = ref.read(gachaStorageProvider);
     final converter = ref.read(gachaLanguageConverterProvider);
     var agg = const LangConvertResult();

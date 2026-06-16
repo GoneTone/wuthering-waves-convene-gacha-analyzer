@@ -253,6 +253,33 @@ void main() {
     expect(reloadedB!.banners['1']!.first.name, '角色C@en');
   });
 
+  test('unifyDataLanguage: 立即設 Preparing 進度（dialog 即時彈出）', () async {
+    SharedPreferences.setMockInitialValues({'pref.dataLanguage': 'en'});
+
+    final storage = GachaStorage(tempDir);
+    await storage.save(
+      BannerStorage(
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.utc(2026, 1, 1),
+        banners: {
+          '1': [_rec(1001, '角色A')],
+        },
+      ),
+    );
+
+    final container = _buildContainer(tempDir: tempDir);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(gachaRepositoryProvider.notifier);
+    await notifier.waitForBootstrap();
+
+    // 不 await：async 函式同步執行到首個 await 前，應已設好 Preparing。
+    final future = notifier.unifyDataLanguage();
+    expect(container.read(gachaRepositoryProvider).progress, isA<Preparing>());
+    await future;
+  });
+
   test('unifyDataLanguage: 結束後清掉進度（避免 UpdateProgressDialog 卡住）', () async {
     // _fetchItemImages 會 emit FetchingItemImages 進度，app_shell 監聽 progress
     // 非 null 即彈出 UpdateProgressDialog（barrierDismissible:false、無關閉鈕）。
