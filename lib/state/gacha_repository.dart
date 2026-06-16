@@ -752,9 +752,10 @@ class GachaRepository extends Notifier<GachaState> {
       final incoming = account.data;
       try {
         final localBefore = newByUid[incoming.playerId];
-        final toSave = localBefore == null
+        var toSave = localBefore == null
             ? incoming
             : localBefore.mergeWith(incoming);
+        toSave = await _convertAccountToDataLanguage(toSave);
         await storage.save(toSave);
         final added =
             toSave.allRecords.length - (localBefore?.allRecords.length ?? 0);
@@ -820,6 +821,20 @@ class GachaRepository extends Notifier<GachaState> {
       );
     }
 
+    // 首次匯入自動播種資料語言：取 bundle 中 last_updated 最新帳號的語言。
+    final seedLang = _latestLanguageOf(bundle.accounts.map((a) => a.data));
+    if (seedLang != null) {
+      await settingsNotifier.seedDataLanguageIfUnset(seedLang);
+      if (!ref.mounted) {
+        return ImportResult(
+          successAccounts: successCount,
+          addedRecords: addedRecords,
+          duplicateRecords: duplicateRecords,
+          failedUids: failed,
+        );
+      }
+    }
+
     state = state.copyWith(
       byUid: newByUid,
       activeUid: newActive,
@@ -878,6 +893,17 @@ class GachaRepository extends Notifier<GachaState> {
       state = state.copyWith(byUid: newByUid);
     }
     _log.info('cleared uid=${sanitizeUid(uid)}');
+  }
+
+  /// 回傳 [stores] 中 `lastUpdated` 最新者的帳號級語言；空集合回 null。
+  String? _latestLanguageOf(Iterable<BannerStorage> stores) {
+    BannerStorage? latest;
+    for (final s in stores) {
+      if (latest == null || s.lastUpdated.isAfter(latest.lastUpdated)) {
+        latest = s;
+      }
+    }
+    return latest?.languageCode;
   }
 
   /// 若已設定資料語言，將 [data] 轉成該語言後回傳；未設定或轉換失敗則回原樣。
