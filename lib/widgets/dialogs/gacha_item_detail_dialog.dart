@@ -22,6 +22,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/utils/encore_entry_text.d
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/dialog_toast.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gallery_chip_bar.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
 
 /// module-level logger，供 dialog 與其 tap target 共用。
@@ -757,18 +758,10 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (chipEntries.length > 1) ...[
-            Wrap(
-              spacing: AppSpacing.s,
-              runSpacing: AppSpacing.s,
-              children: [
-                for (var i = 0; i < chipEntries.length; i++)
-                  ChoiceChip(
-                    label: Text(chipEntries[i].label),
-                    selected: i == clampedIndex,
-                    showCheckmark: false,
-                    onSelected: (_) => setState(() => _selectedIndex = i),
-                  ),
-              ],
+            GalleryChipBar(
+              labels: [for (final e in chipEntries) e.label],
+              selectedIndex: clampedIndex,
+              onSelected: (i) => setState(() => _selectedIndex = i),
             ),
             const SizedBox(height: AppSpacing.m),
           ],

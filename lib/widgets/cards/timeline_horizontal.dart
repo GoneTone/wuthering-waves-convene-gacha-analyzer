@@ -11,21 +11,13 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_no
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/scroll/scroll_affordance.dart';
 
 /// 每個時間軸欄的固定寬度。
 const double _colWidth = 90;
 
 /// 邊緣漸隱遮罩的寬度。
 const double _edgeFadeWidth = 32;
-
-/// 點擊箭頭捲動的動畫時長。
-const Duration _scrollDuration = Duration(milliseconds: 240);
-
-/// 點擊箭頭捲動的動畫曲線。
-const Curve _scrollCurve = Curves.easeOutCubic;
-
-/// 捲動可及性箭頭的方向。
-enum _ScrollSide { left, right }
 
 /// 從跨卡池 timeline entries 統計各卡池的 5★ 數量,輸出可餵給
 /// [DistributionLegend] (記得搭配 `showAllEntries: true`) 的條目,作為
@@ -137,8 +129,8 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
     final target = (_controller.offset + delta).clamp(0.0, pos.maxScrollExtent);
     _controller.animateTo(
       target,
-      duration: _scrollDuration,
-      curve: _scrollCurve,
+      duration: kScrollAffordanceDuration,
+      curve: kScrollAffordanceCurve,
     );
   }
 
@@ -213,7 +205,7 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
             bottom: 0,
             width: _edgeFadeWidth,
             child: const IgnorePointer(
-              child: _EdgeFade(side: _ScrollSide.left),
+              child: ScrollEdgeFade(side: ScrollSide.left),
             ),
           ),
           Positioned(
@@ -221,7 +213,7 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
             top: 0,
             bottom: 0,
             child: Center(
-              child: _ArrowButton(
+              child: ScrollArrowButton(
                 icon: Icons.chevron_left,
                 tooltip: l.timelineScrollLeft,
                 tokens: tokens,
@@ -238,7 +230,7 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
             bottom: 0,
             width: _edgeFadeWidth,
             child: const IgnorePointer(
-              child: _EdgeFade(side: _ScrollSide.right),
+              child: ScrollEdgeFade(side: ScrollSide.right),
             ),
           ),
           Positioned(
@@ -246,7 +238,7 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
             top: 0,
             bottom: 0,
             child: Center(
-              child: _ArrowButton(
+              child: ScrollArrowButton(
                 icon: Icons.chevron_right,
                 tooltip: l.timelineScrollRight,
                 tokens: tokens,
@@ -394,83 +386,6 @@ class _NowColumn extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// 邊緣漸隱遮罩，用於提示使用者該方向仍可捲動。
-class _EdgeFade extends StatelessWidget {
-  const _EdgeFade({required this.side});
-
-  /// 漸隱方向：left 從左往右漸隱，right 從右往左漸隱。
-  final _ScrollSide side;
-
-  @override
-  Widget build(BuildContext context) {
-    final cardColor = Theme.of(context).gacha.surfaceCard;
-    final isLeft = side == _ScrollSide.left;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: isLeft ? Alignment.centerLeft : Alignment.centerRight,
-          end: isLeft ? Alignment.centerRight : Alignment.centerLeft,
-          colors: [cardColor, cardColor.withValues(alpha: 0)],
-        ),
-      ),
-    );
-  }
-}
-
-/// 浮在時間軸邊緣的圓形捲動箭頭按鈕。
-class _ArrowButton extends StatelessWidget {
-  const _ArrowButton({
-    required this.icon,
-    required this.tooltip,
-    required this.tokens,
-    required this.onPressed,
-  });
-
-  /// 按鈕圖示（左箭頭或右箭頭）。
-  final IconData icon;
-
-  /// 無障礙 tooltip 文字。
-  final String tooltip;
-
-  /// 主題 token，用於按鈕背景色。
-  final GachaTokens tokens;
-
-  /// 點擊後的回呼。
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: tooltip,
-      child: Tooltip(
-        message: tooltip,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: Material(
-            color: tokens.surfaceCard.withValues(alpha: 0.85),
-            shape: CircleBorder(
-              side: BorderSide(
-                color: tokens.textMuted.withValues(alpha: 0.25),
-                width: 1,
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onPressed,
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: Icon(icon, size: 16, color: tokens.textPrimary),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
