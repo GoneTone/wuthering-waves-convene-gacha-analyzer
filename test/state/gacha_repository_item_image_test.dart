@@ -450,4 +450,160 @@ void main() {
       9,
     ]);
   });
+
+  test('forceDetailRefetch：detail 已存在仍重抓，偵測新 skins；icon 不重下', () async {
+    // 預植：1211 角色 icon 已快取、kind 已分類、zh-Hant 詳情已抓但 skins 為空、hasLuckdraw 已評估。
+    await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
+    await ItemImageIndexStorage(tempDir).save(
+      const ItemImageIndex(
+        items: {
+          1211: ItemImageEntry(
+            iconUrl: 'https://x/1211.png',
+            noImage: false,
+            permanentNoImage: false,
+            kind: kItemKindCharacter,
+            hasLuckdraw: false,
+            detailByLang: {
+              'zh-Hant': ItemDetailL10n(
+                intro: 'old',
+                elementName: '',
+                weaponTypeName: '',
+                skins: [],
+              ),
+            },
+          ),
+        },
+      ),
+    );
+    final container = build(characters: {1211}, details: {1211});
+    addTearDown(container.dispose);
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    await container.read(itemImageIndexProvider.notifier).waitForLoad();
+    repo.debugSeedAccount(
+      BannerStorage(
+        playerId: '701000000',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.utc(2026),
+        banners: {
+          '1': [_rec(1211, 5, '角色')],
+        },
+      ),
+    );
+
+    await repo.debugRunItemImagesOnly(forceDetailRefetch: true);
+
+    final e = container.read(itemImageIndexProvider).lookupImage(1211)!;
+    // detail 已存在仍重抓 → 偵測到 fake fetcher 回的新 skin。
+    expect(e.detailByLang['zh-Hant']!.skins, isNotEmpty);
+    // 非破壞：icon 檔未被重下載（仍是預寫 bytes；重下載會被 MockClient 覆成 [1,2,3]）。
+    expect(await File('${tempDir.path}/1211_icon.png').readAsBytes(), [
+      9,
+      9,
+      9,
+    ]);
+  });
+
+  test('非 force 時 detail 已存在不重抓（守衛維持）', () async {
+    await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
+    await ItemImageIndexStorage(tempDir).save(
+      const ItemImageIndex(
+        items: {
+          1211: ItemImageEntry(
+            iconUrl: 'https://x/1211.png',
+            noImage: false,
+            permanentNoImage: false,
+            kind: kItemKindCharacter,
+            hasLuckdraw: false,
+            detailByLang: {
+              'zh-Hant': ItemDetailL10n(
+                intro: 'old',
+                elementName: '',
+                weaponTypeName: '',
+                skins: [],
+              ),
+            },
+          ),
+        },
+      ),
+    );
+    final container = build(characters: {1211}, details: {1211});
+    addTearDown(container.dispose);
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    await container.read(itemImageIndexProvider.notifier).waitForLoad();
+    repo.debugSeedAccount(
+      BannerStorage(
+        playerId: '701000000',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.utc(2026),
+        banners: {
+          '1': [_rec(1211, 5, '角色')],
+        },
+      ),
+    );
+
+    await repo.debugRunItemImagesOnly();
+
+    // 未 force：skins 維持空（沒重抓）。
+    final e = container.read(itemImageIndexProvider).lookupImage(1211)!;
+    expect(e.detailByLang['zh-Hant']!.skins, isEmpty);
+  });
+
+  test('pruneStaleLangs：移除不在任何記錄的殘留語言', () async {
+    // 預植：1503 同時有 zh-Hant 與 en 詳情，但記錄只剩 zh-Hant（en 為轉換後殘留）。
+    await ItemImageIndexStorage(tempDir).save(
+      const ItemImageIndex(
+        items: {
+          1503: ItemImageEntry(
+            iconUrl: 'https://x/1503.png',
+            noImage: false,
+            permanentNoImage: false,
+            kind: kItemKindCharacter,
+            hasLuckdraw: false,
+            detailByLang: {
+              'zh-Hant': ItemDetailL10n(
+                intro: 'A',
+                elementName: '',
+                weaponTypeName: '',
+                skins: [],
+              ),
+              'en': ItemDetailL10n(
+                intro: 'B',
+                elementName: '',
+                weaponTypeName: '',
+                skins: [],
+              ),
+            },
+          ),
+        },
+      ),
+    );
+    await File('${tempDir.path}/1503_icon.png').writeAsBytes([9, 9, 9]);
+    final container = build(characters: {1503}, details: {1503});
+    addTearDown(container.dispose);
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    await container.read(itemImageIndexProvider.notifier).waitForLoad();
+    repo.debugSeedAccount(
+      BannerStorage(
+        playerId: '701000000',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.utc(2026),
+        banners: {
+          '1': [_rec(1503, 5, '角色', lang: 'zh-Hant')],
+        },
+      ),
+    );
+
+    await repo.debugRunItemImagesOnly(
+      forceDetailRefetch: true,
+      pruneStaleLangs: true,
+    );
+
+    final e = container.read(itemImageIndexProvider).lookupImage(1503)!;
+    // en 殘留被清，zh-Hant 保留。
+    expect(e.detailByLang.containsKey('en'), isFalse);
+    expect(e.detailByLang.containsKey('zh-Hant'), isTrue);
+  });
 }

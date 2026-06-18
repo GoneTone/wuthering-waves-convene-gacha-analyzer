@@ -503,7 +503,7 @@ class GachaRepository extends Notifier<GachaState> {
     // 圖片補抓階段（best-effort，不影響 UpdateCompleted）。
     var itemImagesDownloaded = 0;
     try {
-      itemImagesDownloaded = await _fetchItemImages(client);
+      itemImagesDownloaded = (await _fetchItemImages(client)).imagesDownloaded;
     } catch (e, st) {
       _log.warning('image stage threw (ignored)', e, st);
     }
@@ -596,7 +596,9 @@ class GachaRepository extends Notifier<GachaState> {
 
       var itemImagesDownloaded = 0;
       try {
-        itemImagesDownloaded = await _fetchItemImages(cancellable.client);
+        itemImagesDownloaded = (await _fetchItemImages(
+          cancellable.client,
+        )).imagesDownloaded;
       } catch (e, st) {
         _refetchLog.warning('item image stage threw (ignored)', e, st);
       }
@@ -695,7 +697,9 @@ class GachaRepository extends Notifier<GachaState> {
 
       var itemImagesDownloaded = 0;
       try {
-        itemImagesDownloaded = await _fetchItemImages(cancellable.client);
+        itemImagesDownloaded = (await _fetchItemImages(
+          cancellable.client,
+        )).imagesDownloaded;
       } catch (e, st) {
         _importLog.warning('item image stage threw (ignored)', e, st);
       }
@@ -1021,8 +1025,21 @@ class GachaRepository extends Notifier<GachaState> {
   ///
   /// 每筆獨立 try/catch，單筆失敗不終止整段。取消（`_cancelTriggered` 或
   /// `!ref.mounted`）早退。回傳本次成功寫入磁碟的 icon 張數。
-  Future<int> _fetchItemImages(http.Client client) async {
+  Future<({int imagesDownloaded, int itemsRefreshed, int staleItemsPruned})>
+  _fetchItemImages(
+    http.Client client, {
+    bool forceDetailRefetch = false,
+    bool pruneStaleLangs = false,
+  }) async {
     var downloaded = 0;
+    var staleItemsPruned = 0;
+    final refreshedIds = <int>{};
+    ({int imagesDownloaded, int itemsRefreshed, int staleItemsPruned})
+    result() => (
+      imagesDownloaded: downloaded,
+      itemsRefreshed: refreshedIds.length,
+      staleItemsPruned: staleItemsPruned,
+    );
     final fetcher = ref.read(itemImageFetcherProvider);
     final indexNotifier = ref.read(itemImageIndexProvider.notifier);
     final cacheDir = ref.read(itemImageCacheDirProvider);
@@ -1039,13 +1056,25 @@ class GachaRepository extends Notifier<GachaState> {
         }
       }
     }
-    if (langsById.isEmpty) return downloaded;
+    if (langsById.isEmpty) return result();
+
+    // 殘留語言清理：移除 index 中已不再被任何記錄使用的語言詳情（資料語言轉換後遺留）。
+    // 必須在讀 idx0 快照前做，使後續階段看到清理後的 index。recordLangs 空時不清（防呆）。
+    if (pruneStaleLangs) {
+      final recordLangs = {for (final s in langsById.values) ...s};
+      if (recordLangs.isNotEmpty) {
+        staleItemsPruned = await indexNotifier.pruneLanguages(recordLangs);
+      }
+    }
 
     // (2) gate：icon 未就緒、kind 未分類（含既有快取 icon 的升級回填）、某 lang
     //     詳情未抓、或角色 hasLuckdraw 尚未評估（legacy backfill）→ 需處理。
     //     全無 → early return（不打 catalog）。
     final idx0 = ref.read(itemImageIndexProvider);
     bool needsWork(int id) {
+      // 強制重抓：所有物品都重新處理（catalog 重跑→負取/新物品重試解析；正取→重抓
+      // detail 偵測新 skins）。permanentNoImage 在本專案從不為 true，故不另設例外。
+      if (forceDetailRefetch) return true;
       final existing = idx0.lookupImage(id);
       if (needsItemImageFetch(
         existing: existing,
@@ -1070,7 +1099,7 @@ class GachaRepository extends Notifier<GachaState> {
     }
 
     final workIds = langsById.keys.where(needsWork).toSet();
-    if (workIds.isEmpty) return downloaded;
+    if (workIds.isEmpty) return result();
 
     bool isAborted() => !ref.mounted || _cancelTriggered;
 
@@ -1081,7 +1110,7 @@ class GachaRepository extends Notifier<GachaState> {
     final kindById = <int, String>{};
     final allLangs = {for (final id in workIds) ...langsById[id]!};
     for (final lang in allLangs) {
-      if (isAborted()) return downloaded;
+      if (isAborted()) return result();
       final catalog = await fetcher.fetchCatalog(
         lang: lang,
         kinds: allKinds,
@@ -1103,7 +1132,7 @@ class GachaRepository extends Notifier<GachaState> {
     final positiveIds = <int>{};
     final hdIconById = <int, String>{};
     for (final id in workIds) {
-      if (isAborted()) return downloaded;
+      if (isAborted()) return result();
       final existing = ref.read(itemImageIndexProvider).lookupImage(id);
       final iconNeeded = needsItemImageFetch(
         existing: existing,
@@ -1169,7 +1198,7 @@ class GachaRepository extends Notifier<GachaState> {
                 existing?.detailByLang.containsKey(lang) ?? false;
             final luckdrawUnevaluated =
                 kind == kItemKindCharacter && existing?.hasLuckdraw == null;
-            if (!detailAlready || luckdrawUnevaluated) {
+            if (forceDetailRefetch || !detailAlready || luckdrawUnevaluated) {
               final detail = await fetcher.fetchItemDetail(
                 resourceId: id,
                 kind: kind,
@@ -1196,6 +1225,7 @@ class GachaRepository extends Notifier<GachaState> {
                   ),
                   hasLuckdraw: detail.hasLuckdraw,
                 );
+                refreshedIds.add(id);
                 if (kind == kItemKindCharacter && detail.iconHd.isNotEmpty) {
                   hdIconById[id] = detail.iconHd;
                 }
@@ -1232,7 +1262,7 @@ class GachaRepository extends Notifier<GachaState> {
     }
 
     // (7) 下載階段：只下載 icon（立繪走 dialog lazy）。
-    if (toDownload.isEmpty || isAborted()) return downloaded;
+    if (toDownload.isEmpty || isAborted()) return result();
     var downloadedDone = 0;
     await runConcurrent<(int, String)>(
       items: toDownload,
@@ -1266,16 +1296,23 @@ class GachaRepository extends Notifier<GachaState> {
         );
       },
     );
-    return downloaded;
+    return result();
   }
 
   /// 測試用：略過 banner fetch 直接跑 item image 階段（用既有 state.byUid）。
   @visibleForTesting
-  Future<void> debugRunItemImagesOnly() async {
+  Future<void> debugRunItemImagesOnly({
+    bool forceDetailRefetch = false,
+    bool pruneStaleLangs = false,
+  }) async {
     _cancelTriggered = false;
     final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
     try {
-      await _fetchItemImages(cancellable.client);
+      await _fetchItemImages(
+        cancellable.client,
+        forceDetailRefetch: forceDetailRefetch,
+        pruneStaleLangs: pruneStaleLangs,
+      );
     } finally {
       cancellable.client.close();
     }
