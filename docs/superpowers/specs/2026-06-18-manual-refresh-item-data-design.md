@@ -72,7 +72,8 @@ Future<({int imagesDownloaded, int itemsRefreshed, int staleItemsPruned})>
 ```
 
 - **回傳改為 record**：`imagesDownloaded`（本次成功寫檔的 icon 張數，沿用既有語意）、`itemsRefreshed`（本次成功重抓 detail 的**相異物品數**）、`staleItemsPruned`（本次清掉殘留語言的相異物品數）。其餘呼叫端（一般更新、匯入、unify）只讀 `.imagesDownloaded`，改為解構取該欄位即可，不受影響。
-- **gate（`needsWork`）**：`forceDetailRefetch == false` 維持現狀。`forceDetailRefetch == true` 時對所有 `langsById` 的 id 回傳 true（`permanentNoImage` 者仍可維持跳過，避免反覆打已知無圖的 id；於程式碼內留 WHY 註解）。效果：catalog 重跑 → 先前負取／encore 新增的物品重新嘗試解析；正取物品強制進入 detail 階段。
+- **gate（`needsWork`）**：`forceDetailRefetch == false` 維持現狀。`forceDetailRefetch == true` 時**無條件對所有 `langsById` 的 id 回傳 true**，不對任何負取狀態（含 `permanentNoImage`）做例外——這顆手動按鈕就是要給所有物品一次重新嘗試的機會。效果：catalog 重跑 → 先前負取／encore 新增的物品重新嘗試解析；正取物品強制進入 detail 階段。
+  - 註：`permanentNoImage` 在本專案目前**從未被設為 true**（model 留著欄位，但 `lib/` 內所有寫入點皆為 false／沿用，屬自原神版移植遺留、未接上的旗標），故實務上不存在永久負取物品；force 路徑無條件重抓在今天沒有任何行為差異，僅是明確不依賴該旗標、並對映姐妹專案「無負快取、人人重抓」的語意。是否一併移除此遺留欄位屬獨立清理，不在本功能範圍。
 - **detail 階段內層 worker**：`forceDetailRefetch == true` 時略過 `detailAlready` 守衛，對正取、非道具的 `(id, lang)` 一律重抓 detail（偵測新 skins）。`hasLuckdraw` 維持「一旦為 true 永遠為 true」語意不變。
 - **icon**：`needsItemImageFetch` gate 不變 → **缺檔才下載**，已有 icon 不重下；符合「icon 僅缺檔補下載」。
 - **skins**：本管線從不 eager 下載造型大圖（既有行為）→ **維持 lazy**，由詳情頁開啟時補下載；符合需求。
