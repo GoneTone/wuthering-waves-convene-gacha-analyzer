@@ -33,6 +33,7 @@ dependencies:
   super_clipboard: ^0.9.1
   synchronized: ^3.4.1
   flutter_html: ^3.0.0
+  html: ^0.15.6
   webview_windows: ^0.4.0
 
 dev_dependencies:
