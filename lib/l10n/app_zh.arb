@@ -361,6 +361,49 @@
   "@confirmRefetchItemImagesConfirm": {
     "description": "Confirm button label in the refetch AlertDialog."
   },
+  "settingsItemData": "物品資料",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
+  "settingsRefreshItemDataDesc": "重新抓取所有物品的最新詳細資料（簡介、圖片清單等），保留已下載的圖片；新增的圖片會在你開啟該物品詳情時才下載。",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
+  "settingsRefreshItemDataTitle": "更新物品資料",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
+  "settingsRefreshItemDataEmpty": "尚無喚取紀錄，無法更新物品資料",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
+  "confirmRefreshItemDataTitle": "更新物品資料？",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
+  "confirmRefreshItemDataBody": "將重新抓取所有物品的詳細資料，保留已下載的圖片，新增的圖片會在開啟詳情時才下載。確定要更新嗎？",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
+  "confirmRefreshItemDataConfirm": "開始更新",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
+  "progressDoneItemDataSummary": "已更新 {count} 個物品的資料",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "progressDoneItemDataImagesSummary": "補下載 {count} 張物品圖片",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "progressDoneItemDataPrunedSummary": "已清理 {count} 個物品的殘留語言資料",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "settingsImageCache": "圖片快取",
   "@settingsImageCache": {

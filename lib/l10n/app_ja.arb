@@ -481,6 +481,16 @@
   "@confirmRefetchItemImagesConfirm": {
     "description": "Confirm button label in the refetch AlertDialog."
   },
+  "settingsItemData": "アイテムデータ",
+  "settingsRefreshItemDataDesc": "すべてのアイテムの最新の詳細データ（紹介、画像リストなど）を再取得します。ダウンロード済みの画像は保持され、新しく追加された画像はそのアイテムの詳細を開いたときにダウンロードされます。",
+  "settingsRefreshItemDataTitle": "アイテムデータを更新",
+  "settingsRefreshItemDataEmpty": "集音記録がないため、アイテムデータを更新できません",
+  "confirmRefreshItemDataTitle": "アイテムデータを更新しますか？",
+  "confirmRefreshItemDataBody": "すべてのアイテムの詳細データを再取得します。ダウンロード済みの画像は保持され、新しく追加された画像は詳細を開いたときにダウンロードされます。更新しますか？",
+  "confirmRefreshItemDataConfirm": "更新を開始",
+  "progressDoneItemDataSummary": "{count} 件のアイテムのデータを更新しました",
+  "progressDoneItemDataImagesSummary": "アイテム画像を {count} 件ダウンロード",
+  "progressDoneItemDataPrunedSummary": "{count} 件のアイテムの残存言語データを整理しました",
   "settingsImageCache": "画像キャッシュ",
   "@settingsImageCache": {
     "description": "Settings page section title for image cache controls."

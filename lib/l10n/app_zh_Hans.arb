@@ -477,6 +477,16 @@
   "@confirmRefetchItemImagesConfirm": {
     "description": "Confirm button label in the refetch AlertDialog."
   },
+  "settingsItemData": "物品资料",
+  "settingsRefreshItemDataDesc": "重新抓取所有物品的最新详细资料（简介、图片清单等），保留已下载的图片；新增的图片会在你打开该物品详情时才下载。",
+  "settingsRefreshItemDataTitle": "更新物品资料",
+  "settingsRefreshItemDataEmpty": "尚无唤取记录，无法更新物品资料",
+  "confirmRefreshItemDataTitle": "更新物品资料？",
+  "confirmRefreshItemDataBody": "将重新抓取所有物品的详细资料，保留已下载的图片，新增的图片会在打开详情时才下载。确定要更新吗？",
+  "confirmRefreshItemDataConfirm": "开始更新",
+  "progressDoneItemDataSummary": "已更新 {count} 个物品的资料",
+  "progressDoneItemDataImagesSummary": "补下载 {count} 张物品图片",
+  "progressDoneItemDataPrunedSummary": "已清理 {count} 个物品的残留语言资料",
   "settingsImageCache": "图片缓存",
   "@settingsImageCache": {
     "description": "Settings page section title for image cache controls."
