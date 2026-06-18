@@ -11,10 +11,8 @@ void main() {
       ),
     );
     expect(find.byType(Html), findsOneWidget);
-    expect(
-      find.textContaining('https://example.com', findRichText: true),
-      findsWidgets,
-    );
+    final html = tester.widget<Html>(find.byType(Html));
+    expect(html.data, contains('<a href="https://example.com"'));
   });
 
   testWidgets('onLinkTap 已接上（callback 非 null）', (tester) async {
