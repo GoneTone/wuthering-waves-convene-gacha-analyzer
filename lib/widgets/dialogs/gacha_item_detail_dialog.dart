@@ -19,6 +19,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/encore_entry_text.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_html.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/dialog_toast.dart';
@@ -478,7 +479,10 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   /// 行」與標題的間距不一致。改用 bodyMedium 當 root 後，單行與多行皆貼齊（間距一致）。
   Widget _detailHtml(ThemeData theme, String data) => DefaultTextStyle(
     style: theme.textTheme.bodyMedium ?? const TextStyle(),
-    child: Html(data: stripEntryLinkTags(data), style: _detailHtmlStyle(theme)),
+    child: AppHtml(
+      data: stripEntryLinkTags(data),
+      style: _detailHtmlStyle(theme),
+    ),
   );
 
   /// 造型圖下方 caption：Name（標題）＋SubDecName（次標、弱色）＋BgDescription
