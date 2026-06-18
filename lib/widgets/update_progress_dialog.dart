@@ -221,23 +221,37 @@ class _Body extends StatelessWidget {
         :final failedBanners,
         :final itemImagesDownloaded,
         :final importSummary,
+        :final itemDetailsRefreshed,
+        :final staleItemsPruned,
       ) =>
         Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (importSummary != null)
-              Text(
-                l.progressDoneImportSummary(
-                  importSummary.successAccounts,
-                  importSummary.addedRecords,
-                  importSummary.duplicateRecords,
-                ),
-              )
-            else
-              Text(l.progressDoneSummary(totalNewRecords)),
-            const SizedBox(height: AppSpacing.xs),
-            Text(l.progressDoneImagesSummary(itemImagesDownloaded)),
+            if (itemDetailsRefreshed != null) ...[
+              Text(l.progressDoneItemDataSummary(itemDetailsRefreshed)),
+              if (itemImagesDownloaded > 0) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(l.progressDoneItemDataImagesSummary(itemImagesDownloaded)),
+              ],
+              if (staleItemsPruned > 0) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(l.progressDoneItemDataPrunedSummary(staleItemsPruned)),
+              ],
+            ] else ...[
+              if (importSummary != null)
+                Text(
+                  l.progressDoneImportSummary(
+                    importSummary.successAccounts,
+                    importSummary.addedRecords,
+                    importSummary.duplicateRecords,
+                  ),
+                )
+              else
+                Text(l.progressDoneSummary(totalNewRecords)),
+              const SizedBox(height: AppSpacing.xs),
+              Text(l.progressDoneImagesSummary(itemImagesDownloaded)),
+            ],
             if (failedBanners.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.s),
               Text(
