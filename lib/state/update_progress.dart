@@ -77,6 +77,8 @@ class UpdateCompleted extends UpdateProgress {
     required this.updatedAt,
     required this.itemImagesDownloaded,
     this.importSummary,
+    this.itemDetailsRefreshed,
+    this.staleItemsPruned = 0,
   });
 
   /// 本次更新新增的總紀錄數（update 流程用；import 流程為 0）。
@@ -94,6 +96,13 @@ class UpdateCompleted extends UpdateProgress {
 
   /// 匯入流程的結果摘要；非 import 入口為 null。
   final ImportResult? importSummary;
+
+  /// 「更新物品資料」流程專屬：本次成功重抓詳情的相異物品數。非 null 即代表此完成
+  /// 來自更新物品資料流程，UI 據此切換到物品資料摘要；其他入口為 null。
+  final int? itemDetailsRefreshed;
+
+  /// 「更新物品資料」流程本次清理殘留語言的物品數；其他入口為 0。
+  final int staleItemsPruned;
 }
 
 /// 更新失敗。

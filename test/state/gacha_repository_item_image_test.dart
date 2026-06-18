@@ -606,4 +606,57 @@ void main() {
     expect(e.detailByLang.containsKey('en'), isFalse);
     expect(e.detailByLang.containsKey('zh-Hant'), isTrue);
   });
+
+  test('refreshAllItemDetails 非破壞性重抓 + 完成訊息帶物品資料摘要', () async {
+    // 預植：1211 角色 icon 已快取、詳情已抓但 skins 空。
+    await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
+    await ItemImageIndexStorage(tempDir).save(
+      const ItemImageIndex(
+        items: {
+          1211: ItemImageEntry(
+            iconUrl: 'https://x/1211.png',
+            noImage: false,
+            permanentNoImage: false,
+            kind: kItemKindCharacter,
+            hasLuckdraw: false,
+            detailByLang: {
+              'zh-Hant': ItemDetailL10n(
+                intro: 'old',
+                elementName: '',
+                weaponTypeName: '',
+                skins: [],
+              ),
+            },
+          ),
+        },
+      ),
+    );
+    final container = build(characters: {1211}, details: {1211});
+    addTearDown(container.dispose);
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    await container.read(itemImageIndexProvider.notifier).waitForLoad();
+    repo.debugSeedAccount(
+      BannerStorage(
+        playerId: '701000000',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.utc(2026),
+        banners: {
+          '1': [_rec(1211, 5, '角色')],
+        },
+      ),
+    );
+
+    await repo.refreshAllItemDetails();
+
+    final e = container.read(itemImageIndexProvider).lookupImage(1211)!;
+    // 強制重抓 → 偵測新 skins。
+    expect(e.detailByLang['zh-Hant']!.skins, isNotEmpty);
+    // 非破壞性：icon 檔保留（未被 resetAll 清掉）。
+    expect(File('${tempDir.path}/1211_icon.png').existsSync(), isTrue);
+    // 完成訊息為物品資料摘要（itemDetailsRefreshed 非 null）。
+    final prog = container.read(gachaRepositoryProvider).progress;
+    expect(prog, isA<UpdateCompleted>());
+    expect((prog as UpdateCompleted).itemDetailsRefreshed, 1);
+  });
 }

@@ -125,6 +125,9 @@ class GachaRepository extends Notifier<GachaState> {
   /// Logger 實例（force-refetch 流程，獨立子樹以利日誌過濾）。
   static final _refetchLog = Logger('gacha.itemimage.refetch');
 
+  /// 非破壞性「更新物品資料」流程 logger。
+  static final _refreshDetailsLog = Logger('gacha.itemimage.refreshDetails');
+
   /// Logger 實例（匯入流程，獨立子樹以利日誌過濾）。
   static final _importLog = Logger('gacha.import');
 
@@ -627,6 +630,73 @@ class GachaRepository extends Notifier<GachaState> {
     }
   }
 
+  /// 非破壞性更新所有物品詳細資料：重抓 detail 偵測新增 skins／頁籤，保留已下載的圖、
+  /// 新圖維持 lazy。與破壞性 [forceRefetchAllItemImages] 區隔——**不** `resetAll()`。
+  ///
+  /// 流程：互斥檢查 → emit `Preparing` → `_fetchItemImages(forceDetailRefetch: true,
+  /// pruneStaleLangs: true)` → 依取消狀態 emit `UpdateCompleted`（帶 itemDetailsRefreshed／
+  /// staleItemsPruned）或清 progress。
+  Future<void> refreshAllItemDetails() async {
+    if (state.progress != null) {
+      _refreshDetailsLog.info('skip: another progress in-flight');
+      return;
+    }
+    if (_isUpdating) return;
+    _isUpdating = true;
+    _cancelTriggered = false;
+
+    final totalUids = state.byUid.length;
+    _refreshDetailsLog.info('start, totalUids=$totalUids');
+
+    final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
+    _activeCancellable = cancellable;
+    state = state.copyWith(progress: const Preparing());
+
+    try {
+      var result = (
+        imagesDownloaded: 0,
+        itemsRefreshed: 0,
+        staleItemsPruned: 0,
+      );
+      try {
+        result = await _fetchItemImages(
+          cancellable.client,
+          forceDetailRefetch: true,
+          pruneStaleLangs: true,
+        );
+      } catch (e, st) {
+        _refreshDetailsLog.warning('item detail stage threw (ignored)', e, st);
+      }
+      if (!ref.mounted) return;
+
+      if (_cancelTriggered) {
+        _refreshDetailsLog.warning('cancelled');
+        state = state.copyWith(clearProgress: true);
+        return;
+      }
+
+      _refreshDetailsLog.info(
+        'done refreshed=${result.itemsRefreshed} '
+        'images=${result.imagesDownloaded} pruned=${result.staleItemsPruned}',
+      );
+      state = state.copyWith(
+        progress: UpdateCompleted(
+          totalNewRecords: 0,
+          failedBanners: const [],
+          updatedAt: DateTime.now().toUtc(),
+          itemImagesDownloaded: result.imagesDownloaded,
+          itemDetailsRefreshed: result.itemsRefreshed,
+          staleItemsPruned: result.staleItemsPruned,
+        ),
+      );
+    } finally {
+      _activeCancellable?.client.close();
+      _activeCancellable = null;
+      _cancelTriggered = false;
+      _isUpdating = false;
+    }
+  }
+
   /// 匯入帳號 bundle，並接續以增量方式補抓物品角色圖片。
   ///
   /// 流程：
@@ -1024,7 +1094,12 @@ class GachaRepository extends Notifier<GachaState> {
   ///      `phase: downloading`。toDownload 為空則直接 return。
   ///
   /// 每筆獨立 try/catch，單筆失敗不終止整段。取消（`_cancelTriggered` 或
-  /// `!ref.mounted`）早退。回傳本次成功寫入磁碟的 icon 張數。
+  /// `!ref.mounted`）早退。回傳包含三個欄位的 record：`imagesDownloaded`（本次新下載
+  /// 成功的 icon 張數）、`itemsRefreshed`（強制重抓詳情的相異物品數）、
+  /// `staleItemsPruned`（清理殘留語言的物品數）。
+  ///
+  /// [forceDetailRefetch]：true 時即使詳情已存在也強制重抓，偵測新 skins 等變動。
+  /// [pruneStaleLangs]：true 時在抓取前先清除不再被任何記錄使用的殘留語言詳情。
   Future<({int imagesDownloaded, int itemsRefreshed, int staleItemsPruned})>
   _fetchItemImages(
     http.Client client, {
