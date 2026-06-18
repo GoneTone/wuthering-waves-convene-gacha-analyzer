@@ -78,7 +78,7 @@ Future<({int imagesDownloaded, int itemsRefreshed, int staleItemsPruned})>
 - **icon**：`needsItemImageFetch` gate 不變 → **缺檔才下載**，已有 icon 不重下；符合「icon 僅缺檔補下載」。
 - **skins**：本管線從不 eager 下載造型大圖（既有行為）→ **維持 lazy**，由詳情頁開啟時補下載；符合需求。
 - **`itemsRefreshed`**：以 `Set<int> refreshedIds` 在每次成功 `mergeItemDetail` 後 `add(id)`，回傳其 `length`（相異 id，同物品多語言只算 1）。
-- **殘留語言清理**：`pruneStaleLangs == true` 時，在算出 `allLangs`（所有記錄語言集合，即既有 `langsById` 的值聯集）後、進入 detail 階段前，以 `allLangs.isNotEmpty` 守衛呼叫 `indexNotifier.pruneLanguages(allLangs)`；`staleItemsPruned` = 該呼叫回傳值；清完重讀 index 快照供後續階段使用。
+- **殘留語言清理**：`pruneStaleLangs == true` 時，在算出 `recordLangs`（**所有記錄**的語言聯集，即 `langsById` 全部值的聯集）後、`langsById.isEmpty` 早退之後、進入 detail 階段（讀 `idx0` 快照）前，以 `recordLangs.isNotEmpty` 守衛呼叫 `indexNotifier.pruneLanguages(recordLangs)`；`staleItemsPruned` = 該呼叫回傳值；清完重讀 index 快照供後續階段使用。**注意**：keep-set 取的是「全記錄語言」而非「workIds 過濾後的語言」（後者是既有 code 內另一個名為 `allLangs` 的變數，僅涵蓋需要工作的物品）——用全記錄聯集才不會誤刪「該語言仍被某個本次不需工作的物品使用」的頁面，是刻意取較大、較保守的 keep-set。
 - **取消／互斥／進度**（`FetchingItemImages` 各 phase）全部沿用既有邏輯；所有 return 點都回傳完整 record（prune 之前的早退點 `staleItemsPruned` 自然為 0、`itemsRefreshed` 為 0）。
 
 ### 2. 新增 `refreshAllItemDetails()`
@@ -91,7 +91,7 @@ Future<({int imagesDownloaded, int itemsRefreshed, int staleItemsPruned})>
 4. 依取消狀態 emit `UpdateCompleted(itemImagesDownloaded: result.imagesDownloaded, itemDetailsRefreshed: result.itemsRefreshed, staleItemsPruned: result.staleItemsPruned)` 或 `clearProgress`。
 5. `finally` 收尾關 client、清旗標。
 
-專屬 logger `Logger('wish.itemImage.refreshDetails')`，在開始、各階段、完成／取消處埋 `info`（帶 images／items／pruned 計數）。
+專屬 logger `Logger('gacha.itemimage.refreshDetails')`（對齊本檔既有 `gacha.itemimage.*` 命名樹），在開始、各階段、完成／取消處埋 `info`（帶 images／items／pruned 計數）。
 
 ### 3. `ItemImageIndexNotifier.pruneLanguages`
 
