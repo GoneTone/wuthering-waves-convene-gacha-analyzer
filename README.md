@@ -1,6 +1,6 @@
 # 鳴潮喚取卡池分析 Wuthering Waves Convene Gacha Analyzer
 
-繁體中文 | [简体中文](README_ZH-HANS.md) | [English](README_EN.md)
+繁體中文 | [简体中文](README_ZH-HANS.md) | [English](README_EN.md) | [日本語](README_JA-JP.md)
 
 [![Crowdin](https://badges.crowdin.net/wuthering-waves-convene-gacha-analyzer/localized.svg)](https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer)
 
