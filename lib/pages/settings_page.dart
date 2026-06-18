@@ -112,6 +112,12 @@ class SettingsPage extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.xl),
               SectionCard(
+                title: l.settingsItemData,
+                icon: Icons.dataset_outlined,
+                child: const _ItemDataSection(),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              SectionCard(
                 title: l.settingsImageCache,
                 icon: Icons.image_outlined,
                 child: const _ImageCacheSection(),
@@ -898,6 +904,67 @@ class _DataManagement extends ConsumerWidget {
     );
     if (ok != true) return;
     await ref.read(gachaRepositoryProvider.notifier).clearAll();
+  }
+}
+
+/// 設定頁「物品資料」區：非破壞性更新所有物品詳細資料（重抓 metadata，保留已下載圖）。
+class _ItemDataSection extends ConsumerWidget {
+  /// 建立 [_ItemDataSection]。
+  const _ItemDataSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final tokens = theme.gacha;
+    final hasData = ref.watch(
+      gachaRepositoryProvider.select((s) => s.byUid.isNotEmpty),
+    );
+    final progress = ref.watch(
+      gachaRepositoryProvider.select((s) => s.progress),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.settingsRefreshItemDataDesc,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: tokens.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.m),
+        Tooltip(
+          message: !hasData ? l.settingsRefreshItemDataEmpty : '',
+          child: FilledButton.icon(
+            onPressed: (!hasData || progress != null)
+                ? null
+                : () => _confirmAndRefresh(context, ref),
+            icon: const Icon(Icons.update, size: 18),
+            label: Text(l.settingsRefreshItemDataTitle),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 顯示輕量確認 dialog（非 danger），確認後呼叫非破壞性 [GachaRepository.refreshAllItemDetails]。
+  Future<void> _confirmAndRefresh(BuildContext ctx, WidgetRef ref) async {
+    final l = AppLocalizations.of(ctx)!;
+    final ok = await showConfirmDialog(
+      context: ctx,
+      title: l.confirmRefreshItemDataTitle,
+      body: l.confirmRefreshItemDataBody,
+      cancelLabel: l.actionCancel,
+      confirmLabel: l.confirmRefreshItemDataConfirm,
+      isDanger: false,
+    );
+    if (ok != true) return;
+    // 後端流程獨立於 dialog lifecycle；UpdateProgressDialog 由 app_shell.dart 既有
+    // ref.listen 自動彈出。
+    unawaited(
+      ref.read(gachaRepositoryProvider.notifier).refreshAllItemDetails(),
+    );
   }
 }
 
