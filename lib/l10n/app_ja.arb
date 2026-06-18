@@ -17,7 +17,7 @@
       }
     }
   },
-  "appName": "鳴潮 集音分析ツール",
+  "appName": "鳴潮集音分析ツール",
   "actionUpdate": "データ更新",
   "actionCancel": "キャンセル",
   "actionClose": "閉じる",
