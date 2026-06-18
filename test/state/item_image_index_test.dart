@@ -277,4 +277,87 @@ void main() {
       expect(File('${dir.path}/1211_icon.png').existsSync(), isFalse);
     });
   });
+
+  group('pruneLanguages', () {
+    test('移除不在 keepLangs 的語言詳情，保留當前語言與 icon/kind', () async {
+      final notifier = container.read(itemImageIndexProvider.notifier);
+      await notifier.mergeIcon(
+        resourceId: 1503,
+        iconUrl: 'https://x/role.webp',
+        noImage: false,
+        permanentNoImage: false,
+        kind: 'kind:character',
+      );
+      await notifier.mergeItemDetail(
+        resourceId: 1503,
+        lang: 'zh-Hant',
+        detail: const ItemDetailL10n(
+          intro: 'A',
+          elementName: '',
+          weaponTypeName: '',
+          skins: [],
+        ),
+      );
+      await notifier.mergeItemDetail(
+        resourceId: 1503,
+        lang: 'en',
+        detail: const ItemDetailL10n(
+          intro: 'B',
+          elementName: '',
+          weaponTypeName: '',
+          skins: [],
+        ),
+      );
+
+      final pruned = await notifier.pruneLanguages({'zh-Hant'});
+
+      final e = container.read(itemImageIndexProvider).lookupImage(1503)!;
+      expect(pruned, 1);
+      expect(e.detailByLang.keys.toSet(), {'zh-Hant'});
+      expect(e.iconUrl, 'https://x/role.webp');
+      expect(e.kind, 'kind:character');
+    });
+
+    test('空 keepLangs 直接回 0 且不動資料（防呆）', () async {
+      final notifier = container.read(itemImageIndexProvider.notifier);
+      await notifier.mergeItemDetail(
+        resourceId: 1503,
+        lang: 'en',
+        detail: const ItemDetailL10n(
+          intro: 'B',
+          elementName: '',
+          weaponTypeName: '',
+          skins: [],
+        ),
+      );
+      final pruned = await notifier.pruneLanguages(<String>{});
+      expect(pruned, 0);
+      expect(
+        container
+            .read(itemImageIndexProvider)
+            .lookupImage(1503)!
+            .detailByLang
+            .keys,
+        contains('en'),
+      );
+    });
+
+    test('無殘留語言時回 0、state identity 不變（不重建）', () async {
+      final notifier = container.read(itemImageIndexProvider.notifier);
+      await notifier.mergeItemDetail(
+        resourceId: 1503,
+        lang: 'zh-Hant',
+        detail: const ItemDetailL10n(
+          intro: 'A',
+          elementName: '',
+          weaponTypeName: '',
+          skins: [],
+        ),
+      );
+      final before = container.read(itemImageIndexProvider);
+      final pruned = await notifier.pruneLanguages({'zh-Hant'});
+      expect(pruned, 0);
+      expect(identical(container.read(itemImageIndexProvider), before), isTrue);
+    });
+  });
 }

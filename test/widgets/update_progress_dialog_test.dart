@@ -102,4 +102,43 @@ void main() {
       expect(find.textContaining('gachaTypeCollabWeapon'), findsNothing);
     });
   });
+
+  group('UpdateProgressDialog — 物品資料完成摘要', () {
+    testWidgets('itemDetailsRefreshed 非 null → 三行皆顯示，不顯示「新增筆數」', (
+      tester,
+    ) async {
+      await _pumpDialog(
+        tester,
+        progress: UpdateCompleted(
+          totalNewRecords: 0,
+          failedBanners: const [],
+          updatedAt: DateTime.utc(2026),
+          itemImagesDownloaded: 3,
+          itemDetailsRefreshed: 5,
+          staleItemsPruned: 2,
+        ),
+      );
+      expect(find.textContaining('已更新 5 個物品的資料'), findsOneWidget);
+      expect(find.textContaining('補下載 3 張物品圖片'), findsOneWidget);
+      expect(find.textContaining('已清理 2 個物品的殘留語言資料'), findsOneWidget);
+      expect(find.textContaining('新增'), findsNothing);
+    });
+
+    testWidgets('補圖=0、清理=0 → 只顯示主行', (tester) async {
+      await _pumpDialog(
+        tester,
+        progress: UpdateCompleted(
+          totalNewRecords: 0,
+          failedBanners: const [],
+          updatedAt: DateTime.utc(2026),
+          itemImagesDownloaded: 0,
+          itemDetailsRefreshed: 4,
+          staleItemsPruned: 0,
+        ),
+      );
+      expect(find.textContaining('已更新 4 個物品的資料'), findsOneWidget);
+      expect(find.textContaining('補下載'), findsNothing);
+      expect(find.textContaining('殘留語言'), findsNothing);
+    });
+  });
 }

@@ -483,6 +483,16 @@
   "@confirmRefetchItemImagesConfirm": {
     "description": "Confirm button label in the refetch AlertDialog."
   },
+  "settingsItemData": "Item data",
+  "settingsRefreshItemDataDesc": "Re-fetch the latest details for all items (intro, image list, etc.), keeping already-downloaded images; newly added images download when you open that item's details.",
+  "settingsRefreshItemDataTitle": "Update item data",
+  "settingsRefreshItemDataEmpty": "No gacha records yet, nothing to update",
+  "confirmRefreshItemDataTitle": "Update item data?",
+  "confirmRefreshItemDataBody": "This re-fetches details for all items, keeping already-downloaded images; newly added images download when you open the details. Update now?",
+  "confirmRefreshItemDataConfirm": "Start updating",
+  "progressDoneItemDataSummary": "{count, plural, =1{Updated data for {count} item} other{Updated data for {count} items}}",
+  "progressDoneItemDataImagesSummary": "{count, plural, =1{Downloaded {count} item image} other{Downloaded {count} item images}}",
+  "progressDoneItemDataPrunedSummary": "{count, plural, =1{Cleaned up stale-language data for {count} item} other{Cleaned up stale-language data for {count} items}}",
   "settingsImageCache": "Image cache",
   "@settingsImageCache": {
     "description": "Settings page section title for image cache controls."
