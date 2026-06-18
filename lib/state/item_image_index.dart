@@ -163,6 +163,44 @@ class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
     _log.info('resetAll: index+cache wiped');
   }
 
+  /// 移除所有 entry 中 lang 不在 [keepLangs] 的 detailByLang 條目（資料語言轉換後殘留清理）。
+  ///
+  /// 保留 iconUrl／noImage／permanentNoImage／kind／hasLuckdraw。空 [keepLangs] 直接回 0
+  /// （防呆：空集合會清掉全部）。回傳 detailByLang 真的有縮減的相異物品數；無縮減回 0、
+  /// 不重建 index（不觸發 UI churn）。
+  Future<int> pruneLanguages(Set<String> keepLangs) async {
+    if (keepLangs.isEmpty) return 0;
+    return _lock.synchronized(() async {
+      var prunedItems = 0;
+      final newItems = <int, ItemImageEntry>{};
+      state.items.forEach((id, entry) {
+        final kept = <String, ItemDetailL10n>{
+          for (final e in entry.detailByLang.entries)
+            if (keepLangs.contains(e.key)) e.key: e.value,
+        };
+        if (kept.length != entry.detailByLang.length) {
+          prunedItems++;
+          newItems[id] = ItemImageEntry(
+            iconUrl: entry.iconUrl,
+            noImage: entry.noImage,
+            permanentNoImage: entry.permanentNoImage,
+            detailByLang: kept,
+            hasLuckdraw: entry.hasLuckdraw,
+            kind: entry.kind,
+          );
+        } else {
+          newItems[id] = entry;
+        }
+      });
+      if (prunedItems == 0) return 0;
+      await _saveAndEmit(ItemImageIndex(items: newItems));
+      _log.info(
+        'pruneLanguages: pruned $prunedItems items, keepLangs=$keepLangs',
+      );
+      return prunedItems;
+    });
+  }
+
   /// 內部 helper：寫檔 + emit。
   Future<void> _saveAndEmit(ItemImageIndex next) async {
     final storage = ref.read(itemImageIndexStorageProvider);
