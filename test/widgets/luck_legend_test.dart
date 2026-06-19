@@ -15,9 +15,7 @@ void main() {
         home: const Scaffold(body: LuckLegend()),
       ),
     );
-    final l = AppLocalizations.of(
-      tester.element(find.byType(LuckLegend)),
-    )!;
+    final l = AppLocalizations.of(tester.element(find.byType(LuckLegend)))!;
     expect(find.text(l.luckTierLucky), findsOneWidget);
     expect(find.text(l.luckTierAverage), findsOneWidget);
     expect(find.text(l.luckTierUnlucky), findsOneWidget);
