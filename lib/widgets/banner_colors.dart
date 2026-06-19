@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 /// 卡池配色表，給 Timeline 系列 widget 共用。
 ///
-/// 配色刻意跟稀有度 token（5★ 金、4★ 紫、3★ 藍）保持距離，避免使用者看到
-/// 時間軸節點的顏色誤判為稀有度。每個 cardPoolType 一個獨特色相，dark / light
-/// 各一組對應飽和度。
+/// 配色刻意全部落在 cyan → 洋紅 的冷色／洋紅弧段，避開「歐非色」占用的綠
+/// （[GachaTokens.stateSuccess]）、琥珀（[GachaTokens.stateWarning]）、紅
+/// （[GachaTokens.stateDanger]）三個色帶——時間軸已改以歐非色標示節點與抽數，
+/// 卡池色僅作為卡池名稱／圖例的識別，若落在同色帶會與歐非語意混淆。每個
+/// cardPoolType 一個獨特色相，dark / light 各一組對應飽和度。
 @immutable
 class BannerColors {
   /// 建立 [BannerColors]。
@@ -26,34 +28,34 @@ class BannerColors {
   factory BannerColors.of(Brightness brightness) =>
       brightness == Brightness.dark ? _dark : _light;
 
-  /// Dark mode palette。
+  /// Dark mode palette（全部位於 cyan → 洋紅 弧段，避開綠／琥珀／紅）。
   static const _dark = BannerColors(
-    character: Color(0xFF46B07A), // 森林綠
-    weapon: Color(0xFFE6736B), // 珊瑚紅
-    standardCharacter: Color(0xFF26A69A), // 青綠
-    standardWeapon: Color(0xFFEFA94A), // 鮮橘
-    beginner: Color(0xFF7A8AAD), // 灰藍
-    beginnerChoice: Color(0xFFB59FE5), // 薰衣草紫
-    newVoyageCharacter: Color(0xFF5AB6E0), // 天藍
-    newVoyageWeapon: Color(0xFFD98AC4), // 紫粉
-    collabCharacter: Color(0xFFE5689E), // 洋紅
-    collabWeapon: Color(0xFF6F6BE0), // 靛藍
+    character: Color(0xFF22B5C2), // 青藍
+    weapon: Color(0xFF4C9CEA), // 天藍
+    standardCharacter: Color(0xFF6E7CE8), // 矢車菊藍
+    standardWeapon: Color(0xFFA56FDE), // 紫羅蘭
+    beginner: Color(0xFF7E8AA8), // 灰藍
+    beginnerChoice: Color(0xFFC596E2), // 薰衣草紫
+    newVoyageCharacter: Color(0xFF59C0D8), // 淺青
+    newVoyageWeapon: Color(0xFFD074CC), // 蘭紫
+    collabCharacter: Color(0xFFE070A6), // 桃紅
+    collabWeapon: Color(0xFF8266E0), // 靛藍
     fallback: Color(0xFF8A92A6), // 中性
   );
 
-  /// Light mode palette。
+  /// Light mode palette（同色相、加深以利白底對比）。
   static const _light = BannerColors(
-    character: Color(0xFF2E7D32),
-    weapon: Color(0xFFC62828),
-    standardCharacter: Color(0xFF00897B),
-    standardWeapon: Color(0xFFB8651B),
-    beginner: Color(0xFF5A6680),
-    beginnerChoice: Color(0xFF6E5BAB),
-    newVoyageCharacter: Color(0xFF1E6AA8),
-    newVoyageWeapon: Color(0xFFA53D8C),
-    collabCharacter: Color(0xFFC23E7E),
-    collabWeapon: Color(0xFF4A46C2),
-    fallback: Color(0xFF6A7080),
+    character: Color(0xFF0E8C99), // 青藍
+    weapon: Color(0xFF2E6FC4), // 天藍
+    standardCharacter: Color(0xFF4A4FC0), // 矢車菊藍
+    standardWeapon: Color(0xFF8341B0), // 紫羅蘭
+    beginner: Color(0xFF5A6680), // 灰藍
+    beginnerChoice: Color(0xFF8A57BE), // 薰衣草紫
+    newVoyageCharacter: Color(0xFF1C8FAE), // 淺青
+    newVoyageWeapon: Color(0xFFA63C9E), // 蘭紫
+    collabCharacter: Color(0xFFB83E78), // 桃紅
+    collabWeapon: Color(0xFF5547C0), // 靛藍
+    fallback: Color(0xFF6A7080), // 中性
   );
 
   /// 角色活動喚取配色（cardPoolType 1）。
