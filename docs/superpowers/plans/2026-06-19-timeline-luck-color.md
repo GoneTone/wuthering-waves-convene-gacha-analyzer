@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 時間軸節點與物品名稱改為依「抽數相對保底比例」呈現歐非色（綠/黃/紅），總覽頁以卡池色顯示卡池名稱保留辨識，並加上小圖例與 tooltip。
+**Goal:** 時間軸節點與物品名稱改為依「抽數相對保底比例」呈現歐非色（綠/黃/紅），總覽頁以卡池色顯示卡池名稱保留辨識，並加上小圖例與 tooltip。（Task 1–7 為初版；Task 8–12 為同分支後續增強，把歐非色延伸到所有「抽數」呈現處、調整卡池調色盤避撞、分享圖加圖例、橫向時間軸加年/月區隔——供姐妹專案參考。）
 
-**Architecture:** 新增純函式 `luckTierFor`／`luckColorFor`（`luck_palette.dart`）與在地化標籤＋圖例 widget（`luck_legend.dart`）；`gacha_types.dart` 新增集中查詢 helper `gachaTypeFor`／`pityThresholdFor`。兩個時間軸 widget 把節點/名稱顏色由卡池色換成歐非色；橫向圖例走 `ChartCard.legend`，直向用可選參數 `showLuckLegend`（分享圖不傳，零回歸）。
+**Architecture:** 新增純函式 `luckTierFor`／`luckColorFor`（`luck_palette.dart`）與在地化標籤＋圖例 widget（`luck_legend.dart`）；`gacha_types.dart` 新增集中查詢 helper `gachaTypeFor`／`pityThresholdFor`。兩個時間軸 widget 把節點/名稱顏色由卡池色換成歐非色；橫向圖例走 `ChartCard.legend`，直向用可選參數 `showLuckLegend`。後續把歐非色一致延伸到時間軸 meta 的「N 抽」與記錄列表「保底內」欄，並把卡池調色盤整體移出歐非色帶。
 
 **Tech Stack:** Flutter／Dart、FVM 釘版、Riverpod、flutter gen-l10n（ARB i18n）。
 
@@ -1009,7 +1009,7 @@ git commit -m "feat(timeline): color vertical timeline by luck, tint banner name
 
 - [ ] **Step 2: 確認 share_card 未受影響**
 
-讀 `lib/widgets/share/share_card.dart:394` 附近的 `TimelineVertical(...)`，確認**沒有**傳 `showLuckLegend`（維持預設 false，分享圖不顯示圖例）。不需修改。
+讀 `lib/widgets/share/share_card.dart:394` 附近的 `TimelineVertical(...)`，確認**沒有**傳 `showLuckLegend`（維持預設 false，分享圖不顯示圖例）。不需修改。（註：此決策於後續 **Task 10** 改為「分享圖也顯示圖例、釘在卡片底部」，share_card 改傳 `showLuckLegend: true`。）
 
 - [ ] **Step 3: 全量驗證**
 
@@ -1025,16 +1025,69 @@ git commit -m "feat(overview): show luck legend under the timeline"
 
 ---
 
+## 後續增強任務（同分支已實作，供姐妹專案參考）
+
+Task 1–7 落地後，於同分支追加下列增強。皆已完成並全綠提交，以下記錄**檔案、做法與
+關鍵決策**（非逐步 TDD），方便姐妹專案直接照搬。原則：所有「抽數」語意數字一律套
+同一套歐非色，並讓卡池識別色不與歐非色衝突。
+
+### Task 8: 時間軸 meta 的「N 抽」上歐非色 — 已實作（commit `602c58f`）
+
+**Files:** `lib/widgets/cards/timeline_horizontal.dart`、`lib/widgets/cards/timeline_vertical.dart`；測試同兩檔的 `_test.dart`。
+
+- 橫向：底部 `日期 · N 抽` 改 `Text.rich`，「N 抽」span 套 `luck` 色，日期維持 `textMuted`。
+- 垂直：meta `Text.rich` 把第三段 ` · N 抽` 拆成 muted 的 ` · ` 分隔 + 套 `luck` 的「N 抽」span（卡池名稱段仍卡池色）。
+- 測試：以遞迴尋找 `Text.rich` 內 span 的 helper（注意區域函式勿命名為 `find`，會遮蔽 `flutter_test` 的 `find`），斷言 40 抽→`stateSuccess`、70 抽→`stateDanger`。
+
+### Task 9: 卡池調色盤避開歐非色帶 — 已實作（commit `acca4b6`）
+
+**Files:** `lib/widgets/banner_colors.dart`、`test/widgets/banner_colors_test.dart`。
+
+- 問題：卡池 `1`＝`stateSuccess`、`2`＝`stateDanger` 完全同 hex，`4` 橘≈琥珀。
+- 做法：10 個卡池色（dark + light）整體重排到 cyan→洋紅 弧段，全部避開綠/琥珀/紅；**不新增 token**。
+- 測試：新增「任一卡池色 ≠ 該主題 `stateSuccess`／`stateWarning`／`stateDanger`」斷言（dark + light）。
+
+### Task 10: 分享圖圖例（時間軸卡片內、釘底部） — 已實作（commit `a44b128`，取代早期 footer 版 `94c3ea9`）
+
+**Files:** `lib/widgets/cards/timeline_vertical.dart`（`container()`）、`lib/widgets/share/share_card.dart`、`test/widgets/share/share_card_test.dart`。
+
+- `TimelineVertical.container()` 加參數 `bool withLegend`；`fillHeight` 時改 `Column[Expanded(裁切內容), LuckLegend]`（圖例釘邊框內底部、不被裁），非 `fillHeight` 時 `Column[內容, LuckLegend]`。原本散在 build 內的圖例改由 `container()` 統一渲染。
+- `share_card._timeline()` 傳 `showLuckLegend: true`（移除早期「等高列下方 footer」版的 `Center(LuckLegend())` 與其 import）。
+- 測試：斷言「12 筆跨月 entries 溢出被裁時，`LuckLegend` 底部仍 ≤ 卡片底部」。
+
+### Task 11: 記錄列表「保底內」欄上歐非色 — 已實作（commit `365100e`）
+
+**Files:** `lib/widgets/data/sortable_table.dart`、`test/widgets/data/sortable_table_test.dart`。
+
+- `_Row` 新增 `mainRank` 欄位；「保底內」（`mainPityIndex`）數字改用
+  `luckColorFor(luckTierFor(row.mainPityIndex, pityThresholdFor(record.cardPoolType, mainRank)), tokens)`。
+- 「總抽數」（`totalIndex`，累積序號）維持 `textMuted`。
+- 測試：A(5★)/B(4★)/C(3★) 下，值 `1`（C 的 totalIndex muted + mainPityIndex 綠）的 `Text` 顏色集合同時含 `stateSuccess` 與 `textMuted`。
+
+### Task 12: 橫向時間軸年/月區隔 — 已實作（commits `bf5d5fe`、間距微調 `75a2dc8`）
+
+**Files:** `lib/widgets/cards/timeline_horizontal.dart`、`test/widgets/cards/timeline_horizontal_test.dart`。
+
+- build 計算 `monthStart`（每欄是否為其月份分組首欄，左→右＝新→舊），傳 `isMonthStart` 與 `showMonthDivider = monthStart[i] && i > 0` 給 `_EntryColumn`。
+- `_EntryColumn`：頂部固定高 `_monthBandHeight` 標籤帶（組首填 `timelineMonthLabel`、靠上對齊；其餘留白）＋**底部等高 spacer 對稱補回**（置中欄加等高上下 padding 不移動中心→節點仍對齊軸線）；組首欄左側 `Border` 當分隔線；「現在」欄不加帶。
+- 測試：兩個月份分組各出現一個 `timelineMonthLabel` 標籤。
+- 注意：`_monthBandHeight` 同時決定標籤帶與底部 spacer，調間距時兩者一起變、對齊不破。
+
+---
+
 ## 驗收條件（對照 spec）
 
 - [ ] `fvm dart format lib/ test/`、`fvm flutter analyze`（No issues found!）、`fvm flutter test`（All tests passed!）全綠。
 - [ ] 單卡池頁：時間軸節點/名稱依抽數呈綠/黃/紅，卡片下方有歐非圖例（`ChartCard.legend`）。
 - [ ] 總覽頁：節點/名稱呈歐非色；meta 行卡池名稱以卡池色顯示；卡片底部有圖例。
 - [ ] 節點 tooltip 顯示「名稱 · 分級 · N 抽」。
-- [ ] 分享圖：節點/名稱顏色反映歐非，但**不顯示圖例**，版面與改動前一致。
+- [ ] 時間軸 meta 的「N 抽」與記錄列表「保底內」欄皆呈歐非色（Task 8/11）。
+- [ ] 卡池調色盤無任一色等於歐非三色（Task 9）。
+- [ ] 分享圖：節點/名稱/抽數呈歐非色，時間軸卡片底部有圖例且 entries 溢出被裁時仍可見（Task 10）。
+- [ ] 橫向時間軸有年/月分隔線＋標籤，節點仍對齊軸線（Task 12）。
 
 ## Self-Review 摘要
 
-- **Spec 覆蓋**：分級邏輯→T2；門檻來源→T1＋T5/T6 的 `rank = sourceRecord?.qualityLevel ?? targetRank`；顏色重用→T2；新檔 luck_palette/luck_legend→T2/T4；helper→T1；橫向→T5；直向＋卡池名稱色→T6；圖例（橫向 ChartCard.legend、直向參數）→T5/T6/T7；分享圖零回歸→T6 預設 false＋T7 Step 2 驗證；tooltip→T5/T6；i18n→T3；測試→各任務 TDD。
+- **Spec 覆蓋**：分級邏輯→T2；門檻來源→T1＋T5/T6 的 `rank = sourceRecord?.qualityLevel ?? targetRank`；顏色重用→T2；新檔 luck_palette/luck_legend→T2/T4；helper→T1；橫向→T5；直向＋卡池名稱色→T6；圖例（橫向 ChartCard.legend、直向參數）→T5/T6/T7；tooltip→T5/T6；i18n→T3；測試→各任務 TDD。後續增強（抽數/列表一致上色、卡池避撞、分享圖圖例、橫向年月區隔）→T8–T12（已實作）。
 - **型別一致**：`luckTierFor(int,int)→LuckTier`、`luckColorFor(LuckTier,GachaTokens)→Color`、`luckTierLabel(LuckTier,AppLocalizations)→String`、`pityThresholdFor(String,int)→int`、`gachaTypeFor(String)→GachaType` 全程一致。
 - **無 placeholder**：每個 code step 均附完整程式碼與預期輸出。
