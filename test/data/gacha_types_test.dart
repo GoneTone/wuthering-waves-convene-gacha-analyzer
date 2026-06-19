@@ -70,4 +70,46 @@ void main() {
       ]);
     });
   });
+
+  group('gachaTypeFor', () {
+    test('已知 cardPoolType 回傳對應 GachaType', () {
+      expect(gachaTypeFor('1').cardPoolType, 1);
+      expect(gachaTypeFor('5').nameKey, 'gachaTypeBeginner');
+    });
+
+    test('未知 cardPoolType 回傳 fallback（5★80 / 4★10）', () {
+      final t = gachaTypeFor('999');
+      expect(t.cardPoolType, 999);
+      expect(t.primaryPity.threshold, 80);
+      expect(t.secondaryPity!.threshold, 10);
+    });
+
+    test('非數字 cardPoolType 的 fallback cardPoolType = 0', () {
+      expect(gachaTypeFor('abc').cardPoolType, 0);
+    });
+  });
+
+  group('pityThresholdFor', () {
+    test('標準池 5★ → 80', () {
+      expect(pityThresholdFor('1', 5), 80);
+    });
+
+    test('新手池 5★ → 50', () {
+      expect(pityThresholdFor('5', 5), 50);
+    });
+
+    test('任一池 4★ → 10', () {
+      expect(pityThresholdFor('1', 4), 10);
+      expect(pityThresholdFor('5', 4), 10);
+    });
+
+    test('未知池 5★ → fallback 80', () {
+      expect(pityThresholdFor('999', 5), 80);
+    });
+
+    test('rank 無對應 pity（3★）回傳主保底門檻', () {
+      expect(pityThresholdFor('1', 3), 80);
+      expect(pityThresholdFor('5', 3), 50);
+    });
+  });
 }

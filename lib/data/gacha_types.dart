@@ -118,3 +118,27 @@ const gachaTypes = <GachaType>[
     pities: [_pityFive80, _pityFour10],
   ),
 ];
+
+/// 依 [cardPoolType] 字串查 [GachaType]；查無時回傳帶預設保底（5★80／4★10）
+/// 的 fallback（[cardPoolType] 非數字時其 `cardPoolType` 欄為 0）。
+GachaType gachaTypeFor(String cardPoolType) => gachaTypes.firstWhere(
+  (t) => t.key == cardPoolType,
+  orElse: () => GachaType(
+    cardPoolType: int.tryParse(cardPoolType) ?? 0,
+    nameKey: cardPoolType,
+    pities: const [
+      PityRule(rank: 5, threshold: 80),
+      PityRule(rank: 4, threshold: 10),
+    ],
+  ),
+);
+
+/// 查 [cardPoolType] 池中 [rank] 的保底門檻；該池無對應 [rank] 的規則時，
+/// 回傳主保底門檻當保守值。
+int pityThresholdFor(String cardPoolType, int rank) {
+  final type = gachaTypeFor(cardPoolType);
+  for (final p in type.pities) {
+    if (p.rank == rank) return p.threshold;
+  }
+  return type.primaryPity.threshold;
+}
