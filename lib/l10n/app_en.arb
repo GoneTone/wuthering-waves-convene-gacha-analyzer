@@ -395,6 +395,9 @@
       }
     }
   },
+  "luckTierLucky": "Lucky",
+  "luckTierAverage": "Average",
+  "luckTierUnlucky": "Unlucky",
   "timelineNowLabel": "Now",
   "timelineNowPulls": "{n} pulls",
   "@timelineNowPulls": {

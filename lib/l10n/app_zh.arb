@@ -291,6 +291,9 @@
   "@timelineSinceLast": {
     "placeholders": { "n": { "type": "int" } }
   },
+  "luckTierLucky": "歐",
+  "luckTierAverage": "普通",
+  "luckTierUnlucky": "非",
   "timelineNowLabel": "現在",
   "timelineNowPulls": "已 {n} 抽",
   "@timelineNowPulls": {

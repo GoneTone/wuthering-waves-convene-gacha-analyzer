@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_filter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_row.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
@@ -9,6 +10,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart'
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/pager.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_palette.dart';
 
 /// 可排序的喚取記錄表格，含分頁功能。
 class SortableTable extends StatefulWidget {
@@ -109,6 +111,7 @@ class _SortableTableState extends State<SortableTable> {
                   theme: theme,
                   tokens: tokens,
                   l: l,
+                  mainRank: widget.mainRank,
                 ),
             ],
           ),
@@ -335,6 +338,7 @@ class _Row extends StatelessWidget {
     required this.theme,
     required this.tokens,
     required this.l,
+    required this.mainRank,
   });
 
   /// 喚取記錄資料。
@@ -352,6 +356,9 @@ class _Row extends StatelessWidget {
   /// 國際化字串。
   final AppLocalizations l;
 
+  /// 該卡池主稀有度 rank，用於查保底門檻、為「保底內」抽數上歐非色。
+  final int mainRank;
+
   @override
   Widget build(BuildContext context) {
     final record = row.record;
@@ -367,6 +374,16 @@ class _Row extends StatelessWidget {
       color: tokens.textMuted,
       fontFeatures: kTabularFigures,
     );
+    // 「保底內」抽數以歐非色顯示（與時間軸一致）：依該筆距上次主稀有度的
+    // 抽數相對該卡池保底門檻的比例分綠/黃/紅。
+    final pityLuck = luckColorFor(
+      luckTierFor(
+        row.mainPityIndex,
+        pityThresholdFor(record.cardPoolType, mainRank),
+      ),
+      tokens,
+    );
+    final pityNum = TextStyle(color: pityLuck, fontFeatures: kTabularFigures);
     return Container(
       padding: const EdgeInsets.symmetric(
         vertical: AppSpacing.m,
@@ -431,7 +448,7 @@ class _Row extends StatelessWidget {
             child: Text(
               '${row.mainPityIndex}',
               textAlign: TextAlign.end,
-              style: mutedNum,
+              style: pityNum,
             ),
           ),
         ],

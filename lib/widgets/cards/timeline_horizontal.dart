@@ -11,6 +11,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_no
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_palette.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/scroll/scroll_affordance.dart';
 
 /// 每個時間軸欄的固定寬度。
@@ -18,6 +20,11 @@ const double _colWidth = 90;
 
 /// 邊緣漸隱遮罩的寬度。
 const double _edgeFadeWidth = 32;
+
+/// 月份標籤帶高度。每欄頂部保留此高（首欄填標籤、其餘留白），底部以等高
+/// spacer 對稱補回，使節點 y 不因標籤帶位移、仍對齊背景軸線。標籤靠上對齊，
+/// 多出的高度成為標籤與下方名稱之間的間隔。
+const double _monthBandHeight = 26;
 
 /// 從跨卡池 timeline entries 統計各卡池的 5★ 數量,輸出可餵給
 /// [DistributionLegend] (記得搭配 `showAllEntries: true`) 的條目,作為
@@ -55,16 +62,12 @@ class TimelineHorizontal extends StatefulWidget {
   const TimelineHorizontal({
     super.key,
     required this.entries,
-    required this.colors,
     required this.targetRank,
     this.nowPulls,
   });
 
   /// 要顯示的時間軸條目（由新到舊排序）。
   final List<TimelineEntry> entries;
-
-  /// 各卡池節點的顏色映射。
-  final BannerColors colors;
 
   /// 該卡池萃取的稀有度（5 或 4）。用於「暫無 N★ 紀錄」文案。
   final int targetRank;
@@ -149,6 +152,15 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
       );
     }
 
+    // 每欄是否為其月份分組首欄（左→右 = 新→舊，某月最新一筆即該組起點）。
+    final monthStart = <bool>[];
+    int? prevYearMonth;
+    for (final entry in widget.entries) {
+      final ym = entry.time.year * 12 + entry.time.month;
+      monthStart.add(prevYearMonth != ym);
+      prevYearMonth = ym;
+    }
+
     return Stack(
       children: [
         // 背景軸線
@@ -185,11 +197,14 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
                   children: [
                     if (widget.nowPulls != null)
                       _NowColumn(nowPulls: widget.nowPulls!, tokens: tokens),
-                    for (final entry in widget.entries)
+                    for (var i = 0; i < widget.entries.length; i++)
                       _EntryColumn(
-                        entry: entry,
-                        colors: widget.colors,
+                        entry: widget.entries[i],
+                        targetRank: widget.targetRank,
                         tokens: tokens,
+                        isMonthStart: monthStart[i],
+                        // 月份交界畫分隔線；最左欄（最新月份起點）不畫。
+                        showMonthDivider: monthStart[i] && i > 0,
                       ),
                   ],
                 ),
@@ -256,33 +271,77 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
 class _EntryColumn extends StatelessWidget {
   const _EntryColumn({
     required this.entry,
-    required this.colors,
+    required this.targetRank,
     required this.tokens,
+    required this.isMonthStart,
+    required this.showMonthDivider,
   });
 
   /// 該欄對應的時間軸條目。
   final TimelineEntry entry;
 
-  /// 各卡池節點的顏色映射。
-  final BannerColors colors;
+  /// 該卡池萃取的稀有度（5 或 4），用於查保底門檻。
+  final int targetRank;
 
   /// 主題 token。
   final GachaTokens tokens;
 
+  /// 是否為其月份分組首欄；true 時頂部標籤帶顯示年/月。
+  final bool isMonthStart;
+
+  /// 是否在左側畫月份分隔線（月份交界、且非最左欄時為 true）。
+  final bool showMonthDivider;
+
   @override
   Widget build(BuildContext context) {
-    final accent = colors.colorFor(entry.gachaType);
     final l = AppLocalizations.of(context)!;
+    final rank = entry.sourceRecord?.qualityLevel ?? targetRank;
+    final pity = pityThresholdFor(entry.gachaType, rank);
+    final tier = luckTierFor(entry.pullsSincePrev, pity);
+    final luck = luckColorFor(tier, tokens);
+    final monthLabel = isMonthStart
+        ? l.timelineMonthLabel(
+            entry.time.year.toString(),
+            entry.time.month.toString().padLeft(2, '0'),
+          )
+        : null;
     return Tooltip(
-      message: entry.name,
+      message:
+          '${entry.name} · ${luckTierLabel(tier, l)} · '
+          '${l.timelineSinceLast(entry.pullsSincePrev)}',
       preferBelow: false,
       waitDuration: const Duration(milliseconds: 100),
-      child: SizedBox(
+      child: Container(
         width: _colWidth,
+        decoration: showMonthDivider
+            ? BoxDecoration(
+                border: Border(left: BorderSide(color: tokens.borderEmphasis)),
+              )
+            : null,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // 月份標籤帶（首欄填年/月，其餘留白佔位）。
+            SizedBox(
+              height: _monthBandHeight,
+              child: monthLabel == null
+                  ? null
+                  : Align(
+                      alignment: Alignment.topCenter,
+                      child: Text(
+                        monthLabel,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: tokens.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.4,
+                          fontFeatures: kTabularFigures,
+                        ),
+                      ),
+                    ),
+            ),
             if (entry.sourceRecord != null)
               GachaItemTapTarget(
                 record: entry.sourceRecord!,
@@ -298,7 +357,7 @@ class _EntryColumn extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: accent,
+                        color: luck,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -313,25 +372,35 @@ class _EntryColumn extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: accent,
+                  color: luck,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
               ),
             const SizedBox(height: AppSpacing.xs),
-            TimelineNode(color: accent, tokens: tokens),
+            TimelineNode(color: luck, tokens: tokens),
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              '${formatShortMonthDay(entry.time)} · ${l.timelineSinceLast(entry.pullsSincePrev)}',
+            Text.rich(
+              TextSpan(
+                style: TextStyle(
+                  color: tokens.textMuted,
+                  fontSize: 10,
+                  fontFeatures: kTabularFigures,
+                ),
+                children: [
+                  TextSpan(text: '${formatShortMonthDay(entry.time)} · '),
+                  TextSpan(
+                    text: l.timelineSinceLast(entry.pullsSincePrev),
+                    style: TextStyle(color: luck),
+                  ),
+                ],
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: tokens.textMuted,
-                fontSize: 10,
-                fontFeatures: kTabularFigures,
-              ),
             ),
+            // 對稱補回標籤帶高度，使節點維持在原垂直中心、對齊軸線。
+            const SizedBox(height: _monthBandHeight),
           ],
         ),
       ),

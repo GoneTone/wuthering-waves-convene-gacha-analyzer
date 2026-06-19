@@ -11,6 +11,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 
@@ -137,6 +138,35 @@ void main() {
     // totalIndex 顯示（rows desc by time → id 5 是最新 → totalIndex=3）
     expect(find.text('3'), findsWidgets); // totalIndex of A
     expect(find.text('1'), findsWidgets); // totalIndex of C
+  });
+
+  testWidgets('保底內抽數以歐非色顯示、總抽數維持 muted', (tester) async {
+    // A(5★) total=3/pity=3、B(4★) total=2/pity=2、C(3★) total=1/pity=1。
+    final records = [
+      _r(seq: 3, rank: 5, name: 'A'),
+      _r(seq: 2, rank: 4, name: 'B'),
+      _r(seq: 1, rank: 3, name: 'C'),
+    ];
+    final rows = buildRecordRows(records, _idxFor(records));
+    await tester.pumpWidget(
+      _wrap(
+        SortableTable(
+          rows: rows,
+          sort: null,
+          mainRank: 5,
+          onSortColumnTapped: (_) {},
+        ),
+        container: container,
+      ),
+    );
+    const t = GachaTokens.dark;
+    // '1' 出現兩次（C 列）：總抽數欄 muted、保底內欄歐非綠（pity 1/80 → 歐）。
+    final colors = tester
+        .widgetList<Text>(find.text('1'))
+        .map((w) => w.style?.color)
+        .toList();
+    expect(colors, contains(t.stateSuccess), reason: '保底內抽數應為歐非色');
+    expect(colors, contains(t.textMuted), reason: '總抽數應維持 muted');
   });
 
   testWidgets('paginates with 20 per page (always shows dropdown)', (

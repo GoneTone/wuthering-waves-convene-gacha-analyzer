@@ -402,6 +402,7 @@ class _SectionView extends StatelessWidget {
       nowPulls: section.timelineNowPulls,
       isAcrossBanners: section.isAcrossBanners,
       fillHeight: true,
+      showLuckLegend: true,
     );
   }
 
@@ -478,7 +479,8 @@ class _SectionView extends StatelessWidget {
                 ),
               ],
             ),
-            // index 1 = 右欄：時間軸（fillHeight，超出自身裁切）
+            // index 1 = 右欄：時間軸（fillHeight，超出自身裁切；歐非圖例釘
+            // 在卡片底部，不被裁切）
             _timeline(),
           ],
         ),

@@ -13,6 +13,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/inline_section_title.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/left_driven_equal_height.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_card.dart';
 
@@ -207,6 +208,25 @@ void main() {
     );
   });
 
+  testWidgets('分享圖含歐非色圖例（LuckLegend）', (t) async {
+    final l = await AppLocalizations.delegate.load(const Locale('zh'));
+    final card = ShareCard.banner(
+      l: l,
+      appVersion: '1.0.0',
+      appIcon: await _img(),
+      options: const ShareImageOptions(),
+      uid: '800123456',
+      updatedAt: DateTime(2026, 5, 18, 14, 30),
+      title: '角色活動喚取',
+      records: [_r('1', 5, '那維萊特'), _r('1', 4, '菲謝爾'), _r('1', 3, '冷刃')],
+      targetRank: 5,
+      index: const ItemImageIndex.empty(),
+    );
+    await _pump(t, card, container);
+    expect(t.takeException(), isNull);
+    expect(find.byType(LuckLegend), findsOneWidget);
+  });
+
   testWidgets('綜合模式重用 App 元件（聚合單段：StatCard ×3 + TimelineVertical ×1）', (
     t,
   ) async {
@@ -263,18 +283,22 @@ void main() {
     // 右欄時間軸卡外框高度恆 == 左欄兩 _PieBox 疊高（LeftDrivenEqualHeight
     // 量左欄高後強制右欄等高；超出由 TimelineVertical 自身 ClipRect 裁掉）。
     expect(find.byType(LeftDrivenEqualHeight), findsOneWidget);
-    final rightHeight = t
-        .getSize(
-          find
-              .descendant(
-                of: find.byType(TimelineVertical),
-                matching: find.byType(Container),
-              )
-              .first,
+    final cardFinder = find
+        .descendant(
+          of: find.byType(TimelineVertical),
+          matching: find.byType(Container),
         )
-        .height;
+        .first;
+    final rightHeight = t.getSize(cardFinder).height;
     final leftHeight = _leftColumnHeight(t, l);
     expect(rightHeight, closeTo(leftHeight, 0.5));
+
+    // 圖例釘在卡片底部：即使 entries 溢出被裁，圖例仍在卡內、未被裁掉。
+    expect(find.byType(LuckLegend), findsOneWidget);
+    expect(
+      t.getBottomLeft(find.byType(LuckLegend)).dy,
+      lessThanOrEqualTo(t.getBottomLeft(cardFinder).dy + 0.5),
+    );
 
     // 標題數字為實際總筆數（12），即使時間軸視覺上至多畫 10 筆並裁切；
     // 與 App overview/banner 標題語意一致。
