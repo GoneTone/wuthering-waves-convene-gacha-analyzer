@@ -9,6 +9,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_node.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_palette.dart';
 
 /// 左側月份標籤欄的固定寬度。
 const double _monthColumnWidth = 80;
@@ -35,6 +37,7 @@ class TimelineVertical extends StatefulWidget {
     this.fillHeight = false,
     this.nowPulls,
     this.isAcrossBanners = false,
+    this.showLuckLegend = false,
   });
 
   /// 要顯示的時間軸條目（由新到舊排序）。
@@ -74,6 +77,9 @@ class TimelineVertical extends StatefulWidget {
 
   /// true 表示跨卡池場景，影響「現在」row 的 i18n 文案。
   final bool isAcrossBanners;
+
+  /// true 時於卡片內容底部顯示 [LuckLegend]（App 頁面用）；分享圖維持 false。
+  final bool showLuckLegend;
 
   @override
   State<TimelineVertical> createState() => _TimelineVerticalState();
@@ -270,6 +276,7 @@ class _TimelineVerticalState extends State<TimelineVertical> {
                       showMonthTag: monthFlag[i],
                       colors: colors,
                       tokens: tokens,
+                      targetRank: targetRank,
                     ),
                 ],
               ),
@@ -289,6 +296,11 @@ class _TimelineVerticalState extends State<TimelineVertical> {
                 ),
               ),
             ),
+          if (widget.showLuckLegend && entries.isNotEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: AppSpacing.m),
+              child: LuckLegend(),
+            ),
         ],
       ),
     );
@@ -302,6 +314,7 @@ class _EntryRow extends StatelessWidget {
     required this.showMonthTag,
     required this.colors,
     required this.tokens,
+    required this.targetRank,
   });
 
   /// 該 row 對應的時間軸條目。
@@ -316,8 +329,11 @@ class _EntryRow extends StatelessWidget {
   /// 主題 token。
   final GachaTokens tokens;
 
-  /// 名稱行：可選 icon + 粗體名稱文字的 [Row]。
-  Widget get _nameRow => Row(
+  /// 主要顯示稀有度，用於查該筆保底門檻。
+  final int targetRank;
+
+  /// 名稱行：可選 icon + 粗體名稱文字的 [Row]，名稱以 [nameColor] 上色。
+  Widget _nameRow(Color nameColor) => Row(
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.center,
     children: [
@@ -329,7 +345,7 @@ class _EntryRow extends StatelessWidget {
         child: Text(
           entry.name,
           style: TextStyle(
-            color: colors.colorFor(entry.gachaType),
+            color: nameColor,
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),
@@ -340,25 +356,21 @@ class _EntryRow extends StatelessWidget {
     ],
   );
 
-  /// 依 [cardPoolType] 查詢對應的在地化卡池名稱；查無時回傳 [cardPoolType] 本身。
-  String _bannerName(String cardPoolType, AppLocalizations l) => gachaTypes
-      .firstWhere(
-        (t) => t.key == cardPoolType,
-        orElse: () => GachaType(
-          cardPoolType: int.tryParse(cardPoolType) ?? 0,
-          nameKey: cardPoolType,
-          pities: const [
-            PityRule(rank: 5, threshold: 80),
-            PityRule(rank: 4, threshold: 10),
-          ],
-        ),
-      )
-      .resolveName(l);
+  /// 依 [cardPoolType] 查在地化卡池名稱；查無時回傳 fallback type 的解析名。
+  String _bannerName(String cardPoolType, AppLocalizations l) =>
+      gachaTypeFor(cardPoolType).resolveName(l);
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final accent = colors.colorFor(entry.gachaType);
+    final rank = entry.sourceRecord?.qualityLevel ?? targetRank;
+    final pity = pityThresholdFor(entry.gachaType, rank);
+    final tier = luckTierFor(entry.pullsSincePrev, pity);
+    final luck = luckColorFor(tier, tokens);
+    final bannerColor = colors.colorFor(entry.gachaType);
+    final nodeTooltip =
+        '${entry.name} · ${luckTierLabel(tier, l)} · '
+        '${l.timelineSinceLast(entry.pullsSincePrev)}';
     final year = entry.time.year.toString();
     final month = entry.time.month.toString().padLeft(2, '0');
 
@@ -370,7 +382,6 @@ class _EntryRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 月份左欄(固定寬度,僅在 showMonthTag 時填字)
           SizedBox(
             width: _monthColumnWidth,
             child: showMonthTag
@@ -391,28 +402,24 @@ class _EntryRow extends StatelessWidget {
                   )
                 : const SizedBox.shrink(),
           ),
-          // 節點圓 (tooltip 目標 = halo 大小，會顯示在節點正上方)
           Tooltip(
-            message: entry.name,
+            message: nodeTooltip,
             preferBelow: false,
             waitDuration: const Duration(milliseconds: 100),
             child: SizedBox(
               width: _haloSize,
               child: Center(
-                child: TimelineNode(color: accent, tokens: tokens),
+                child: TimelineNode(color: luck, tokens: tokens),
               ),
             ),
           ),
           const SizedBox(width: AppSpacing.m),
-          // 名稱 + meta (各自 tooltip，目標 = 文字本身寬度)
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // mainAxisSize: min 讓 Row 收縮到 icon+text 實際寬度；
-                  // 否則 Row 預設吃滿父層，Tooltip 會以那整片寬區置中而飄到右側。
                   Tooltip(
                     message: entry.name,
                     preferBelow: false,
@@ -420,21 +427,35 @@ class _EntryRow extends StatelessWidget {
                     child: entry.sourceRecord != null
                         ? GachaItemTapTarget(
                             record: entry.sourceRecord!,
-                            child: _nameRow,
+                            child: _nameRow(luck),
                           )
-                        : _nameRow,
+                        : _nameRow(luck),
                   ),
                   const SizedBox(height: 2),
                   Tooltip(
                     message: entry.name,
                     preferBelow: false,
                     waitDuration: const Duration(milliseconds: 100),
-                    child: Text(
-                      '${formatShortMonthDay(entry.time)} · ${_bannerName(entry.gachaType, l)} · ${l.timelineSinceLast(entry.pullsSincePrev)}',
-                      style: TextStyle(
-                        color: tokens.textMuted,
-                        fontSize: 12,
-                        fontFeatures: kTabularFigures,
+                    child: Text.rich(
+                      TextSpan(
+                        style: TextStyle(
+                          color: tokens.textMuted,
+                          fontSize: 12,
+                          fontFeatures: kTabularFigures,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: '${formatShortMonthDay(entry.time)} · ',
+                          ),
+                          TextSpan(
+                            text: _bannerName(entry.gachaType, l),
+                            style: TextStyle(color: bannerColor),
+                          ),
+                          TextSpan(
+                            text:
+                                ' · ${l.timelineSinceLast(entry.pullsSincePrev)}',
+                          ),
+                        ],
                       ),
                     ),
                   ),

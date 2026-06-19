@@ -10,9 +10,11 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index
 import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
 
 TimelineEntry _e(String name, String gachaType, int pulls, DateTime time) =>
     TimelineEntry(
@@ -663,6 +665,41 @@ void main() {
     await tester.pump();
 
     expect(find.byType(GachaItemIcon), findsNWidgets(entries.length));
+  });
+
+  testWidgets('歐非色：節點名稱依抽數變色（40→success、70→danger）', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) => TimelineVertical(
+          entries: [
+            _e('歐神', '1', 40, DateTime(2025, 4, 1)),
+            _e('非酋', '1', 70, DateTime(2025, 3, 1)),
+          ],
+          colors: colors,
+          targetRank: 5,
+        ),
+      ),
+    );
+    Color nameColor(String name) =>
+        tester.widget<Text>(find.text(name)).style!.color!;
+    const t = GachaTokens.dark;
+    expect(nameColor('歐神'), t.stateSuccess);
+    expect(nameColor('非酋'), t.stateDanger);
+  });
+
+  testWidgets('showLuckLegend=true 顯示圖例、預設不顯示', (tester) async {
+    Widget build({required bool legend}) => _wrap(
+      (ctx, colors) => TimelineVertical(
+        entries: [_e('歐神', '1', 40, DateTime(2025, 4, 1))],
+        colors: colors,
+        targetRank: 5,
+        showLuckLegend: legend,
+      ),
+    );
+    await tester.pumpWidget(build(legend: false));
+    expect(find.byType(LuckLegend), findsNothing);
+    await tester.pumpWidget(build(legend: true));
+    expect(find.byType(LuckLegend), findsOneWidget);
   });
 
   testWidgets(
