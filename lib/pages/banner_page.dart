@@ -16,7 +16,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/record_filter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_type_icons.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/chart_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/five_star_overview.dart';
@@ -259,12 +259,12 @@ class BannerPage extends ConsumerWidget {
                         _countAtRank(stats, primary.rank),
                       ),
                       icon: Icons.timeline,
+                      legend: const LuckLegend(),
                       chart: TimelineHorizontal(
                         entries: buildTimelineEntries(
                           records,
                           targetRank: primary.rank,
                         ),
-                        colors: BannerColors.of(Theme.of(context).brightness),
                         targetRank: primary.rank,
                         nowPulls: pullsSinceLastRanked(
                           records,

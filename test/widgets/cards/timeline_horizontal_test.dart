@@ -10,6 +10,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index
 import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_horizontal.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
@@ -45,11 +46,7 @@ void main() {
   testWidgets('empty + no nowPulls → shows timelineNoRecords', (tester) async {
     await tester.pumpWidget(
       _wrap(
-        (ctx, colors) => TimelineHorizontal(
-          entries: const [],
-          colors: colors,
-          targetRank: 5,
-        ),
+        (ctx, colors) => TimelineHorizontal(entries: const [], targetRank: 5),
       ),
     );
     final l = AppLocalizations.of(
@@ -69,7 +66,6 @@ void main() {
             _e('夜蘭', '301', 87, DateTime(2025, 4, 1)),
             _e('流浪者', '301', 74, DateTime(2025, 3, 1)),
           ],
-          colors: colors,
           targetRank: 5,
         ),
       ),
@@ -85,7 +81,6 @@ void main() {
       _wrap(
         (ctx, colors) => TimelineHorizontal(
           entries: [_e('夜蘭', '301', 87, DateTime(2025, 4, 1))],
-          colors: colors,
           nowPulls: 28,
           targetRank: 5,
         ),
@@ -103,12 +98,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _wrap(
-        (ctx, colors) => TimelineHorizontal(
-          entries: const [],
-          colors: colors,
-          nowPulls: 5,
-          targetRank: 5,
-        ),
+        (ctx, colors) =>
+            TimelineHorizontal(entries: const [], nowPulls: 5, targetRank: 5),
       ),
     );
     final l = AppLocalizations.of(
@@ -128,7 +119,6 @@ void main() {
       _wrap(
         (ctx, colors) => TimelineHorizontal(
           entries: [_e('夜蘭', '301', 87, DateTime(2025, 4, 1))],
-          colors: colors,
           nowPulls: 28,
           targetRank: 5,
         ),
@@ -155,8 +145,7 @@ void main() {
     ];
     await tester.pumpWidget(
       _wrap(
-        (ctx, colors) =>
-            TimelineHorizontal(entries: entries, colors: colors, targetRank: 5),
+        (ctx, colors) => TimelineHorizontal(entries: entries, targetRank: 5),
       ),
     );
     final scrollableState = tester.state<ScrollableState>(
@@ -193,11 +182,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _wrap(
-        (ctx, colors) => TimelineHorizontal(
-          entries: manyEntries(20),
-          colors: colors,
-          targetRank: 5,
-        ),
+        (ctx, colors) =>
+            TimelineHorizontal(entries: manyEntries(20), targetRank: 5),
       ),
     );
     await tester.pumpAndSettle();
@@ -208,11 +194,8 @@ void main() {
   testWidgets('overflow + offset=middle → both arrows visible', (tester) async {
     await tester.pumpWidget(
       _wrap(
-        (ctx, colors) => TimelineHorizontal(
-          entries: manyEntries(20),
-          colors: colors,
-          targetRank: 5,
-        ),
+        (ctx, colors) =>
+            TimelineHorizontal(entries: manyEntries(20), targetRank: 5),
       ),
     );
     await tester.pumpAndSettle();
@@ -233,11 +216,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _wrap(
-        (ctx, colors) => TimelineHorizontal(
-          entries: manyEntries(20),
-          colors: colors,
-          targetRank: 5,
-        ),
+        (ctx, colors) =>
+            TimelineHorizontal(entries: manyEntries(20), targetRank: 5),
       ),
     );
     await tester.pumpAndSettle();
@@ -263,7 +243,6 @@ void main() {
             _e('夜蘭', '301', 87, DateTime(2025, 4, 1)),
             _e('流浪者', '301', 74, DateTime(2025, 3, 1)),
           ],
-          colors: colors,
           targetRank: 5,
         ),
       ),
@@ -278,11 +257,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _wrap(
-        (ctx, colors) => TimelineHorizontal(
-          entries: manyEntries(20),
-          colors: colors,
-          targetRank: 5,
-        ),
+        (ctx, colors) =>
+            TimelineHorizontal(entries: manyEntries(20), targetRank: 5),
       ),
     );
     await tester.pumpAndSettle();
@@ -303,11 +279,8 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         _wrap(
-          (ctx, colors) => TimelineHorizontal(
-            entries: manyEntries(20),
-            colors: colors,
-            targetRank: 5,
-          ),
+          (ctx, colors) =>
+              TimelineHorizontal(entries: manyEntries(20), targetRank: 5),
         ),
       );
       await tester.pumpAndSettle();
@@ -335,8 +308,7 @@ void main() {
     'entries shrink from overflow to non-overflow → arrows disappear',
     (tester) async {
       Widget makeWidget(List<TimelineEntry> entries) => _wrap(
-        (ctx, colors) =>
-            TimelineHorizontal(entries: entries, colors: colors, targetRank: 5),
+        (ctx, colors) => TimelineHorizontal(entries: entries, targetRank: 5),
       );
       await tester.pumpWidget(makeWidget(manyEntries(20)));
       await tester.pumpAndSettle();
@@ -359,11 +331,7 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         _wrap(
-          (ctx, colors) => TimelineHorizontal(
-            entries: const [],
-            colors: colors,
-            targetRank: 5,
-          ),
+          (ctx, colors) => TimelineHorizontal(entries: const [], targetRank: 5),
         ),
       );
       await tester.pumpAndSettle();
@@ -430,12 +398,7 @@ void main() {
               height: 160,
               child: Builder(
                 builder: (ctx) {
-                  final colors = BannerColors.of(Theme.of(ctx).brightness);
-                  return TimelineHorizontal(
-                    entries: entries,
-                    colors: colors,
-                    targetRank: 5,
-                  );
+                  return TimelineHorizontal(entries: entries, targetRank: 5);
                 },
               ),
             ),
@@ -446,5 +409,43 @@ void main() {
     await tester.pump();
 
     expect(find.byType(GachaItemIcon), findsNWidgets(entries.length));
+  });
+
+  testWidgets('歐非色：40 抽名稱為 stateSuccess、70 抽為 stateDanger', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) => TimelineHorizontal(
+          entries: [
+            _e('歐神', '1', 40, DateTime(2025, 4, 1)),
+            _e('非酋', '1', 70, DateTime(2025, 3, 1)),
+          ],
+          targetRank: 5,
+        ),
+      ),
+    );
+    Color nameColor(String name) =>
+        tester.widget<Text>(find.text(name)).style!.color!;
+    const t = GachaTokens.dark;
+    expect(nameColor('歐神'), t.stateSuccess);
+    expect(nameColor('非酋'), t.stateDanger);
+  });
+
+  testWidgets('節點 tooltip 含分級與抽數', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) => TimelineHorizontal(
+          entries: [_e('歐神', '1', 40, DateTime(2025, 4, 1))],
+          targetRank: 5,
+        ),
+      ),
+    );
+    final l = AppLocalizations.of(
+      tester.element(find.byType(TimelineHorizontal)),
+    )!;
+    final expected = '歐神 · ${l.luckTierLucky} · ${l.timelineSinceLast(40)}';
+    expect(
+      find.byWidgetPredicate((w) => w is Tooltip && w.message == expected),
+      findsOneWidget,
+    );
   });
 }

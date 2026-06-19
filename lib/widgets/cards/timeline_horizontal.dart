@@ -11,6 +11,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_no
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_palette.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/scroll/scroll_affordance.dart';
 
 /// 每個時間軸欄的固定寬度。
@@ -55,16 +57,12 @@ class TimelineHorizontal extends StatefulWidget {
   const TimelineHorizontal({
     super.key,
     required this.entries,
-    required this.colors,
     required this.targetRank,
     this.nowPulls,
   });
 
   /// 要顯示的時間軸條目（由新到舊排序）。
   final List<TimelineEntry> entries;
-
-  /// 各卡池節點的顏色映射。
-  final BannerColors colors;
 
   /// 該卡池萃取的稀有度（5 或 4）。用於「暫無 N★ 紀錄」文案。
   final int targetRank;
@@ -188,7 +186,7 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
                     for (final entry in widget.entries)
                       _EntryColumn(
                         entry: entry,
-                        colors: widget.colors,
+                        targetRank: widget.targetRank,
                         tokens: tokens,
                       ),
                   ],
@@ -256,25 +254,30 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
 class _EntryColumn extends StatelessWidget {
   const _EntryColumn({
     required this.entry,
-    required this.colors,
+    required this.targetRank,
     required this.tokens,
   });
 
   /// 該欄對應的時間軸條目。
   final TimelineEntry entry;
 
-  /// 各卡池節點的顏色映射。
-  final BannerColors colors;
+  /// 該卡池萃取的稀有度（5 或 4），用於查保底門檻。
+  final int targetRank;
 
   /// 主題 token。
   final GachaTokens tokens;
 
   @override
   Widget build(BuildContext context) {
-    final accent = colors.colorFor(entry.gachaType);
     final l = AppLocalizations.of(context)!;
+    final rank = entry.sourceRecord?.qualityLevel ?? targetRank;
+    final pity = pityThresholdFor(entry.gachaType, rank);
+    final tier = luckTierFor(entry.pullsSincePrev, pity);
+    final luck = luckColorFor(tier, tokens);
     return Tooltip(
-      message: entry.name,
+      message:
+          '${entry.name} · ${luckTierLabel(tier, l)} · '
+          '${l.timelineSinceLast(entry.pullsSincePrev)}',
       preferBelow: false,
       waitDuration: const Duration(milliseconds: 100),
       child: SizedBox(
@@ -298,7 +301,7 @@ class _EntryColumn extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: accent,
+                        color: luck,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -313,13 +316,13 @@ class _EntryColumn extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: accent,
+                  color: luck,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
               ),
             const SizedBox(height: AppSpacing.xs),
-            TimelineNode(color: accent, tokens: tokens),
+            TimelineNode(color: luck, tokens: tokens),
             const SizedBox(height: AppSpacing.xs),
             Text(
               '${formatShortMonthDay(entry.time)} · ${l.timelineSinceLast(entry.pullsSincePrev)}',
