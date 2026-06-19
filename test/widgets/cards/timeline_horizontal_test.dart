@@ -494,7 +494,7 @@ void main() {
     expect(find.text(l.timelineMonthLabel('2025', '03')), findsOneWidget);
   });
 
-  testWidgets('節點 tooltip 含分級與抽數', (tester) async {
+  testWidgets('hover tooltip 只顯示物品名稱（不含分級/抽數）', (tester) async {
     await tester.pumpWidget(
       _wrap(
         (ctx, colors) => TimelineHorizontal(
@@ -506,10 +506,18 @@ void main() {
     final l = AppLocalizations.of(
       tester.element(find.byType(TimelineHorizontal)),
     )!;
-    final expected = '歐神 · ${l.luckTierLucky} · ${l.timelineSinceLast(40)}';
     expect(
-      find.byWidgetPredicate((w) => w is Tooltip && w.message == expected),
+      find.byWidgetPredicate((w) => w is Tooltip && w.message == '歐神'),
       findsOneWidget,
+    );
+    // 不得含抽數（分級名稱「歐」是名稱子字串、不適合反向斷言，改驗抽數）。
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Tooltip &&
+            (w.message?.contains(l.timelineSinceLast(40)) ?? false),
+      ),
+      findsNothing,
     );
   });
 }

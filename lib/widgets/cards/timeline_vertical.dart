@@ -380,9 +380,6 @@ class _EntryRow extends StatelessWidget {
     final tier = luckTierFor(entry.pullsSincePrev, pity);
     final luck = luckColorFor(tier, tokens);
     final bannerColor = colors.colorFor(entry.gachaType);
-    final nodeTooltip =
-        '${entry.name} · ${luckTierLabel(tier, l)} · '
-        '${l.timelineSinceLast(entry.pullsSincePrev)}';
     final year = entry.time.year.toString();
     final month = entry.time.month.toString().padLeft(2, '0');
 
@@ -415,7 +412,7 @@ class _EntryRow extends StatelessWidget {
                 : const SizedBox.shrink(),
           ),
           Tooltip(
-            message: nodeTooltip,
+            message: entry.name,
             preferBelow: false,
             waitDuration: const Duration(milliseconds: 100),
             child: SizedBox(

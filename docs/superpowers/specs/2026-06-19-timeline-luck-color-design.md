@@ -150,14 +150,11 @@ int pityThresholdFor(String cardPoolType, int rank);
 
 ## tooltip 文案
 
-節點 tooltip 由「只有物品名稱」改為組裝既有片段：
+節點／物品 hover tooltip **只顯示物品名稱**。
 
-```
-{物品名稱} · {分級名稱} · {timelineSinceLast(pulls)}
-```
-
-例：`深淵的呼喚 · 歐 · 40 抽`。分級名稱取自下方新增的 l10n key，抽數重用既有
-`timelineSinceLast`，不另外新增 tooltip 專用 key。
+> 註：初版曾把節點 tooltip 組成「`{物品名稱} · {分級名稱} · {N 抽}`」，後續（同分支）
+> 改回只顯示名稱——分級與抽數已由節點顏色、meta 的「N 抽」與圖例呈現，tooltip 再
+> 重複反而冗餘。因此不需 tooltip 專用 l10n key。
 
 ## i18n
 
@@ -191,7 +188,7 @@ int pityThresholdFor(String cardPoolType, int rank);
   `fvm flutter test`（All tests passed!）全綠。
 - 單卡池頁時間軸節點/名稱顏色隨抽數呈綠/黃/紅，下方有圖例。
 - 總覽頁時間軸節點/名稱呈歐非色，meta 行卡池名稱以卡池色顯示，下方有圖例。
-- 節點 tooltip 顯示「名稱 · 分級 · N 抽」。
+- 節點／物品 hover tooltip 只顯示物品名稱。
 - 分享圖呈現歐非色，且時間軸卡片底部有圖例（即使 entries 溢出被裁仍可見）。
 
 ## 後續增強（同分支追加，供姐妹專案參考）

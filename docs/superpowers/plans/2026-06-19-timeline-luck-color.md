@@ -1080,7 +1080,7 @@ Task 1–7 落地後，於同分支追加下列增強。皆已完成並全綠提
 - [ ] `fvm dart format lib/ test/`、`fvm flutter analyze`（No issues found!）、`fvm flutter test`（All tests passed!）全綠。
 - [ ] 單卡池頁：時間軸節點/名稱依抽數呈綠/黃/紅，卡片下方有歐非圖例（`ChartCard.legend`）。
 - [ ] 總覽頁：節點/名稱呈歐非色；meta 行卡池名稱以卡池色顯示；卡片底部有圖例。
-- [ ] 節點 tooltip 顯示「名稱 · 分級 · N 抽」。
+- [ ] 節點／物品 hover tooltip 只顯示物品名稱（初版曾含分級/抽數，後改回只顯示名稱）。
 - [ ] 時間軸 meta 的「N 抽」與記錄列表「保底內」欄皆呈歐非色（Task 8/11）。
 - [ ] 卡池調色盤無任一色等於歐非三色（Task 9）。
 - [ ] 分享圖：節點/名稱/抽數呈歐非色，時間軸卡片底部有圖例且 entries 溢出被裁時仍可見（Task 10）。
