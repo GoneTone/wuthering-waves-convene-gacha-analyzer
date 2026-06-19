@@ -473,6 +473,27 @@ void main() {
     expect(richSpanColor(tester, l.timelineSinceLast(70)), t.stateDanger);
   });
 
+  testWidgets('年/月區隔：每個月份分組顯示一個年/月標籤', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) => TimelineHorizontal(
+          entries: [
+            _e('A', '1', 40, DateTime(2025, 4, 28)),
+            _e('B', '1', 30, DateTime(2025, 4, 12)),
+            _e('C', '1', 50, DateTime(2025, 3, 15)),
+          ],
+          targetRank: 5,
+        ),
+      ),
+    );
+    final l = AppLocalizations.of(
+      tester.element(find.byType(TimelineHorizontal)),
+    )!;
+    // 兩個月份分組（2025/04 兩筆 + 2025/03 一筆）→ 各一個標籤。
+    expect(find.text(l.timelineMonthLabel('2025', '04')), findsOneWidget);
+    expect(find.text(l.timelineMonthLabel('2025', '03')), findsOneWidget);
+  });
+
   testWidgets('節點 tooltip 含分級與抽數', (tester) async {
     await tester.pumpWidget(
       _wrap(

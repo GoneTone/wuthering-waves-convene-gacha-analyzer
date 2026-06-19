@@ -21,6 +21,10 @@ const double _colWidth = 90;
 /// 邊緣漸隱遮罩的寬度。
 const double _edgeFadeWidth = 32;
 
+/// 月份標籤帶高度。每欄頂部保留此高（首欄填標籤、其餘留白），底部以等高
+/// spacer 對稱補回，使節點 y 不因標籤帶位移、仍對齊背景軸線。
+const double _monthBandHeight = 16;
+
 /// 從跨卡池 timeline entries 統計各卡池的 5★ 數量,輸出可餵給
 /// [DistributionLegend] (記得搭配 `showAllEntries: true`) 的條目,作為
 /// [TimelineHorizontal] 在跨卡池場景下的顏色圖例。
@@ -147,6 +151,15 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
       );
     }
 
+    // 每欄是否為其月份分組首欄（左→右 = 新→舊，某月最新一筆即該組起點）。
+    final monthStart = <bool>[];
+    int? prevYearMonth;
+    for (final entry in widget.entries) {
+      final ym = entry.time.year * 12 + entry.time.month;
+      monthStart.add(prevYearMonth != ym);
+      prevYearMonth = ym;
+    }
+
     return Stack(
       children: [
         // 背景軸線
@@ -183,11 +196,14 @@ class _TimelineHorizontalState extends State<TimelineHorizontal> {
                   children: [
                     if (widget.nowPulls != null)
                       _NowColumn(nowPulls: widget.nowPulls!, tokens: tokens),
-                    for (final entry in widget.entries)
+                    for (var i = 0; i < widget.entries.length; i++)
                       _EntryColumn(
-                        entry: entry,
+                        entry: widget.entries[i],
                         targetRank: widget.targetRank,
                         tokens: tokens,
+                        isMonthStart: monthStart[i],
+                        // 月份交界畫分隔線；最左欄（最新月份起點）不畫。
+                        showMonthDivider: monthStart[i] && i > 0,
                       ),
                   ],
                 ),
@@ -256,6 +272,8 @@ class _EntryColumn extends StatelessWidget {
     required this.entry,
     required this.targetRank,
     required this.tokens,
+    required this.isMonthStart,
+    required this.showMonthDivider,
   });
 
   /// 該欄對應的時間軸條目。
@@ -267,6 +285,12 @@ class _EntryColumn extends StatelessWidget {
   /// 主題 token。
   final GachaTokens tokens;
 
+  /// 是否為其月份分組首欄；true 時頂部標籤帶顯示年/月。
+  final bool isMonthStart;
+
+  /// 是否在左側畫月份分隔線（月份交界、且非最左欄時為 true）。
+  final bool showMonthDivider;
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -274,18 +298,48 @@ class _EntryColumn extends StatelessWidget {
     final pity = pityThresholdFor(entry.gachaType, rank);
     final tier = luckTierFor(entry.pullsSincePrev, pity);
     final luck = luckColorFor(tier, tokens);
+    final monthLabel = isMonthStart
+        ? l.timelineMonthLabel(
+            entry.time.year.toString(),
+            entry.time.month.toString().padLeft(2, '0'),
+          )
+        : null;
     return Tooltip(
       message:
           '${entry.name} · ${luckTierLabel(tier, l)} · '
           '${l.timelineSinceLast(entry.pullsSincePrev)}',
       preferBelow: false,
       waitDuration: const Duration(milliseconds: 100),
-      child: SizedBox(
+      child: Container(
         width: _colWidth,
+        decoration: showMonthDivider
+            ? BoxDecoration(
+                border: Border(left: BorderSide(color: tokens.borderEmphasis)),
+              )
+            : null,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // 月份標籤帶（首欄填年/月，其餘留白佔位）。
+            SizedBox(
+              height: _monthBandHeight,
+              child: monthLabel == null
+                  ? null
+                  : Center(
+                      child: Text(
+                        monthLabel,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: tokens.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.4,
+                          fontFeatures: kTabularFigures,
+                        ),
+                      ),
+                    ),
+            ),
             if (entry.sourceRecord != null)
               GachaItemTapTarget(
                 record: entry.sourceRecord!,
@@ -343,6 +397,8 @@ class _EntryColumn extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
+            // 對稱補回標籤帶高度，使節點維持在原垂直中心、對齊軸線。
+            const SizedBox(height: _monthBandHeight),
           ],
         ),
       ),
