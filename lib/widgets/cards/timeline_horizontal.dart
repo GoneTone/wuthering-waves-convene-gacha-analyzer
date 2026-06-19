@@ -11,7 +11,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_no
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_palette.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/scroll/scroll_affordance.dart';
 
@@ -306,9 +305,7 @@ class _EntryColumn extends StatelessWidget {
           )
         : null;
     return Tooltip(
-      message:
-          '${entry.name} · ${luckTierLabel(tier, l)} · '
-          '${l.timelineSinceLast(entry.pullsSincePrev)}',
+      message: entry.name,
       preferBelow: false,
       waitDuration: const Duration(milliseconds: 100),
       child: Container(
