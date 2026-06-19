@@ -146,7 +146,7 @@ class _TimelineVerticalState extends State<TimelineVertical> {
     final title = widget.title;
     final footerNote = widget.footerNote;
     final fillHeight = widget.fillHeight;
-    Widget container(Widget child) {
+    Widget container(Widget child, {bool withLegend = false}) {
       // title 與 footerNote 皆未傳（App 既有用法）→ 回傳原 child 本體，
       // 渲染樹與加入此參數前逐字等價、零回歸。
       final Widget body = (title == null && footerNote == null)
@@ -178,7 +178,7 @@ class _TimelineVerticalState extends State<TimelineVertical> {
       // OverflowBox 區域 = 有界高，body 自然高較矮 → 下方為卡內留白。
       // fillHeight=false（App 既有用法）：child 維持原 body，渲染樹與加入
       // 此參數前逐字等價、零回歸。
-      final Widget content = fillHeight
+      final Widget scroller = fillHeight
           ? ClipRect(
               child: OverflowBox(
                 minHeight: 0,
@@ -188,6 +188,22 @@ class _TimelineVerticalState extends State<TimelineVertical> {
               ),
             )
           : body;
+      // 歐非圖例釘在卡片底部（邊框內、裁切區下方）。fillHeight 時內容區用
+      // Expanded 占滿剩餘高並自行裁切，圖例不被 OverflowBox 的高度解放拖出
+      // 邊框、恆可見；非 fillHeight（App）時自然排在內容下方。
+      final Widget content = withLegend
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
+              children: [
+                if (fillHeight) Expanded(child: scroller) else scroller,
+                const Padding(
+                  padding: EdgeInsets.only(top: AppSpacing.m),
+                  child: LuckLegend(),
+                ),
+              ],
+            )
+          : scroller;
       return Container(
         constraints: fillHeight
             ? const BoxConstraints(minHeight: double.infinity)
@@ -296,13 +312,9 @@ class _TimelineVerticalState extends State<TimelineVertical> {
                 ),
               ),
             ),
-          if (widget.showLuckLegend && entries.isNotEmpty)
-            const Padding(
-              padding: EdgeInsets.only(top: AppSpacing.m),
-              child: LuckLegend(),
-            ),
         ],
       ),
+      withLegend: widget.showLuckLegend && entries.isNotEmpty,
     );
   }
 }
