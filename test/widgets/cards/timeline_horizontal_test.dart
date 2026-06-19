@@ -42,6 +42,29 @@ Widget _wrap(Widget Function(BuildContext ctx, BannerColors colors) build) =>
       ),
     );
 
+/// 在所有 Text.rich 子樹中遞迴找 text 等於 [text] 的 span，回傳其顏色。
+Color? richSpanColor(WidgetTester tester, String text) {
+  TextSpan? search(TextSpan span) {
+    if (span.text == text) return span;
+    for (final child in span.children ?? const <InlineSpan>[]) {
+      if (child is TextSpan) {
+        final r = search(child);
+        if (r != null) return r;
+      }
+    }
+    return null;
+  }
+
+  for (final w in tester.widgetList<Text>(find.byType(Text))) {
+    final span = w.textSpan;
+    if (span is TextSpan) {
+      final r = search(span);
+      if (r != null) return r.style?.color;
+    }
+  }
+  return null;
+}
+
 void main() {
   testWidgets('empty + no nowPulls → shows timelineNoRecords', (tester) async {
     await tester.pumpWidget(
@@ -428,6 +451,26 @@ void main() {
     const t = GachaTokens.dark;
     expect(nameColor('歐神'), t.stateSuccess);
     expect(nameColor('非酋'), t.stateDanger);
+  });
+
+  testWidgets('歐非色：幾抽文字 40→stateSuccess、70→stateDanger', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) => TimelineHorizontal(
+          entries: [
+            _e('歐神', '1', 40, DateTime(2025, 4, 1)),
+            _e('非酋', '1', 70, DateTime(2025, 3, 1)),
+          ],
+          targetRank: 5,
+        ),
+      ),
+    );
+    final l = AppLocalizations.of(
+      tester.element(find.byType(TimelineHorizontal)),
+    )!;
+    const t = GachaTokens.dark;
+    expect(richSpanColor(tester, l.timelineSinceLast(40)), t.stateSuccess);
+    expect(richSpanColor(tester, l.timelineSinceLast(70)), t.stateDanger);
   });
 
   testWidgets('節點 tooltip 含分級與抽數', (tester) async {

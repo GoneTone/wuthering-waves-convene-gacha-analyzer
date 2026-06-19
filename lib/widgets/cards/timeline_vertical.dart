@@ -451,9 +451,10 @@ class _EntryRow extends StatelessWidget {
                             text: _bannerName(entry.gachaType, l),
                             style: TextStyle(color: bannerColor),
                           ),
+                          const TextSpan(text: ' · '),
                           TextSpan(
-                            text:
-                                ' · ${l.timelineSinceLast(entry.pullsSincePrev)}',
+                            text: l.timelineSinceLast(entry.pullsSincePrev),
+                            style: TextStyle(color: luck),
                           ),
                         ],
                       ),

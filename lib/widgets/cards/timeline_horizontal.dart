@@ -324,16 +324,24 @@ class _EntryColumn extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             TimelineNode(color: luck, tokens: tokens),
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              '${formatShortMonthDay(entry.time)} · ${l.timelineSinceLast(entry.pullsSincePrev)}',
+            Text.rich(
+              TextSpan(
+                style: TextStyle(
+                  color: tokens.textMuted,
+                  fontSize: 10,
+                  fontFeatures: kTabularFigures,
+                ),
+                children: [
+                  TextSpan(text: '${formatShortMonthDay(entry.time)} · '),
+                  TextSpan(
+                    text: l.timelineSinceLast(entry.pullsSincePrev),
+                    style: TextStyle(color: luck),
+                  ),
+                ],
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: tokens.textMuted,
-                fontSize: 10,
-                fontFeatures: kTabularFigures,
-              ),
             ),
           ],
         ),
