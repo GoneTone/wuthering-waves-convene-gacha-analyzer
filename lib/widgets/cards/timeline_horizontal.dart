@@ -22,8 +22,9 @@ const double _colWidth = 90;
 const double _edgeFadeWidth = 32;
 
 /// 月份標籤帶高度。每欄頂部保留此高（首欄填標籤、其餘留白），底部以等高
-/// spacer 對稱補回，使節點 y 不因標籤帶位移、仍對齊背景軸線。
-const double _monthBandHeight = 16;
+/// spacer 對稱補回，使節點 y 不因標籤帶位移、仍對齊背景軸線。標籤靠上對齊，
+/// 多出的高度成為標籤與下方名稱之間的間隔。
+const double _monthBandHeight = 26;
 
 /// 從跨卡池 timeline entries 統計各卡池的 5★ 數量,輸出可餵給
 /// [DistributionLegend] (記得搭配 `showAllEntries: true`) 的條目,作為
@@ -326,7 +327,8 @@ class _EntryColumn extends StatelessWidget {
               height: _monthBandHeight,
               child: monthLabel == null
                   ? null
-                  : Center(
+                  : Align(
+                      alignment: Alignment.topCenter,
                       child: Text(
                         monthLabel,
                         maxLines: 1,
