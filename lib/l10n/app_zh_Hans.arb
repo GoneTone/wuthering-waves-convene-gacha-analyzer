@@ -389,6 +389,9 @@
       }
     }
   },
+  "luckTierLucky": "欧",
+  "luckTierAverage": "普通",
+  "luckTierUnlucky": "非",
   "timelineNowLabel": "现在",
   "timelineNowPulls": "已 {n} 抽",
   "@timelineNowPulls": {
