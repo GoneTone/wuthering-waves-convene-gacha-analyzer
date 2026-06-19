@@ -13,6 +13,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/inline_section_title.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/left_driven_equal_height.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_card.dart';
 
@@ -205,6 +206,25 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('分享圖含歐非色圖例（LuckLegend）', (t) async {
+    final l = await AppLocalizations.delegate.load(const Locale('zh'));
+    final card = ShareCard.banner(
+      l: l,
+      appVersion: '1.0.0',
+      appIcon: await _img(),
+      options: const ShareImageOptions(),
+      uid: '800123456',
+      updatedAt: DateTime(2026, 5, 18, 14, 30),
+      title: '角色活動喚取',
+      records: [_r('1', 5, '那維萊特'), _r('1', 4, '菲謝爾'), _r('1', 3, '冷刃')],
+      targetRank: 5,
+      index: const ItemImageIndex.empty(),
+    );
+    await _pump(t, card, container);
+    expect(t.takeException(), isNull);
+    expect(find.byType(LuckLegend), findsOneWidget);
   });
 
   testWidgets('綜合模式重用 App 元件（聚合單段：StatCard ×3 + TimelineVertical ×1）', (

@@ -21,6 +21,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.d
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/item_type_pie.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rank_palette.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rarity_pie.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/five_star_overview.dart';
@@ -482,6 +483,10 @@ class _SectionView extends StatelessWidget {
             _timeline(),
           ],
         ),
+        // 歐非色圖例：說明右欄時間軸節點/名稱/抽數的綠黃紅含義。放在等高列
+        // 正下方（而非時間軸卡內），避開右欄 fillHeight 的裁切、保證可見。
+        const SizedBox(height: AppSpacing.m),
+        const Center(child: LuckLegend()),
         // 五星一覽掛在該段尾端，清單為空時不顯示。
         // （前身雙段版面殘留說明）鳴潮為單段喚取，五星直接落在該段底下。
         if (section.fiveStar.isNotEmpty) ...[
