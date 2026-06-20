@@ -84,8 +84,8 @@ void main() {
       expect(p.distance, 0);
     });
 
-    test('rank=4 → counts to last 4★ ignoring 5★', () {
-      // records: 3★, 5★, 3★, 4★, 3★ (newest first)
+    test('rank=4 → 中途 5★ 重置距離（但平均仍只算 4★）', () {
+      // records (新→舊): 3★(1/5), 5★(1/4), 3★(1/3), 4★(1/2), 3★(1/1)
       final records = [
         GachaRecord(
           resourceId: 1211,
@@ -134,9 +134,49 @@ void main() {
         ),
       ];
       final p = computePity(records, threshold: 10, rank: 4);
-      // 上次 4★ 是 time 1/2；之後是 3★ + 5★ + 3★ = 3 抽
-      expect(p.current, 3);
+      // 距離：最近重置事件是 1/4 的 5★，其後只有 1/5 的 3★ → current=1。
+      expect(p.current, 1);
+      expect(p.lastRecordAt, DateTime(2025, 1, 4));
+      // 平均仍只算 4★：上次 4★ 是 1/2，分子 = 5 − 3 = 2，命中 1 → avg=2.0。
+      expect(p.hitCount, 1);
+      expect(p.completedInterval, 2);
+      expect(p.averageInterval, 2.0);
+    });
+
+    test('rank=4 距離吃 5★ 重置，但平均間隔不被 5★ 影響', () {
+      // records (新→舊): 5★, 3★, 3★, 4★, 未中×6
+      // 距離：最近重置事件即首筆 5★ → current=0。
+      // 平均：唯一 4★ 在 time 第 7 筆，純 4★ 分子 = 10 − 3 = 7，命中 1 → avg=7.0
+      //       （中途的 5★ 被算進間隔、不視為 4★ 命中）。
+      final records = [
+        _r(rank: 5, time: DateTime(2025, 3, 10)),
+        _r(rank: 3, time: DateTime(2025, 3, 9)),
+        _r(rank: 3, time: DateTime(2025, 3, 8)),
+        _r(rank: 4, time: DateTime(2025, 3, 7)),
+        for (var i = 0; i < 6; i++) _r(rank: 3, time: DateTime(2025, 3, 6 - i)),
+      ];
+      final p = computePity(records, threshold: 10, rank: 4);
+      expect(p.current, 0);
+      expect(p.distance, 10);
+      expect(p.lastRecordAt, DateTime(2025, 3, 10));
+      expect(p.hitCount, 1);
+      expect(p.averageInterval, 7.0);
+    });
+
+    test('rank=5 不受 >= 重置影響（5★ 為最高星，等同 == 5）', () {
+      // records (新→舊): 4★, 4★, 5★, 4★ → 距離與平均皆只看 5★。
+      final records = [
+        _r(rank: 4, time: DateTime(2025, 1, 4)),
+        _r(rank: 4, time: DateTime(2025, 1, 3)),
+        _r(rank: 5, time: DateTime(2025, 1, 2)),
+        _r(rank: 4, time: DateTime(2025, 1, 1)),
+      ];
+      final p = computePity(records, threshold: 80, rank: 5);
+      expect(p.current, 2);
       expect(p.lastRecordAt, DateTime(2025, 1, 2));
+      expect(p.hitCount, 1);
+      expect(p.completedInterval, 2);
+      expect(p.averageInterval, 2.0);
     });
 
     test('空 list → hitCount=0、averageInterval=null', () {
