@@ -569,6 +569,11 @@
     }
   },
   "shareImageCopiedOnly": "クリップボードにコピーしました",
+  "shareImageSaved": "保存しました：{path}",
+  "@shareImageSaved": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "shareImageCopyFailed": "クリップボードへのコピーに失敗しました",
   "shareImageFailed": "シェア画像の生成に失敗しました",
   "exportDialogSuccessTitle": "エクスポート成功",
   "exportDialogFailedTitle": "エクスポート失敗",

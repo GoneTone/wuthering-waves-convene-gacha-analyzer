@@ -469,6 +469,11 @@
     "placeholders": { "path": { "type": "String" } }
   },
   "shareImageCopiedOnly": "已複製到剪貼簿",
+  "shareImageSaved": "已存檔：{path}",
+  "@shareImageSaved": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "shareImageCopyFailed": "複製到剪貼簿失敗",
   "shareImageFailed": "分享圖生成失敗",
   "exportDialogSuccessTitle": "匯出成功",
   "exportDialogFailedTitle": "匯出失敗",
