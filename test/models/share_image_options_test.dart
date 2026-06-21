@@ -17,4 +17,11 @@ void main() {
     expect(o.brightness, Brightness.light);
     expect(o.showFullUid, isTrue);
   });
+
+  test('ShareImageAction 含 save 與 copy 兩值', () {
+    expect(
+      ShareImageAction.values,
+      containsAll([ShareImageAction.save, ShareImageAction.copy]),
+    );
+  });
 }
