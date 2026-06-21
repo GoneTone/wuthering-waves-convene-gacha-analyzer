@@ -14,3 +14,12 @@ class ShareImageOptions {
   /// true = 圖上顯示完整 UID；false = 經 maskUidForShare 遮罩。
   final bool showFullUid;
 }
+
+/// 使用者在分享圖設定 dialog 選擇的終端動作。
+enum ShareImageAction {
+  /// 存檔分享圖。
+  save,
+
+  /// 複製分享圖到剪貼簿。
+  copy,
+}

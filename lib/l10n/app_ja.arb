@@ -543,7 +543,6 @@
   "shareImageThemeLight": "ライト",
   "shareImageShowFullUid": "画像に UID をすべて表示",
   "shareImageShowFullUidHint": "オフにすると先頭 3 桁のみ表示し、残りは • でマスクします",
-  "shareImageGenerate": "生成",
   "shareImageUpdatedAt": "データ更新 {time}",
   "@shareImageUpdatedAt": {
     "placeholders": {
@@ -552,24 +551,14 @@
       }
     }
   },
-  "shareImageSavedAndCopied": "保存してクリップボードにコピーしました：{path}",
-  "@shareImageSavedAndCopied": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
-  "shareImageSavedOnly": "保存しました：{path}（クリップボード非対応）",
-  "@shareImageSavedOnly": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
   "shareImageCopiedOnly": "クリップボードにコピーしました",
+  "shareImageSaved": "保存しました：{path}",
+  "@shareImageSaved": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "shareImageCopyFailed": "クリップボードへのコピーに失敗しました",
   "shareImageFailed": "シェア画像の生成に失敗しました",
+  "shareImageGenerating": "画像を生成中...",
   "exportDialogSuccessTitle": "エクスポート成功",
   "exportDialogFailedTitle": "エクスポート失敗",
   "settingsExportFailed": "エクスポートに失敗しました：{error}",

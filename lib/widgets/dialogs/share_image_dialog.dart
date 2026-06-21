@@ -5,12 +5,13 @@ import 'package:wuthering_waves_convene_gacha_analyzer/models/share_image_option
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 
-/// 開啟分享圖選項 dialog。回傳 null 表示使用者取消。
-Future<ShareImageOptions?> showShareImageDialog(
+/// 開啟分享圖選項 dialog。回傳 null 表示使用者取消；否則含選項與所選動作。
+Future<({ShareImageOptions options, ShareImageAction action})?>
+showShareImageDialog(
   BuildContext context, {
   required Brightness initialBrightness,
 }) {
-  return showDialog<ShareImageOptions>(
+  return showDialog<({ShareImageOptions options, ShareImageAction action})>(
     context: context,
     builder: (_) => _ShareImageDialog(initialBrightness: initialBrightness),
   );
@@ -76,14 +77,25 @@ class _ShareImageDialogState extends State<_ShareImageDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l.actionCancel),
         ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(
-            ShareImageOptions(
+        TextButton(
+          onPressed: () => Navigator.of(context).pop((
+            options: ShareImageOptions(
               brightness: _brightness,
               showFullUid: _showFullUid,
             ),
-          ),
-          child: Text(l.shareImageGenerate),
+            action: ShareImageAction.copy,
+          )),
+          child: Text(l.actionCopyImage),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop((
+            options: ShareImageOptions(
+              brightness: _brightness,
+              showFullUid: _showFullUid,
+            ),
+            action: ShareImageAction.save,
+          )),
+          child: Text(l.actionSaveImage),
         ),
       ],
     );

@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart' show DefaultCupertinoLocalizations;
@@ -16,28 +17,10 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/share_ima
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/preloaded_item_images.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/share_progress_dialog.dart';
 
 /// 分享圖流程的 logger（命名空間 share.image）。
 final _log = Logger('share.image');
-
-/// 把 [ShareExportResult] 攤平成 dialog 需要的訊息與 reveal 路徑。
-/// copiedOnly 只進剪貼簿、無檔案，故 revealPath 為 null。
-({String message, String? revealPath}) _shareResultToDialog(
-  AppLocalizations l,
-  ShareExportResult r,
-) {
-  switch (r.status) {
-    case ShareExportStatus.savedAndCopied:
-      return (
-        message: l.shareImageSavedAndCopied(r.path ?? ''),
-        revealPath: r.path,
-      );
-    case ShareExportStatus.savedOnly:
-      return (message: l.shareImageSavedOnly(r.path ?? ''), revealPath: r.path);
-    case ShareExportStatus.copiedOnly:
-      return (message: l.shareImageCopiedOnly, revealPath: null);
-  }
-}
 
 /// 建構離屏渲染用的 widget 樹（含 Localizations，使重用的 RarityPie/ItemTypePie
 /// 內部 AppLocalizations.of(context) 能在同步 flush 內解析）。
@@ -114,23 +97,42 @@ Future<void> generateAndShareImage({
 }) async {
   final brightness = Theme.of(context).brightness;
   final locale = Localizations.localeOf(context);
-  final options = await showShareImageDialog(
+  final selection = await showShareImageDialog(
     context,
     initialBrightness: brightness,
   );
-  if (options == null) return;
+  if (selection == null) return;
   if (!context.mounted) return;
+  final options = selection.options;
+  final action = selection.action;
 
   final container = ProviderScope.containerOf(context);
   final itemImageIndex = container.read(itemImageIndexProvider);
   final cacheDir = container.read(itemImageCacheDirProvider);
-  final icon = await loadAppIconImage();
-  final preloaded = await preloadItemImages(
-    index: itemImageIndex,
-    cacheDir: cacheDir,
-    records: recordsForPreload,
-  );
+
+  // 預載 + 離屏渲染期間顯示不可關閉的「生成中」進度視窗；closeProgress 為
+  // idempotent，渲染一完成（早於存檔系統視窗 / 複製結果通知）即關閉，catch 與
+  // finally 再各呼叫一次當保險，確保任何路徑都不會卡住進度視窗。
+  var progressOpen = false;
+  void closeProgress() {
+    if (progressOpen && context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+      progressOpen = false;
+    }
+  }
+
+  unawaited(showShareProgressDialog(context));
+  progressOpen = true;
+
+  ui.Image? icon;
+  Map<int, ui.Image>? preloaded;
   try {
+    icon = await loadAppIconImage();
+    preloaded = await preloadItemImages(
+      index: itemImageIndex,
+      cacheDir: cacheDir,
+      records: recordsForPreload,
+    );
     final png = await renderWidgetToPng(
       buildShareRenderTree(
         card: PreloadedItemImages(
@@ -143,17 +145,32 @@ Future<void> generateAndShareImage({
       ),
       width: kShareCardWidth,
     );
-    final result = await exportShareImage(png, suggestedName: suggestedName);
+    closeProgress();
     if (!context.mounted) return;
-    final m = _shareResultToDialog(l, result);
-    await showExportResultDialog(
-      context,
-      success: true,
-      message: m.message,
-      revealPath: m.revealPath,
-    );
+    switch (action) {
+      case ShareImageAction.save:
+        final path = await saveShareImage(png, suggestedName: suggestedName);
+        if (!context.mounted) return;
+        // 使用者取消存檔對話框：不彈任何結果，保持安靜。
+        if (path == null) return;
+        await showExportResultDialog(
+          context,
+          success: true,
+          message: l.shareImageSaved(path),
+          revealPath: path,
+        );
+      case ShareImageAction.copy:
+        final ok = await copyShareImage(png);
+        if (!context.mounted) return;
+        await showExportResultDialog(
+          context,
+          success: ok,
+          message: ok ? l.shareImageCopiedOnly : l.shareImageCopyFailed,
+        );
+    }
   } catch (e, st) {
     _log.warning('share image flow failed', e, st);
+    closeProgress();
     if (!context.mounted) return;
     await showExportResultDialog(
       context,
@@ -161,7 +178,8 @@ Future<void> generateAndShareImage({
       message: l.shareImageFailed,
     );
   } finally {
-    icon.dispose();
-    disposePreloadedItemImages(preloaded);
+    closeProgress();
+    icon?.dispose();
+    if (preloaded != null) disposePreloadedItemImages(preloaded);
   }
 }
