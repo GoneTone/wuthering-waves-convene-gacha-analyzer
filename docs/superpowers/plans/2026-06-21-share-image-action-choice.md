@@ -4,7 +4,7 @@
 
 **Goal:** 讓使用者在分享圖設定 dialog 內二選一「儲存圖片」或「複製圖片」，取代現在強制「存檔＋複製」一起做。
 
-**Architecture:** 設定 dialog 回傳 `(options, action)` record；服務層把合併式 `exportShareImage` 拆成獨立的 `saveShareImage` / `copyShareImage`；`generateAndShareImage` 依 action 分流並沿用既有 `showExportResultDialog` 回報。任務以「先加新、後刪舊」排序，確保每個 task 結束時 `analyze` / `test` 全綠。
+**Architecture:** 設定 dialog 回傳 `(options, action)` record；服務層把合併式 `exportShareImage` 拆成獨立的 `saveShareImage` / `copyShareImage`；`generateAndShareImage` 依 action 分流並沿用既有 `showExportResultDialog` 回報。任務以「先加新、後刪舊」排序，確保每個 task 結束時 `analyze` / `test` 全綠。Task 6 為後續追加：渲染期間顯示不可關閉的「生成中」進度視窗。
 
 **Tech Stack:** Flutter、Dart、Riverpod、`super_clipboard`、`file_selector`、Flutter gen-l10n（4 核心 ARB）。
 
@@ -87,7 +87,7 @@ git commit -m "feat(share): add ShareImageAction enum"
 在 `"shareImageCopiedOnly": "已複製到剪貼簿",`（約第 471 行）之後插入：
 
 ```json
-  "shareImageSaved": "已存檔：{path}",
+  "shareImageSaved": "已儲存：{path}",
   "@shareImageSaved": {
     "placeholders": { "path": { "type": "String" } }
   },
@@ -606,9 +606,172 @@ git commit -m "refactor(share): remove combined export API and dead strings"
 
 ---
 
+### Task 6: 渲染期間顯示「生成中」進度視窗（後續追加需求）
+
+**背景：** Task 1-5 完成後，使用者回報：點「儲存／複製」後設定 dialog 直接關閉，
+接著要等離屏渲染（`renderWidgetToPng` + 預載物品圖，這段最花時間）才跳結果，
+中間只剩工具列那顆容易被忽略的小 spinner。需在渲染空檔顯示明確的「生成中」狀態。
+
+**設計決策（已與使用者確認）：** 關閉設定 dialog 後彈一個獨立、不可關閉的進度視窗，
+渲染完成（早於系統存檔視窗 / 複製結果通知）即關閉。風格對齊既有 `UpdateProgressDialog`
+（圖示 + 文字標題 + `LinearProgressIndicator`）。
+
+**Files:**
+- Create: `lib/widgets/dialogs/share_progress_dialog.dart`
+- Modify: `lib/widgets/share/share_image_helper.dart`（`generateAndShareImage`）
+- Modify: 4 核心 ARB（新增 `shareImageGenerating`）
+- Test: `test/widgets/dialogs/share_progress_dialog_test.dart`
+
+**Interfaces:**
+- Produces：`Future<void> showShareProgressDialog(BuildContext)`、`class ShareProgressDialog`。
+
+- [ ] **Step 1: 加 l10n 字串 `shareImageGenerating`（省略號用 ASCII `...`）**
+
+各 ARB 在 `shareImageFailed` 之後插入：
+- `app_zh.arb`：`"shareImageGenerating": "圖片生成中...",`
+- `app_zh_Hans.arb`：`"shareImageGenerating": "图片生成中...",`
+- `app_en.arb`：`"shareImageGenerating": "Generating image...",`
+- `app_ja.arb`：`"shareImageGenerating": "画像を生成中...",`
+
+Run: `fvm flutter gen-l10n`
+
+- [ ] **Step 2: 建立進度視窗 widget**
+
+`lib/widgets/dialogs/share_progress_dialog.dart`：
+
+```dart
+import 'package:flutter/material.dart';
+
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+
+/// 顯示分享圖「生成中」進度視窗（不可關閉）。回傳的 Future 於視窗被 pop 時完成；
+/// 呼叫端應在渲染完成或失敗時自行 pop 關閉，使用者無法手動關閉。
+Future<void> showShareProgressDialog(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const ShareProgressDialog(),
+  );
+}
+
+/// 分享圖離屏渲染期間顯示的不可關閉進度視窗：圖示 + 文字標題 + [LinearProgressIndicator]，
+/// 風格對齊 [UpdateProgressDialog]。
+class ShareProgressDialog extends StatelessWidget {
+  /// 建立 [ShareProgressDialog]。
+  const ShareProgressDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final tokens = Theme.of(context).gacha;
+    // canPop: false 讓使用者無法以返回鍵 / ESC 關閉，僅由渲染流程結束時程式化 pop。
+    return PopScope(
+      canPop: false,
+      child: AppDialog(
+        title: Row(
+          children: [
+            Icon(Icons.image_outlined, color: tokens.textPrimary),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(child: Text(l.shareImageGenerating)),
+          ],
+        ),
+        content: const LinearProgressIndicator(),
+      ),
+    );
+  }
+}
+```
+
+- [ ] **Step 3: 改 `generateAndShareImage` 在預載+渲染期間顯示進度視窗**
+
+在 import 區加入 `import 'dart:async' show unawaited;` 與 share_progress_dialog import。
+把「取得 container 之後到 try/finally」整段改為（重點：進度視窗在預載前彈出，
+`closeProgress` idempotent，渲染一完成即關閉；preload 收進 try 避免失敗時卡住；
+`icon`/`preloaded` 改 null-safe dispose）：
+
+```dart
+  final container = ProviderScope.containerOf(context);
+  final itemImageIndex = container.read(itemImageIndexProvider);
+  final cacheDir = container.read(itemImageCacheDirProvider);
+
+  var progressOpen = false;
+  void closeProgress() {
+    if (progressOpen && context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+      progressOpen = false;
+    }
+  }
+
+  unawaited(showShareProgressDialog(context));
+  progressOpen = true;
+
+  ui.Image? icon;
+  Map<int, ui.Image>? preloaded;
+  try {
+    icon = await loadAppIconImage();
+    preloaded = await preloadItemImages(
+      index: itemImageIndex,
+      cacheDir: cacheDir,
+      records: recordsForPreload,
+    );
+    final png = await renderWidgetToPng(
+      buildShareRenderTree(
+        card: PreloadedItemImages(
+          images: preloaded,
+          child: buildCard(icon, options),
+        ),
+        brightness: options.brightness,
+        locale: locale,
+        container: container,
+      ),
+      width: kShareCardWidth,
+    );
+    closeProgress();
+    if (!context.mounted) return;
+    switch (action) {
+      // ... save / copy 分流維持 Task 4 的內容 ...
+    }
+  } catch (e, st) {
+    _log.warning('share image flow failed', e, st);
+    closeProgress();
+    if (!context.mounted) return;
+    await showExportResultDialog(
+      context,
+      success: false,
+      message: l.shareImageFailed,
+    );
+  } finally {
+    closeProgress();
+    icon?.dispose();
+    if (preloaded != null) disposePreloadedItemImages(preloaded);
+  }
+```
+
+- [ ] **Step 4: 寫 widget 測試**
+
+`test/widgets/dialogs/share_progress_dialog_test.dart`：驗證顯示
+`l.shareImageGenerating` 文字與 `LinearProgressIndicator`，且 `PopScope.canPop == false`。
+**注意：`LinearProgressIndicator` 是無限動畫，測試用 `await t.pump()`，不要用
+`pumpAndSettle()`（永不收斂會逾時）。**
+
+- [ ] **Step 5: 全量 format / analyze / test，commit**
+
+```bash
+fvm dart format lib/ test/
+fvm flutter analyze
+fvm flutter test
+git add lib/ test/
+git commit -m "feat(share): show generating progress dialog during render"
+```
+
+---
+
 ## 收尾驗證（手動，非 commit gate）
 
 - 點 OverviewPage / BannerPage 分享鈕 → 設定 dialog 底部顯示「取消／複製圖片／儲存圖片」三鈕。
-- 選「儲存圖片」→ 只開系統存檔對話框；存檔成功彈「已存檔：<path>」+「開啟資料夾」；取消存檔不彈窗。
-- 選「複製圖片」→ 只寫剪貼簿；成功彈「已複製到剪貼簿」；失敗彈「複製到剪貼簿失敗」。
+- 選「儲存圖片」→ 先彈不可關閉的「圖片生成中...」進度視窗（渲染期間）→ 渲染完成關閉 → 開系統存檔對話框；存檔成功彈「已儲存：<path>」+「開啟資料夾」；取消存檔不彈窗。
+- 選「複製圖片」→ 先彈「圖片生成中...」進度視窗 → 渲染完成關閉 → 寫剪貼簿；成功彈「已複製到剪貼簿」；失敗彈「複製到剪貼簿失敗」。
 - 主題（深／淺）與「顯示完整 UID」選項對兩個動作皆正確生效。
+- 繁中存檔成功訊息用「已儲存」（非「已存檔」）；其餘語言維持各自的 saved 語意（en `Saved`、ja `保存しました`、簡中 `已保存`）。

@@ -92,11 +92,12 @@ Future<bool> copyShareImage(Uint8List png);
 
 - **沿用**：`actionSaveImage`、`actionCopyImage`（按鈕文字）；`shareImageCopiedOnly`（「已複製到剪貼簿」）當複製成功訊息。
 - **新增**：
-  - `shareImageSaved` = 「已存檔：{path}」（帶 `path` placeholder metadata）。
+  - `shareImageSaved` = 「已儲存：{path}」（帶 `path` placeholder metadata）。繁中用「已儲存」而非「已存檔」；其餘語言維持各自的 saved 語意（en `Saved: {path}`、ja `保存しました：{path}`、簡中 `已保存：{path}`）。
   - `shareImageCopyFailed` = 「複製到剪貼簿失敗」。
+  - `shareImageGenerating` = 「圖片生成中...」（渲染進度視窗用，見第 7 節；省略號用 ASCII `...`）。
 - **移除**（新流程不再同時做兩件事，成死字串）：`shareImageSavedAndCopied`、`shareImageSavedOnly`。
 - `shareImageGenerate`（「生成」）若無其他引用一併移除；實作時以搜尋確認無殘留引用再決定。
-- 標點依語言慣例：繁中／日文全形「：」，英文半形冒號。`{path}` 前後不留空格，沿用既有 `shareImageSavedAndCopied` 的格式慣例。
+- 標點依語言慣例：繁中／日文全形「：」，英文半形冒號。`{path}` 前後不留空格。
 
 ### 6. 測試
 
@@ -104,6 +105,24 @@ Future<bool> copyShareImage(Uint8List png);
 - `test/widgets/dialogs/share_image_dialog_test.dart`：更新為新 record 回傳；驗證三顆鈕存在、按「儲存」回 `action: save`、按「複製」回 `action: copy`、取消回 null，主題／UID 選項仍正確帶出。
 - `test/models/share_image_options_test.dart`：補 `ShareImageAction` enum 基本覆蓋（值存在）。
 - helper 層既有測試（若有引用舊 `exportShareImage`／三態）隨之調整為新分流。
+- `test/widgets/dialogs/share_progress_dialog_test.dart`（第 7 節）：驗證顯示生成中文字與 `LinearProgressIndicator`、`PopScope.canPop == false`。
+
+## 7. 渲染進度視窗（後續追加需求）
+
+實作 1-6 後使用者回報：選完動作後設定 dialog 直接關閉，要等離屏渲染（`renderWidgetToPng`
++ 預載物品圖）才跳結果，中間只剩工具列小 spinner，回饋不明顯。追加一個渲染期間的
+「生成中」狀態。
+
+- **決策**：關閉設定 dialog 後彈一個獨立、不可關閉的進度視窗（`ShareProgressDialog`，
+  `PopScope canPop: false` + `AppDialog` + 圖示 + 文字 + `LinearProgressIndicator`，
+  風格對齊既有 `UpdateProgressDialog`），渲染完成（早於系統存檔視窗 / 複製結果通知）即關閉。
+- **落點**：新檔 `lib/widgets/dialogs/share_progress_dialog.dart`
+  （`showShareProgressDialog(BuildContext)` + `ShareProgressDialog`）；
+  `generateAndShareImage` 在預載前彈出、以 idempotent 的 `closeProgress()`
+  （`Navigator.of(context, rootNavigator: true).pop()` + 旗標）在渲染完成 / catch / finally 關閉；
+  preload 收進 `try` 避免失敗時視窗卡住，`icon`/`preloaded` 改 null-safe dispose。
+- **測試注意**：`LinearProgressIndicator` 是無限動畫，widget 測試用 `pump()`，
+  不可用 `pumpAndSettle()`（永不收斂會逾時）。
 
 ## 非目標（YAGNI）
 
@@ -116,4 +135,4 @@ Future<bool> copyShareImage(Uint8List png);
 - `fvm dart format lib/ test/` 無變更殘留。
 - `fvm flutter analyze` → `No issues found!`。
 - `fvm flutter test` → `All tests passed!`。
-- 手動：點分享鈕 → 設定 dialog 顯示「取消／複製圖片／儲存圖片」三鈕；選「儲存」只開存檔對話框並回報「已存檔」；選「複製」只寫剪貼簿並回報「已複製到剪貼簿」；皆不再強制兩件事一起做。
+- 手動：點分享鈕 → 設定 dialog 顯示「取消／複製圖片／儲存圖片」三鈕；選動作後先彈不可關閉的「圖片生成中...」進度視窗（渲染期間），完成後關閉；選「儲存」只開存檔對話框並回報「已儲存」；選「複製」只寫剪貼簿並回報「已複製到剪貼簿」；皆不再強制兩件事一起做。
