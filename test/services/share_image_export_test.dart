@@ -35,7 +35,7 @@ void main() {
       shareFileWriter = (p, bytes) async =>
           throw const FileSystemException('boom');
 
-      expect(
+      await expectLater(
         () => saveShareImage(png, suggestedName: 'a.png'),
         throwsA(isA<FileSystemException>()),
       );
