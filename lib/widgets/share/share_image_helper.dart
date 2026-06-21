@@ -20,25 +20,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/export_re
 /// 分享圖流程的 logger（命名空間 share.image）。
 final _log = Logger('share.image');
 
-/// 把 [ShareExportResult] 攤平成 dialog 需要的訊息與 reveal 路徑。
-/// copiedOnly 只進剪貼簿、無檔案，故 revealPath 為 null。
-({String message, String? revealPath}) _shareResultToDialog(
-  AppLocalizations l,
-  ShareExportResult r,
-) {
-  switch (r.status) {
-    case ShareExportStatus.savedAndCopied:
-      return (
-        message: l.shareImageSavedAndCopied(r.path ?? ''),
-        revealPath: r.path,
-      );
-    case ShareExportStatus.savedOnly:
-      return (message: l.shareImageSavedOnly(r.path ?? ''), revealPath: r.path);
-    case ShareExportStatus.copiedOnly:
-      return (message: l.shareImageCopiedOnly, revealPath: null);
-  }
-}
-
 /// 建構離屏渲染用的 widget 樹（含 Localizations，使重用的 RarityPie/ItemTypePie
 /// 內部 AppLocalizations.of(context) 能在同步 flush 內解析）。
 ///
@@ -114,12 +95,14 @@ Future<void> generateAndShareImage({
 }) async {
   final brightness = Theme.of(context).brightness;
   final locale = Localizations.localeOf(context);
-  final options = await showShareImageDialog(
+  final selection = await showShareImageDialog(
     context,
     initialBrightness: brightness,
   );
-  if (options == null) return;
+  if (selection == null) return;
   if (!context.mounted) return;
+  final options = selection.options;
+  final action = selection.action;
 
   final container = ProviderScope.containerOf(context);
   final itemImageIndex = container.read(itemImageIndexProvider);
@@ -143,15 +126,28 @@ Future<void> generateAndShareImage({
       ),
       width: kShareCardWidth,
     );
-    final result = await exportShareImage(png, suggestedName: suggestedName);
     if (!context.mounted) return;
-    final m = _shareResultToDialog(l, result);
-    await showExportResultDialog(
-      context,
-      success: true,
-      message: m.message,
-      revealPath: m.revealPath,
-    );
+    switch (action) {
+      case ShareImageAction.save:
+        final path = await saveShareImage(png, suggestedName: suggestedName);
+        if (!context.mounted) return;
+        // 使用者取消存檔對話框：不彈任何結果，保持安靜。
+        if (path == null) return;
+        await showExportResultDialog(
+          context,
+          success: true,
+          message: l.shareImageSaved(path),
+          revealPath: path,
+        );
+      case ShareImageAction.copy:
+        final ok = await copyShareImage(png);
+        if (!context.mounted) return;
+        await showExportResultDialog(
+          context,
+          success: ok,
+          message: ok ? l.shareImageCopiedOnly : l.shareImageCopyFailed,
+        );
+    }
   } catch (e, st) {
     _log.warning('share image flow failed', e, st);
     if (!context.mounted) return;
