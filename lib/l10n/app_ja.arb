@@ -558,6 +558,7 @@
   },
   "shareImageCopyFailed": "クリップボードへのコピーに失敗しました",
   "shareImageFailed": "シェア画像の生成に失敗しました",
+  "shareImageGenerating": "画像を生成中...",
   "exportDialogSuccessTitle": "エクスポート成功",
   "exportDialogFailedTitle": "エクスポート失敗",
   "settingsExportFailed": "エクスポートに失敗しました：{error}",

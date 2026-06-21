@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart' show DefaultCupertinoLocalizations;
@@ -16,6 +17,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/share_ima
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/preloaded_item_images.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/export_result_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/share_progress_dialog.dart';
 
 /// 分享圖流程的 logger（命名空間 share.image）。
 final _log = Logger('share.image');
@@ -107,13 +109,30 @@ Future<void> generateAndShareImage({
   final container = ProviderScope.containerOf(context);
   final itemImageIndex = container.read(itemImageIndexProvider);
   final cacheDir = container.read(itemImageCacheDirProvider);
-  final icon = await loadAppIconImage();
-  final preloaded = await preloadItemImages(
-    index: itemImageIndex,
-    cacheDir: cacheDir,
-    records: recordsForPreload,
-  );
+
+  // 預載 + 離屏渲染期間顯示不可關閉的「生成中」進度視窗；closeProgress 為
+  // idempotent，渲染一完成（早於存檔系統視窗 / 複製結果通知）即關閉，catch 與
+  // finally 再各呼叫一次當保險，確保任何路徑都不會卡住進度視窗。
+  var progressOpen = false;
+  void closeProgress() {
+    if (progressOpen && context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+      progressOpen = false;
+    }
+  }
+
+  unawaited(showShareProgressDialog(context));
+  progressOpen = true;
+
+  ui.Image? icon;
+  Map<int, ui.Image>? preloaded;
   try {
+    icon = await loadAppIconImage();
+    preloaded = await preloadItemImages(
+      index: itemImageIndex,
+      cacheDir: cacheDir,
+      records: recordsForPreload,
+    );
     final png = await renderWidgetToPng(
       buildShareRenderTree(
         card: PreloadedItemImages(
@@ -126,6 +145,7 @@ Future<void> generateAndShareImage({
       ),
       width: kShareCardWidth,
     );
+    closeProgress();
     if (!context.mounted) return;
     switch (action) {
       case ShareImageAction.save:
@@ -150,6 +170,7 @@ Future<void> generateAndShareImage({
     }
   } catch (e, st) {
     _log.warning('share image flow failed', e, st);
+    closeProgress();
     if (!context.mounted) return;
     await showExportResultDialog(
       context,
@@ -157,7 +178,8 @@ Future<void> generateAndShareImage({
       message: l.shareImageFailed,
     );
   } finally {
-    icon.dispose();
-    disposePreloadedItemImages(preloaded);
+    closeProgress();
+    icon?.dispose();
+    if (preloaded != null) disposePreloadedItemImages(preloaded);
   }
 }

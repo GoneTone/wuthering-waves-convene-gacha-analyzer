@@ -466,6 +466,7 @@
   },
   "shareImageCopyFailed": "複製到剪貼簿失敗",
   "shareImageFailed": "分享圖生成失敗",
+  "shareImageGenerating": "圖片生成中...",
   "exportDialogSuccessTitle": "匯出成功",
   "exportDialogFailedTitle": "匯出失敗",
   "settingsExportFailed": "匯出失敗：{error}",

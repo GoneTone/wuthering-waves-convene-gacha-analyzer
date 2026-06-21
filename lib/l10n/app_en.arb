@@ -560,6 +560,7 @@
   },
   "shareImageCopyFailed": "Failed to copy to clipboard",
   "shareImageFailed": "Failed to generate share image",
+  "shareImageGenerating": "Generating image...",
   "exportDialogSuccessTitle": "Export Successful",
   "exportDialogFailedTitle": "Export Failed",
   "settingsExportFailed": "Export failed: {error}",

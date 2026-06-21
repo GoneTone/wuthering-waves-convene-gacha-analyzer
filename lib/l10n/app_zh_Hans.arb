@@ -554,6 +554,7 @@
   },
   "shareImageCopyFailed": "复制到剪贴板失败",
   "shareImageFailed": "分享图生成失败",
+  "shareImageGenerating": "图片生成中...",
   "exportDialogSuccessTitle": "导出成功",
   "exportDialogFailedTitle": "导出失败",
   "settingsExportFailed": "导出失败：{error}",
