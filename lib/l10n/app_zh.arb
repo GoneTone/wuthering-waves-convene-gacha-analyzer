@@ -460,7 +460,7 @@
     "placeholders": { "time": { "type": "String" } }
   },
   "shareImageCopiedOnly": "已複製到剪貼簿",
-  "shareImageSaved": "已存檔：{path}",
+  "shareImageSaved": "已儲存：{path}",
   "@shareImageSaved": {
     "placeholders": { "path": { "type": "String" } }
   },
