@@ -10,47 +10,52 @@ void main() {
 
   tearDown(resetShareImageExportSeams);
 
-  test('使用者選了路徑 + 剪貼簿成功 → saved', () async {
-    final tmp = '${Directory.systemTemp.path}/share_test_a.png';
-    shareSaveLocationPicker = (name) async => FileSaveLocation(tmp);
-    shareClipboardWriter = (bytes) async => true;
+  group('saveShareImage', () {
+    test('選了路徑 → 寫檔並回傳實際路徑', () async {
+      final tmp = '${Directory.systemTemp.path}/share_save_a.png';
+      shareSaveLocationPicker = (name) async => FileSaveLocation(tmp);
 
-    final r = await exportShareImage(png, suggestedName: 'a.png');
+      final path = await saveShareImage(png, suggestedName: 'a.png');
 
-    expect(r.status, ShareExportStatus.savedAndCopied);
-    expect(r.path, tmp);
-    expect(await File(tmp).readAsBytes(), png);
-    await File(tmp).delete();
+      expect(path, tmp);
+      expect(await File(tmp).readAsBytes(), png);
+      await File(tmp).delete();
+    });
+
+    test('使用者取消 → 回傳 null', () async {
+      shareSaveLocationPicker = (name) async => null;
+
+      final path = await saveShareImage(png, suggestedName: 'a.png');
+
+      expect(path, isNull);
+    });
+
+    test('已選路徑但寫檔失敗 → rethrow', () async {
+      shareSaveLocationPicker = (name) async => FileSaveLocation('x.png');
+      shareFileWriter = (p, bytes) async =>
+          throw const FileSystemException('boom');
+
+      expect(
+        () => saveShareImage(png, suggestedName: 'a.png'),
+        throwsA(isA<FileSystemException>()),
+      );
+    });
   });
 
-  test('使用者取消存檔但剪貼簿成功 → copiedOnly', () async {
-    shareSaveLocationPicker = (name) async => null;
-    shareClipboardWriter = (bytes) async => true;
+  group('copyShareImage', () {
+    test('剪貼簿成功 → true', () async {
+      shareClipboardWriter = (bytes) async => true;
+      expect(await copyShareImage(png), isTrue);
+    });
 
-    final r = await exportShareImage(png, suggestedName: 'a.png');
+    test('平台不支援 → false', () async {
+      shareClipboardWriter = (bytes) async => false;
+      expect(await copyShareImage(png), isFalse);
+    });
 
-    expect(r.status, ShareExportStatus.copiedOnly);
-    expect(r.path, isNull);
-  });
-
-  test('剪貼簿不支援但存檔成功 → savedOnly', () async {
-    final tmp = '${Directory.systemTemp.path}/share_test_b.png';
-    shareSaveLocationPicker = (name) async => FileSaveLocation(tmp);
-    shareClipboardWriter = (bytes) async => false;
-
-    final r = await exportShareImage(png, suggestedName: 'b.png');
-
-    expect(r.status, ShareExportStatus.savedOnly);
-    await File(tmp).delete();
-  });
-
-  test('剪貼簿失敗 + 使用者取消存檔 → copiedOnly', () async {
-    shareSaveLocationPicker = (name) async => null;
-    shareClipboardWriter = (bytes) async => false;
-
-    final r = await exportShareImage(png, suggestedName: 'a.png');
-
-    expect(r.status, ShareExportStatus.copiedOnly);
-    expect(r.path, isNull);
+    test('剪貼簿例外 → false（吞掉）', () async {
+      shareClipboardWriter = (bytes) async => throw Exception('boom');
+      expect(await copyShareImage(png), isFalse);
+    });
   });
 }

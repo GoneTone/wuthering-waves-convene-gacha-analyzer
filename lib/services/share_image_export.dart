@@ -121,3 +121,38 @@ Future<ShareExportResult> exportShareImage(
     path: loc.path,
   );
 }
+
+/// 讓使用者選位置存 PNG。成功回**實際存檔路徑**（供呼叫端顯示完整路徑）；
+/// 使用者取消回 null（非錯誤）；已選路徑但寫檔失敗記 severe log 後 rethrow。
+Future<String?> saveShareImage(
+  Uint8List png, {
+  required String suggestedName,
+}) async {
+  final loc = await shareSaveLocationPicker(suggestedName);
+  if (loc == null) {
+    _log.info('share image save cancelled');
+    return null;
+  }
+  try {
+    await shareFileWriter(loc.path, png);
+  } catch (e, st) {
+    _log.severe('share image write failed ${sanitizeFsPath(loc.path)}', e, st);
+    rethrow;
+  }
+  _log.info(
+    'share image saved ${sanitizeFsPath(loc.path)}; bytes=${png.length}',
+  );
+  return loc.path;
+}
+
+/// 把 PNG 寫入系統剪貼簿。成功回 true；平台不支援回 false；例外記 warning 後回 false。
+Future<bool> copyShareImage(Uint8List png) async {
+  try {
+    final ok = await shareClipboardWriter(png);
+    _log.info('share image copy clipboard=$ok bytes=${png.length}');
+    return ok;
+  } catch (e, st) {
+    _log.warning('share image copy failed', e, st);
+    return false;
+  }
+}
