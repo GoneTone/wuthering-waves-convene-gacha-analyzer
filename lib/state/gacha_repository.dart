@@ -45,6 +45,15 @@ class _AllPoolsFailedException implements Exception {
   final GachaApiException apiError;
 }
 
+/// 雲端同步請求匯入時，已有更新或匯入進行中而無法執行時拋出；呼叫端應稍後重試。
+class CloudSyncBusyException implements Exception {
+  /// 建立 [CloudSyncBusyException]。
+  const CloudSyncBusyException();
+
+  @override
+  String toString() => 'CloudSyncBusyException';
+}
+
 /// 喚取資料整體狀態，包含帳號資料、更新進度與 bootstrap 旗標。
 @immutable
 class GachaState {
@@ -795,6 +804,26 @@ class GachaRepository extends Notifier<GachaState> {
       _activeCancellable?.client.close();
       _activeCancellable = null;
       _cancelTriggered = false;
+      _isUpdating = false;
+    }
+  }
+
+  /// 雲端同步專用的靜默匯入：純資料合併（寫入 storage＋整併偏好），
+  /// 不啟動 progress UI、不抓物品圖片。
+  ///
+  /// 已有更新或匯入進行中時拋 [CloudSyncBusyException]，由雲端同步層重排。
+  Future<ImportResult> importBundleForCloudSync(AccountsBundle bundle) async {
+    if (state.progress != null || _isUpdating) {
+      _importLog.info('cloud sync import rejected: busy');
+      throw const CloudSyncBusyException();
+    }
+    _isUpdating = true;
+    try {
+      _importLog.info(
+        'cloud sync import start, accounts=${bundle.accounts.length}',
+      );
+      return await _runImport(bundle);
+    } finally {
       _isUpdating = false;
     }
   }
