@@ -26,4 +26,50 @@ void main() {
       expect(c.scopes, cloudSyncScopes);
     });
   });
+
+  group('hasRequiredCloudScopes', () {
+    test('含 drive.appdata（不論 email 以何種形式回傳）→ true', () {
+      expect(
+        hasRequiredCloudScopes(const [
+          'https://www.googleapis.com/auth/drive.appdata',
+          'https://www.googleapis.com/auth/userinfo.email',
+          'openid',
+        ]),
+        isTrue,
+      );
+    });
+
+    test('只授予 email／openid（漏勾雲端硬碟）→ false', () {
+      expect(
+        hasRequiredCloudScopes(const [
+          'https://www.googleapis.com/auth/userinfo.email',
+          'openid',
+        ]),
+        isFalse,
+      );
+    });
+
+    test('空清單 → false', () {
+      expect(hasRequiredCloudScopes(const []), isFalse);
+    });
+  });
+
+  group('isInsufficientScope', () {
+    test('Drive 403 insufficient_scope 訊息 → true', () {
+      expect(
+        isInsufficientScope(
+          Exception(
+            'Access was denied (www-authenticate header was: '
+            'Bearer realm="https://accounts.google.com/", '
+            'error="insufficient_scope", scope="...").',
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('一般網路錯誤 → false', () {
+      expect(isInsufficientScope(Exception('Connection refused')), isFalse);
+    });
+  });
 }

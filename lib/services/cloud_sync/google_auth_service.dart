@@ -15,8 +15,28 @@ class CloudReauthRequiredException implements Exception {
   String toString() => 'CloudReauthRequiredException';
 }
 
+/// 授權結果未包含必要的 Drive scope（使用者在 Google 逐項授權頁漏勾）時拋出。
+class CloudScopeMissingException implements Exception {
+  /// 建立 [CloudScopeMissingException]。
+  const CloudScopeMissingException();
+
+  @override
+  String toString() => 'CloudScopeMissingException';
+}
+
 /// 判斷例外是否為 OAuth `invalid_grant`（refresh token 被撤銷／過期）。
 bool isInvalidGrant(Object e) => e.toString().contains('invalid_grant');
+
+/// 判斷例外是否為 API 回報的 `insufficient_scope`（token 缺必要權限）。
+bool isInsufficientScope(Object e) =>
+    e.toString().contains('insufficient_scope');
+
+/// 檢查實際授予的 [granted] scopes 是否含雲端同步必要的 `drive.appdata`。
+///
+/// 只檢查 Drive scope：email 即使漏授，Google 也可能以
+/// `userinfo.email` 等別名回傳，且缺 email 會在取 userinfo 時另行失敗。
+bool hasRequiredCloudScopes(Iterable<String> granted) =>
+    granted.contains('https://www.googleapis.com/auth/drive.appdata');
 
 /// 以既存 refresh token 建立「已過期」的種子憑證，供 refreshCredentials 換新 access token。
 AccessCredentials buildResumeCredentials(String refreshToken) =>
@@ -113,6 +133,17 @@ class GoogleAuthService {
       final refresh = client.credentials.refreshToken;
       if (refresh == null) {
         throw StateError('OAuth flow returned no refresh token');
+      }
+      // Google 逐項授權（granular consent）允許使用者漏勾 Drive 權限並照樣發
+      // token；此時當場 revoke 並拋出，讓使用者立刻得知要重新授權，
+      // 而不是等第一輪同步 403 才發現。
+      final granted = client.credentials.scopes;
+      if (!hasRequiredCloudScopes(granted)) {
+        _log.warning(
+          'signIn: drive.appdata not granted (granted=${granted.join(' ')})',
+        );
+        await revokeToken(refresh);
+        throw const CloudScopeMissingException();
       }
       final email = await _fetchEmail(client);
       _log.info('signIn ok');

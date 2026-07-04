@@ -320,6 +320,7 @@
   "cloudSyncErrorBusy": "同期を保留しました：更新またはインポートが進行中です。後で自動的に再試行します。",
   "cloudSyncErrorSchemaTooNew": "同期をスキップしました：クラウドのデータは新しいバージョンのアプリで作成されています。先にアプリを更新してください。",
   "cloudSyncErrorAuthFailed": "認可に失敗しました。もう一度お試しください。",
+  "cloudSyncErrorScopeMissing": "認可に Google ドライブへのアクセス権が含まれていません。再連携し、Google の同意画面でドライブデータのチェックボックスをオンにしてください。",
   "cloudSyncReauthRequired": "認可が失効しました。Google アカウントを再連携してください。",
   "cloudSyncRemoveFromCloud": "クラウド同期データからもこのアカウントを削除する",
   "settingsAccountManagement": "アカウント管理",

@@ -316,6 +316,7 @@
   "cloudSyncErrorBusy": "同步暂缓：当前有更新或导入进行中，稍后会自动重试。",
   "cloudSyncErrorSchemaTooNew": "同步已跳过：云端数据由较新版本的 App 创建，请先更新 App。",
   "cloudSyncErrorAuthFailed": "授权失败，请再试一次。",
+  "cloudSyncErrorScopeMissing": "授权未包含云端硬盘权限。请重新关联，并在 Google 授权页勾选云端硬盘数据的访问权限。",
   "cloudSyncReauthRequired": "授权已失效，请重新关联 Google 账号。",
   "cloudSyncRemoveFromCloud": "同时从云端同步数据中移除此账号",
   "settingsAccountManagement": "账号管理",

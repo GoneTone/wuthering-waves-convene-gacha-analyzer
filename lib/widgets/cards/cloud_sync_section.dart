@@ -32,7 +32,7 @@ class CloudSyncSection extends ConsumerWidget {
     final sync = ref.watch(cloudSyncProvider);
 
     if (email == null) {
-      return _UnlinkedView(l: l, phase: sync.phase);
+      return _UnlinkedView(l: l, sync: sync);
     }
     return _LinkedView(l: l, email: email, sync: sync);
   }
@@ -41,26 +41,28 @@ class CloudSyncSection extends ConsumerWidget {
 /// 未連結狀態：說明文字＋連結按鈕（授權等待中顯示 spinner 與取消）。
 class _UnlinkedView extends ConsumerWidget {
   /// 建立 [_UnlinkedView]。
-  const _UnlinkedView({required this.l, required this.phase});
+  const _UnlinkedView({required this.l, required this.sync});
 
   /// 當前 i18n 字串實例。
   final AppLocalizations l;
 
-  /// 當前同步階段。
-  final CloudSyncPhase phase;
+  /// 當前同步狀態（含階段與錯誤 token）。
+  final CloudSyncState sync;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).gacha;
-    final awaiting = phase == CloudSyncPhase.awaitingConsent;
+    final awaiting = sync.phase == CloudSyncPhase.awaitingConsent;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(l.cloudSyncIntro, style: TextStyle(color: tokens.textSecondary)),
-        if (phase == CloudSyncPhase.error) ...[
+        if (sync.phase == CloudSyncPhase.error) ...[
           const SizedBox(height: AppSpacing.s),
           Text(
-            l.cloudSyncErrorAuthFailed,
+            sync.errorToken == 'scopeMissing'
+                ? l.cloudSyncErrorScopeMissing
+                : l.cloudSyncErrorAuthFailed,
             style: TextStyle(color: tokens.stateDanger),
           ),
         ],
@@ -220,7 +222,9 @@ class _StatusLine extends StatelessWidget {
     switch (sync.phase) {
       case CloudSyncPhase.reauthRequired:
         return Text(
-          l.cloudSyncReauthRequired,
+          sync.errorToken == 'scopeMissing'
+              ? l.cloudSyncErrorScopeMissing
+              : l.cloudSyncReauthRequired,
           style: TextStyle(color: tokens.stateDanger),
         );
       case CloudSyncPhase.error:
@@ -228,6 +232,7 @@ class _StatusLine extends StatelessWidget {
           'busy' => l.cloudSyncErrorBusy,
           'schemaTooNew' => l.cloudSyncErrorSchemaTooNew,
           'authFailed' => l.cloudSyncErrorAuthFailed,
+          'scopeMissing' => l.cloudSyncErrorScopeMissing,
           _ => l.cloudSyncErrorNetwork,
         };
         return Text(text, style: TextStyle(color: tokens.stateDanger));

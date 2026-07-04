@@ -322,6 +322,7 @@
   "cloudSyncErrorBusy": "Sync deferred: an update or import is in progress. Will retry automatically.",
   "cloudSyncErrorSchemaTooNew": "Sync skipped: the cloud data was created by a newer app version. Please update the app first.",
   "cloudSyncErrorAuthFailed": "Authorization failed. Please try again.",
+  "cloudSyncErrorScopeMissing": "The authorization did not include Google Drive access. Please relink and tick the Drive data checkbox on the Google consent page.",
   "cloudSyncReauthRequired": "Authorization expired. Please relink your Google account.",
   "cloudSyncRemoveFromCloud": "Also remove this account from cloud sync data",
   "settingsAccountManagement": "Account management",

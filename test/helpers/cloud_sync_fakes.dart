@@ -42,6 +42,9 @@ class FakeAuthService extends GoogleAuthService {
   /// restore 是否要拋 invalid_grant。
   bool restoreThrowsReauth = false;
 
+  /// signIn 是否要模擬「授權未含必要 scope」而拋 [CloudScopeMissingException]。
+  bool signInThrowsScopeMissing = false;
+
   /// restore() 被呼叫的次數，供斷言「reauthRequired 後不再重試」用。
   int restoreCalls = 0;
 
@@ -51,6 +54,7 @@ class FakeAuthService extends GoogleAuthService {
   @override
   Future<CloudAuthSession> signIn(void Function(String url) openUrl) async {
     openUrl('https://accounts.google.com/consent');
+    if (signInThrowsScopeMissing) throw const CloudScopeMissingException();
     return CloudAuthSession(
       client: FakeAuthClient(),
       email: 'u@example.com',
@@ -83,8 +87,15 @@ class FakeRemote implements CloudSyncRemote {
   /// upload 次數。
   int uploads = 0;
 
+  /// 設定後 download 會拋出此例外，模擬遠端錯誤（如 insufficient_scope）。
+  Object? downloadError;
+
   @override
-  Future<String?> download() async => content;
+  Future<String?> download() async {
+    final err = downloadError;
+    if (err != null) throw err;
+    return content;
+  }
 
   @override
   Future<void> upload(String json) async {

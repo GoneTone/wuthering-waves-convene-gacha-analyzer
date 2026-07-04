@@ -172,6 +172,13 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
       if (!ref.mounted) return;
       state = const CloudSyncState();
       await syncNow(manual: true);
+    } on CloudScopeMissingException {
+      if (!ref.mounted || gen != _authGeneration) return;
+      _log.warning('link failed: required Drive scope not granted');
+      state = const CloudSyncState(
+        phase: CloudSyncPhase.error,
+        errorToken: 'scopeMissing',
+      );
     } catch (e) {
       if (!ref.mounted || gen != _authGeneration) return;
       _log.warning('link failed: $e');
@@ -276,6 +283,16 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
       _scheduleDebounced();
     } catch (e, st) {
       if (!ref.mounted) return;
+      if (isInsufficientScope(e)) {
+        // 既存 token 缺 Drive 權限（早期授權漏勾）：重試必敗，比照授權失效
+        // 進 reauthRequired 停止自動同步，狀態列指引使用者重新連結並勾選。
+        _log.warning('sync round failed: insufficient scope, relink required');
+        state = const CloudSyncState(
+          phase: CloudSyncPhase.reauthRequired,
+          errorToken: 'scopeMissing',
+        );
+        return;
+      }
       _log.warning('sync round failed', e, st);
       state = const CloudSyncState(
         phase: CloudSyncPhase.error,

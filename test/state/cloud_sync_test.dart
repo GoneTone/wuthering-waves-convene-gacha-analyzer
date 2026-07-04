@@ -322,4 +322,49 @@ void main() {
     expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
     expect(container.read(settingsProvider).cloudAccountEmail, isNull);
   });
+
+  test('link：授權未含 drive.appdata → error(scopeMissing)、不寫入任何狀態', () async {
+    authService.signInThrowsScopeMissing = true;
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+    await container.read(cloudSyncProvider.notifier).link();
+
+    final s = container.read(cloudSyncProvider);
+    expect(s.phase, CloudSyncPhase.error);
+    expect(s.errorToken, 'scopeMissing');
+    expect(container.read(settingsProvider).cloudAccountEmail, isNull);
+    expect(tokenStore.token, isNull);
+    expect(remote.uploads, 0);
+  });
+
+  test(
+    '同步遇 insufficient_scope → reauthRequired(scopeMissing)、停止自動同步',
+    () async {
+      remote.downloadError = Exception(
+        'Access was denied (www-authenticate header was: '
+        'Bearer realm="https://accounts.google.com/", '
+        'error="insufficient_scope", scope="...").',
+      );
+      final container = makeContainer();
+      await container.read(settingsProvider.notifier).waitForLoad();
+      await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+      await container.read(cloudSyncProvider.notifier).link();
+
+      final s = container.read(cloudSyncProvider);
+      expect(s.phase, CloudSyncPhase.reauthRequired);
+      expect(s.errorToken, 'scopeMissing');
+      expect(remote.uploads, 0);
+
+      // reauthRequired 短路：再手動觸發也不會嘗試同步。
+      await container.read(cloudSyncProvider.notifier).syncNow(manual: false);
+      expect(remote.uploads, 0);
+      expect(
+        container.read(cloudSyncProvider).phase,
+        CloudSyncPhase.reauthRequired,
+      );
+    },
+  );
 }
