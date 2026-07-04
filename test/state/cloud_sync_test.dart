@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,93 +10,12 @@ import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_remote.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/token_store.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
-/// 測試用 in-memory token store。
-class InMemoryTokenStore implements TokenStore {
-  /// 目前存放的 token。
-  String? token;
-
-  @override
-  Future<String?> readRefreshToken() async => token;
-
-  @override
-  Future<void> writeRefreshToken(String t) async => token = t;
-
-  @override
-  Future<void> deleteRefreshToken() async => token = null;
-}
-
-/// 不發真請求的 fake AuthClient。
-class _FakeAuthClient extends http.BaseClient implements AuthClient {
-  @override
-  AccessCredentials get credentials => throw UnimplementedError();
-
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) =>
-      throw UnimplementedError();
-}
-
-/// 可程式化行為的 fake 授權服務。
-class _FakeAuthService extends GoogleAuthService {
-  _FakeAuthService(this.store)
-    : super(tokenStore: store, baseClientFactory: http.Client.new);
-
-  /// 供斷言的 token store。
-  final InMemoryTokenStore store;
-
-  /// restore 是否要拋 invalid_grant。
-  bool restoreThrowsReauth = false;
-
-  @override
-  Future<CloudAuthSession> signIn(void Function(String url) openUrl) async {
-    openUrl('https://accounts.google.com/consent');
-    await store.writeRefreshToken('refresh-1');
-    return CloudAuthSession(client: _FakeAuthClient(), email: 'u@example.com');
-  }
-
-  @override
-  Future<AuthClient?> restore() async {
-    if (restoreThrowsReauth) throw const CloudReauthRequiredException();
-    if (store.token == null) return null;
-    return _FakeAuthClient();
-  }
-
-  @override
-  Future<void> signOut() async => store.deleteRefreshToken();
-}
-
-/// 記錄呼叫的 fake 遠端。
-class _FakeRemote implements CloudSyncRemote {
-  /// 雲端檔內容。
-  String? content;
-
-  /// upload 次數。
-  int uploads = 0;
-
-  @override
-  Future<String?> download() async => content;
-
-  @override
-  Future<void> upload(String json) async {
-    uploads++;
-    content = json;
-  }
-}
-
-/// 不會被觸發的 fake capture。
-class _FakeCapture implements GachaCapture {
-  @override
-  CaptureSession start() =>
-      CaptureSession(result: Future.value(null), cancel: () async {});
-}
+import '../helpers/cloud_sync_fakes.dart';
 
 /// 產生雲端側 bundle JSON。
 String _cloudBundleJson(String uid) => jsonEncode({
@@ -119,15 +37,15 @@ String _cloudBundleJson(String uid) => jsonEncode({
 void main() {
   late Directory tempDir;
   late InMemoryTokenStore tokenStore;
-  late _FakeAuthService authService;
-  late _FakeRemote remote;
+  late FakeAuthService authService;
+  late FakeRemote remote;
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('cloud_sync_test_');
     SharedPreferences.setMockInitialValues({});
     tokenStore = InMemoryTokenStore();
-    authService = _FakeAuthService(tokenStore);
-    remote = _FakeRemote();
+    authService = FakeAuthService(tokenStore);
+    remote = FakeRemote();
     debugCloudSyncConfiguredOverride = true;
   });
 
@@ -141,7 +59,7 @@ void main() {
       overrides: [
         appVersionProvider.overrideWithValue('1.5.0'),
         gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
-        gachaCaptureProvider.overrideWithValue(_FakeCapture()),
+        gachaCaptureProvider.overrideWithValue(FakeCapture()),
         cancellableHttpClientFactoryProvider.overrideWithValue(
           () => CancellableHttpClient(
             client: MockClient((_) async => http.Response('', 500)),
