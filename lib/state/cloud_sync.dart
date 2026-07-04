@@ -125,6 +125,9 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     if (!isCloudSyncConfigured) return;
     await ref.read(settingsProvider.notifier).waitForLoad();
     if (!ref.mounted || !_linked) return;
+    // 沒等本機 bootstrap 完成就同步，byUid 會是空的，雲端內容會把本機檔案當「全新」覆蓋掉。
+    await ref.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    if (!ref.mounted) return;
     try {
       await _ensureClient();
     } on CloudReauthRequiredException {
@@ -138,6 +141,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
       );
       return;
     }
+    if (!ref.mounted) return;
     if (ref.read(settingsProvider).cloudAutoSyncEnabled) {
       await syncNow(manual: false);
     }
@@ -154,9 +158,14 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     try {
       final session = await auth.signIn(openUrl);
       if (!ref.mounted || gen != _authGeneration) {
+        // 取消後在瀏覽器遲到完成的授權：拋棄 client、revoke 該次 grant，不寫入 token store。
         session.client.close();
+        unawaited(auth.revokeToken(session.refreshToken));
         return;
       }
+      await ref
+          .read(tokenStoreProvider)
+          .writeRefreshToken(session.refreshToken);
       _client?.close();
       _client = session.client;
       await ref.read(settingsProvider.notifier).setCloudAccount(session.email);
@@ -211,8 +220,12 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
   }
 
   /// 跑一輪同步。[manual] 目前僅影響 log 標記；錯誤一律以狀態列呈現（spec §8）。
+  ///
+  /// reauthRequired 時直接返回：restore 保證失敗，重試只會空轉並讓狀態列閃爍，
+  /// 只有重新連結（[link]）能離開此狀態。
   Future<void> syncNow({required bool manual}) async {
     if (!isCloudSyncConfigured || !_linked) return;
+    if (state.phase == CloudSyncPhase.reauthRequired) return;
     if (_syncing) {
       _pendingRerun = true;
       return;
@@ -286,8 +299,11 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
   }
 
   /// 本機資料（byUid／別名）變動時排程 debounce 同步。
+  ///
+  /// reauthRequired 時不排程：只有重新連結（[link]）能離開此狀態。
   void _onLocalChange() {
     if (!isCloudSyncConfigured || !_linked) return;
+    if (state.phase == CloudSyncPhase.reauthRequired) return;
     if (!ref.read(settingsProvider).cloudAutoSyncEnabled) return;
     if (ref.read(gachaRepositoryProvider).isBootstrapping) return;
     _scheduleDebounced();

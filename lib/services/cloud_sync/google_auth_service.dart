@@ -30,16 +30,23 @@ AccessCredentials buildResumeCredentials(String refreshToken) =>
       cloudSyncScopes,
     );
 
-/// 登入成功的授權會話：可用的 [AuthClient] 與帳號 email。
+/// 登入成功的授權會話：可用的 [AuthClient]、帳號 email 與 refresh token。
 class CloudAuthSession {
   /// 建立 [CloudAuthSession]。
-  const CloudAuthSession({required this.client, required this.email});
+  const CloudAuthSession({
+    required this.client,
+    required this.email,
+    required this.refreshToken,
+  });
 
   /// 自動續期的授權 HTTP client；用畢由呼叫端 close。
   final AuthClient client;
 
   /// 已連結帳號的 email。
   final String email;
+
+  /// 本次授權取得的 refresh token；由呼叫端決定是否持久化。
+  final String refreshToken;
 }
 
 /// 包住 [AutoRefreshingAuthClient]，close 時連同自建的底層 base client 一併關閉。
@@ -93,7 +100,8 @@ class GoogleAuthService {
 
   /// 走 installed-app loopback 流程登入：[openUrl] 收到授權頁 URL 時開啟系統瀏覽器。
   ///
-  /// 成功後 refresh token 存入 [tokenStore] 並抓取帳號 email。
+  /// 回傳的 session 帶著 refresh token，是否寫入 [tokenStore] 交由呼叫端決定
+  /// （避免取消連結後遲到的授權結果覆蓋較新的 token；見 [CloudAuthSession]）。
   Future<CloudAuthSession> signIn(void Function(String url) openUrl) async {
     _log.info('signIn start');
     final client = await clientViaUserConsent(
@@ -106,10 +114,13 @@ class GoogleAuthService {
       if (refresh == null) {
         throw StateError('OAuth flow returned no refresh token');
       }
-      await tokenStore.writeRefreshToken(refresh);
       final email = await _fetchEmail(client);
       _log.info('signIn ok');
-      return CloudAuthSession(client: client, email: email);
+      return CloudAuthSession(
+        client: client,
+        email: email,
+        refreshToken: refresh,
+      );
     } catch (e) {
       client.close();
       rethrow;
@@ -151,25 +162,31 @@ class GoogleAuthService {
   Future<void> signOut() async {
     final refresh = await tokenStore.readRefreshToken();
     if (refresh != null) {
-      final base = baseClientFactory();
-      try {
-        final res = await base.post(
-          Uri.parse('https://oauth2.googleapis.com/revoke'),
-          body: {'token': refresh},
-        );
-        if (res.statusCode == 200) {
-          _log.info('revoke ok');
-        } else {
-          _log.warning('revoke failed (ignored): HTTP ${res.statusCode}');
-        }
-      } catch (e) {
-        _log.warning('revoke failed (ignored): $e');
-      } finally {
-        base.close();
-      }
+      await revokeToken(refresh);
     }
     await tokenStore.deleteRefreshToken();
     _log.info('signOut done');
+  }
+
+  /// 向 Google revoke 指定的 refresh token（盡力而為，失敗僅記警告不拋出；
+  /// 絕不把 token 內容寫進 log）。
+  Future<void> revokeToken(String refreshToken) async {
+    final base = baseClientFactory();
+    try {
+      final res = await base.post(
+        Uri.parse('https://oauth2.googleapis.com/revoke'),
+        body: {'token': refreshToken},
+      );
+      if (res.statusCode == 200) {
+        _log.info('revoke ok');
+      } else {
+        _log.warning('revoke failed (ignored): HTTP ${res.statusCode}');
+      }
+    } catch (e) {
+      _log.warning('revoke failed (ignored): $e');
+    } finally {
+      base.close();
+    }
   }
 
   /// 以 userinfo API 取得已授權帳號的 email。

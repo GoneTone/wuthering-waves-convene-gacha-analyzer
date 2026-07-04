@@ -40,7 +40,7 @@
 
 **合併細節**：
 
-- 雲端 bundle 的 `last_active_uid` 在同步時**不套用**（手動匯入才會還原），避免靜默同步偷偷切換使用者目前作用中的帳號。
+- 雲端 bundle 的 `last_active_uid` 在同步時**不套用**（手動匯入才會還原），避免靜默同步偷偷切換使用者目前作用中的帳號。實作語意：本機已有作用中帳號一律 local-wins；本機完全沒有帳號（如新機首次同步）才會採用雲端的 `last_active_uid`。
 - 別名衝突：本機已有別名以本機為準，本機沒有才採用雲端的。
 
 **併發語意**：多台電腦同時同步採 last-writer-wins。因合併只增不減，最壞情況是另一台的新紀錄晚一輪才收斂，不會遺失資料，故不需樂觀鎖。
@@ -64,7 +64,7 @@
 
 1. `url_launcher` 開**系統瀏覽器**跑 Google 授權頁；`googleapis_auth`（`auth_io`）的 installed-app 流程自動在本機開臨時 localhost port 接收授權回跳，使用者按「允許」即完成。不用 `webview_windows`（Google 封鎖 embedded WebView OAuth，回 `403 disallowed_useragent`）。
 2. 授權成功 → 存 token、取 email → 立刻觸發第一輪同步。
-3. 等待授權期間設定頁顯示等待狀態＋「取消」（放棄授權、關閉 localhost 監聽）。
+3. 等待授權期間設定頁顯示等待狀態＋「取消」（放棄授權、關閉 localhost 監聽）。實作限制：`clientViaUserConsent` 的 localhost 監聽無法中途中止，取消後若使用者仍在瀏覽器完成授權，該次授權結果會被丟棄並即時 revoke，不會寫入本機。
 
 ### Token 儲存
 

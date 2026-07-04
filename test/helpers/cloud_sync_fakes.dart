@@ -42,15 +42,25 @@ class FakeAuthService extends GoogleAuthService {
   /// restore 是否要拋 invalid_grant。
   bool restoreThrowsReauth = false;
 
+  /// restore() 被呼叫的次數，供斷言「reauthRequired 後不再重試」用。
+  int restoreCalls = 0;
+
+  /// revokeToken() 最後一次收到的 token，供斷言用；未呼叫則為 null。
+  String? lastRevokedToken;
+
   @override
   Future<CloudAuthSession> signIn(void Function(String url) openUrl) async {
     openUrl('https://accounts.google.com/consent');
-    await store.writeRefreshToken('refresh-1');
-    return CloudAuthSession(client: FakeAuthClient(), email: 'u@example.com');
+    return CloudAuthSession(
+      client: FakeAuthClient(),
+      email: 'u@example.com',
+      refreshToken: 'refresh-1',
+    );
   }
 
   @override
   Future<AuthClient?> restore() async {
+    restoreCalls++;
     if (restoreThrowsReauth) throw const CloudReauthRequiredException();
     if (store.token == null) return null;
     return FakeAuthClient();
@@ -58,6 +68,11 @@ class FakeAuthService extends GoogleAuthService {
 
   @override
   Future<void> signOut() async => store.deleteRefreshToken();
+
+  @override
+  Future<void> revokeToken(String refreshToken) async {
+    lastRevokedToken = refreshToken;
+  }
 }
 
 /// 記錄呼叫的 fake 遠端。

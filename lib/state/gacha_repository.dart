@@ -811,9 +811,9 @@ class GachaRepository extends Notifier<GachaState> {
   /// 雲端同步專用的靜默匯入：純資料合併（寫入 storage＋整併偏好），
   /// 不啟動 progress UI、不抓物品圖片。
   ///
-  /// 已有更新或匯入進行中時拋 [CloudSyncBusyException]，由雲端同步層重排。
+  /// bootstrap 未完成、已有更新或匯入進行中時拋 [CloudSyncBusyException]，由雲端同步層重排。
   Future<ImportResult> importBundleForCloudSync(AccountsBundle bundle) async {
-    if (state.progress != null || _isUpdating) {
+    if (state.isBootstrapping || state.progress != null || _isUpdating) {
       _importLog.info('cloud sync import rejected: busy');
       throw const CloudSyncBusyException();
     }
