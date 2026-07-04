@@ -40,6 +40,7 @@ class DriveSyncRemote implements CloudSyncRemote {
     return files.first.id;
   }
 
+  /// 下載 appDataFolder 內的同步檔內容；檔案不存在回 null。
   @override
   Future<String?> download() async {
     final id = await _findFileId();
@@ -61,6 +62,7 @@ class DriveSyncRemote implements CloudSyncRemote {
     return utf8.decode(bytes.takeBytes());
   }
 
+  /// 上傳（覆蓋）appDataFolder 內的同步檔；無檔時建立、有檔時更新。
   @override
   Future<void> upload(String json) async {
     final data = utf8.encode(json);
