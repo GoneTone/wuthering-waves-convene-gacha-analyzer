@@ -6,6 +6,7 @@ import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_export.dart';
@@ -70,6 +71,17 @@ final cloudSyncRemoteFactoryProvider =
 final cloudSyncUrlOpenerProvider = Provider<void Function(String url)>(
   (ref) =>
       (url) => unawaited(launchUrl(Uri.parse(url))),
+);
+
+/// 把主視窗帶回前景（還原最小化＋show＋focus）的 provider（測試 override 成 no-op）。
+///
+/// Windows 防搶焦點政策可能把 focus 降級成工作列閃爍，屬預期行為。
+final windowForegroundProvider = Provider<Future<void> Function()>(
+  (ref) => () async {
+    if (await windowManager.isMinimized()) await windowManager.restore();
+    await windowManager.show();
+    await windowManager.focus();
+  },
 );
 
 /// [CloudSyncNotifier] 的 Riverpod provider。

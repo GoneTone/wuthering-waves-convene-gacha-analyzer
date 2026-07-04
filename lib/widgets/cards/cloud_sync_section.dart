@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,6 +27,15 @@ class CloudSyncSection extends ConsumerWidget {
         style: TextStyle(color: tokens.textMuted),
       );
     }
+
+    // 授權等待結束（成功、失敗、缺 scope 皆同）時把視窗帶回前景，
+    // 使用者在瀏覽器按完「允許」不必自己切回 app 看結果。
+    ref.listen(cloudSyncProvider, (prev, next) {
+      final leftConsent =
+          prev?.phase == CloudSyncPhase.awaitingConsent &&
+          next.phase != CloudSyncPhase.awaitingConsent;
+      if (leftConsent) unawaited(ref.read(windowForegroundProvider)());
+    });
 
     final email = ref.watch(
       settingsProvider.select((s) => s.cloudAccountEmail),

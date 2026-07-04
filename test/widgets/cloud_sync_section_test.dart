@@ -33,32 +33,36 @@ void main() {
     if (await tempDir.exists()) await tempDir.delete(recursive: true);
   });
 
-  Widget wrap({GoogleAuthService? auth}) => ProviderScope(
-    overrides: [
-      appVersionProvider.overrideWithValue('1.5.0'),
-      gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
-      gachaCaptureProvider.overrideWithValue(FakeCapture()),
-      cancellableHttpClientFactoryProvider.overrideWithValue(
-        () => CancellableHttpClient(
-          client: MockClient((_) async => http.Response('', 500)),
-          cancel: () {},
+  Widget wrap({GoogleAuthService? auth, VoidCallback? onForeground}) =>
+      ProviderScope(
+        overrides: [
+          appVersionProvider.overrideWithValue('1.5.0'),
+          gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
+          gachaCaptureProvider.overrideWithValue(FakeCapture()),
+          cancellableHttpClientFactoryProvider.overrideWithValue(
+            () => CancellableHttpClient(
+              client: MockClient((_) async => http.Response('', 500)),
+              cancel: () {},
+            ),
+          ),
+          tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
+          if (auth != null) googleAuthServiceProvider.overrideWithValue(auth),
+          cloudSyncRemoteFactoryProvider.overrideWithValue((_) => FakeRemote()),
+          cloudSyncUrlOpenerProvider.overrideWithValue((_) {}),
+          windowForegroundProvider.overrideWithValue(() async {
+            onForeground?.call();
+          }),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('en'),
+          theme: buildDarkTheme(),
+          home: const Scaffold(
+            body: SingleChildScrollView(child: CloudSyncSection()),
+          ),
         ),
-      ),
-      tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
-      if (auth != null) googleAuthServiceProvider.overrideWithValue(auth),
-      cloudSyncRemoteFactoryProvider.overrideWithValue((_) => FakeRemote()),
-      cloudSyncUrlOpenerProvider.overrideWithValue((_) {}),
-    ],
-    child: MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('en'),
-      theme: buildDarkTheme(),
-      home: const Scaffold(
-        body: SingleChildScrollView(child: CloudSyncSection()),
-      ),
-    ),
-  );
+      );
 
   testWidgets('未連結：顯示說明與連結按鈕', (tester) async {
     await tester.pumpWidget(wrap());
@@ -94,5 +98,21 @@ void main() {
       find.textContaining('did not include Google Drive access'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('授權等待結束 → 自動把視窗帶回前景', (tester) async {
+    var foregroundCalls = 0;
+    final auth = FakeAuthService(InMemoryTokenStore())
+      ..signInThrowsScopeMissing = true;
+    await tester.pumpWidget(
+      wrap(auth: auth, onForeground: () => foregroundCalls++),
+    );
+    await tester.pumpAndSettle();
+    expect(foregroundCalls, 0);
+
+    await tester.tap(find.text('Link Google account'));
+    await tester.pumpAndSettle();
+
+    expect(foregroundCalls, 1);
   });
 }
