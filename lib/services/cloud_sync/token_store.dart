@@ -20,13 +20,16 @@ class SecureTokenStore implements TokenStore {
   /// refresh token 的儲存 key。
   static const _kRefreshToken = 'cloudsync.refreshToken';
 
+  /// 讀取已存的 refresh token。
   @override
   Future<String?> readRefreshToken() => _storage.read(key: _kRefreshToken);
 
+  /// 寫入 refresh token。
   @override
   Future<void> writeRefreshToken(String token) =>
       _storage.write(key: _kRefreshToken, value: token);
 
+  /// 刪除已存的 refresh token。
   @override
   Future<void> deleteRefreshToken() => _storage.delete(key: _kRefreshToken);
 }

@@ -53,13 +53,16 @@ class _OwningAuthClient extends http.BaseClient implements AuthClient {
   /// 自建的底層 client，close 時一併關閉。
   final http.Client _base;
 
+  /// 目前的授權憑證（委派給內部 client）。
   @override
   AccessCredentials get credentials => _inner.credentials;
 
+  /// 發送授權請求（委派給內部 client）。
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) =>
       _inner.send(request);
 
+  /// 關閉授權 client 與底層 HTTP client。
   @override
   void close() {
     _inner.close();
@@ -150,11 +153,15 @@ class GoogleAuthService {
     if (refresh != null) {
       final base = baseClientFactory();
       try {
-        await base.post(
+        final res = await base.post(
           Uri.parse('https://oauth2.googleapis.com/revoke'),
           body: {'token': refresh},
         );
-        _log.info('revoke ok');
+        if (res.statusCode == 200) {
+          _log.info('revoke ok');
+        } else {
+          _log.warning('revoke failed (ignored): HTTP ${res.statusCode}');
+        }
       } catch (e) {
         _log.warning('revoke failed (ignored): $e');
       } finally {
