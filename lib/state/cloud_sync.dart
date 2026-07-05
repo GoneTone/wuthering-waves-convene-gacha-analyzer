@@ -76,11 +76,16 @@ final cloudSyncUrlOpenerProvider = Provider<void Function(String url)>(
 /// 把主視窗帶回前景（還原最小化＋show＋focus）的 provider（測試 override 成 no-op）。
 ///
 /// Windows 防搶焦點政策可能把 focus 降級成工作列閃爍，屬預期行為。
+/// 呼叫端 fire-and-forget，失敗只記 log，不讓例外流進 unhandled zone。
 final windowForegroundProvider = Provider<Future<void> Function()>(
   (ref) => () async {
-    if (await windowManager.isMinimized()) await windowManager.restore();
-    await windowManager.show();
-    await windowManager.focus();
+    try {
+      if (await windowManager.isMinimized()) await windowManager.restore();
+      await windowManager.show();
+      await windowManager.focus();
+    } catch (e) {
+      Logger('cloudsync.sync').warning('bring-to-foreground failed: $e');
+    }
   },
 );
 

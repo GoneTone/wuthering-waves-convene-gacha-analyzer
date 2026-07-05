@@ -55,14 +55,38 @@ void main() {
   });
 
   group('isInsufficientScope', () {
-    test('Drive 403 insufficient_scope 訊息 → true', () {
+    test(
+      'Drive 403 insufficient_scope 訊息（www-authenticate header 路徑）→ true',
+      () {
+        expect(
+          isInsufficientScope(
+            Exception(
+              'Access was denied (www-authenticate header was: '
+              'Bearer realm="https://accounts.google.com/", '
+              'error="insufficient_scope", scope="...").',
+            ),
+          ),
+          isTrue,
+        );
+      },
+    );
+
+    test('DetailedApiRequestError 的 JSON message 路徑 → true', () {
       expect(
         isInsufficientScope(
           Exception(
-            'Access was denied (www-authenticate header was: '
-            'Bearer realm="https://accounts.google.com/", '
-            'error="insufficient_scope", scope="...").',
+            'DetailedApiRequestError(status: 403, message: '
+            'Request had insufficient authentication scopes.)',
           ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('結構化 reason ACCESS_TOKEN_SCOPE_INSUFFICIENT → true', () {
+      expect(
+        isInsufficientScope(
+          Exception('reason: ACCESS_TOKEN_SCOPE_INSUFFICIENT'),
         ),
         isTrue,
       );

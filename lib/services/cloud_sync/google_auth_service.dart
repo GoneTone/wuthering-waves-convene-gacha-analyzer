@@ -27,9 +27,18 @@ class CloudScopeMissingException implements Exception {
 /// 判斷例外是否為 OAuth `invalid_grant`（refresh token 被撤銷／過期）。
 bool isInvalidGrant(Object e) => e.toString().contains('invalid_grant');
 
-/// 判斷例外是否為 API 回報的 `insufficient_scope`（token 缺必要權限）。
-bool isInsufficientScope(Object e) =>
-    e.toString().contains('insufficient_scope');
+/// 判斷例外是否為 API 回報的「token 缺必要權限」。
+///
+/// 覆蓋兩種真實錯誤表面：googleapis_auth 的 `AuthenticatedClient` 對帶
+/// `www-authenticate` header 的回應直接拋 `insufficient_scope`（生產環境
+/// 實測主要路徑）；無該 header 時 googleapis 走 `DetailedApiRequestError`，
+/// 訊息為 `insufficient authentication scopes` 或結構化 reason。
+bool isInsufficientScope(Object e) {
+  final s = e.toString();
+  return s.contains('insufficient_scope') ||
+      s.contains('insufficient authentication scopes') ||
+      s.contains('ACCESS_TOKEN_SCOPE_INSUFFICIENT');
+}
 
 /// 檢查實際授予的 [granted] scopes 是否含雲端同步必要的 `drive.appdata`。
 ///
