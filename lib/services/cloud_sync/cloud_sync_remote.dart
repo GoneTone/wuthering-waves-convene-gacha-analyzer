@@ -29,10 +29,14 @@ class DriveSyncRemote implements CloudSyncRemote {
   static final _log = Logger('cloudsync.sync');
 
   /// 查找 appDataFolder 內同步檔的 file id；不存在回 null。
+  ///
+  /// orderBy 讓兩台電腦首次同步同時建檔時，後續各 client 穩定挑到同一個
+  /// （最新的）檔案收斂，避免各自讀寫不同孤兒檔。
   Future<String?> _findFileId() async {
     final list = await _api.files.list(
       spaces: 'appDataFolder',
       q: "name = '$cloudSyncFileName'",
+      orderBy: 'modifiedTime desc',
       $fields: 'files(id)',
     );
     final files = list.files;

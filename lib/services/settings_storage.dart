@@ -233,7 +233,7 @@ abstract final class SettingsStorage {
       locale: _parseLocale(prefs.getString(_kLocale)),
       lastActiveUid: prefs.getString(_kLastActiveUid),
       uidAliases: _parseAliases(prefs.getString(_kUidAliases)),
-      uidOrder: _parseOrder(prefs.getString(_kUidOrder)),
+      uidOrder: _parseOrder(prefs.getString(_kUidOrder), label: 'uidOrder'),
       skippedReleaseTag: prefs.getString(_kSkippedReleaseTag),
       maskUidInUi: prefs.getBool(_kMaskUidInUi) ?? false,
       dataLanguage: dataLangRaw == null || dataLangRaw == 'none'
@@ -245,6 +245,7 @@ abstract final class SettingsStorage {
       cloudLastSyncedAt: _parseUtcTime(prefs.getString(_kCloudLastSyncedAt)),
       cloudPendingRemovals: _parseOrder(
         prefs.getString(_kCloudPendingRemovals),
+        label: 'cloudPendingRemovals',
       ),
     );
   }
@@ -325,15 +326,16 @@ abstract final class SettingsStorage {
     }
   }
 
-  /// 解析 UID 排序 JSON，格式錯誤時 log 警告並回傳空列表。
-  static List<String> _parseOrder(String? raw) {
+  /// 解析字串清單 JSON（uidOrder／cloudPendingRemovals 共用），
+  /// 格式錯誤時以 [label] 標記 log 警告並回傳空列表。
+  static List<String> _parseOrder(String? raw, {required String label}) {
     if (raw == null || raw.isEmpty) return const [];
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return const [];
       return decoded.map((e) => e.toString()).toList(growable: false);
     } catch (e, st) {
-      _log.warning('uidOrder corrupt, resetting to empty', e, st);
+      _log.warning('$label corrupt, resetting to empty', e, st);
       return const [];
     }
   }

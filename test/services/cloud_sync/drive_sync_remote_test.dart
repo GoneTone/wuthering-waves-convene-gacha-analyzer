@@ -22,6 +22,16 @@ void main() {
     expect(await remote.download(), isNull);
   });
 
+  test('查檔查詢以 modifiedTime desc 排序，跨機首同步穩定挑同一檔', () async {
+    Map<String, String>? listParams;
+    final client = MockClient((req) async {
+      listParams = req.url.queryParameters;
+      return _json({'files': <Object>[]});
+    });
+    await DriveSyncRemote(client).download();
+    expect(listParams?['orderBy'], 'modifiedTime desc');
+  });
+
   test('download：有檔 → 回傳內容', () async {
     final client = MockClient((req) async {
       if (req.url.queryParameters['alt'] == 'media') {

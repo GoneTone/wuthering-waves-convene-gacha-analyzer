@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -115,4 +116,49 @@ void main() {
 
     expect(foregroundCalls, 1);
   });
+
+  testWidgets('已連結（授權失效）重連 → 顯示等待授權列與取消', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'pref.cloudAccountEmail': 'u@example.com',
+    });
+    final store = InMemoryTokenStore()..token = 'refresh-0';
+    final auth = _GatedSignInAuthService(store)..restoreThrowsReauth = true;
+    await tester.pumpWidget(wrap(auth: auth));
+    await tester.pumpAndSettle();
+
+    // restore 拋 invalid_grant → reauthRequired → 出現重連按鈕。
+    await tester.tap(find.text('Sync now'));
+    await tester.pumpAndSettle();
+    expect(find.text('Link Google account'), findsOneWidget);
+
+    // 按重連 → 等待授權期間應顯示 spinner 提示與取消（M1）。
+    await tester.tap(find.text('Link Google account'));
+    await tester.pump();
+    expect(
+      find.textContaining('finish authorization in your browser'),
+      findsOneWidget,
+    );
+    expect(find.text('Cancel'), findsOneWidget);
+
+    // 收尾：取消等待並讓被閘住的 signIn 以例外收場（結果會被世代檢查拋棄）。
+    await tester.tap(find.text('Cancel'));
+    await tester.pump();
+    auth.gate.completeError(const CloudScopeMissingException());
+    await tester.pumpAndSettle();
+  });
+}
+
+/// signIn 卡在 [gate] 上的 fake，用來讓 widget 測試停留在等待授權狀態。
+class _GatedSignInAuthService extends FakeAuthService {
+  /// 建立 [_GatedSignInAuthService]。
+  _GatedSignInAuthService(super.store);
+
+  /// signIn 的完成閘門。
+  final gate = Completer<CloudAuthSession>();
+
+  @override
+  Future<CloudAuthSession> signIn(void Function(String url) openUrl) {
+    openUrl('https://accounts.google.com/consent');
+    return gate.future;
+  }
 }

@@ -160,7 +160,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     }
     if (!ref.mounted) return;
     if (ref.read(settingsProvider).cloudAutoSyncEnabled) {
-      await syncNow(manual: false);
+      await syncNow(manual: false, trigger: 'startup');
     }
   }
 
@@ -188,7 +188,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
       await ref.read(settingsProvider.notifier).setCloudAccount(session.email);
       if (!ref.mounted) return;
       state = const CloudSyncState();
-      await syncNow(manual: true);
+      await syncNow(manual: true, trigger: 'link');
     } on CloudScopeMissingException {
       if (!ref.mounted || gen != _authGeneration) return;
       _log.warning('link failed: required Drive scope not granted');
@@ -232,7 +232,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
   Future<void> setAutoSync(bool value) async {
     await ref.read(settingsProvider.notifier).setCloudAutoSyncEnabled(value);
     if (!ref.mounted) return;
-    if (value && _linked) await syncNow(manual: false);
+    if (value && _linked) await syncNow(manual: false, trigger: 'autoSyncOn');
   }
 
   /// 把 [uid] 排入待雲端移除清單並立即同步（離線時清單留待下輪補刪）。
@@ -240,14 +240,19 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     await ref.read(settingsProvider.notifier).addCloudPendingRemoval(uid);
     if (!ref.mounted) return;
     _debounce?.cancel();
-    await syncNow(manual: false);
+    await syncNow(manual: false, trigger: 'removal');
   }
 
-  /// 跑一輪同步。[manual] 目前僅影響 log 標記；錯誤一律以狀態列呈現（spec §8）。
+  /// 跑一輪同步。[manual] 僅影響 log 標記；[trigger] 為觸發來源標籤
+  /// （startup／dataChange／removal／link／manual...，spec §9），
+  /// 錯誤一律以狀態列呈現（spec §8）。
   ///
   /// reauthRequired 時直接返回：restore 保證失敗，重試只會空轉並讓狀態列閃爍，
   /// 只有重新連結（[link]）能離開此狀態。
-  Future<void> syncNow({required bool manual}) async {
+  Future<void> syncNow({
+    required bool manual,
+    String trigger = 'manual',
+  }) async {
     if (!isCloudSyncConfigured || !_linked) return;
     if (state.phase == CloudSyncPhase.reauthRequired) return;
     if (_syncing) {
@@ -256,7 +261,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     }
     _syncing = true;
     state = const CloudSyncState(phase: CloudSyncPhase.syncing);
-    _log.info('sync round start manual=$manual');
+    _log.info('sync round start trigger=$trigger manual=$manual');
     try {
       await _ensureClient();
       final settings = ref.read(settingsProvider);
@@ -319,7 +324,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
       _syncing = false;
       if (_pendingRerun && ref.mounted) {
         _pendingRerun = false;
-        unawaited(syncNow(manual: false));
+        unawaited(syncNow(manual: false, trigger: 'rerun'));
       }
     }
   }
@@ -349,7 +354,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     _debounce = Timer(const Duration(seconds: 5), () {
       if (!ref.mounted || !_linked) return;
       if (syncFingerprint(_exportLocal()) == _lastFingerprint) return;
-      unawaited(syncNow(manual: false));
+      unawaited(syncNow(manual: false, trigger: 'dataChange'));
     });
   }
 

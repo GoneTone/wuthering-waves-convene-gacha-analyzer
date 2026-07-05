@@ -79,27 +79,7 @@ class _UnlinkedView extends ConsumerWidget {
         ],
         const SizedBox(height: AppSpacing.m),
         if (awaiting)
-          Row(
-            children: [
-              const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              const SizedBox(width: AppSpacing.m),
-              Expanded(
-                child: Text(
-                  l.cloudSyncAwaitingConsent,
-                  style: TextStyle(color: tokens.textSecondary),
-                ),
-              ),
-              TextButton(
-                onPressed: () =>
-                    ref.read(cloudSyncProvider.notifier).cancelLink(),
-                child: Text(l.actionCancel),
-              ),
-            ],
-          )
+          _AwaitingConsentRow(l: l)
         else
           Align(
             alignment: Alignment.centerLeft,
@@ -109,6 +89,40 @@ class _UnlinkedView extends ConsumerWidget {
               label: Text(l.cloudSyncLink),
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// 等待瀏覽器授權中的提示列：spinner＋說明＋取消，未連結與重連兩處共用。
+class _AwaitingConsentRow extends ConsumerWidget {
+  /// 建立 [_AwaitingConsentRow]。
+  const _AwaitingConsentRow({required this.l});
+
+  /// 當前 i18n 字串實例。
+  final AppLocalizations l;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).gacha;
+    return Row(
+      children: [
+        const SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        const SizedBox(width: AppSpacing.m),
+        Expanded(
+          child: Text(
+            l.cloudSyncAwaitingConsent,
+            style: TextStyle(color: tokens.textSecondary),
+          ),
+        ),
+        TextButton(
+          onPressed: () => ref.read(cloudSyncProvider.notifier).cancelLink(),
+          child: Text(l.actionCancel),
+        ),
       ],
     );
   }
@@ -155,40 +169,46 @@ class _LinkedView extends ConsumerWidget {
           onChanged: (v) => ref.read(cloudSyncProvider.notifier).setAutoSync(v),
         ),
         const SizedBox(height: AppSpacing.s),
-        _StatusLine(l: l, sync: sync, lastSyncedAt: lastSyncedAt),
-        const SizedBox(height: AppSpacing.m),
-        Wrap(
-          spacing: AppSpacing.m,
-          runSpacing: AppSpacing.s,
-          children: [
-            FilledButton.icon(
-              onPressed: syncing
-                  ? null
-                  : () => ref
-                        .read(cloudSyncProvider.notifier)
-                        .syncNow(manual: true),
-              icon: syncing
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.cloud_sync, size: 18),
-              label: Text(l.cloudSyncNow),
-            ),
-            if (sync.phase == CloudSyncPhase.reauthRequired)
+        // 重連（reauthRequired → link）等待授權期間顯示與未連結態相同的
+        // 等待列，取代狀態列與動作鈕，避免按了重連卻看似沒反應。
+        if (sync.phase == CloudSyncPhase.awaitingConsent) ...[
+          _AwaitingConsentRow(l: l),
+        ] else ...[
+          _StatusLine(l: l, sync: sync, lastSyncedAt: lastSyncedAt),
+          const SizedBox(height: AppSpacing.m),
+          Wrap(
+            spacing: AppSpacing.m,
+            runSpacing: AppSpacing.s,
+            children: [
               FilledButton.icon(
-                onPressed: () => ref.read(cloudSyncProvider.notifier).link(),
-                icon: const Icon(Icons.link, size: 18),
-                label: Text(l.cloudSyncLink),
+                onPressed: syncing
+                    ? null
+                    : () => ref
+                          .read(cloudSyncProvider.notifier)
+                          .syncNow(manual: true),
+                icon: syncing
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.cloud_sync, size: 18),
+                label: Text(l.cloudSyncNow),
               ),
-            OutlinedButton.icon(
-              onPressed: () => _confirmUnlink(context, ref),
-              icon: const Icon(Icons.link_off, size: 18),
-              label: Text(l.cloudSyncUnlink),
-            ),
-          ],
-        ),
+              if (sync.phase == CloudSyncPhase.reauthRequired)
+                FilledButton.icon(
+                  onPressed: () => ref.read(cloudSyncProvider.notifier).link(),
+                  icon: const Icon(Icons.link, size: 18),
+                  label: Text(l.cloudSyncLink),
+                ),
+              OutlinedButton.icon(
+                onPressed: () => _confirmUnlink(context, ref),
+                icon: const Icon(Icons.link_off, size: 18),
+                label: Text(l.cloudSyncUnlink),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

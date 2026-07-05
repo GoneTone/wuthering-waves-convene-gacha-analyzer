@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
@@ -321,6 +322,24 @@ void main() {
     expect(delayedAuth.lastRevokedToken, 'refresh-1');
     expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
     expect(container.read(settingsProvider).cloudAccountEmail, isNull);
+  });
+
+  test('syncNow log 帶觸發來源標記（spec §9）', () async {
+    final messages = <String>[];
+    final sub = Logger.root.onRecord.listen((r) {
+      if (r.loggerName == 'cloudsync.sync') messages.add(r.message);
+    });
+    addTearDown(sub.cancel);
+
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    await container.read(cloudSyncProvider.notifier).link();
+
+    expect(messages.any((m) => m.contains('trigger=link')), isTrue);
+
+    await container.read(cloudSyncProvider.notifier).syncNow(manual: true);
+    expect(messages.any((m) => m.contains('trigger=manual')), isTrue);
   });
 
   test('link：授權未含 drive.appdata → error(scopeMissing)、不寫入任何狀態', () async {
