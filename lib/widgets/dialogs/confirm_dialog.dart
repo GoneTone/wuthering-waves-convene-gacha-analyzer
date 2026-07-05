@@ -194,13 +194,18 @@ class _ConfirmDialogState extends State<_ConfirmDialog> {
           ),
           if (widget.checkboxLabel != null) ...[
             const SizedBox(height: AppSpacing.m),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              dense: true,
-              title: Text(widget.checkboxLabel!),
-              value: _checked,
-              onChanged: (v) => setState(() => _checked = v ?? false),
+            // CheckboxListTile 不開放 horizontalTitleGap，預設 16dp 加上
+            // Checkbox 自身留白會讓勾選框與文字離太開，用 ListTileTheme 歸零。
+            ListTileTheme(
+              data: const ListTileThemeData(horizontalTitleGap: 0),
+              child: CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                dense: true,
+                title: Text(widget.checkboxLabel!),
+                value: _checked,
+                onChanged: (v) => setState(() => _checked = v ?? false),
+              ),
             ),
           ],
         ],
