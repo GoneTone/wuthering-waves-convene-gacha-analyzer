@@ -107,6 +107,28 @@ Rust 会在 `flutter run` / `flutter build` 时由 `rust_builder/` 的 cargokit 
 flutter run -d windows
 ```
 
+### 云端同步凭据（可选）
+
+云端同步（Google 云端硬盘备份）需要 Google OAuth 凭据。未设置时其他功能完全不受影响，仅设置页的云端同步区块显示未设置提示。
+
+要在自己的构建中启用：
+
+1. 到 [Google Cloud Console](https://console.cloud.google.com/) 创建项目，启用 **Google Drive API**，配置 OAuth 同意屏幕（scopes：`.../auth/drive.appdata` 与 `email`），创建「**桌面应用**」类型的 OAuth 客户端。
+2. 在项目根目录创建 `secrets/cloud_sync_defines.json`（已被 git 忽略）：
+
+   ```json
+   {
+     "CLOUD_SYNC_CLIENT_ID": "你的 client id",
+     "CLOUD_SYNC_CLIENT_SECRET": "你的 client secret"
+   }
+   ```
+
+3. 运行时带入该文件（JetBrains IDE 可直接选内置的「main.dart (cloud sync)」运行配置；`build_release.ps1` 打包时会自动检测）：
+
+   ```bash
+   flutter run -d windows --dart-define-from-file=secrets/cloud_sync_defines.json
+   ```
+
 ### Rust ↔ Dart 桥接代码生成
 
 修改 `rust/src/api/` 内的 Rust 函数后，重新生成桥接代码。第一次使用前先安装 codegen 工具：
