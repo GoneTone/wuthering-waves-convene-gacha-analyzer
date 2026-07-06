@@ -129,14 +129,20 @@ class GoogleAuthService {
 
   /// 走 installed-app loopback 流程登入：[openUrl] 收到授權頁 URL 時開啟系統瀏覽器。
   ///
+  /// [postAuthPage] 為授權成功後瀏覽器顯示的自訂 HTML（null 用套件預設英文頁）；
+  /// 失敗路徑的回應頁套件未開放自訂。
   /// 回傳的 session 帶著 refresh token，是否寫入 [tokenStore] 交由呼叫端決定
   /// （避免取消連結後遲到的授權結果覆蓋較新的 token；見 [CloudAuthSession]）。
-  Future<CloudAuthSession> signIn(void Function(String url) openUrl) async {
+  Future<CloudAuthSession> signIn(
+    void Function(String url) openUrl, {
+    String? postAuthPage,
+  }) async {
     _log.info('signIn start');
     final client = await clientViaUserConsent(
       _clientId,
       cloudSyncScopes,
       openUrl,
+      customPostAuthPage: postAuthPage,
     );
     try {
       final refresh = client.credentials.refreshToken;

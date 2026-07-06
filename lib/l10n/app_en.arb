@@ -325,6 +325,8 @@
   "cloudSyncErrorScopeMissing": "The authorization did not include Google Drive access. Please relink and tick the Drive data checkbox on the Google consent page.",
   "cloudSyncReauthRequired": "Authorization expired. Please relink your Google account.",
   "cloudSyncRemoveFromCloud": "Also remove this account from cloud sync data",
+  "cloudSyncPostAuthTitle": "Authorization complete",
+  "cloudSyncPostAuthBody": "You can close this tab and return to the app.",
   "settingsAccountManagement": "Account management",
   "settingsPrivacySectionTitle": "Privacy",
   "settingsMaskUidInUi": "Mask UID in interface",

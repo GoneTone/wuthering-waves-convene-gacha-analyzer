@@ -255,6 +255,8 @@
   "cloudSyncErrorScopeMissing": "授權未包含雲端硬碟權限。請重新連結，並在 Google 授權頁勾選雲端硬碟資料的存取權。",
   "cloudSyncReauthRequired": "授權已失效，請重新連結 Google 帳號。",
   "cloudSyncRemoveFromCloud": "同時從雲端同步資料移除此帳號",
+  "cloudSyncPostAuthTitle": "授權完成",
+  "cloudSyncPostAuthBody": "可以關閉此分頁，回到應用程式繼續。",
   "settingsAccountManagement": "帳號管理",
   "settingsPrivacySectionTitle": "隱私",
   "settingsMaskUidInUi": "遮蔽介面中的 UID",

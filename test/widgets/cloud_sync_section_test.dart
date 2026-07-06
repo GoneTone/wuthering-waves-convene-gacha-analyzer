@@ -101,6 +101,22 @@ void main() {
     );
   });
 
+  testWidgets('連結時傳入依 UI 語言在地化的授權完成頁', (tester) async {
+    final auth = FakeAuthService(InMemoryTokenStore())
+      ..signInThrowsScopeMissing = true;
+    await tester.pumpWidget(wrap(auth: auth));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Link Google account'));
+    await tester.pumpAndSettle();
+
+    final page = auth.lastPostAuthPage;
+    expect(page, isNotNull);
+    expect(page, contains('Authorization complete'));
+    expect(page, contains('You can close this tab and return to the app.'));
+    expect(page, contains('lang="en"'));
+  });
+
   testWidgets('授權等待結束 → 自動把視窗帶回前景', (tester) async {
     var foregroundCalls = 0;
     final auth = FakeAuthService(InMemoryTokenStore())
@@ -157,7 +173,10 @@ class _GatedSignInAuthService extends FakeAuthService {
   final gate = Completer<CloudAuthSession>();
 
   @override
-  Future<CloudAuthSession> signIn(void Function(String url) openUrl) {
+  Future<CloudAuthSession> signIn(
+    void Function(String url) openUrl, {
+    String? postAuthPage,
+  }) {
     openUrl('https://accounts.google.com/consent');
     return gate.future;
   }

@@ -30,7 +30,10 @@ class _DelayedSignInAuthService extends FakeAuthService {
   final Completer<CloudAuthSession> _completer;
 
   @override
-  Future<CloudAuthSession> signIn(void Function(String url) openUrl) async {
+  Future<CloudAuthSession> signIn(
+    void Function(String url) openUrl, {
+    String? postAuthPage,
+  }) async {
     openUrl('https://accounts.google.com/consent');
     return _completer.future;
   }
@@ -322,6 +325,18 @@ void main() {
     expect(delayedAuth.lastRevokedToken, 'refresh-1');
     expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
     expect(container.read(settingsProvider).cloudAccountEmail, isNull);
+  });
+
+  test('link 把自訂完成頁 HTML 傳給 signIn', () async {
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+    await container
+        .read(cloudSyncProvider.notifier)
+        .link(postAuthPage: '<html>done</html>');
+
+    expect(authService.lastPostAuthPage, '<html>done</html>');
   });
 
   test('syncNow log 帶觸發來源標記（spec §9）', () async {

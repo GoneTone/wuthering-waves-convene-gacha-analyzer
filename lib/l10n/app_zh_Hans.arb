@@ -319,6 +319,8 @@
   "cloudSyncErrorScopeMissing": "授权未包含云端硬盘权限。请重新关联，并在 Google 授权页勾选云端硬盘数据的访问权限。",
   "cloudSyncReauthRequired": "授权已失效，请重新关联 Google 账号。",
   "cloudSyncRemoveFromCloud": "同时从云端同步数据中移除此账号",
+  "cloudSyncPostAuthTitle": "授权完成",
+  "cloudSyncPostAuthBody": "可以关闭此标签页，回到应用程序继续。",
   "settingsAccountManagement": "账号管理",
   "settingsPrivacySectionTitle": "隐私",
   "settingsMaskUidInUi": "遮蔽界面中的 UID",

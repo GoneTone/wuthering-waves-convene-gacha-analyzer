@@ -51,8 +51,15 @@ class FakeAuthService extends GoogleAuthService {
   /// revokeToken() 最後一次收到的 token，供斷言用；未呼叫則為 null。
   String? lastRevokedToken;
 
+  /// signIn() 最後一次收到的自訂完成頁 HTML，供斷言用；未傳則為 null。
+  String? lastPostAuthPage;
+
   @override
-  Future<CloudAuthSession> signIn(void Function(String url) openUrl) async {
+  Future<CloudAuthSession> signIn(
+    void Function(String url) openUrl, {
+    String? postAuthPage,
+  }) async {
+    lastPostAuthPage = postAuthPage;
     openUrl('https://accounts.google.com/consent');
     if (signInThrowsScopeMissing) throw const CloudScopeMissingException();
     return CloudAuthSession(

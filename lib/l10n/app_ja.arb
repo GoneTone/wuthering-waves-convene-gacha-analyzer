@@ -323,6 +323,8 @@
   "cloudSyncErrorScopeMissing": "認可に Google ドライブへのアクセス権が含まれていません。再連携し、Google の同意画面でドライブデータのチェックボックスをオンにしてください。",
   "cloudSyncReauthRequired": "認可が失効しました。Google アカウントを再連携してください。",
   "cloudSyncRemoveFromCloud": "クラウド同期データからもこのアカウントを削除する",
+  "cloudSyncPostAuthTitle": "認可が完了しました",
+  "cloudSyncPostAuthBody": "このタブを閉じて、アプリに戻って続行できます。",
   "settingsAccountManagement": "アカウント管理",
   "settingsPrivacySectionTitle": "プライバシー",
   "settingsMaskUidInUi": "画面上の UID をマスク",

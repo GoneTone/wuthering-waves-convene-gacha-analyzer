@@ -1,4 +1,5 @@
 import 'dart:async' show unawaited;
+import 'dart:convert' show HtmlEscape;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,54 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_text.dart';
+
+/// 產生授權成功後瀏覽器顯示的完成頁 HTML（依當前 UI 語言在地化）。
+///
+/// 頁面完全自足（inline style、隨系統深淺色），文案經 HTML escape。
+String _buildPostAuthPage(AppLocalizations l, String lang) {
+  const esc = HtmlEscape();
+  final title = esc.convert(l.cloudSyncPostAuthTitle);
+  final body = esc.convert(l.cloudSyncPostAuthBody);
+  return '''
+<!DOCTYPE html>
+<html lang="$lang">
+<head>
+<meta charset="utf-8">
+<title>$title</title>
+<style>
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center;
+         justify-content: center; font-family: system-ui, sans-serif;
+         background: #14161a; color: #e6e9ef; }
+  @media (prefers-color-scheme: light) {
+    body { background: #f5f6f8; color: #1c1e21; }
+  }
+  main { text-align: center; padding: 2.5rem 3rem; }
+  .mark { font-size: 3rem; }
+  h1 { font-size: 1.4rem; margin: 0.75rem 0 0.5rem; }
+  p { margin: 0; opacity: 0.75; }
+</style>
+</head>
+<body>
+<main>
+  <div class="mark">✅</div>
+  <h1>$title</h1>
+  <p>$body</p>
+</main>
+</body>
+</html>
+''';
+}
+
+/// 以當前 context 的語言組出完成頁並發起連結。
+void _linkWithLocalizedPage(BuildContext context, WidgetRef ref) {
+  final l = AppLocalizations.of(context)!;
+  final lang = Localizations.localeOf(context).toLanguageTag();
+  unawaited(
+    ref
+        .read(cloudSyncProvider.notifier)
+        .link(postAuthPage: _buildPostAuthPage(l, lang)),
+  );
+}
 
 /// 設定頁「雲端同步」區塊：連結 Google 帳號、自動同步開關、立即同步與中斷連結。
 class CloudSyncSection extends ConsumerWidget {
@@ -84,7 +133,7 @@ class _UnlinkedView extends ConsumerWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: FilledButton.icon(
-              onPressed: () => ref.read(cloudSyncProvider.notifier).link(),
+              onPressed: () => _linkWithLocalizedPage(context, ref),
               icon: const Icon(Icons.link, size: 18),
               label: Text(l.cloudSyncLink),
             ),
@@ -197,7 +246,7 @@ class _LinkedView extends ConsumerWidget {
               ),
               if (sync.phase == CloudSyncPhase.reauthRequired)
                 FilledButton.icon(
-                  onPressed: () => ref.read(cloudSyncProvider.notifier).link(),
+                  onPressed: () => _linkWithLocalizedPage(context, ref),
                   icon: const Icon(Icons.link, size: 18),
                   label: Text(l.cloudSyncLink),
                 ),

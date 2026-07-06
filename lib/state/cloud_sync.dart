@@ -165,7 +165,10 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
   }
 
   /// 連結 Google 帳號：開瀏覽器授權，成功後存 email 並立即同步一輪。
-  Future<void> link() async {
+  ///
+  /// [postAuthPage] 為授權成功後瀏覽器顯示的自訂 HTML，由 UI 端以當前
+  /// 語言產生（notifier 拿不到 AppLocalizations）。
+  Future<void> link({String? postAuthPage}) async {
     if (!isCloudSyncConfigured) return;
     if (state.phase == CloudSyncPhase.awaitingConsent) return;
     final gen = ++_authGeneration;
@@ -173,7 +176,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     final auth = ref.read(googleAuthServiceProvider);
     final openUrl = ref.read(cloudSyncUrlOpenerProvider);
     try {
-      final session = await auth.signIn(openUrl);
+      final session = await auth.signIn(openUrl, postAuthPage: postAuthPage);
       if (!ref.mounted || gen != _authGeneration) {
         // 取消後在瀏覽器遲到完成的授權：拋棄 client、revoke 該次 grant，不寫入 token store。
         session.client.close();
