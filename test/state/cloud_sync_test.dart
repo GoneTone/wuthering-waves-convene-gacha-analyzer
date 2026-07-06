@@ -82,11 +82,42 @@ BannerStorage _localBannerStorage(String uid) => BannerStorage.fromJson(
       as Map<String, dynamic>,
 );
 
+/// 產生含 1 筆五星紀錄的雲端側 bundle JSON（觸發靜默補圖用）。
+String _cloudBundleJsonWithRecord(String uid) => jsonEncode({
+  'schema_version': AccountsBundle.currentSchemaVersion,
+  'app': accountsBundleAppId,
+  'exported_at': '2026-07-04T00:00:00.000Z',
+  'app_version': '1.5.0',
+  'last_active_uid': uid,
+  'accounts': [
+    {
+      'player_id': uid,
+      'language_code': 'zh-Hant',
+      'last_updated': '2026-07-01T00:00:00.000Z',
+      'banners': {
+        '1': [
+          {
+            'card_pool_type': '1',
+            'resource_id': 21050026,
+            'quality_level': 5,
+            'resource_type': '武器',
+            'name': '雲端測試武器',
+            'count': 1,
+            'time': '2026-06-29 12:00:00',
+            'language_code': 'zh-Hant',
+          },
+        ],
+      },
+    },
+  ],
+});
+
 void main() {
   late Directory tempDir;
   late InMemoryTokenStore tokenStore;
   late FakeAuthService authService;
   late FakeRemote remote;
+  late int httpFactoryCalls;
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('cloud_sync_test_');
@@ -94,6 +125,7 @@ void main() {
     tokenStore = InMemoryTokenStore();
     authService = FakeAuthService(tokenStore);
     remote = FakeRemote();
+    httpFactoryCalls = 0;
     debugCloudSyncConfiguredOverride = true;
   });
 
@@ -108,12 +140,13 @@ void main() {
         appVersionProvider.overrideWithValue('1.5.0'),
         gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
         gachaCaptureProvider.overrideWithValue(FakeCapture()),
-        cancellableHttpClientFactoryProvider.overrideWithValue(
-          () => CancellableHttpClient(
+        cancellableHttpClientFactoryProvider.overrideWithValue(() {
+          httpFactoryCalls++;
+          return CancellableHttpClient(
             client: MockClient((_) async => http.Response('', 500)),
             cancel: () {},
-          ),
-        ),
+          );
+        }),
         tokenStoreProvider.overrideWithValue(tokenStore),
         googleAuthServiceProvider.overrideWithValue(authService),
         cloudSyncRemoteFactoryProvider.overrideWithValue((_) => remote),
@@ -325,6 +358,39 @@ void main() {
     expect(delayedAuth.lastRevokedToken, 'refresh-1');
     expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
     expect(container.read(settingsProvider).cloudAccountEmail, isNull);
+  });
+
+  test('同步合併出新紀錄 → 觸發補圖並以進度／完成摘要呈現', () async {
+    remote.content = _cloudBundleJsonWithRecord('100000001');
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+    await container.read(cloudSyncProvider.notifier).link();
+    // 補圖是 fire-and-forget，等它收尾（factory 於補圖開頭即被呼叫）。
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    expect(httpFactoryCalls, greaterThan(0));
+    // 走與「更新物品資料」相同的 progress 呈現：結束停在 UpdateCompleted，
+    // 只帶物品資料／補圖摘要（不帶 importSummary，避免顯示成匯入結果）。
+    final progress = container.read(gachaRepositoryProvider).progress;
+    expect(progress, isA<UpdateCompleted>());
+    final completed = progress! as UpdateCompleted;
+    expect(completed.importSummary, isNull);
+    expect(completed.itemDetailsRefreshed, isNotNull);
+    expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
+  });
+
+  test('同步無新增紀錄 → 不觸發補圖', () async {
+    remote.content = _cloudBundleJson('100000001');
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+    await container.read(cloudSyncProvider.notifier).link();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    expect(httpFactoryCalls, 0);
   });
 
   test('link 把自訂完成頁 HTML 傳給 signIn', () async {

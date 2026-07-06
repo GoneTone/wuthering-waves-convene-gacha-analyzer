@@ -140,6 +140,9 @@ class GachaRepository extends Notifier<GachaState> {
   /// Logger 實例（匯入流程，獨立子樹以利日誌過濾）。
   static final _importLog = Logger('gacha.import');
 
+  /// Logger 實例（雲端同步觸發的靜默補圖，對齊 cloudsync.* 樹）。
+  static final _cloudSyncLog = Logger('cloudsync.sync');
+
   /// build() 內 `_bootstrapLoad()` 完成的 future，供測試 await。
   Completer<void>? _bootstrapCompleter;
 
@@ -1401,6 +1404,53 @@ class GachaRepository extends Notifier<GachaState> {
       },
     );
     return result();
+  }
+
+  /// 雲端同步合併出新紀錄後的補圖：補抓缺漏的物品圖示與詳情，走與
+  /// 「更新物品資料」相同的 progress 呈現（app_shell 會彈進度對話框），
+  /// 結束只顯示物品資料／補圖張數摘要（不帶 importSummary，避免顯示成
+  /// 手動匯入的結果文案）。
+  ///
+  /// best-effort：補圖失敗僅記 log，仍照常收尾；更新／匯入進行中或
+  /// bootstrap 未完成時直接略過，缺圖留待下次「更新」自然補齊。
+  Future<void> fetchItemImagesForCloudSync() async {
+    if (state.isBootstrapping || state.progress != null || _isUpdating) {
+      _cloudSyncLog.info('image fetch skipped: busy');
+      return;
+    }
+    _isUpdating = true;
+    _cancelTriggered = false;
+    final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
+    _activeCancellable = cancellable;
+    state = state.copyWith(progress: const Preparing());
+    var result = (imagesDownloaded: 0, itemsRefreshed: 0, staleItemsPruned: 0);
+    try {
+      try {
+        result = await _fetchItemImages(cancellable.client);
+      } catch (e, st) {
+        _cloudSyncLog.warning('image fetch failed (ignored)', e, st);
+      }
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        progress: UpdateCompleted(
+          totalNewRecords: 0,
+          failedBanners: const [],
+          updatedAt: DateTime.now().toUtc(),
+          itemImagesDownloaded: result.imagesDownloaded,
+          itemDetailsRefreshed: result.itemsRefreshed,
+          staleItemsPruned: result.staleItemsPruned,
+        ),
+      );
+      _cloudSyncLog.info(
+        'image fetch done, items=${result.itemsRefreshed} '
+        'images=${result.imagesDownloaded}',
+      );
+    } finally {
+      _activeCancellable?.client.close();
+      _activeCancellable = null;
+      _cancelTriggered = false;
+      _isUpdating = false;
+    }
   }
 
   /// 測試用：略過 banner fetch 直接跑 item image 階段（用既有 state.byUid）。
