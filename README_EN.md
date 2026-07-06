@@ -59,11 +59,12 @@ The utility may trigger anti-virus software during installation and execution. T
 - Click any item for details: characters show the introduction, element, weapon type, and switchable Outfit and Convene artwork (the Convene art is captured live from encore's rendered canvas on your machine and cached — no artwork is redistributed); weapons show their description and weapon type
 - Generate a share image in one click (dark / light theme, full UID or first-3-digits mask), automatically copied to the clipboard and optionally saved as a PNG file
 - Export / Import accounts as JSON
+- Cloud sync: link your own Google account to automatically back up convene records to your Google Drive and keep multiple computers in sync; deleting an account can optionally remove it from the cloud data too
 - Dark / Light theme toggle
 - Multi-language ([help us translate](https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer))
 - Optional UID masking in the UI (first 3 digits only) for added privacy
 - Automatic update check on launch, with a manual trigger in Settings
-- All data stays on your machine — nothing is uploaded
+- All data stays on your machine by default — nothing is uploaded; cloud sync is opt-in and backs up only to your own Google Drive
 
 ## Supported Third-Party Import Platforms
 
