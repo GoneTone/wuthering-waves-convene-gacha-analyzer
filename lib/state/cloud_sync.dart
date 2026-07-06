@@ -265,6 +265,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     _syncing = true;
     state = const CloudSyncState(phase: CloudSyncPhase.syncing);
     _log.info('sync round start trigger=$trigger manual=$manual');
+    ImportResult? mergeResult;
     try {
       await _ensureClient();
       final settings = ref.read(settingsProvider);
@@ -272,9 +273,11 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
       final outcome = await runSyncRound(
         remote: ref.read(cloudSyncRemoteFactoryProvider)(_client!),
         pendingRemovals: pending,
-        applyRemote: (bundle) => ref
-            .read(gachaRepositoryProvider.notifier)
-            .importBundleForCloudSync(bundle),
+        applyRemote: (bundle) async {
+          mergeResult = await ref
+              .read(gachaRepositoryProvider.notifier)
+              .importBundleForCloudSync(bundle);
+        },
         exportLocal: _exportLocal,
         clearPendingRemovals: (uids) => ref
             .read(settingsProvider.notifier)
@@ -289,6 +292,15 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
               .setCloudLastSyncedAt(DateTime.now().toUtc());
           if (!ref.mounted) return;
           state = const CloudSyncState();
+          if ((mergeResult?.addedRecords ?? 0) > 0) {
+            // 雲端合併出新紀錄（如第二台電腦首次同步）→ 補抓缺漏的物品
+            // 圖示與詳情，走進度對話框讓使用者看到狀態，結束顯示補圖摘要。
+            unawaited(
+              ref
+                  .read(gachaRepositoryProvider.notifier)
+                  .fetchItemImagesForCloudSync(),
+            );
+          }
         case CloudSyncSkippedSchemaTooNew():
           state = const CloudSyncState(
             phase: CloudSyncPhase.error,
