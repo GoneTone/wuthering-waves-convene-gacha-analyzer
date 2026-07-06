@@ -107,6 +107,28 @@ Rust は `flutter run` / `flutter build` の際に `rust_builder/` の cargokit 
 flutter run -d windows
 ```
 
+### クラウド同期の認証情報（任意）
+
+クラウド同期（Google ドライブへのバックアップ）には Google OAuth 認証情報が必要です。未設定でも他の機能には一切影響せず、設定ページのクラウド同期欄に未設定の案内が表示されるだけです。
+
+自分のビルドで有効にするには：
+
+1. [Google Cloud Console](https://console.cloud.google.com/) でプロジェクトを作成し、**Google Drive API** を有効化、OAuth 同意画面を設定（スコープ：`.../auth/drive.appdata` と `email`）し、「**デスクトップ アプリ**」タイプの OAuth クライアントを作成します。
+2. プロジェクトルートに `secrets/cloud_sync_defines.json` を作成します（git 管理外）：
+
+   ```json
+   {
+     "CLOUD_SYNC_CLIENT_ID": "あなたの client id",
+     "CLOUD_SYNC_CLIENT_SECRET": "あなたの client secret"
+   }
+   ```
+
+3. 実行時にこのファイルを渡します（JetBrains IDE では同梱の「main.dart (cloud sync)」実行構成が使えます。`build_release.ps1` はパッケージ時に自動検出します）：
+
+   ```bash
+   flutter run -d windows --dart-define-from-file=secrets/cloud_sync_defines.json
+   ```
+
 ### Rust ↔ Dart ブリッジコードの生成
 
 `rust/src/api/` 内の Rust 関数を変更した後、ブリッジコードを再生成します。初回利用前に codegen ツールをインストールしてください：

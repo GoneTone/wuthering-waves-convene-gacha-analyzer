@@ -83,6 +83,10 @@ class AppSettings {
     this.maskUidInUi = false,
     this.dataLanguage,
     this.dataLanguageSeeded = false,
+    this.cloudAccountEmail,
+    this.cloudAutoSyncEnabled = true,
+    this.cloudLastSyncedAt,
+    this.cloudPendingRemovals = const [],
   });
 
   /// 外觀主題。
@@ -112,6 +116,18 @@ class AppSettings {
   /// 資料語言是否已初始化（自動播種或使用者明確選擇過）。false 代表可被自動播種。
   final bool dataLanguageSeeded;
 
+  /// 已連結的 Google 帳號 email；null 代表未連結雲端同步。
+  final String? cloudAccountEmail;
+
+  /// 是否啟用自動雲端同步（App 啟動與資料變動後自動跑一輪）。
+  final bool cloudAutoSyncEnabled;
+
+  /// 上次雲端同步成功時間（UTC）；null 代表尚未同步過。
+  final DateTime? cloudLastSyncedAt;
+
+  /// 待從雲端移除的 UID 清單（刪帳號勾「連雲端一起刪」時排入，同步成功後清除）。
+  final List<String> cloudPendingRemovals;
+
   /// 預設設定值（跟隨系統主題與語言）。
   static const defaults = AppSettings(
     themeMode: AppThemeMode.system,
@@ -134,6 +150,12 @@ class AppSettings {
     String? dataLanguage,
     bool clearDataLanguage = false,
     bool? dataLanguageSeeded,
+    String? cloudAccountEmail,
+    bool clearCloudAccountEmail = false,
+    bool? cloudAutoSyncEnabled,
+    DateTime? cloudLastSyncedAt,
+    bool clearCloudLastSyncedAt = false,
+    List<String>? cloudPendingRemovals,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     locale: locale ?? this.locale,
@@ -150,6 +172,14 @@ class AppSettings {
         ? null
         : (dataLanguage ?? this.dataLanguage),
     dataLanguageSeeded: dataLanguageSeeded ?? this.dataLanguageSeeded,
+    cloudAccountEmail: clearCloudAccountEmail
+        ? null
+        : (cloudAccountEmail ?? this.cloudAccountEmail),
+    cloudAutoSyncEnabled: cloudAutoSyncEnabled ?? this.cloudAutoSyncEnabled,
+    cloudLastSyncedAt: clearCloudLastSyncedAt
+        ? null
+        : (cloudLastSyncedAt ?? this.cloudLastSyncedAt),
+    cloudPendingRemovals: cloudPendingRemovals ?? this.cloudPendingRemovals,
   );
 }
 
@@ -182,6 +212,18 @@ abstract final class SettingsStorage {
   /// SharedPreferences key：資料語言（語言碼／`"none"`／不存在三態）。
   static const _kDataLanguage = 'pref.dataLanguage';
 
+  /// SharedPreferences key：已連結的雲端帳號 email。
+  static const _kCloudAccountEmail = 'pref.cloudAccountEmail';
+
+  /// SharedPreferences key：自動雲端同步開關。
+  static const _kCloudAutoSyncEnabled = 'pref.cloudAutoSyncEnabled';
+
+  /// SharedPreferences key：上次雲端同步成功時間（ISO8601 UTC）。
+  static const _kCloudLastSyncedAt = 'pref.cloudLastSyncedAt';
+
+  /// SharedPreferences key：待雲端移除 UID 清單 JSON。
+  static const _kCloudPendingRemovals = 'pref.cloudPendingRemovals';
+
   /// 從 SharedPreferences 讀取設定，欄位缺漏時回退到預設值。
   static Future<AppSettings> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -191,13 +233,20 @@ abstract final class SettingsStorage {
       locale: _parseLocale(prefs.getString(_kLocale)),
       lastActiveUid: prefs.getString(_kLastActiveUid),
       uidAliases: _parseAliases(prefs.getString(_kUidAliases)),
-      uidOrder: _parseOrder(prefs.getString(_kUidOrder)),
+      uidOrder: _parseOrder(prefs.getString(_kUidOrder), label: 'uidOrder'),
       skippedReleaseTag: prefs.getString(_kSkippedReleaseTag),
       maskUidInUi: prefs.getBool(_kMaskUidInUi) ?? false,
       dataLanguage: dataLangRaw == null || dataLangRaw == 'none'
           ? null
           : dataLangRaw,
       dataLanguageSeeded: dataLangRaw != null,
+      cloudAccountEmail: prefs.getString(_kCloudAccountEmail),
+      cloudAutoSyncEnabled: prefs.getBool(_kCloudAutoSyncEnabled) ?? true,
+      cloudLastSyncedAt: _parseUtcTime(prefs.getString(_kCloudLastSyncedAt)),
+      cloudPendingRemovals: _parseOrder(
+        prefs.getString(_kCloudPendingRemovals),
+        label: 'cloudPendingRemovals',
+      ),
     );
   }
 
@@ -224,6 +273,24 @@ abstract final class SettingsStorage {
     } else {
       await prefs.setString(_kDataLanguage, s.dataLanguage ?? 'none');
     }
+    if (s.cloudAccountEmail == null) {
+      await prefs.remove(_kCloudAccountEmail);
+    } else {
+      await prefs.setString(_kCloudAccountEmail, s.cloudAccountEmail!);
+    }
+    await prefs.setBool(_kCloudAutoSyncEnabled, s.cloudAutoSyncEnabled);
+    if (s.cloudLastSyncedAt == null) {
+      await prefs.remove(_kCloudLastSyncedAt);
+    } else {
+      await prefs.setString(
+        _kCloudLastSyncedAt,
+        s.cloudLastSyncedAt!.toUtc().toIso8601String(),
+      );
+    }
+    await prefs.setString(
+      _kCloudPendingRemovals,
+      jsonEncode(s.cloudPendingRemovals),
+    );
   }
 
   /// 解析主題設定字串，未知值回退到 [AppThemeMode.system]。
@@ -259,16 +326,23 @@ abstract final class SettingsStorage {
     }
   }
 
-  /// 解析 UID 排序 JSON，格式錯誤時 log 警告並回傳空列表。
-  static List<String> _parseOrder(String? raw) {
+  /// 解析字串清單 JSON（uidOrder／cloudPendingRemovals 共用），
+  /// 格式錯誤時以 [label] 標記 log 警告並回傳空列表。
+  static List<String> _parseOrder(String? raw, {required String label}) {
     if (raw == null || raw.isEmpty) return const [];
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return const [];
       return decoded.map((e) => e.toString()).toList(growable: false);
     } catch (e, st) {
-      _log.warning('uidOrder corrupt, resetting to empty', e, st);
+      _log.warning('$label corrupt, resetting to empty', e, st);
       return const [];
     }
+  }
+
+  /// 解析 ISO8601 時間字串為 UTC DateTime，null 或格式錯誤回 null。
+  static DateTime? _parseUtcTime(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw)?.toUtc();
   }
 }

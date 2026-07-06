@@ -107,6 +107,28 @@ Rust is compiled automatically by `rust_builder/`'s cargokit during `flutter run
 flutter run -d windows
 ```
 
+### Cloud sync credentials (optional)
+
+Cloud sync (Google Drive backup) requires Google OAuth credentials. Without them everything else works normally; the cloud sync section in Settings simply shows an "unconfigured" notice.
+
+To enable it in your own build:
+
+1. In the [Google Cloud Console](https://console.cloud.google.com/), create a project, enable the **Google Drive API**, configure the OAuth consent screen (scopes: `.../auth/drive.appdata` and `email`), and create a **Desktop app** OAuth client.
+2. Create `secrets/cloud_sync_defines.json` at the project root (git-ignored):
+
+   ```json
+   {
+     "CLOUD_SYNC_CLIENT_ID": "your client id",
+     "CLOUD_SYNC_CLIENT_SECRET": "your client secret"
+   }
+   ```
+
+3. Pass the file when running (JetBrains IDEs can use the bundled "main.dart (cloud sync)" run configuration; `build_release.ps1` picks the file up automatically when packaging):
+
+   ```bash
+   flutter run -d windows --dart-define-from-file=secrets/cloud_sync_defines.json
+   ```
+
 ### Rust ↔ Dart bridge code generation
 
 After changing Rust functions in `rust/src/api/`, regenerate the bridge code. Install the codegen tool on first use:

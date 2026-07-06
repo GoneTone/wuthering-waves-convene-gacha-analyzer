@@ -107,6 +107,28 @@ Rust 會在 `flutter run` / `flutter build` 時由 `rust_builder/` 的 cargokit 
 flutter run -d windows
 ```
 
+### 雲端同步憑證（選用）
+
+雲端同步（Google 雲端硬碟備份）需要 Google OAuth 憑證。未設定時其他功能完全不受影響，僅設定頁的雲端同步區塊顯示未設定提示。
+
+要在自己的建置啟用：
+
+1. 到 [Google Cloud Console](https://console.cloud.google.com/) 建立專案，啟用 **Google Drive API**，設定 OAuth 同意畫面（scopes：`.../auth/drive.appdata` 與 `email`），建立「**電腦版應用程式**」類型的 OAuth 用戶端。
+2. 在專案根目錄建立 `secrets/cloud_sync_defines.json`（已被 git 忽略）：
+
+   ```json
+   {
+     "CLOUD_SYNC_CLIENT_ID": "你的 client id",
+     "CLOUD_SYNC_CLIENT_SECRET": "你的 client secret"
+   }
+   ```
+
+3. 執行時帶入該檔（JetBrains IDE 可直接選內建的「main.dart (cloud sync)」執行設定；`build_release.ps1` 打包時會自動偵測）：
+
+   ```bash
+   flutter run -d windows --dart-define-from-file=secrets/cloud_sync_defines.json
+   ```
+
 ### Rust ↔ Dart 橋接程式碼產生
 
 修改 `rust/src/api/` 內的 Rust 函式後，重新產生橋接程式碼。第一次使用前先安裝 codegen 工具：

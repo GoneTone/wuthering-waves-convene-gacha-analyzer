@@ -36,6 +36,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart'
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/account_management.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/cloud_sync_section.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/section_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/accounts_picker_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
@@ -109,6 +110,12 @@ class SettingsPage extends ConsumerWidget {
                 title: l.settingsDataManagement,
                 icon: Icons.folder_outlined,
                 child: const _DataManagement(),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              SectionCard(
+                title: l.settingsCloudSync,
+                icon: Icons.cloud_sync_outlined,
+                child: const CloudSyncSection(),
               ),
               const SizedBox(height: AppSpacing.xl),
               SectionCard(
