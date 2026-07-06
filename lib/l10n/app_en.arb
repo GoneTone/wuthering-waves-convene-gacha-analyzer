@@ -327,6 +327,8 @@
   "cloudSyncRemoveFromCloud": "Also remove this account from cloud sync data",
   "cloudSyncPostAuthTitle": "Authorization complete",
   "cloudSyncPostAuthBody": "You can close this tab and return to the app.",
+  "cloudSyncPostAuthScopeMissingTitle": "Missing Google Drive permission",
+  "cloudSyncPostAuthScopeMissingBody": "The Google Drive data checkbox was not ticked. Please return to the app, relink, and tick that permission.",
   "settingsAccountManagement": "Account management",
   "settingsPrivacySectionTitle": "Privacy",
   "settingsMaskUidInUi": "Mask UID in interface",

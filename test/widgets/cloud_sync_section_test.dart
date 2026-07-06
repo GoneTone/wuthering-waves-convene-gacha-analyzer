@@ -115,6 +115,14 @@ void main() {
     expect(page, contains('Authorization complete'));
     expect(page, contains('You can close this tab and return to the app.'));
     expect(page, contains('lang="en"'));
+    // 頁面內嵌 JS 讀回跳 URL 的 scope 參數，缺 drive.appdata 時切換成
+    // 「缺少權限」指引，兩種文案都要在頁面裡。
+    expect(page, contains('drive.appdata'));
+    expect(page, contains('Missing Google Drive permission'));
+    expect(
+      page,
+      contains('return to the app, relink, and tick that permission'),
+    );
   });
 
   testWidgets('授權等待結束 → 自動把視窗帶回前景', (tester) async {

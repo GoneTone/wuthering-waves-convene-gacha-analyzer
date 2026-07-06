@@ -325,6 +325,8 @@
   "cloudSyncRemoveFromCloud": "クラウド同期データからもこのアカウントを削除する",
   "cloudSyncPostAuthTitle": "認可が完了しました",
   "cloudSyncPostAuthBody": "このタブを閉じて、アプリに戻って続行できます。",
+  "cloudSyncPostAuthScopeMissingTitle": "Google ドライブの権限が不足しています",
+  "cloudSyncPostAuthScopeMissingBody": "Google ドライブのデータのチェックボックスがオンになっていませんでした。アプリに戻って再連携し、その権限をオンにしてください。",
   "settingsAccountManagement": "アカウント管理",
   "settingsPrivacySectionTitle": "プライバシー",
   "settingsMaskUidInUi": "画面上の UID をマスク",

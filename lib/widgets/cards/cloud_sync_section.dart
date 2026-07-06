@@ -15,10 +15,15 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_tex
 /// 產生授權成功後瀏覽器顯示的完成頁 HTML（依當前 UI 語言在地化）。
 ///
 /// 頁面完全自足（inline style、隨系統深淺色），文案經 HTML escape。
+/// OAuth 流程在 token 交換成功即回這頁，不管使用者有沒有勾雲端硬碟權限；
+/// 幸好 Google 的回跳 URL 帶有實際授予的 `scope` 參數，頁內 JS 據此在
+/// 缺 drive.appdata 時切換成「缺少權限」指引，避免誤報授權完成。
 String _buildPostAuthPage(AppLocalizations l, String lang) {
   const esc = HtmlEscape();
   final title = esc.convert(l.cloudSyncPostAuthTitle);
   final body = esc.convert(l.cloudSyncPostAuthBody);
+  final missingTitle = esc.convert(l.cloudSyncPostAuthScopeMissingTitle);
+  final missingBody = esc.convert(l.cloudSyncPostAuthScopeMissingBody);
   return '''
 <!DOCTYPE html>
 <html lang="$lang">
@@ -32,18 +37,32 @@ String _buildPostAuthPage(AppLocalizations l, String lang) {
   @media (prefers-color-scheme: light) {
     body { background: #f5f6f8; color: #1c1e21; }
   }
-  main { text-align: center; padding: 2.5rem 3rem; }
+  main { text-align: center; padding: 2.5rem 3rem; max-width: 32rem; }
   .mark { font-size: 3rem; }
   h1 { font-size: 1.4rem; margin: 0.75rem 0 0.5rem; }
   p { margin: 0; opacity: 0.75; }
 </style>
 </head>
 <body>
-<main>
-  <div class="mark">✅</div>
+<main id="ok">
+  <div class="mark">&#9989;</div>
   <h1>$title</h1>
   <p>$body</p>
 </main>
+<main id="scope-missing" hidden>
+  <div class="mark">&#9888;&#65039;</div>
+  <h1>$missingTitle</h1>
+  <p>$missingBody</p>
+</main>
+<script>
+  // Google 回跳帶 scope=實際授予的權限清單；缺 drive.appdata 時切換文案。
+  // 參數缺席時保守維持成功文案（app 端另有 scope 驗證兜底）。
+  var scope = new URLSearchParams(location.search).get('scope');
+  if (scope !== null && scope.indexOf('drive.appdata') === -1) {
+    document.getElementById('ok').hidden = true;
+    document.getElementById('scope-missing').hidden = false;
+  }
+</script>
 </body>
 </html>
 ''';
