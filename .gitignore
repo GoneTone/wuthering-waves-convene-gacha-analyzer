@@ -79,3 +79,6 @@ app.*.map.json
 
 # WebView2 Evergreen Bootstrapper (downloaded at build time by build_release.ps1)
 /scripts/build_installer/MicrosoftEdgeWebview2Setup.exe
+
+# Local build-time secrets (dart-define-from-file inputs; CI writes its own from repo secrets)
+/secrets/

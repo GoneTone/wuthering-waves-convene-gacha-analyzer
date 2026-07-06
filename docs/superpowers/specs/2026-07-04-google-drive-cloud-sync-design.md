@@ -28,7 +28,7 @@
 - **存放位置**：Google Drive 隱藏的 `appDataFolder`（`drive.appdata` scope），使用者在雲端硬碟介面看不到、也改不到，不會被誤刪誤改。
 - **檔案**：單一檔案 `wuwa_convene_sync.json`，內容即 `exportAccounts` 產出的 `AccountsBundle` JSON——與手動匯出檔同格式，拿下來可直接餵給「匯入」功能。
 - **OAuth scopes**：`https://www.googleapis.com/auth/drive.appdata`（最小權限）＋ `email`（僅用於設定頁顯示已連結帳號）。
-- **OAuth 用戶端**：Google Cloud Console 的 Desktop app 類型 client；`client_id`／`client_secret` 直接寫在原始碼常數（Google 官方定義 installed app 的 secret 不視為機密），任何人 clone 即可建置出可用的同步功能。
+- **OAuth 用戶端**：Google Cloud Console 的 Desktop app 類型 client。憑證**不進 repo**、改於建置時注入（`--dart-define-from-file`：本機用 git-ignored 的 `secrets/cloud_sync_defines.json`，CI 由 repo secrets `CLOUD_SYNC_CLIENT_ID`／`CLOUD_SYNC_CLIENT_SECRET` 產生同名檔）；未注入時 `isCloudSyncConfigured` 為 false、功能優雅停用。原設計為直接寫在原始碼常數（Google 官方定義 installed app 的 secret 不視為機密），因 GitHub push protection 一律攔截 Google OAuth 憑證而改為此方案——代價是 fork 者需自備憑證才能啟用同步。
 
 ## 3. 同步演算法
 

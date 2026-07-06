@@ -106,6 +106,25 @@ jobs:
           Write-Host "Release commit SHA: $sha"
 
       # === D. Build =================================================
+      # 雲端同步 OAuth 憑證不進 repo，由 repo secrets 於建置前寫成
+      # dart-define-from-file 輸入檔（缺 secrets 時跳過，僅該功能停用）。
+      - name: Write cloud sync defines from secrets
+        shell: pwsh
+        env:
+          CLOUD_SYNC_CLIENT_ID: ${{ secrets.CLOUD_SYNC_CLIENT_ID }}
+          CLOUD_SYNC_CLIENT_SECRET: ${{ secrets.CLOUD_SYNC_CLIENT_SECRET }}
+        run: |
+          if ($env:CLOUD_SYNC_CLIENT_ID -and $env:CLOUD_SYNC_CLIENT_SECRET) {
+            New-Item -ItemType Directory -Force secrets | Out-Null
+            @{
+              CLOUD_SYNC_CLIENT_ID     = $env:CLOUD_SYNC_CLIENT_ID
+              CLOUD_SYNC_CLIENT_SECRET = $env:CLOUD_SYNC_CLIENT_SECRET
+            } | ConvertTo-Json | Set-Content secrets/cloud_sync_defines.json -Encoding UTF8
+            Write-Host "cloud sync defines written"
+          } else {
+            Write-Host "::warning::CLOUD_SYNC_CLIENT_ID/SECRET secrets not set; cloud sync will be disabled in this release build"
+          }
+
       - name: Build Windows installer
         shell: pwsh
         run: .\scripts\build_installer\build_release.ps1

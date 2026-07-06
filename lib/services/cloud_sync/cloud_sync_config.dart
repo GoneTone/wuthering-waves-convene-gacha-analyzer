@@ -1,14 +1,19 @@
 import 'package:flutter/foundation.dart';
 
-/// Google Cloud Console「Desktop app」OAuth 用戶端 ID。
+/// Google Cloud Console「Desktop app」OAuth 用戶端 ID，建置時注入。
 ///
-/// Installed app 的 client id／secret 依 Google 官方定義不視為機密
-/// （必然可自使用者端取出），直接寫在原始碼供任何人 clone 即建置可用。
-/// 空字串代表此建置未設定，雲端同步功能整體停用（見 [isCloudSyncConfigured]）。
-const String cloudSyncClientId = '';
+/// 以 `--dart-define-from-file=secrets/cloud_sync_defines.json`（本機，
+/// git-ignored）或 CI 由 repo secrets 產生的同名檔注入；未注入時為空字串，
+/// 雲端同步功能整體優雅停用（見 [isCloudSyncConfigured]）。
+/// 不直接寫在原始碼：installed app 憑證雖依 Google 定義非機密，但會被
+/// GitHub push protection 攔截。
+const String cloudSyncClientId = String.fromEnvironment('CLOUD_SYNC_CLIENT_ID');
 
-/// Google OAuth 用戶端 secret（Desktop app 類型，非機密，見 [cloudSyncClientId]）。
-const String cloudSyncClientSecret = '';
+/// Google OAuth 用戶端 secret（Desktop app 類型），建置時注入（見
+/// [cloudSyncClientId]）。
+const String cloudSyncClientSecret = String.fromEnvironment(
+  'CLOUD_SYNC_CLIENT_SECRET',
+);
 
 /// 測試用 override；null 時以憑證常數判斷。
 @visibleForTesting
