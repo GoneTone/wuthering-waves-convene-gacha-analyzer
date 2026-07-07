@@ -371,13 +371,9 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
     expect(httpFactoryCalls, greaterThan(0));
-    // 走與「更新物品資料」相同的 progress 呈現：結束停在 UpdateCompleted，
-    // 只帶物品資料／補圖摘要（不帶 importSummary，避免顯示成匯入結果）。
-    final progress = container.read(gachaRepositoryProvider).progress;
-    expect(progress, isA<UpdateCompleted>());
-    final completed = progress! as UpdateCompleted;
-    expect(completed.importSummary, isNull);
-    expect(completed.itemDetailsRefreshed, isNotNull);
+    // 測試環境抓不到任何圖（HTTP 全 500）→ 三個計數全零 → 不該留下
+    // 完成訊息（progress 保持 null，對話框不彈或自動關閉）。
+    expect(container.read(gachaRepositoryProvider).progress, isNull);
     expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
   });
 
