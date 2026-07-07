@@ -393,6 +393,58 @@ void main() {
     expect(httpFactoryCalls, 0);
   });
 
+  test('同步中 refresh token 失效（invalid_grant）→ reauthRequired 而非網路錯誤', () async {
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    await container.read(cloudSyncProvider.notifier).link();
+    expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
+
+    // 連結後 client 已就位（_ensureClient 短路），token 撤銷只會在
+    // 自動續期時自 API 呼叫途中爆出 invalid_grant。
+    remote.downloadError = Exception(
+      'ServerRequestFailedException: Failed to refresh access token: '
+      'invalid_grant',
+    );
+    await container.read(cloudSyncProvider.notifier).syncNow(manual: true);
+
+    expect(
+      container.read(cloudSyncProvider).phase,
+      CloudSyncPhase.reauthRequired,
+    );
+
+    // reauthRequired 之後不再空轉重試。
+    final uploadsBefore = remote.uploads;
+    await container.read(cloudSyncProvider.notifier).syncNow(manual: false);
+    expect(remote.uploads, uploadsBefore);
+  });
+
+  test('busy 重排不做指紋跳過：本機沒變也會補跑並合併雲端新資料', () async {
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    final notifier = container.read(cloudSyncProvider.notifier);
+    await notifier.link();
+    expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
+
+    // 模擬該輪撞上更新／匯入 busy 被擋。
+    notifier.debounceDelay = Duration.zero;
+    remote.downloadError = const CloudSyncBusyException();
+    await notifier.syncNow(manual: false);
+    expect(container.read(cloudSyncProvider).errorToken, 'busy');
+
+    // busy 解除；雲端此時有新資料、本機完全沒變（指紋與上輪相同）。
+    remote.downloadError = null;
+    remote.content = _cloudBundleJsonWithRecord('100000001');
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    // 重排的補跑必須執行並把雲端新紀錄合併進本機。
+    expect(
+      container.read(gachaRepositoryProvider).byUid.keys,
+      contains('100000001'),
+    );
+  });
+
   test('link 把自訂完成頁 HTML 傳給 signIn', () async {
     final container = makeContainer();
     await container.read(settingsProvider.notifier).waitForLoad();
