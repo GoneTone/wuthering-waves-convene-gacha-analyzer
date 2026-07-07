@@ -51,6 +51,10 @@ final itemImageIndexProvider =
     );
 
 /// 包裝 [ItemImageIndexStorage] 的 Riverpod Notifier；mutation 後同步 persist。
+///
+/// 所有寫入方法開頭都會先 `await waitForLoad()`：初始載入完成前寫入會以
+/// 空 state 做 read-modify-write，把磁碟上的既有 index 覆寫成只剩新條目
+/// （防護放在 notifier 本身而非呼叫端，新增的早期呼叫者才不會踩雷）。
 class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
   /// Logger 實例（item_image.notifier 命名空間）。
   static final _log = Logger('item_image.notifier');
@@ -96,6 +100,7 @@ class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
     required bool permanentNoImage,
     String? kind,
   }) async {
+    await waitForLoad();
     await _lock.synchronized(() async {
       final prev = state.items[resourceId];
       final newItems = Map<int, ItemImageEntry>.from(state.items)
@@ -125,6 +130,7 @@ class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
     required ItemDetailL10n detail,
     bool hasLuckdraw = false,
   }) async {
+    await waitForLoad();
     await _lock.synchronized(() async {
       final prev = state.items[resourceId];
       final mergedDetail = <String, ItemDetailL10n>{
@@ -155,6 +161,8 @@ class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
 
   /// 強制重抓圖片用：清空整個 index 與 cache 目錄。
   Future<void> resetAll() async {
+    // 等載入完成才清，避免清完後 _load 才回來把舊資料復活回記憶體。
+    await waitForLoad();
     final storage = ref.read(itemImageIndexStorageProvider);
     await storage.clearAll();
     await storage.wipeCacheDirectory();
@@ -170,6 +178,7 @@ class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
   /// 不重建 index（不觸發 UI churn）。
   Future<int> pruneLanguages(Set<String> keepLangs) async {
     if (keepLangs.isEmpty) return 0;
+    await waitForLoad();
     return _lock.synchronized(() async {
       var prunedItems = 0;
       final newItems = <int, ItemImageEntry>{};
