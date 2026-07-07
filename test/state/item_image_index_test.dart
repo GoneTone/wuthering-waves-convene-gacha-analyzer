@@ -1,9 +1,25 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+
+/// load 卡在 [gate] 上的 storage，用來確定性重現「載入完成前就寫入」的競態。
+class _GatedLoadStorage extends ItemImageIndexStorage {
+  /// 建立 [_GatedLoadStorage]。
+  _GatedLoadStorage(super.baseDir);
+
+  /// load 的放行閘門。
+  final gate = Completer<void>();
+
+  @override
+  Future<ItemImageIndex> load() async {
+    await gate.future;
+    return super.load();
+  }
+}
 
 void main() {
   late Directory tempDir;
@@ -33,6 +49,62 @@ void main() {
 
   test('初始為空 index', () {
     expect(container.read(itemImageIndexProvider).items, isEmpty);
+  });
+
+  test('載入完成前寫入不會以空 state 覆寫磁碟上的既有 index', () async {
+    // 另開目錄：先用一般 storage 播種一筆既有資料到磁碟。
+    final dir = await Directory.systemTemp.createTemp('item_image_race_');
+    addTearDown(() async {
+      if (await dir.exists()) await dir.delete(recursive: true);
+    });
+    final seeder = ProviderContainer(
+      overrides: [
+        itemImageIndexStorageProvider.overrideWithValue(
+          ItemImageIndexStorage(dir),
+        ),
+        itemImageCacheDirProvider.overrideWithValue(dir),
+      ],
+    );
+    await seeder.read(itemImageIndexProvider.notifier).waitForLoad();
+    await seeder
+        .read(itemImageIndexProvider.notifier)
+        .mergeIcon(
+          resourceId: 111,
+          iconUrl: 'https://x/111.png',
+          noImage: false,
+          permanentNoImage: false,
+        );
+    seeder.dispose();
+
+    // 用閘門卡住 load，在載入完成前就呼叫寫入（重現過早呼叫者）。
+    final gated = _GatedLoadStorage(dir);
+    final racer = ProviderContainer(
+      overrides: [
+        itemImageIndexStorageProvider.overrideWithValue(gated),
+        itemImageCacheDirProvider.overrideWithValue(dir),
+      ],
+    );
+    addTearDown(racer.dispose);
+    final mergeFuture = racer
+        .read(itemImageIndexProvider.notifier)
+        .mergeIcon(
+          resourceId: 222,
+          iconUrl: 'https://x/222.png',
+          noImage: false,
+          permanentNoImage: false,
+        );
+    await Future<void>.delayed(Duration.zero);
+    gated.gate.complete();
+    await mergeFuture;
+    await racer.read(itemImageIndexProvider.notifier).waitForLoad();
+
+    // 既有的 111 與新寫入的 222 必須同時存在於記憶體與磁碟。
+    final st = racer.read(itemImageIndexProvider);
+    expect(st.lookupImage(111)?.iconUrl, 'https://x/111.png');
+    expect(st.lookupImage(222)?.iconUrl, 'https://x/222.png');
+    final reloaded = await ItemImageIndexStorage(dir).load();
+    expect(reloaded.lookupImage(111)?.iconUrl, 'https://x/111.png');
+    expect(reloaded.lookupImage(222)?.iconUrl, 'https://x/222.png');
   });
 
   test('bumpCacheRevision 換新 identity 但內容不變', () async {
