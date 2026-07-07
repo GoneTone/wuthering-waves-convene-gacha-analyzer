@@ -1407,9 +1407,13 @@ class GachaRepository extends Notifier<GachaState> {
   }
 
   /// 雲端同步合併出新紀錄後的補圖：補抓缺漏的物品圖示與詳情，走與
-  /// 「更新物品資料」相同的 progress 呈現（app_shell 會彈進度對話框），
-  /// 結束只顯示物品資料／補圖張數摘要（不帶 importSummary，避免顯示成
-  /// 手動匯入的結果文案）。
+  /// 「更新物品資料」相同的 progress 呈現，結束顯示物品資料／補圖張數
+  /// 摘要（不帶 importSummary，避免顯示成手動匯入的結果文案）。
+  ///
+  /// 刻意**不**先 emit `Preparing`：合併進來的物品若本機圖示／詳情皆已
+  /// 齊全，整段沒有工作可做，不該彈任何視窗——有工作時 `_fetchItemImages`
+  /// 會自行 emit 進度（對話框屆時才彈出）；結束時三個計數全零就靜默清掉
+  /// progress，不顯示「更新完成」。
   ///
   /// best-effort：補圖失敗僅記 log，仍照常收尾；更新／匯入進行中或
   /// bootstrap 未完成時直接略過，缺圖留待下次「更新」自然補齊。
@@ -1422,7 +1426,6 @@ class GachaRepository extends Notifier<GachaState> {
     _cancelTriggered = false;
     final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
     _activeCancellable = cancellable;
-    state = state.copyWith(progress: const Preparing());
     var result = (imagesDownloaded: 0, itemsRefreshed: 0, staleItemsPruned: 0);
     try {
       try {
@@ -1431,19 +1434,28 @@ class GachaRepository extends Notifier<GachaState> {
         _cloudSyncLog.warning('image fetch failed (ignored)', e, st);
       }
       if (!ref.mounted) return;
-      state = state.copyWith(
-        progress: UpdateCompleted(
-          totalNewRecords: 0,
-          failedBanners: const [],
-          updatedAt: DateTime.now().toUtc(),
-          itemImagesDownloaded: result.imagesDownloaded,
-          itemDetailsRefreshed: result.itemsRefreshed,
-          staleItemsPruned: result.staleItemsPruned,
-        ),
-      );
+      final didWork =
+          result.imagesDownloaded > 0 ||
+          result.itemsRefreshed > 0 ||
+          result.staleItemsPruned > 0;
+      if (didWork) {
+        state = state.copyWith(
+          progress: UpdateCompleted(
+            totalNewRecords: 0,
+            failedBanners: const [],
+            updatedAt: DateTime.now().toUtc(),
+            itemImagesDownloaded: result.imagesDownloaded,
+            itemDetailsRefreshed: result.itemsRefreshed,
+            staleItemsPruned: result.staleItemsPruned,
+          ),
+        );
+      } else {
+        // 沒有實際成果：清掉過程中可能已 emit 的進度，讓對話框自動關閉。
+        state = state.copyWith(clearProgress: true);
+      }
       _cloudSyncLog.info(
         'image fetch done, items=${result.itemsRefreshed} '
-        'images=${result.imagesDownloaded}',
+        'images=${result.imagesDownloaded} dialog=${didWork ? 'shown' : 'suppressed'}',
       );
     } finally {
       _activeCancellable?.client.close();
