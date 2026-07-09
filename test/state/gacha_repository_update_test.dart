@@ -275,7 +275,7 @@ void main() {
       hits++;
       final body = jsonDecode(req.body) as Map<String, dynamic>;
       final type = body['cardPoolType'] as int;
-      // round 1 (hit 1): pool 0 fails → early abort; round 2 (hits 2-11): pool 1 yields a record
+      // round 1 (hit 1): pool 0 fails → early abort; round 2 (hits 2-13): pool 1 yields a record
       final String payload;
       if (hits <= 1) {
         payload = _fail(-1);
@@ -353,7 +353,7 @@ void main() {
           // round 1：pool 0 失敗 → 早退重攔
           payload = _fail(-1);
         } else {
-          // round 2（hits 2-11）：pool 0（type 1）仍失敗，pool 2（type 2）給一筆，其餘空
+          // round 2（hits 2-13）：pool 0（type 1）仍失敗，pool 2（type 2）給一筆，其餘空
           payload = switch (type) {
             1 => _fail(-1),
             2 => _ok([_row('2')]),
