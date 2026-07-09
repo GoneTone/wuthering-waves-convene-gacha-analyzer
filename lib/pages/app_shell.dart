@@ -515,6 +515,8 @@ String _railLabel(String nameKey, AppLocalizations l) => switch (nameKey) {
   'gachaTypeNewVoyageWeapon' => l.gachaTypeNewVoyageWeaponShort,
   'gachaTypeCollabCharacter' => l.gachaTypeCollabCharacterShort,
   'gachaTypeCollabWeapon' => l.gachaTypeCollabWeaponShort,
+  'gachaTypeReverbCharacter' => l.gachaTypeReverbCharacterShort,
+  'gachaTypeReverbWeapon' => l.gachaTypeReverbWeaponShort,
   _ => nameKey,
 };
 
@@ -533,6 +535,8 @@ IconData _railIconActive(String nameKey) => switch (nameKey) {
   'gachaTypeNewVoyageWeapon' => Icons.explore,
   'gachaTypeCollabCharacter' => Icons.diversity_3,
   'gachaTypeCollabWeapon' => Icons.handshake,
+  'gachaTypeReverbCharacter' => Icons.auto_stories,
+  'gachaTypeReverbWeapon' => Icons.history_edu,
   _ => Icons.casino,
 };
 
