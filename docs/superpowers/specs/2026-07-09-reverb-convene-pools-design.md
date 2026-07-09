@@ -39,7 +39,7 @@
 
 ### 2. i18n `lib/l10n/{app_zh,app_zh_Hans,app_en,app_ja}.arb`
 
-每檔新增 4 個 key（`app_zh.arb` 為 template，需附 `@` description；其餘三檔僅值）。譯名以 `docs/術語表.md` 為單一來源；各語系 Short 沿用該語系「全名 → 短名」的既有刪法（zh 去「喚取」、zh_Hans 去「唤取」、en 去「 Convene」、ja 去「集音」並保留括號後綴）：
+每檔新增 4 個 key（既有 `gachaType*` key 皆無 `@` description，新 key 亦不加；四檔僅加值）。譯名以 `docs/術語表.md` 為單一來源；各語系 Short 沿用該語系「全名 → 短名」的既有刪法（zh 去「喚取」、zh_Hans 去「唤取」、en 去「 Convene」、ja 去「集音」並保留括號後綴）：
 
 | key | zh_Hant | zh_Hans | en | ja |
 |---|---|---|---|---|

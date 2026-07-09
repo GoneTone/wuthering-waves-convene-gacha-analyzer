@@ -504,7 +504,7 @@ void main() {
     expect(await storage.loadCapturedCredential('701000000'), isNotNull);
   });
 
-  test('all 10 pools empty → UpdateErrorNoRecords', () async {
+  test('all 12 pools empty → UpdateErrorNoRecords', () async {
     final storage = GachaStorage(tempDir);
     final mock = MockClient(
       (req) async => http.Response(
