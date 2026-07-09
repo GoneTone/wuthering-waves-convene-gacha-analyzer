@@ -41,6 +41,8 @@
   "gachaTypeNewVoyageWeapon": "武器新旅喚取",
   "gachaTypeCollabCharacter": "角色聯動喚取",
   "gachaTypeCollabWeapon": "武器聯動喚取",
+  "gachaTypeReverbCharacter": "角色憶旅喚取",
+  "gachaTypeReverbWeapon": "武器憶旅喚取",
   "gachaTypeCharacterShort": "角色活動",
   "gachaTypeWeaponShort": "武器活動",
   "gachaTypeStandardCharacterShort": "角色常駐",
@@ -51,6 +53,8 @@
   "gachaTypeNewVoyageWeaponShort": "武器新旅",
   "gachaTypeCollabCharacterShort": "角色聯動",
   "gachaTypeCollabWeaponShort": "武器聯動",
+  "gachaTypeReverbCharacterShort": "角色憶旅",
+  "gachaTypeReverbWeaponShort": "武器憶旅",
 
   "navSectionGacha": "喚取",
 
