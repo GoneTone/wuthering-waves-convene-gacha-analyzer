@@ -69,7 +69,7 @@ void main() {
     for (final t in gachaTypes) {
       expect(find.text(t.resolveName(l)), findsOneWidget);
     }
-    // 鳴潮 10 池主稀有度皆 5★，空資料時每列顯示「暫無 5★」。
+    // 鳴潮 12 池主稀有度皆 5★，空資料時每列顯示「暫無 5★」。
     expect(
       find.text(l.pityNoMainRarity(l.rarityStar(5))),
       findsNWidgets(gachaTypes.length),

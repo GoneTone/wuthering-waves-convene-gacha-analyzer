@@ -202,7 +202,7 @@ void main() {
         final body = jsonDecode(req.body) as Map<String, dynamic>;
         final type = body['cardPoolType'] as int;
         // round 1：pool 0（hit 1）失敗 → 早退重攔；
-        // round 2（hits 2-11）：完整 10 池，pool 1 給一筆紀錄。
+        // round 2（hits 2-13）：完整 12 池，pool 1 給一筆紀錄。
         final String payload = hits == 1
             ? _fail(-1)
             : (type == 1 ? _ok([_row('1')]) : _ok(const []));
@@ -270,7 +270,7 @@ void main() {
     var captureCalls = 0;
     var hits = 0;
     // round 1 的 pool 0（首抓角色活動）一失敗就早退重攔：第 1 個 hit 視為過期失敗，第 2
-    // 個 hit 起為重攔後新 cred 的成功回應（完整 10 池）。
+    // 個 hit 起為重攔後新 cred 的成功回應（完整 12 池）。
     final mock = MockClient((req) async {
       hits++;
       final body = jsonDecode(req.body) as Map<String, dynamic>;

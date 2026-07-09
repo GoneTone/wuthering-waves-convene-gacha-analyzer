@@ -31,7 +31,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_actio
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_image_helper.dart';
 
-/// 總覽頁，聚合所有 10 池的統計、圖表與 timeline。
+/// 總覽頁，聚合所有 12 池的統計、圖表與 timeline。
 class OverviewPage extends ConsumerWidget {
   /// 建立 [OverviewPage]。
   const OverviewPage({super.key});
@@ -185,7 +185,7 @@ class _OverviewSection extends StatelessWidget {
   /// timeline 目標稀有度。
   final int timelineRank;
 
-  /// 此段的五星一覽清單；空清單時不顯示該區塊（10 池聚合段一律有五星一覽）。
+  /// 此段的五星一覽清單；空清單時不顯示該區塊（12 池聚合段一律有五星一覽）。
   final List<FiveStarCollectionItem> fiveStarItems;
 
   @override

@@ -8,7 +8,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries
 
 /// OverviewPage 與 ShareCard 共用的喚取彙整結果（鳴潮單段喚取）。
 ///
-/// 扁平結構（R8）：直接持有全部 10 池的彙整欄位，無 `GachaSectionData` wrapper、
+/// 扁平結構（R8）：直接持有全部 12 池的彙整欄位，無 `GachaSectionData` wrapper、
 /// 無 `.gacha` 中介層。消費端（plan 07 的 `overview_page`／`share_card`）直接用
 /// `sec.stats`／`sec.banners`／`sec.timeline` 直取。
 @immutable
@@ -25,7 +25,7 @@ class OverviewSections {
     required this.fourStarAvg,
   });
 
-  /// 包含的卡池類型清單（全部 10 池）。
+  /// 包含的卡池類型清單（全部 12 池）。
   final List<GachaType> types;
 
   /// 各卡池的抽卡記錄，key 為 cardPoolType 字串。

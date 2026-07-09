@@ -27,7 +27,7 @@ ItemImageIndex _idx(Map<int, String> kinds) => ItemImageIndex(
 );
 
 void main() {
-  test('buildOverviewSections 聚合全部 10 池於單段、統計正確', () {
+  test('buildOverviewSections 聚合全部 12 池於單段、統計正確', () {
     final t = DateTime(2026, 5, 1, 10);
     final activeBanners = <String, List<GachaRecord>>{
       '1': [_r('1', 5, '達妮婭', t), _r('1', 3, '冷刃', t)],
