@@ -74,7 +74,7 @@ void main() {
     ],
   );
 
-  test('happy path: 10 pools fetched, stored, UpdateCompleted', () async {
+  test('happy path: 12 pools fetched, stored, UpdateCompleted', () async {
     final storage = GachaStorage(tempDir);
     final hitTypes = <int>[];
     final mock = MockClient((req) async {
@@ -99,7 +99,7 @@ void main() {
 
     await container.read(gachaRepositoryProvider.notifier).update();
 
-    expect(hitTypes, [1, 2, 3, 4, 5, 6, 8, 9, 10, 11]);
+    expect(hitTypes, [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13]);
     final progress = container.read(gachaRepositoryProvider).progress;
     expect(progress, isA<UpdateCompleted>());
     expect((progress as UpdateCompleted).totalNewRecords, 1);
@@ -161,8 +161,8 @@ void main() {
       expect(progress, isA<UpdateCompleted>());
       // exactly one pool (pool 2) recorded as failed
       expect((progress as UpdateCompleted).failedBanners, hasLength(1));
-      // all 10 pools attempted (did NOT abort at pool 2)
-      expect(poolHits, 10);
+      // all 12 pools attempted (did NOT abort at pool 2)
+      expect(poolHits, 12);
       // pool 1's record was still saved despite pool 2 failing
       final state = container.read(gachaRepositoryProvider);
       expect(state.byUid['701000000']!.banners['1'], hasLength(1));
@@ -238,8 +238,8 @@ void main() {
       expect(round1Fetches, 1);
       // cached cred 供第一輪使用，只有 fallback 那次重攔
       expect(captureCalls, 1);
-      // 1 次早退 + 10 次第二輪
-      expect(hits, 11);
+      // 1 次早退 + 12 次第二輪
+      expect(hits, 13);
       final progress = container.read(gachaRepositoryProvider).progress;
       expect(progress, isA<UpdateCompleted>());
       expect((progress as UpdateCompleted).totalNewRecords, 1);
@@ -312,8 +312,8 @@ void main() {
 
     // cached cred used for round 1 (no primary capture); only the fallback captured
     expect(captureCalls, 1);
-    // round 1 aborted after a single fetch (pool 0); round 2 fetched all 10 pools
-    expect(hits, 11);
+    // round 1 aborted after a single fetch (pool 0); round 2 fetched all 12 pools
+    expect(hits, 13);
     final progress = container.read(gachaRepositoryProvider).progress;
     expect(progress, isA<UpdateCompleted>());
     expect((progress as UpdateCompleted).totalNewRecords, 1);
@@ -389,8 +389,8 @@ void main() {
 
       // 只重攔一次：第二輪 pool 0 失敗不觸發第三輪
       expect(captureCalls, 1);
-      // 1 次早退 + 10 次第二輪
-      expect(hits, 11);
+      // 1 次早退 + 12 次第二輪
+      expect(hits, 13);
       final progress = container.read(gachaRepositoryProvider).progress;
       expect(progress, isA<UpdateCompleted>());
       // 第二輪只有 pool 0（cardPoolType 1）記為失敗

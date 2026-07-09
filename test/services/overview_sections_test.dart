@@ -62,7 +62,7 @@ void main() {
     expect(sections.timelineNowPulls, 0);
   });
 
-  test('types 含全部 10 個卡池', () {
+  test('types 含全部 12 個卡池', () {
     final sections = buildOverviewSections(
       const <String, List<GachaRecord>>{},
       const ItemImageIndex.empty(),
@@ -78,6 +78,8 @@ void main() {
       9,
       10,
       11,
+      12,
+      13,
     ]);
   });
 }
