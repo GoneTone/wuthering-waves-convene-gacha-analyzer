@@ -69,7 +69,7 @@ void main() {
     for (final t in gachaTypes) {
       expect(find.text(t.resolveName(l)), findsOneWidget);
     }
-    // 鳴潮 10 池主稀有度皆 5★，空資料時每列顯示「暫無 5★」。
+    // 鳴潮 12 池主稀有度皆 5★，空資料時每列顯示「暫無 5★」。
     expect(
       find.text(l.pityNoMainRarity(l.rarityStar(5))),
       findsNWidgets(gachaTypes.length),
@@ -116,7 +116,7 @@ void main() {
   ) async {
     expect(
       gachaTypes.map((t) => t.key).toList(),
-      const ['1', '2', '3', '4', '5', '6', '8', '9', '10', '11'],
+      const ['1', '2', '3', '4', '5', '6', '8', '9', '10', '11', '12', '13'],
       reason: 'test assumes gachaTypes order — update if order changes',
     );
     final t0 = DateTime(2025, 1, 1);

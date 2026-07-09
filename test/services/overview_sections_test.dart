@@ -27,7 +27,7 @@ ItemImageIndex _idx(Map<int, String> kinds) => ItemImageIndex(
 );
 
 void main() {
-  test('buildOverviewSections 聚合全部 10 池於單段、統計正確', () {
+  test('buildOverviewSections 聚合全部 12 池於單段、統計正確', () {
     final t = DateTime(2026, 5, 1, 10);
     final activeBanners = <String, List<GachaRecord>>{
       '1': [_r('1', 5, '達妮婭', t), _r('1', 3, '冷刃', t)],
@@ -62,7 +62,7 @@ void main() {
     expect(sections.timelineNowPulls, 0);
   });
 
-  test('types 含全部 10 個卡池', () {
+  test('types 含全部 12 個卡池', () {
     final sections = buildOverviewSections(
       const <String, List<GachaRecord>>{},
       const ItemImageIndex.empty(),
@@ -78,6 +78,8 @@ void main() {
       9,
       10,
       11,
+      12,
+      13,
     ]);
   });
 }

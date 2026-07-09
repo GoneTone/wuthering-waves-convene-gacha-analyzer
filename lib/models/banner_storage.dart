@@ -25,7 +25,7 @@ class BannerStorage {
   /// 最後更新時間（UTC）。
   final DateTime lastUpdated;
 
-  /// cardPoolType 字串（`'1'..'11'`，無 `'7'`）→ 該卡池紀錄（由新到舊）。
+  /// cardPoolType 字串（`'1'..'13'`，無 `'7'`）→ 該卡池紀錄（由新到舊）。
   final Map<String, List<GachaRecord>> banners;
 
   /// 從本地存檔 JSON 還原 [BannerStorage]。

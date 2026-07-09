@@ -21,6 +21,8 @@ class BannerColors {
     required this.newVoyageWeapon,
     required this.collabCharacter,
     required this.collabWeapon,
+    required this.reverbCharacter,
+    required this.reverbWeapon,
     required this.fallback,
   });
 
@@ -40,6 +42,8 @@ class BannerColors {
     newVoyageWeapon: Color(0xFFD074CC), // 蘭紫
     collabCharacter: Color(0xFFE070A6), // 桃紅
     collabWeapon: Color(0xFF8266E0), // 靛藍
+    reverbCharacter: Color(0xFFE66EC6), // 洋紅
+    reverbWeapon: Color(0xFFA08BC0), // 灰紫
     fallback: Color(0xFF8A92A6), // 中性
   );
 
@@ -55,6 +59,8 @@ class BannerColors {
     newVoyageWeapon: Color(0xFFA63C9E), // 蘭紫
     collabCharacter: Color(0xFFB83E78), // 桃紅
     collabWeapon: Color(0xFF5547C0), // 靛藍
+    reverbCharacter: Color(0xFFB93A96), // 洋紅
+    reverbWeapon: Color(0xFF71589A), // 灰紫
     fallback: Color(0xFF6A7080), // 中性
   );
 
@@ -88,6 +94,12 @@ class BannerColors {
   /// 武器聯動喚取配色（cardPoolType 11）。
   final Color collabWeapon;
 
+  /// 角色憶旅喚取配色（cardPoolType 12）。
+  final Color reverbCharacter;
+
+  /// 武器憶旅喚取配色（cardPoolType 13）。
+  final Color reverbWeapon;
+
   /// 未知 cardPoolType 的備用配色。
   final Color fallback;
 
@@ -103,6 +115,8 @@ class BannerColors {
     '9' => newVoyageWeapon,
     '10' => collabCharacter,
     '11' => collabWeapon,
+    '12' => reverbCharacter,
+    '13' => reverbWeapon,
     _ => fallback,
   };
 }

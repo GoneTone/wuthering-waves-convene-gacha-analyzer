@@ -21,7 +21,7 @@ class GachaType {
     required this.pities,
   });
 
-  /// 對應喚取記錄 API 的 `cardPoolType`（int，集合 [1,2,3,4,5,6,8,9,10,11]，無 7）。
+  /// 對應喚取記錄 API 的 `cardPoolType`（int，集合 [1,2,3,4,5,6,8,9,10,11,12,13]，無 7）。
   final int cardPoolType;
 
   /// 對外 key/route/map 用的字串（即 [cardPoolType] 的字串形式）。
@@ -52,6 +52,8 @@ class GachaType {
     'gachaTypeNewVoyageWeapon' => l.gachaTypeNewVoyageWeapon,
     'gachaTypeCollabCharacter' => l.gachaTypeCollabCharacter,
     'gachaTypeCollabWeapon' => l.gachaTypeCollabWeapon,
+    'gachaTypeReverbCharacter' => l.gachaTypeReverbCharacter,
+    'gachaTypeReverbWeapon' => l.gachaTypeReverbWeapon,
     _ => nameKey,
   };
 }
@@ -115,6 +117,16 @@ const gachaTypes = <GachaType>[
   GachaType(
     cardPoolType: 11,
     nameKey: 'gachaTypeCollabWeapon',
+    pities: [_pityFive80, _pityFour10],
+  ),
+  GachaType(
+    cardPoolType: 12,
+    nameKey: 'gachaTypeReverbCharacter',
+    pities: [_pityFive80, _pityFour10],
+  ),
+  GachaType(
+    cardPoolType: 13,
+    nameKey: 'gachaTypeReverbWeapon',
     pities: [_pityFive80, _pityFour10],
   ),
 ];
