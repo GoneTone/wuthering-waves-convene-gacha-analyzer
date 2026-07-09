@@ -13,6 +13,7 @@
 - **`rust_builder/` 勿手動改**：`rust_builder/` 是 flutter_rust_bridge 自動產生的 FFI plugin glue（含 `cargokit/`），只負責把 `rust/` 編進 Flutter 原生建置流程，本身沒有業務邏輯。要改 Rust 邏輯改 `rust/`（crate `gacha_capture_core`）；要改 Dart 綁定改 `flutter_rust_bridge.yaml` 後重跑 frb codegen。Rust 編譯由 cargokit 自動掛在 `flutter build` 的 CMake 流程上，**不需另外手動 `cargo build`**，但建置機需安裝 Rust toolchain（cargo）。
 - **簡單改動免 spec**：純樣式微調（顏色、間距、icon 換掉、字串小改）、單檔 typo、單一 bug fix、純機械重構（重新命名、抽常數）、翻譯補字串等，可直接動手實作不必走 brainstorming → spec → plan 流程；若使用者下指令時已自帶設計判斷（明確的 what + why）也同樣免 spec。需要 spec 的判準：跨多檔影響架構、新增 widget／service／資料流、需要驗收條件超過「跑 analyze + test 全綠」的功能。把 spec 留給真正會影響後人維護的決策。
 - **優先用 `fvm flutter` / `fvm dart`**：本專案以 FVM 釘住 Flutter 版本（見 `.fvmrc`），所有 Flutter／Dart 指令（`fvm flutter analyze`／`fvm flutter test`／`fvm flutter gen-l10n`／`fvm dart format` 等）一律優先透過 `fvm` 執行，確保用的是專案釘住的 SDK 版本；若環境找不到 `fvm`，再退回直接使用 `flutter`／`dart`。
+- **新增／移除卡池要同步所有對照與卡池數敘述**：卡池以 `lib/data/gacha_types.dart` 的 `gachaTypes` 為單一驅動源，但另有多處 switch 對照要一起補：`resolveName`、四份 ARB（全名＋`Short`）、`lib/widgets/gacha_type_icons.dart`、`lib/pages/app_shell.dart`（`_railIconActive`／`_railLabel`）、`lib/widgets/banner_colors.dart`（欄位＋`colorFor`）。文字面也要同步：測試描述與期望、in-code 註解、`docs/鳴潮相關資料.md`、`docs/術語表.md`、README ×4 的「涵蓋 N 種卡池」行。注意「卡池數」有很多衍生寫法（「10 個卡池」「10 池」「其餘 9 池」「hits 2-11」「`'1'..'11'`」「10 種類の集音」等），收尾時用寬鬆 grep 掃殘留，不要只搜單一寫法。（完整改動面前例：`docs/superpowers/specs/2026-07-09-reverb-convene-pools-design.md`）
 
 ## 提交前品質檢查
 
