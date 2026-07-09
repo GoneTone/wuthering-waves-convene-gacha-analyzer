@@ -39,7 +39,7 @@ class GachaFetcher {
     this.timeout = const Duration(seconds: 15),
   });
 
-  /// 兩次 API 呼叫之間的最短間隔（夾在 10 個 cardPoolType 之間，避免被擋）。
+  /// 兩次 API 呼叫之間的最短間隔（夾在 12 個 cardPoolType 之間，避免被擋）。
   final Duration rateLimit;
 
   /// 單次 HTTP 請求超時。

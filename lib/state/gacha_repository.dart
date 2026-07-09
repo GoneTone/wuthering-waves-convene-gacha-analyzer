@@ -29,7 +29,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dar
 
 export 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
 
-/// 10 個卡池全部 `code==0` 且 `data` 全空（該帳號從未喚取）→ 轉成 [UpdateErrorNoRecords]。
+/// 12 個卡池全部 `code==0` 且 `data` 全空（該帳號從未喚取）→ 轉成 [UpdateErrorNoRecords]。
 class _NoRecordsException implements Exception {
   const _NoRecordsException();
 }
@@ -384,7 +384,7 @@ class GachaRepository extends Notifier<GachaState> {
     }
   }
 
-  /// 依序拉取 10 個 cardPoolType 的整池全歷史，合併存檔。
+  /// 依序拉取 12 個 cardPoolType 的整池全歷史，合併存檔。
   ///
   /// 逐池容錯：單池 `code!=0` 保留舊資料、記入 `failed` 後繼續（最終以
   /// `UpdateCompleted.failedBanners` 顯示部分失敗紅字）；**10 池全失敗** → 丟
