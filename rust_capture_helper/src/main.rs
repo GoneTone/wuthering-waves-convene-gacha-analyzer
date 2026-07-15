@@ -203,7 +203,9 @@ fn socket_watcher(shared: Arc<Mutex<Shared>>) {
         }
     };
     let mut sys = System::new();
-    let mut pid_is_target: HashMap<u32, bool> = HashMap::new();
+    // 只快取已定案的 Target/NotTarget；Unknown（映像名一時讀不到）不快取，
+    // 讓後續事件或 network_loop 的 SYN fallback 再判，避免永久誤標。
+    let mut pid_verdict: HashMap<u32, Verdict> = HashMap::new();
     let mut buf = vec![0u8; 65535];
     loop {
         let packet = match divert.recv(Some(&mut buf)) {
@@ -215,14 +217,19 @@ fn socket_watcher(shared: Arc<Mutex<Shared>>) {
             continue;
         }
         let pid = addr.process_id();
-        let is_kr = match pid_is_target.get(&pid) {
-            Some(&v) => v,
+        // 回傳 (verdict, 是否為本次首度分類)：首度才寫 log，避免重複洗版。
+        let (verdict, first_seen) = match pid_verdict.get(&pid) {
+            Some(&v) => (v, false),
             None => {
-                let v = proc_name(pid, &mut sys).eq_ignore_ascii_case(TARGET_PROCESS);
-                pid_is_target.insert(pid, v);
-                v
+                let name = proc_name(pid, &mut sys);
+                let v = classify_verdict(&name);
+                if v != Verdict::Unknown {
+                    pid_verdict.insert(pid, v);
+                }
+                (v, true)
             }
         };
+
         let lport = addr.local_port();
         let proto = addr.protocol();
         let v6 = addr.ipv6();
@@ -235,22 +242,60 @@ fn socket_watcher(shared: Arc<Mutex<Shared>>) {
             g.v6_drop_ports.remove(&lport);
             g.not_target_ports.remove(&lport);
             g.redirects.remove(&lport);
-        } else if is_kr {
-            match (proto, v6) {
-                (6, false) => {
-                    g.tcp_ports.insert(lport);
+            continue;
+        }
+        match verdict {
+            Verdict::Target => {
+                match (proto, v6) {
+                    (6, false) => {
+                        g.tcp_ports.insert(lport);
+                    }
+                    (6, true) => {
+                        g.v6_drop_ports.insert(lport);
+                    }
+                    (17, _) => {
+                        g.udp_ports.insert(lport);
+                    }
+                    _ => {}
                 }
-                (6, true) => {
-                    g.v6_drop_ports.insert(lport);
+                drop(g);
+                if first_seen {
+                    hlog(
+                        "INFO",
+                        &format!(
+                            "connect port={lport} pid={pid} name=KRWebView.exe \
+                             verdict=target proto={proto} v6={v6}"
+                        ),
+                    );
                 }
-                (17, _) => {
-                    g.udp_ports.insert(lport);
-                }
-                _ => {}
             }
-        } else {
-            // 非 KRWebView 的 :443（含 helper 自己對上游的連線）→ 記下供 network_loop 跳過查詢。
-            g.not_target_ports.insert(lport);
+            Verdict::NotTarget => {
+                // 非 KRWebView（含 helper 自己對上游的連線）→ 記下供 network_loop 跳過查詢。
+                g.not_target_ports.insert(lport);
+                drop(g);
+                if first_seen {
+                    hlog(
+                        "INFO",
+                        &format!(
+                            "connect port={lport} pid={pid} verdict=not_target \
+                             proto={proto} v6={v6}"
+                        ),
+                    );
+                }
+            }
+            Verdict::Unknown => {
+                // 映像名一時讀不到：維持未分類（不塞任何集合），交給 SYN fallback。
+                drop(g);
+                if first_seen {
+                    hlog(
+                        "WARNING",
+                        &format!(
+                            "connect port={lport} pid={pid} name=unresolved \
+                             verdict=unknown proto={proto} v6={v6} (defer to SYN fallback)"
+                        ),
+                    );
+                }
+            }
         }
     }
 }
