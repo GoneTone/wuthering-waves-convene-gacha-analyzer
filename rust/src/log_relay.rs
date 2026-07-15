@@ -31,20 +31,29 @@ impl Drop for LogRelayGuard {
 }
 
 /// 綁定 127.0.0.1:port、起一條 reader 執行緒等 helper 連入並轉發其 log 行。
+/// 正式路徑:每行經 [`emit_tracing`] 轉成 tracing 事件。
 pub fn start(port: u16) -> Result<LogRelayGuard> {
+    start_with_sink(port, emit_tracing)
+}
+
+/// [`start`] 的可注入版本:`sink(level, msg)` 決定每行的去向（正式用 tracing、測試用 channel）。
+fn start_with_sink<F>(port: u16, sink: F) -> Result<LogRelayGuard>
+where
+    F: Fn(&str, &str) + Send + 'static,
+{
     let listener = TcpListener::bind(("127.0.0.1", port))?;
     listener.set_nonblocking(true)?;
     let stop = Arc::new(AtomicBool::new(false));
     let stop_thread = stop.clone();
-    let handle = std::thread::spawn(move || relay_loop(listener, stop_thread));
+    let handle = std::thread::spawn(move || relay_loop(listener, stop_thread, sink));
     Ok(LogRelayGuard {
         stop,
         handle: Some(handle),
     })
 }
 
-/// 等 helper 連入（nonblocking accept + stop 檢查），連上後逐行讀取並轉發,直到 EOF 或 stop。
-fn relay_loop(listener: TcpListener, stop: Arc<AtomicBool>) {
+/// 等 helper 連入（nonblocking accept + stop 檢查），連上後逐行讀取並經 `sink` 轉發,直到 EOF 或 stop。
+fn relay_loop<F: Fn(&str, &str)>(listener: TcpListener, stop: Arc<AtomicBool>, sink: F) {
     let stream = loop {
         if stop.load(Ordering::SeqCst) {
             return;
@@ -68,7 +77,7 @@ fn relay_loop(listener: TcpListener, stop: Arc<AtomicBool>) {
         line.clear();
         match reader.read_line(&mut line) {
             Ok(0) => break, // EOF:helper 已退出
-            Ok(_) => emit(line.trim_end_matches(['\r', '\n'])),
+            Ok(_) => forward(line.trim_end_matches(['\r', '\n']), &sink),
             Err(ref e)
                 if e.kind() == std::io::ErrorKind::WouldBlock
                     || e.kind() == std::io::ErrorKind::TimedOut =>
@@ -85,12 +94,17 @@ fn parse_line(line: &str) -> (&str, &str) {
     line.split_once('\t').unwrap_or(("INFO", line))
 }
 
-/// 把一行轉成對應 level 的 tracing 事件（target `capture.helper`）。
-fn emit(line: &str) {
+/// 空行略過,其餘解析後交給 `sink`。
+fn forward<F: Fn(&str, &str)>(line: &str, sink: &F) {
     if line.is_empty() {
         return;
     }
     let (level, msg) = parse_line(line);
+    sink(level, msg);
+}
+
+/// 正式轉發:依 level 呼叫對應 tracing 巨集（target `capture.helper`，沿用既有 forward 到 Dart 的路徑）。
+fn emit_tracing(level: &str, msg: &str) {
     match level {
         "WARNING" | "WARN" => tracing::warn!(target: "capture.helper", "{msg}"),
         "SEVERE" | "ERROR" => tracing::error!(target: "capture.helper", "{msg}"),
@@ -101,6 +115,9 @@ fn emit(line: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
+    use std::net::TcpStream;
+    use std::sync::mpsc;
 
     #[test]
     fn parse_line_splits_level_and_message() {
@@ -110,5 +127,50 @@ mod tests {
         );
         assert_eq!(parse_line("INFO\thello"), ("INFO", "hello"));
         assert_eq!(parse_line("no-tab"), ("INFO", "no-tab"));
+    }
+
+    /// 端到端(同機)驗證:client 連上 relay、送兩行 helper 協定格式,relay 讀取→解析→經 sink 轉出。
+    /// client 全程存活(不像無 admin 的真 helper 會秒退 RST),故無競態、可確定性斷言。
+    #[test]
+    fn relay_receives_parses_and_forwards_lines() {
+        // 先綁 :0 找一個空閒埠,再交給 relay,避免固定埠衝突。
+        let free = TcpListener::bind(("127.0.0.1", 0)).unwrap();
+        let port = free.local_addr().unwrap().port();
+        drop(free);
+
+        let (tx, rx) = mpsc::channel::<(String, String)>();
+        let sink = move |level: &str, msg: &str| {
+            let _ = tx.send((level.to_string(), msg.to_string()));
+        };
+        let _guard = start_with_sink(port, sink).expect("relay start");
+
+        // 以 client 身分連上(重試等 listener 就緒),連線全程保持存活。
+        let mut client = None;
+        for _ in 0..100 {
+            if let Ok(s) = TcpStream::connect(("127.0.0.1", port)) {
+                client = Some(s);
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        let mut client = client.expect("connect to relay");
+        client.write_all(b"INFO\tcapture_helper started\n").unwrap();
+        client
+            .write_all(b"WARNING\tport=51000 verdict=unknown\n")
+            .unwrap();
+        client.flush().unwrap();
+
+        let first = rx.recv_timeout(Duration::from_secs(3)).expect("line 1");
+        let second = rx.recv_timeout(Duration::from_secs(3)).expect("line 2");
+        assert_eq!(
+            first,
+            ("INFO".to_string(), "capture_helper started".to_string())
+        );
+        assert_eq!(
+            second,
+            ("WARNING".to_string(), "port=51000 verdict=unknown".to_string())
+        );
+
+        drop(client); // 斷言完才關,避免中途 RST
     }
 }
