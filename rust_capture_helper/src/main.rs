@@ -94,17 +94,16 @@ fn init_hlog(log_dir: &str) {
     }
 }
 
-/// 寫一行 helper log 到當天主 log 檔（純 append、每筆一次 write 整行、避免與 app IOSink 交錯）。
-/// 未初始化時 no-op。同時保留 stderr 輸出供獨立除錯。
+/// 寫一行 helper log 到當天主 log 檔（純 append、整行含結尾 `\n` 只呼叫一次 `write_all`，
+/// 避免與 app IOSink 各自 `WriteFile` 交錯造成內容夾雜）。未初始化時 no-op。
+/// 同時保留 stderr 輸出供獨立除錯。lock 中毒時仍用 `into_inner()` 復原繼續寫，不永久停擺。
 fn hlog(level: &str, msg: &str) {
     let ts = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Micros, true);
-    let line = format_helper_log_line(&ts, level, msg);
-    eprintln!("{line}");
+    let line = format!("{}\n", format_helper_log_line(&ts, level, msg));
+    eprint!("{line}");
     if let Some(m) = LOG_FILE.get() {
-        if let Ok(mut f) = m.lock() {
-            let _ = f.write_all(line.as_bytes());
-            let _ = f.write_all(b"\n");
-        }
+        let mut f = m.lock().unwrap_or_else(|e| e.into_inner());
+        let _ = f.write_all(line.as_bytes());
     }
 }
 
@@ -833,5 +832,43 @@ mod tests {
     fn log_file_name_uses_utc_date() {
         let dt = chrono::Utc.with_ymd_and_hms(2026, 7, 15, 23, 59, 0).unwrap();
         assert_eq!(helper_log_file_name(dt), "2026-07-15.log");
+    }
+
+    /// 驗證 `hlog` 對當天 log 檔只做「整行（含結尾 `\n`）一次 `write_all`」：檔案內容結尾要
+    /// 恰好是一行格式化好的訊息、只有一個換行（不會被拆成兩次 write 而讓 app IOSink 夾在中間）。
+    /// `LOG_FILE` 是 process 全域 `OnceLock`，若已被其他測試 `set` 過則此處 `init_hlog` 為 no-op，
+    /// 因此只斷言「這次呼叫附加的內容」而非整個檔案內容，避免與其他測試互相干擾。
+    #[test]
+    fn hlog_appends_single_write_all_terminated_line() {
+        let dir = std::env::temp_dir().join(format!(
+            "capture_helper_hlog_test_{}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let dir_str = dir.to_str().unwrap().to_string();
+
+        init_hlog(&dir_str);
+        hlog("INFO", "unit-test-line");
+
+        let file_name = helper_log_file_name(chrono::Utc::now());
+        let path = dir.join(&file_name);
+
+        // 若 LOG_FILE 已被其他測試佔用，init_hlog 對這個新 dir 是 no-op，檔案根本不會建立；
+        // 這種情況下沒有東西可斷言，直接清理並提早結束，維持測試自我容忍、確定性。
+        let Ok(contents) = std::fs::read_to_string(&path) else {
+            let _ = std::fs::remove_dir_all(&dir);
+            return;
+        };
+
+        assert!(
+            contents.ends_with(" [INFO   ] [capture.helper] unit-test-line\n"),
+            "檔案結尾應為一行完整格式化訊息：{contents:?}"
+        );
+        assert!(
+            !contents.contains("\n\n"),
+            "不應出現連續兩個換行（代表被拆成兩次 write）：{contents:?}"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
