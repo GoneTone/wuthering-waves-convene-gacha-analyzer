@@ -22,12 +22,14 @@
 //! Happy Eyeballs 即時 fallback，不等 ~250ms timeout）；UDP 443（QUIC）靜默 drop 逼退 TCP。
 //!
 //! 跑法：通常由主程式 spawn。獨立除錯時以系統管理員執行：
-//! `capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid>]`（省略後兩者則無看門狗）。
+//! `capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid> [<log_dir>]]`
+//! （省略停止事件名/PID 則無看門狗；省略 `log_dir` 則不寫檔，只留 stderr）。
 
 use std::collections::{HashMap, HashSet};
+use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::net::{Ipv4Addr, TcpListener, TcpStream};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;
 
 use sysinfo::{Pid, System};
@@ -79,6 +81,33 @@ fn helper_log_file_name(now: chrono::DateTime<chrono::Utc>) -> String {
     format!("{}.log", now.format("%Y-%m-%d"))
 }
 
+/// 全域 helper log 檔 handle（多執行緒共享）。未提供 log 目錄時為 None，`hlog` 靜默略過。
+static LOG_FILE: OnceLock<Mutex<std::fs::File>> = OnceLock::new();
+
+/// 依 log 目錄開當天 log 檔（append 模式）。失敗則不設，`hlog` 之後為 no-op。
+fn init_hlog(log_dir: &str) {
+    let path = format!("{log_dir}/{}", helper_log_file_name(chrono::Utc::now()));
+    if let Ok(f) = OpenOptions::new().create(true).append(true).open(&path) {
+        let _ = LOG_FILE.set(Mutex::new(f));
+    } else {
+        eprintln!("[warn] 無法開啟 helper log：{path}");
+    }
+}
+
+/// 寫一行 helper log 到當天主 log 檔（純 append、每筆一次 write 整行、避免與 app IOSink 交錯）。
+/// 未初始化時 no-op。同時保留 stderr 輸出供獨立除錯。
+fn hlog(level: &str, msg: &str) {
+    let ts = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Micros, true);
+    let line = format_helper_log_line(&ts, level, msg);
+    eprintln!("{line}");
+    if let Some(m) = LOG_FILE.get() {
+        if let Ok(mut f) = m.lock() {
+            let _ = f.write_all(line.as_bytes());
+            let _ = f.write_all(b"\n");
+        }
+    }
+}
+
 /// 跨執行緒共享狀態。
 #[derive(Default)]
 struct Shared {
@@ -96,9 +125,10 @@ struct Shared {
     not_target_ports: HashSet<u16>,
 }
 
-/// 引數：`capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid>]`。
+/// 引數：`capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid> [<log_dir>]]`。
 /// `mitm_port`＝主程式 hudsucker 監聽埠；`stop_event_name`/`parent_pid`＝看門狗（主程式設定
-/// 該事件或主程式結束時，helper 自行 exit，WinDivert handle 關閉即還原重導向）。
+/// 該事件或主程式結束時，helper 自行 exit，WinDivert handle 關閉即還原重導向）；
+/// `log_dir`＝app 的 `logs/` 目錄，提供時初始化全域 `hlog` 寫入當天主 log 檔。
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let mitm_port: u16 = args
@@ -111,6 +141,13 @@ fn main() {
     ) {
         start_watchdog(ev, pid);
     }
+    if let Some(dir) = args.get(4) {
+        init_hlog(dir);
+    }
+    hlog(
+        "INFO",
+        &format!("capture_helper started, mitm_port={mitm_port}"),
+    );
 
     let shared = Arc::new(Mutex::new(Shared::default()));
     {

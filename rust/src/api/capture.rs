@@ -31,7 +31,7 @@ struct Session {
 
 static SESSION: Lazy<Mutex<Option<Session>>> = Lazy::new(|| Mutex::new(None));
 
-pub fn start_capture(sink: StreamSink<CapturedRequest>) -> Result<()> {
+pub fn start_capture(log_dir: String, sink: StreamSink<CapturedRequest>) -> Result<()> {
     let mut guard = SESSION.lock().unwrap_or_else(|e| e.into_inner());
     if guard.is_some() {
         return Err(anyhow!("capture already running"));
@@ -46,7 +46,7 @@ pub fn start_capture(sink: StreamSink<CapturedRequest>) -> Result<()> {
     // 先起 MITM（確保 helper 的 shim CONNECT 時它已在聽），再 UAC 提權 spawn helper。
     // helper spawn 失敗（UAC 取消等）會讓上面的 mitm（區域變數）drop、自動收掉。
     let mitm = mitm::start(addr, &root.cert_pem, &root.key_pem, sink)?;
-    let helper = helper::spawn(addr.port())?;
+    let helper = helper::spawn(addr.port(), &log_dir)?;
 
     *guard = Some(Session {
         _helper: helper,

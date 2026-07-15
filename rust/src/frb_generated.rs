@@ -68,6 +68,7 @@ fn wire__crate__api__capture__start_capture_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_log_dir = <String>::sse_decode(&mut deserializer);
             let api_sink = <StreamSink<
                 crate::api::capture::CapturedRequest,
                 flutter_rust_bridge::for_generated::SseCodec,
@@ -76,7 +77,7 @@ fn wire__crate__api__capture__start_capture_impl(
             move |context| {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
-                        let output_ok = crate::api::capture::start_capture(api_sink)?;
+                        let output_ok = crate::api::capture::start_capture(api_log_dir, api_sink)?;
                         Ok(output_ok)
                     })(),
                 )
