@@ -6,7 +6,9 @@
 
 ## 一、問題陳述
 
-使用者回報：**重開遊戲後**，在 app 點「更新資料」→ 依提示回遊戲開卡池歷史頁 → **仍卡在等待抓取**；必須先取消、再點一次「更新資料」、再回遊戲重開卡池歷史頁，第二次才抓得到。也就是**重攔第一次必失敗、第二次必成功**的確定性行為。
+使用者回報：**重開遊戲後**，在 app 點「更新資料」→ 依提示回遊戲開卡池歷史頁 → **有時仍卡在等待抓取**；必須先取消、再點一次「更新資料」、再回遊戲重開卡池歷史頁才抓得到。
+
+**此現象是間歇性的、感覺隨機**（並非每次重開都必現）。這點很關鍵：**隨機而非確定性，最吻合一個 timing race**——冷 spawn 的 KRWebView 其 :443 CONNECT 事件，和「該行程映像名變得可讀」之間在賽跑，行程建立的微小時序抖動決定當次輸贏。
 
 ### 1.1 log 佐證（`2026-07-15.log`，08:53 這輪）
 
@@ -41,14 +43,18 @@ capture done with no match
 
 判定依賴 `proc_name(pid)`（`rust_capture_helper/src/main.rs:709`，用 `sysinfo` 讀映像名）。**重開遊戲後第一次開卡池頁時，KRWebView 是剛 spawn、誕生不到數毫秒的冷行程**，此時映像名常常讀不到、回空字串 → 被判成「非 KRWebView」→ 該本機埠被寫進 `not_target_ports`。
 
-一旦落進 `not_target_ports`，NETWORK 層 `known_not` 分支會**永久短路跳過**（`main.rs:249`），連 SYN 時的 `GetExtendedTcpTable` 補救查詢都不做 → 這條連線再也不會被重導向 → MITM 全程看不到 → no match。第二次時 KRWebView 已是熱行程、`proc_name` 讀得到，正常重導向、命中。**「冷＝必失敗、熱＝必成功」是確定性的**（年輕行程映像名讀不到並非隨機競態），正好對上使用者觀察。
+一旦落進 `not_target_ports`，NETWORK 層 `known_not` 分支會**永久短路跳過**（`main.rs:249`），連 SYN 時的 `GetExtendedTcpTable` 補救查詢都不做 → 這條連線再也不會被重導向 → MITM 全程看不到 → no match。
+
+**為何隨機而非每次必現**：`proc_name` 能否在 CONNECT 當下讀到剛 spawn 行程的映像名，取決於行程建立各階段（loader 映射 exe、Windows 填好 image name）與 CONNECT 事件到達的相對時序。這個時序每次都有微小抖動，故有時及時讀到（該次成功）、有時沒讀到（該次落空並被永久毒化）。這正是使用者觀察到「間歇隨機」的成因，也是 timing race 的典型特徵。
 
 ### 2.1 待證實與替代機制
 
-此判斷需 helper log 證實。若 log 顯示的是**其他機制**，軌 A 讓它當場可辨識，屆時另案處理（本次不預先實作，遵循 YAGNI）：
+此判斷需 helper log 證實。「間歇隨機」雖最吻合 5.1/5.2 的 `proc_name` timing race，但**隨機性本身無法排除**下列同樣會呈現隨機的機制，故軌 A 必須先上、當場分辨；屆時視 log 另案處理（本次不預先實作，遵循 YAGNI）：
 
-- **連線復用**：若 KRWebView 復用重攔啟動前就已建立的既有連線，則整段沒有新 CONNECT/SYN，helper log 會顯示「該 :443 完全沒出現在事件流」。但使用者情境是「重開遊戲後」，重啟後無既有連線，此機制在該情境下不成立，故列為次要。
-- **QUIC / HTTP3 首選**：冷啟動先試 UDP 443 被 drop 後的 TCP fallback 時序異常。log 會顯示 UDP drop 與後續 TCP SYN 的順序。
+- **連線復用**：若 KRWebView 復用「重攔啟動前就已建立、仍在 pool 內的既有連線」，則整段沒有新 CONNECT/SYN，helper log 會顯示「該 :443 完全沒出現在事件流」。既有連線是否還活著取決於閒置時序，故也可能呈現隨機。（原以「重啟後無既有連線」排除，但使用者「重開」可能指重開卡池頁而非重啟整個 client，無法據此排除。）
+- **QUIC / HTTP3 首選**：冷啟動先試 UDP 443，被 drop 後才 TCP fallback，其時序異常也可能隨機。log 會顯示 UDP drop 與後續 TCP SYN 的順序。
+
+三者中若為 `proc_name` race，軌 B 直接修好；若為連線復用或 QUIC 時序，軌 B 的「不毒化 not_target」仍是無害的正確性改進，對應修法待 log 證實後另補。
 
 ## 三、目標與非目標
 
