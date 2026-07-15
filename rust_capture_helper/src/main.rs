@@ -23,11 +23,10 @@
 //! Happy Eyeballs 即時 fallback，不等 ~250ms timeout）；UDP 443（QUIC）靜默 drop 逼退 TCP。
 //!
 //! 跑法：通常由主程式 spawn。獨立除錯時以系統管理員執行：
-//! `capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid> [<log_dir>]]`
-//! （省略停止事件名/PID 則無看門狗；省略 `log_dir` 則不寫檔，只留 stderr）。
+//! `capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid> [<log_port>]]`
+//! （省略停止事件名/PID 則無看門狗；省略 `log_port` 則不連 log relay，只留 stderr）。
 
 use std::collections::{HashMap, HashSet};
-use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::net::{Ipv4Addr, TcpListener, TcpStream};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -71,42 +70,26 @@ fn classify_verdict(proc_name: &str) -> Verdict {
     }
 }
 
-/// 組一行 helper log，格式對齊 app 的 `LogService._format`：
-/// `<UTC ISO8601 帶 Z> [LEVEL(左對齊補到 7 寬)] [capture.helper] <msg>`。
-fn format_helper_log_line(ts: &str, level: &str, msg: &str) -> String {
-    format!("{ts} [{level:<7}] [capture.helper] {msg}")
-}
+/// 連向 app log relay 的 socket（多執行緒共享）。未連上時為 None、`hlog` 靜默略過。
+static LOG_SOCK: OnceLock<Mutex<TcpStream>> = OnceLock::new();
 
-/// 依 UTC 時間算當天 log 檔名（`YYYY-MM-DD.log`），對齊 `LogService._fileFor` 命名。
-fn helper_log_file_name(now: chrono::DateTime<chrono::Utc>) -> String {
-    format!("{}.log", now.format("%Y-%m-%d"))
-}
-
-/// 全域 helper log 檔 handle（多執行緒共享）。未提供 log 目錄時為 None，`hlog` 靜默略過。
-static LOG_FILE: OnceLock<Mutex<std::fs::File>> = OnceLock::new();
-
-/// 依 log 目錄開當天 log 檔（append 模式）。失敗則不設，`hlog` 之後為 no-op。
-fn init_hlog(log_dir: &str) {
-    let path = format!("{log_dir}/{}", helper_log_file_name(chrono::Utc::now()));
-    if let Ok(f) = OpenOptions::new().create(true).append(true).open(&path) {
-        let _ = LOG_FILE.set(Mutex::new(f));
-    } else {
-        eprintln!("[warn] 無法開啟 helper log：{path}");
+/// 連上 app 的 log relay（127.0.0.1:port）。失敗則不設，`hlog` 之後為 no-op（僅 eprintln）。
+fn init_hlog(log_port: u16) {
+    match TcpStream::connect(("127.0.0.1", log_port)) {
+        Ok(s) => {
+            let _ = LOG_SOCK.set(Mutex::new(s));
+        }
+        Err(e) => eprintln!("[warn] 連 log relay 127.0.0.1:{log_port} 失敗:{e}"),
     }
 }
 
-/// 寫一行 helper log 到當天主 log 檔（helper 這一側：整行含結尾 `\n` 只呼叫一次 `write_all`，
-/// 底層為 `FILE_APPEND_DATA` 語意，單次 append 在 OS 層是原子的）。但 app 端 `LogService` 的
-/// `IOSink` append 在 Windows 上是 seek-to-EOF 再 `WriteFile`、非原子，故極罕見兩行程幾乎同時
-/// 寫入時，仍可能夾雜出斷行——考量這是診斷用 log，可接受此殘留機率。未初始化時 no-op。
-/// 同時保留 stderr 輸出供獨立除錯。lock 中毒時仍用 `into_inner()` 復原繼續寫，不永久停擺。
+/// 送一行 `LEVEL\tMESSAGE\n` 給 app 的 log relay（Mutex 序列化多執行緒、poison 復原）。
+/// 未連上時 no-op。同時保留 stderr 供獨立除錯。
 fn hlog(level: &str, msg: &str) {
-    let ts = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Micros, true);
-    let line = format!("{}\n", format_helper_log_line(&ts, level, msg));
-    eprint!("{line}");
-    if let Some(m) = LOG_FILE.get() {
-        let mut f = m.lock().unwrap_or_else(|e| e.into_inner());
-        let _ = f.write_all(line.as_bytes());
+    eprintln!("[{level}] {msg}");
+    if let Some(m) = LOG_SOCK.get() {
+        let mut s = m.lock().unwrap_or_else(|e| e.into_inner());
+        let _ = s.write_all(format!("{level}\t{msg}\n").as_bytes());
     }
 }
 
@@ -127,10 +110,10 @@ struct Shared {
     not_target_ports: HashSet<u16>,
 }
 
-/// 引數：`capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid> [<log_dir>]]`。
+/// 引數：`capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid> [<log_port>]]`。
 /// `mitm_port`＝主程式 hudsucker 監聽埠；`stop_event_name`/`parent_pid`＝看門狗（主程式設定
 /// 該事件或主程式結束時，helper 自行 exit，WinDivert handle 關閉即還原重導向）；
-/// `log_dir`＝app 的 `logs/` 目錄，提供時初始化全域 `hlog` 寫入當天主 log 檔。
+/// `log_port`＝app 的 log relay 埠，提供時連上該埠、初始化全域 `hlog` 送 log 行給 app。
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let mitm_port: u16 = args
@@ -143,13 +126,10 @@ fn main() {
     ) {
         start_watchdog(ev, pid);
     }
-    if let Some(dir) = args.get(4) {
-        init_hlog(dir);
+    if let Some(port) = args.get(4).and_then(|s| s.parse::<u16>().ok()) {
+        init_hlog(port);
     }
-    hlog(
-        "INFO",
-        &format!("capture_helper started, mitm_port={mitm_port}"),
-    );
+    hlog("INFO", &format!("capture_helper started, mitm_port={mitm_port}"));
 
     let shared = Arc::new(Mutex::new(Shared::default()));
     {
@@ -882,7 +862,6 @@ fn proc_name(pid: u32, sys: &mut System) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::TimeZone;
 
     #[test]
     fn classify_empty_name_is_unknown() {
@@ -899,70 +878,5 @@ mod tests {
     fn classify_other_process_is_not_target() {
         assert_eq!(classify_verdict("chrome.exe"), Verdict::NotTarget);
         assert_eq!(classify_verdict("capture_helper.exe"), Verdict::NotTarget);
-    }
-
-    #[test]
-    fn format_log_line_matches_app_format() {
-        // app 格式：<UTC ISO8601 帶 Z> [LEVEL(padRight 7)] [capture.helper] msg
-        let line = format_helper_log_line(
-            "2026-07-15T08:53:36.538986Z",
-            "WARNING",
-            "port=51000 pid=1234 name=unresolved verdict=unknown",
-        );
-        assert_eq!(
-            line,
-            "2026-07-15T08:53:36.538986Z [WARNING] [capture.helper] \
-             port=51000 pid=1234 name=unresolved verdict=unknown"
-        );
-    }
-
-    #[test]
-    fn format_log_line_pads_short_level_to_width_7() {
-        let line = format_helper_log_line("2026-07-15T00:00:00.000000Z", "INFO", "hi");
-        assert_eq!(line, "2026-07-15T00:00:00.000000Z [INFO   ] [capture.helper] hi");
-    }
-
-    #[test]
-    fn log_file_name_uses_utc_date() {
-        let dt = chrono::Utc.with_ymd_and_hms(2026, 7, 15, 23, 59, 0).unwrap();
-        assert_eq!(helper_log_file_name(dt), "2026-07-15.log");
-    }
-
-    /// 驗證 `hlog` 對當天 log 檔只做「整行（含結尾 `\n`）一次 `write_all`」：檔案內容結尾要
-    /// 恰好是一行格式化好的訊息、只有一個換行（不會被拆成兩次 write 而讓 app IOSink 夾在中間）。
-    /// `LOG_FILE` 是 process 全域 `OnceLock`，若已被其他測試 `set` 過則此處 `init_hlog` 為 no-op，
-    /// 因此只斷言「這次呼叫附加的內容」而非整個檔案內容，避免與其他測試互相干擾。
-    #[test]
-    fn hlog_appends_single_write_all_terminated_line() {
-        let dir = std::env::temp_dir().join(format!(
-            "capture_helper_hlog_test_{}",
-            std::process::id()
-        ));
-        std::fs::create_dir_all(&dir).unwrap();
-        let dir_str = dir.to_str().unwrap().to_string();
-
-        init_hlog(&dir_str);
-        hlog("INFO", "unit-test-line");
-
-        let file_name = helper_log_file_name(chrono::Utc::now());
-        let path = dir.join(&file_name);
-
-        // 若 LOG_FILE 已被其他測試佔用，init_hlog 對這個新 dir 是 no-op，檔案根本不會建立；
-        // 這種情況下沒有東西可斷言，直接清理並提早結束，維持測試自我容忍、確定性。
-        let Ok(contents) = std::fs::read_to_string(&path) else {
-            let _ = std::fs::remove_dir_all(&dir);
-            return;
-        };
-
-        assert!(
-            contents.ends_with(" [INFO   ] [capture.helper] unit-test-line\n"),
-            "檔案結尾應為一行完整格式化訊息：{contents:?}"
-        );
-        assert!(
-            !contents.contains("\n\n"),
-            "不應出現連續兩個換行（代表被拆成兩次 write）：{contents:?}"
-        );
-
-        let _ = std::fs::remove_dir_all(&dir);
     }
 }

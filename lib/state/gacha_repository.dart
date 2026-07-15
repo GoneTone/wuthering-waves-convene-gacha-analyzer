@@ -24,7 +24,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart'
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/state/log_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
 
@@ -107,9 +106,9 @@ final gachaStorageProvider = Provider<GachaStorage>((ref) {
   throw UnimplementedError('gachaStorageProvider must be overridden in main()');
 });
 
-/// [GachaCapture] 實作，預設為 [RustGachaCapture]（logs 路徑取自 [logServiceProvider]）。
+/// [GachaCapture] 實作，預設為 [RustGachaCapture]。
 final gachaCaptureProvider = Provider<GachaCapture>(
-  (ref) => RustGachaCapture(ref.watch(logServiceProvider).logsDir.path),
+  (ref) => RustGachaCapture(),
 );
 
 /// [GachaFetcher] provider，負責從官方喚取 API 拉取喚取紀錄。

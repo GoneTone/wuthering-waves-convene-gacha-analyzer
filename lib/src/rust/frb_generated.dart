@@ -77,7 +77,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Stream<CapturedRequest> crateApiCaptureStartCapture({required String logDir});
+  Stream<CapturedRequest> crateApiCaptureStartCapture();
 
   Stream<LogEvent> crateApiLoggingStartLogStream();
 
@@ -93,16 +93,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Stream<CapturedRequest> crateApiCaptureStartCapture({
-    required String logDir,
-  }) {
+  Stream<CapturedRequest> crateApiCaptureStartCapture() {
     final sink = RustStreamSink<CapturedRequest>();
     unawaited(
       handler.executeNormal(
         NormalTask(
           callFfi: (port_) {
             final serializer = SseSerializer(generalizedFrbRustBinding);
-            sse_encode_String(logDir, serializer);
             sse_encode_StreamSink_captured_request_Sse(sink, serializer);
             pdeCallFfi(
               generalizedFrbRustBinding,
@@ -116,7 +113,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             decodeErrorData: sse_decode_AnyhowException,
           ),
           constMeta: kCrateApiCaptureStartCaptureConstMeta,
-          argValues: [logDir, sink],
+          argValues: [sink],
           apiImpl: this,
         ),
       ),
@@ -125,10 +122,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiCaptureStartCaptureConstMeta =>
-      const TaskConstMeta(
-        debugName: "start_capture",
-        argNames: ["logDir", "sink"],
-      );
+      const TaskConstMeta(debugName: "start_capture", argNames: ["sink"]);
 
   @override
   Stream<LogEvent> crateApiLoggingStartLogStream() {

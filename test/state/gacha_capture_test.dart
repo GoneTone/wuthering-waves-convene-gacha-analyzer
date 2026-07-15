@@ -20,10 +20,4 @@ void main() {
     expect(got!.playerId, '701000000');
     expect(got.languageCode, 'zh-Hant');
   });
-
-  test('RustGachaCapture 保存注入的 logs 路徑', () {
-    const path = r'C:\Users\x\AppData\Roaming\app\logs';
-    final capture = RustGachaCapture(path);
-    expect(capture.logsPath, path);
-  });
 }

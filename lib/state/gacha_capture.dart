@@ -27,13 +27,6 @@ abstract class GachaCapture {
 
 /// 以 Rust 端 WinDivert 重導向 + hudsucker MITM 實作的 [GachaCapture]。
 class RustGachaCapture implements GachaCapture {
-  /// 建立 [RustGachaCapture]；[logsPath] 為 app 的 `logs/` 目錄，
-  /// 傳給提權 helper 讓它把分類決策寫進當天主 log 檔。
-  RustGachaCapture(this.logsPath);
-
-  /// app 的 `logs/` 目錄絕對路徑。
-  final String logsPath;
-
   static final _log = Logger('gacha.capture');
 
   @override
@@ -42,42 +35,38 @@ class RustGachaCapture implements GachaCapture {
     GachaCredential? captured;
     _log.info('capture started');
 
-    rust_capture
-        .startCapture(logDir: logsPath)
-        .listen(
-          (event) {
-            // 已命中過就不覆寫；只取第一筆成功解析的 body。
-            if (captured != null) return;
-            try {
-              captured = GachaCredential.fromCapturedBody(event.body);
-              _log.fine(
-                'captured credential host=${event.host} '
-                'body=${sanitizeCredential(event.body)}',
-              );
-            } catch (e) {
-              // 命中目標 host 但 body 非預期 JSON → 視為未命中，繼續等下一筆。
-              _log.warning(
-                'failed to parse captured body host=${event.host}: $e',
-              );
-            }
-            // 不在此 complete：等 stream onDone（MITM graceful shutdown + helper 停止、
-            // WinDivert 重導向已還原），此時呼叫 HTTP fetcher 才不會被重導向誤導。
-          },
-          onError: (Object e, StackTrace st) {
-            _log.severe('capture error', e, st);
-            if (!completer.isCompleted) completer.completeError(e);
-          },
-          onDone: () {
-            if (captured == null) {
-              _log.info('capture done with no match');
-            } else {
-              _log.info(
-                'capture done, playerId=${sanitizeUid(captured!.playerId)}',
-              );
-            }
-            if (!completer.isCompleted) completer.complete(captured);
-          },
-        );
+    rust_capture.startCapture().listen(
+      (event) {
+        // 已命中過就不覆寫；只取第一筆成功解析的 body。
+        if (captured != null) return;
+        try {
+          captured = GachaCredential.fromCapturedBody(event.body);
+          _log.fine(
+            'captured credential host=${event.host} '
+            'body=${sanitizeCredential(event.body)}',
+          );
+        } catch (e) {
+          // 命中目標 host 但 body 非預期 JSON → 視為未命中，繼續等下一筆。
+          _log.warning('failed to parse captured body host=${event.host}: $e');
+        }
+        // 不在此 complete：等 stream onDone（MITM graceful shutdown + helper 停止、
+        // WinDivert 重導向已還原），此時呼叫 HTTP fetcher 才不會被重導向誤導。
+      },
+      onError: (Object e, StackTrace st) {
+        _log.severe('capture error', e, st);
+        if (!completer.isCompleted) completer.completeError(e);
+      },
+      onDone: () {
+        if (captured == null) {
+          _log.info('capture done with no match');
+        } else {
+          _log.info(
+            'capture done, playerId=${sanitizeUid(captured!.playerId)}',
+          );
+        }
+        if (!completer.isCompleted) completer.complete(captured);
+      },
+    );
 
     return CaptureSession(
       result: completer.future,
