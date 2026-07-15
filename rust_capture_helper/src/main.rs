@@ -48,6 +48,37 @@ const TARGET_API_HOST: &str = "gmserver-api.aki-game2.net";
 /// loopback 位址（正向把 src/dst 都改成它）。
 const LOOPBACK: [u8; 4] = [127, 0, 0, 1];
 
+/// 行程分類三態。`Unknown` 代表映像名一時讀不到（剛 spawn 的行程常見），
+/// 不可據此下「非目標」的永久判定，否則會毒化 `not_target_ports`。
+#[derive(Clone, Copy, PartialEq, Debug)]
+enum Verdict {
+    Target,
+    NotTarget,
+    Unknown,
+}
+
+/// 依映像名分類：空字串 → Unknown、等於目標行程 → Target、其餘 → NotTarget。
+fn classify_verdict(proc_name: &str) -> Verdict {
+    if proc_name.is_empty() {
+        Verdict::Unknown
+    } else if proc_name.eq_ignore_ascii_case(TARGET_PROCESS) {
+        Verdict::Target
+    } else {
+        Verdict::NotTarget
+    }
+}
+
+/// 組一行 helper log，格式對齊 app 的 `LogService._format`：
+/// `<UTC ISO8601 帶 Z> [LEVEL(左對齊補到 7 寬)] [capture.helper] <msg>`。
+fn format_helper_log_line(ts: &str, level: &str, msg: &str) -> String {
+    format!("{ts} [{level:<7}] [capture.helper] {msg}")
+}
+
+/// 依 UTC 時間算當天 log 檔名（`YYYY-MM-DD.log`），對齊 `LogService._fileFor` 命名。
+fn helper_log_file_name(now: chrono::DateTime<chrono::Utc>) -> String {
+    format!("{}.log", now.format("%Y-%m-%d"))
+}
+
 /// 跨執行緒共享狀態。
 #[derive(Default)]
 struct Shared {
@@ -716,4 +747,54 @@ fn proc_name(pid: u32, sys: &mut System) -> String {
     sys.process(spid)
         .map(|p| p.name().to_string_lossy().into_owned())
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    #[test]
+    fn classify_empty_name_is_unknown() {
+        assert_eq!(classify_verdict(""), Verdict::Unknown);
+    }
+
+    #[test]
+    fn classify_krwebview_is_target_case_insensitive() {
+        assert_eq!(classify_verdict("KRWebView.exe"), Verdict::Target);
+        assert_eq!(classify_verdict("krwebview.EXE"), Verdict::Target);
+    }
+
+    #[test]
+    fn classify_other_process_is_not_target() {
+        assert_eq!(classify_verdict("chrome.exe"), Verdict::NotTarget);
+        assert_eq!(classify_verdict("capture_helper.exe"), Verdict::NotTarget);
+    }
+
+    #[test]
+    fn format_log_line_matches_app_format() {
+        // app 格式：<UTC ISO8601 帶 Z> [LEVEL(padRight 7)] [capture.helper] msg
+        let line = format_helper_log_line(
+            "2026-07-15T08:53:36.538986Z",
+            "WARNING",
+            "port=51000 pid=1234 name=unresolved verdict=unknown",
+        );
+        assert_eq!(
+            line,
+            "2026-07-15T08:53:36.538986Z [WARNING] [capture.helper] \
+             port=51000 pid=1234 name=unresolved verdict=unknown"
+        );
+    }
+
+    #[test]
+    fn format_log_line_pads_short_level_to_width_7() {
+        let line = format_helper_log_line("2026-07-15T00:00:00.000000Z", "INFO", "hi");
+        assert_eq!(line, "2026-07-15T00:00:00.000000Z [INFO   ] [capture.helper] hi");
+    }
+
+    #[test]
+    fn log_file_name_uses_utc_date() {
+        let dt = chrono::Utc.with_ymd_and_hms(2026, 7, 15, 23, 59, 0).unwrap();
+        assert_eq!(helper_log_file_name(dt), "2026-07-15.log");
+    }
 }
