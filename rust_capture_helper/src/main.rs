@@ -15,7 +15,8 @@
 //! ## 行程鎖定（避免 GetExtendedTcpTable 拖慢熱路徑）
 //! SOCKET 層 sniff 在 CONNECT 當下（早於 SYN）把 :443 埠分類記入 tcp_ports（KRWebView→導向）
 //! 或 not_target_ports（非 KRWebView，含 helper 自己的上游→跳過），用 PID 快取保持 near-instant；
-//! network_loop 只查 set，僅罕見 race 才 fallback 查連線表。
+//! 行程名一時讀不到則分類為 `Unknown`——不快取、不塞進任何集合，留給 NETWORK 層的 SYN fallback
+//! 重新判定，避免被永久誤標成非目標。network_loop 只查 set，僅罕見 race 才 fallback 查連線表。
 //!
 //! ## IPv6 / QUIC
 //! gmserver 偏好 v6 會繞過 v4 重導向 → 對 KRWebView 的 v6 :443 SYN 送 **RST** 逼退 v4（RST 讓
@@ -94,8 +95,10 @@ fn init_hlog(log_dir: &str) {
     }
 }
 
-/// 寫一行 helper log 到當天主 log 檔（純 append、整行含結尾 `\n` 只呼叫一次 `write_all`，
-/// 避免與 app IOSink 各自 `WriteFile` 交錯造成內容夾雜）。未初始化時 no-op。
+/// 寫一行 helper log 到當天主 log 檔（helper 這一側：整行含結尾 `\n` 只呼叫一次 `write_all`，
+/// 底層為 `FILE_APPEND_DATA` 語意，單次 append 在 OS 層是原子的）。但 app 端 `LogService` 的
+/// `IOSink` append 在 Windows 上是 seek-to-EOF 再 `WriteFile`、非原子，故極罕見兩行程幾乎同時
+/// 寫入時，仍可能夾雜出斷行——考量這是診斷用 log，可接受此殘留機率。未初始化時 no-op。
 /// 同時保留 stderr 輸出供獨立除錯。lock 中毒時仍用 `into_inner()` 復原繼續寫，不永久停擺。
 fn hlog(level: &str, msg: &str) {
     let ts = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Micros, true);

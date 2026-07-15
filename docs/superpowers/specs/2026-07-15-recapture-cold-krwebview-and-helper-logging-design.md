@@ -80,9 +80,10 @@ helper 直接以 **append 模式**寫進 app 現有的 `logs/YYYY-MM-DD.log`（U
 **併寫安全性**（兩行程同時 append 同一檔）：
 
 - helper 以**純 append 模式**開檔（`FILE_APPEND_DATA` 語意：每次 write 原子地 seek 到 EOF 再寫）。
-- **每筆 log 一次 write 整行**（先在 buffer 組好整行、單一 write 呼叫），行長度控制在數 KB 內，確保不與 Dart IOSink 的 `writeln` 交錯出斷行。
+- **每筆 log 一次 write 整行**（先在 buffer 組好整行、單一 write 呼叫），行長度控制在數 KB 內。
 - **行格式沿用 app 既有格式**：`<UTC ISO8601 帶 Z> [LEVEL  ] [target] message`（對齊 `LogService._format`），讓合併後的檔案格式一致、可依時間戳排序。target 用 `capture.helper` 標明來源。
-- 驗收時**實際檢查一份真實合併 log 沒有斷行汙染**。
+- **修正（單側原子性）**：上面的「安全」只有 helper 這一側成立——`FILE_APPEND_DATA` 是 OS 層原子 append。app 端 `LogService` 的 `IOSink`（`FileMode.append`）在 Windows 上是 seek-to-EOF 再 `WriteFile`，**非原子**，並非兩側都保證整行不交錯。因此極罕見的近乎同時寫入仍可能讓某一行被夾雜、斷行，這是已知且可接受的殘留機率（僅影響診斷用 log，不影響業務資料）。
+- 驗收時**實際檢查一份真實合併 log，確認 helper 的行有出現、且未被斷行汙染**。
 
 **邊界情況**：capture session 很短（數秒至一分鐘）。若正好跨 UTC 午夜、app 已 rollover 到新檔，helper 仍寫其啟動時算出的當天檔——影響可忽略（至多幾行落在前一天檔）。
 

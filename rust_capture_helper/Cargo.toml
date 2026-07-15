@@ -21,4 +21,4 @@ windows = { version = "0.62", features = [
     "Win32_NetworkManagement_IpHelper",
     "Win32_System_Threading",
 ] }
-chrono = "0.4"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
