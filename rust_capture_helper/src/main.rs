@@ -360,11 +360,35 @@ fn network_loop(shared: Arc<Mutex<Shared>>) {
                 true
             } else if known_not {
                 false
-            } else if is_syn_only(packet.data.as_ref(), p.ihl)
-                && tcp_port_is_target(p.src_port, false, &mut sys)
-            {
-                shared.lock().unwrap().tcp_ports.insert(p.src_port);
-                true
+            } else if is_syn_only(packet.data.as_ref(), p.ihl) {
+                // 未分類的 :443 SYN：扣住重試解析 owner（冷 spawn 行程名一時讀不到）。
+                // 重導向必須在 SYN 當下完成，故在此定案；期間不 reinject 本封包。
+                match resolve_syn_target_with_retry(p.src_port, &mut sys) {
+                    Verdict::Target => {
+                        shared.lock().unwrap().tcp_ports.insert(p.src_port);
+                        hlog(
+                            "INFO",
+                            &format!("syn-fallback port={} verdict=target -> redirect", p.src_port),
+                        );
+                        true
+                    }
+                    Verdict::NotTarget => {
+                        shared.lock().unwrap().not_target_ports.insert(p.src_port);
+                        hlog(
+                            "INFO",
+                            &format!("syn-fallback port={} verdict=not_target -> skip", p.src_port),
+                        );
+                        false
+                    }
+                    Verdict::Unknown => {
+                        // 重試後仍讀不到：維持未分類、不毒化，讓後續（如重送 SYN）再試。
+                        hlog(
+                            "WARNING",
+                            &format!("syn-fallback port={} verdict=unknown -> skip (not poisoned)", p.src_port),
+                        );
+                        false
+                    }
+                }
             } else {
                 false
             }
@@ -652,6 +676,26 @@ fn tcp_port_is_target(port: u16, v6: bool, sys: &mut System) -> bool {
     find_tcp_pid(port, v6)
         .map(|pid| proc_name(pid, sys).eq_ignore_ascii_case(TARGET_PROCESS))
         .unwrap_or(false)
+}
+
+/// 對剛學到的 :443 SYN，查 owner 行程並分類；剛 spawn 的行程映像名可能一時讀不到，
+/// 故有上限地重試（最多 RETRIES 次、每次間隔 DELAY_MS，總延遲上限 RETRIES*DELAY_MS）。
+/// 回傳 Target/NotTarget 為已定案；Unknown 代表重試後仍無法解析（呼叫端應維持未分類、不毒化）。
+fn resolve_syn_target_with_retry(port: u16, sys: &mut System) -> Verdict {
+    const RETRIES: u32 = 4;
+    const DELAY_MS: u64 = 6;
+    for attempt in 0..=RETRIES {
+        if let Some(pid) = find_tcp_pid(port, false) {
+            let v = classify_verdict(&proc_name(pid, sys));
+            if v != Verdict::Unknown {
+                return v;
+            }
+        }
+        if attempt < RETRIES {
+            std::thread::sleep(std::time::Duration::from_millis(DELAY_MS));
+        }
+    }
+    Verdict::Unknown
 }
 
 /// 掃 TCP（v4/v6）連線表找指定本機埠的擁有者 PID。raw `GetExtendedTcpTable`，零配置線性掃描。
