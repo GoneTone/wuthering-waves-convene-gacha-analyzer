@@ -71,36 +71,37 @@ capture done with no match
 
 ## 四、軌 A 設計：helper 觀測性
 
-### 4.1 Log 落點：併入當天主 log 檔
+### 4.1 Log 落點：經 IPC 轉發回 Flutter，寫入單一當天檔
 
-helper 直接以 **append 模式**寫進 app 現有的 `logs/YYYY-MM-DD.log`（UTC 日期，與 `LogService._fileFor` 命名一致）。
+> **設計沿革（重要）**：原設計是「helper 直接 append 進 `logs/YYYY-MM-DD.log`」。此法在 Windows 上**經實測證實行不通**：app 的 Dart `LogService.IOSink`（`FileMode.append`）全程占著當天檔且**不放行 write-share**，提權 helper 的 `OpenOptions::append().open()` 直接撞 `os error 32`（sharing violation）、`init_hlog` 靜默放棄、`hlog` 變 no-op → **helper 一行都寫不出來**。受控實驗:同一 helper、持有者 `FileShare.Read` → 寫不進;`FileShare.ReadWrite` → 寫得進。dart:io 又**沒有 API 能改 share mode**。故放棄「兩行程併寫同檔」，改採下述 IPC 轉發。
 
-**此決策反而簡化 app 端**：`_rotate` 的保留清理正則（`^(\d{4})-(\d{2})-(\d{2})\.log$`）與 `buildExportBundle` 的 `*.log` 匯出掃描本來就吃這個檔名，**兩者都不用改**。
+helper（獨立提權行程，無 frb 橋）**不自行寫檔**，改用一條**本機 TCP** 把 log 行送回 app，由 app 端**行程內** Rust（`gacha_capture_core` DLL）轉發進**現有的 tracing → frb log stream**，最終由 **Dart（單一寫入者）**寫進當天 `logs/YYYY-MM-DD.log`。這正是 `[rust.mitm]` 等行既有的落地路徑，helper 只是接上同一條管道。
 
-**併寫安全性**（兩行程同時 append 同一檔）：
-
-- helper 以**純 append 模式**開檔（`FILE_APPEND_DATA` 語意：每次 write 原子地 seek 到 EOF 再寫）。
-- **每筆 log 一次 write 整行**（先在 buffer 組好整行、單一 write 呼叫），行長度控制在數 KB 內。
-- **行格式沿用 app 既有格式**：`<UTC ISO8601 帶 Z> [LEVEL  ] [target] message`（對齊 `LogService._format`），讓合併後的檔案格式一致、可依時間戳排序。target 用 `capture.helper` 標明來源。
-- **修正（單側原子性）**：上面的「安全」只有 helper 這一側成立——`FILE_APPEND_DATA` 是 OS 層原子 append。app 端 `LogService` 的 `IOSink`（`FileMode.append`）在 Windows 上是 seek-to-EOF 再 `WriteFile`，**非原子**，並非兩側都保證整行不交錯。因此極罕見的近乎同時寫入仍可能讓某一行被夾雜、斷行，這是已知且可接受的殘留機率（僅影響診斷用 log，不影響業務資料）。
-- 驗收時**實際檢查一份真實合併 log，確認 helper 的行有出現、且未被斷行汙染**。
-
-**邊界情況**：capture session 很短（數秒至一分鐘）。若正好跨 UTC 午夜、app 已 rollover 到新檔，helper 仍寫其啟動時算出的當天檔——影響可忽略（至多幾行落在前一天檔）。
+- **單一寫入者**：只有 Dart 寫檔 → 無 share 衝突、無跨行程交錯、無需改 `_rotate`／`buildExportBundle`／檔名。
+- **落地為** `[rust.capture.helper]`（tracing target `capture.helper` → Dart `Logger('rust.capture.helper')`），時間戳由 app 端於收到時補上（延遲 sub-ms，順序正確）。
+- **既有 log stream 常駐**：Dart 於 `main()` 已 `start_log_stream`（app 生命週期都在），故 helper 行會即時併入當天檔。
 
 ### 4.2 路徑流動
 
-Dart 已知 `LogService.logsDir`，需把它送到 helper：
+app 端於 capture 啟動時開一條本機 log relay listener，helper 連上它送行：
 
 ```
-gachaCaptureProvider (讀 logServiceProvider.logsDir.path)
-  → RustGachaCapture(logsPath)               // 建構子注入
-    → rust_capture.startCapture(logDir)      // frb 簽名新增參數，需重跑 codegen
-      → capture.rs start_capture(sink, logDir)
-        → helper::spawn(mitm_port, logDir)
-          → capture_helper.exe argv[4]（路徑含空白/unicode，用雙引號包好）
+Dart start_log_stream（app 啟動，既有）───────────────┐
+                                                      ▼（frb LogEvent stream）
+capture.rs start_capture(sink):                   Dart LogService → logs/YYYY-MM-DD.log
+  1. mitm::start(...)                                 ▲
+  2. log_relay::start(LOG_RELAY_PORT=18082)  ─────────┘  收到行 → tracing::info!/warn!(target:"capture.helper")
+  3. helper::spawn(mitm_port, LOG_RELAY_PORT)
+        → capture_helper.exe argv[4]=log_port（純數字，免引號）
+             → init_hlog(port): TcpStream::connect(127.0.0.1:port)
+             → hlog(level,msg): 送 "LEVEL\tMESSAGE\n"（Mutex 序列化多執行緒）
 ```
 
-**介面不變原則**：`GachaCapture.start()` 維持無參數，避免 test 內大量 `_FakeCapture` / `overrideWithValue` 連鎖改動；logs 路徑改由 `RustGachaCapture` 建構子注入（provider 內 `ref.watch(logServiceProvider).logsDir.path`）。
+- **埠**：`LOG_RELAY_PORT = 18082`（沿用 18080 MITM／18081 shim 的固定埠風格）。relay 先起、helper 後 spawn，故 helper 連線時 listener 已就緒。
+- **生命週期**：`LogRelayGuard` 納入 `Session`（與 `_mitm`／`_helper` 同）。drop 序 `_helper`（先停、其 socket EOF）→ `_mitm` → `_relay`（設 stop、join reader 執行緒）。reader 用讀取 timeout + stop flag，避免 helper 卡死時 join 阻塞。
+- **協定**：每行 `LEVEL\tMESSAGE\n`，`LEVEL ∈ {INFO, WARNING}`；relay `split_once('\t')` 後依 level 呼叫對應 `tracing` 巨集，message 不含 `\t`／`\n`。
+- **frb 簽名回復**：`start_capture` 回復為無 `log_dir` 參數（app 內部自知 relay 埠）；連帶 Dart `RustGachaCapture()`、`startCapture()`、provider 皆回復無參數（撤銷原 logDir 注入）。
+- **helper 端簡化**：移除檔案 logger（`LOG_FILE`／`init_hlog` 開檔／`format_helper_log_line`／`helper_log_file_name`／`chrono`），改為 socket logger；`classify_verdict` 等分類邏輯不動。
 
 ### 4.3 記錄內容（以「每個本機埠一次決策」為粒度，絕不逐封包）
 
