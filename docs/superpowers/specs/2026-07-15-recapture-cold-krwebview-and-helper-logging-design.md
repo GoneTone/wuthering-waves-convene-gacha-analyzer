@@ -51,7 +51,7 @@ capture done with no match
 
 此判斷需 helper log 證實。「間歇隨機」雖最吻合 5.1/5.2 的 `proc_name` timing race，但**隨機性本身無法排除**下列同樣會呈現隨機的機制，故軌 A 必須先上、當場分辨；屆時視 log 另案處理（本次不預先實作，遵循 YAGNI）：
 
-- **連線復用**：若 KRWebView 復用「重攔啟動前就已建立、仍在 pool 內的既有連線」，則整段沒有新 CONNECT/SYN，helper log 會顯示「該 :443 完全沒出現在事件流」。既有連線是否還活著取決於閒置時序，故也可能呈現隨機。（原以「重啟後無既有連線」排除，但使用者「重開」可能指重開卡池頁而非重啟整個 client，無法據此排除。）
+- **連線復用**：若 KRWebView 復用「重攔啟動前就已建立、仍在 pool 內的既有連線」，則整段沒有新 CONNECT/SYN，helper log 會顯示「該 :443 完全沒出現在事件流」。既有連線是否還活著取決於閒置時序，故也可能呈現隨機。使用者已確認其「重開」**兩種都有**（重啟整個 client、以及只關頁再開卡池歷史頁），故此機制無法排除——只關頁再開時 KRWebView 與其連線可能仍活著被復用。
 - **QUIC / HTTP3 首選**：冷啟動先試 UDP 443，被 drop 後才 TCP fallback，其時序異常也可能隨機。log 會顯示 UDP drop 與後續 TCP SYN 的順序。
 
 三者中若為 `proc_name` race，軌 B 直接修好；若為連線復用或 QUIC 時序，軌 B 的「不毒化 not_target」仍是無害的正確性改進，對應修法待 log 證實後另補。
