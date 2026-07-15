@@ -493,6 +493,7 @@ fn shim_listener(shared: Arc<Mutex<Shared>>, mitm_port: u16) {
             let sni = peek_sni(&mut client, &mut head);
             if sni.as_deref() == Some(TARGET_API_HOST) {
                 let host = sni.unwrap();
+                hlog("INFO", &format!("shim cport={cport} sni={host} -> mitm"));
                 match connect_via_mitm(&host, &head, mitm_port) {
                     Ok(up) => {
                         let _ = splice(client, up);
@@ -500,6 +501,7 @@ fn shim_listener(shared: Arc<Mutex<Shared>>, mitm_port: u16) {
                     Err(e) => eprintln!("[shim] {cport} ({host}) CONNECT 進 MITM 失敗：{e}"),
                 }
             } else {
+                hlog("INFO", &format!("shim cport={cport} sni=(other) -> passthrough"));
                 // 其餘一律直連原始 server passthrough（conntrack 查 IP，head 先補送）。
                 let server_ip = shared
                     .lock()
