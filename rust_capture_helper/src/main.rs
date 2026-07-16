@@ -173,15 +173,55 @@ fn start_watchdog(event_name: String, parent_pid: u32) {
 
 // ── SOCKET 層：追蹤 KRWebView 的 :443 本機埠 ───────────────────────────────
 
+/// WinDivert open 冷開機重試。剛開機後首次 `WinDivertOpen` 常撞 os error 1058
+/// （ERROR_SERVICE_DISABLED）：WinDivert 的核心驅動服務在上次關機時留下 pending-delete／停用
+/// 殘留，首次開啟要現場重裝會失敗——但**失敗那次通常已把服務重建好**，故退避重試即可成功。
+/// 回傳 `Some(handle)` 成功、`None` 表示重試耗盡。每次嘗試都經 [`hlog`] 送回 app 以利診斷。
+fn open_windivert_with_retry<T, E: std::fmt::Debug>(
+    what: &str,
+    mut open: impl FnMut() -> Result<T, E>,
+) -> Option<T> {
+    const ATTEMPTS: u32 = 8;
+    const DELAY_MS: u64 = 400;
+    for attempt in 1..=ATTEMPTS {
+        match open() {
+            Ok(h) => {
+                if attempt > 1 {
+                    hlog(
+                        "INFO",
+                        &format!("{what} 層 WinDivert open 第 {attempt} 次成功（冷開機重建驅動）"),
+                    );
+                }
+                return Some(h);
+            }
+            Err(e) => {
+                hlog(
+                    "WARNING",
+                    &format!("{what} 層 WinDivert open 第 {attempt}/{ATTEMPTS} 次失敗：{e:?}"),
+                );
+                if attempt < ATTEMPTS {
+                    std::thread::sleep(std::time::Duration::from_millis(DELAY_MS));
+                }
+            }
+        }
+    }
+    None
+}
+
 /// 在 SOCKET 層 CONNECT 當下就記下 :443 連線屬於哪個行程（KRWebView 或非），供 NETWORK 層
 /// O(1) 判斷、不必做昂貴的 GetExtendedTcpTable。CONNECT 事件時間上早於 SYN，故能在 SYN 前記好。
 /// 用 PID 快取避免每個事件都 `proc_name`（那會拖慢、輸掉與 SYN 的競態）。
 fn socket_watcher(shared: Arc<Mutex<Shared>>) {
-    let flags = WinDivertFlags::new().set_sniff().set_recv_only();
-    let divert = match WinDivert::socket("true", 0, flags) {
-        Ok(d) => d,
-        Err(e) => {
-            eprintln!("[error] SOCKET 層開啟失敗：{e:?}（需 admin + dll/sys 在旁）");
+    let divert = match open_windivert_with_retry("SOCKET", || {
+        WinDivert::socket("true", 0, WinDivertFlags::new().set_sniff().set_recv_only())
+    }) {
+        Some(d) => d,
+        None => {
+            hlog(
+                "SEVERE",
+                "SOCKET 層開啟失敗，重試耗盡，helper 退出（需 admin + dll/sys 在旁）",
+            );
+            std::thread::sleep(std::time::Duration::from_millis(250)); // 讓錯誤送達 relay 再退出
             std::process::exit(1);
         }
     };
@@ -290,10 +330,13 @@ fn network_loop(shared: Arc<Mutex<Shared>>) {
     let filter = format!(
         "outbound and ((ip and ((tcp and tcp.DstPort == {TARGET_PORT}) or (tcp and tcp.SrcPort == {SHIM_PORT}) or (udp and udp.DstPort == {TARGET_PORT}))) or (ipv6 and ((tcp and tcp.DstPort == {TARGET_PORT}) or (udp and udp.DstPort == {TARGET_PORT}))))"
     );
-    let divert = match WinDivert::network(&filter, 0, WinDivertFlags::new()) {
-        Ok(d) => d,
-        Err(e) => {
-            eprintln!("[error] NETWORK 層開啟失敗：{e:?}");
+    let divert = match open_windivert_with_retry("NETWORK", || {
+        WinDivert::network(&filter, 0, WinDivertFlags::new())
+    }) {
+        Some(d) => d,
+        None => {
+            hlog("SEVERE", "NETWORK 層開啟失敗，重試耗盡，helper 退出");
+            std::thread::sleep(std::time::Duration::from_millis(250)); // 讓錯誤送達 relay 再退出
             std::process::exit(1);
         }
     };
