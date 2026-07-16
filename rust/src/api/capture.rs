@@ -25,8 +25,10 @@ struct Session {
     // Drop 順序刻意（宣告序＝drop 序）：_helper 先 drop → 設停止事件、等 helper 退出、WinDivert
     // 重導向還原（KRWebView :443 恢復直連）；_mitm 後 drop → graceful shutdown。命中後的
     // gmserver response 早在 mitm.rs 的延遲 auto-stop 前已回傳，故先停重導向不影響 in-flight。
+    // _relay 最後 drop：helper 停止時其 log socket 會 EOF，relay 的 reader 執行緒隨後自然退出。
     _helper: helper::HelperHandle,
     _mitm: mitm::MitmServerGuard,
+    _relay: crate::log_relay::LogRelayGuard,
 }
 
 static SESSION: Lazy<Mutex<Option<Session>>> = Lazy::new(|| Mutex::new(None));
@@ -43,14 +45,17 @@ pub fn start_capture(sink: StreamSink<CapturedRequest>) -> Result<()> {
     cert_store::install_to_current_user_root(&root.cert_der)?;
 
     let addr: SocketAddr = PROXY_ADDR.parse()?;
-    // 先起 MITM（確保 helper 的 shim CONNECT 時它已在聽），再 UAC 提權 spawn helper。
-    // helper spawn 失敗（UAC 取消等）會讓上面的 mitm（區域變數）drop、自動收掉。
+    // 先起 MITM（確保 helper 的 shim CONNECT 時它已在聽），再起 log relay（確保 helper 連線時
+    // listener 已就緒），最後才 UAC 提權 spawn helper。helper spawn 失敗（UAC 取消等）會讓上面
+    // 的 mitm/relay（區域變數）drop、自動收掉。
     let mitm = mitm::start(addr, &root.cert_pem, &root.key_pem, sink)?;
-    let helper = helper::spawn(addr.port())?;
+    let relay = crate::log_relay::start(crate::log_relay::LOG_RELAY_PORT)?;
+    let helper = helper::spawn(addr.port(), crate::log_relay::LOG_RELAY_PORT)?;
 
     *guard = Some(Session {
         _helper: helper,
         _mitm: mitm,
+        _relay: relay,
     });
     Ok(())
 }

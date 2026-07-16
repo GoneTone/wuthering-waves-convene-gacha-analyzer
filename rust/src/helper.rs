@@ -35,9 +35,10 @@ impl Drop for HelperHandle {
     }
 }
 
-/// UAC 提權 spawn `capture_helper.exe`，傳入 hudsucker 監聽埠 + 停止事件名 + 主程式 PID。
+/// UAC 提權 spawn `capture_helper.exe`，傳入 hudsucker 監聽埠 + 停止事件名 + 主程式 PID +
+/// （第 4 個 argv）log relay 埠，供 helper 連本機 TCP 把分類決策送回 app 轉發進當天主 log 檔。
 /// UAC 被取消會回 `Err`。
-pub fn spawn(mitm_port: u16) -> Result<HelperHandle> {
+pub fn spawn(mitm_port: u16, log_port: u16) -> Result<HelperHandle> {
     let exe = helper_exe_path()?;
     let dir = exe
         .parent()
@@ -51,7 +52,7 @@ pub fn spawn(mitm_port: u16) -> Result<HelperHandle> {
             .context("CreateEventW 建立停止事件失敗")?
     };
 
-    let params = format!("{mitm_port} {event_name} {}", std::process::id());
+    let params = format!("{mitm_port} {event_name} {} {log_port}", std::process::id());
     let verb = HSTRING::from("runas");
     let file = HSTRING::from(exe.to_string_lossy().as_ref());
     let parameters = HSTRING::from(params);

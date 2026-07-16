@@ -3,4 +3,5 @@ pub(crate) mod ca;
 pub(crate) mod cert_store;
 mod frb_generated; /* AUTO INJECTED BY flutter_rust_bridge. This line may not be accurate, and you can change it according to your needs. */
 pub(crate) mod helper;
+mod log_relay;
 pub(crate) mod mitm;

@@ -15,19 +15,21 @@
 //! ## 行程鎖定（避免 GetExtendedTcpTable 拖慢熱路徑）
 //! SOCKET 層 sniff 在 CONNECT 當下（早於 SYN）把 :443 埠分類記入 tcp_ports（KRWebView→導向）
 //! 或 not_target_ports（非 KRWebView，含 helper 自己的上游→跳過），用 PID 快取保持 near-instant；
-//! network_loop 只查 set，僅罕見 race 才 fallback 查連線表。
+//! 行程名一時讀不到則分類為 `Unknown`——不快取、不塞進任何集合，留給 NETWORK 層的 SYN fallback
+//! 重新判定，避免被永久誤標成非目標。network_loop 只查 set，僅罕見 race 才 fallback 查連線表。
 //!
 //! ## IPv6 / QUIC
 //! gmserver 偏好 v6 會繞過 v4 重導向 → 對 KRWebView 的 v6 :443 SYN 送 **RST** 逼退 v4（RST 讓
 //! Happy Eyeballs 即時 fallback，不等 ~250ms timeout）；UDP 443（QUIC）靜默 drop 逼退 TCP。
 //!
 //! 跑法：通常由主程式 spawn。獨立除錯時以系統管理員執行：
-//! `capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid>]`（省略後兩者則無看門狗）。
+//! `capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid> [<log_port>]]`
+//! （省略停止事件名/PID 則無看門狗；省略 `log_port` 則不連 log relay，只留 stderr）。
 
 use std::collections::{HashMap, HashSet};
 use std::io::{Read, Write};
 use std::net::{Ipv4Addr, TcpListener, TcpStream};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;
 
 use sysinfo::{Pid, System};
@@ -48,6 +50,49 @@ const TARGET_API_HOST: &str = "gmserver-api.aki-game2.net";
 /// loopback 位址（正向把 src/dst 都改成它）。
 const LOOPBACK: [u8; 4] = [127, 0, 0, 1];
 
+/// 行程分類三態。`Unknown` 代表映像名一時讀不到（剛 spawn 的行程常見），
+/// 不可據此下「非目標」的永久判定，否則會毒化 `not_target_ports`。
+#[derive(Clone, Copy, PartialEq, Debug)]
+enum Verdict {
+    Target,
+    NotTarget,
+    Unknown,
+}
+
+/// 依映像名分類：空字串 → Unknown、等於目標行程 → Target、其餘 → NotTarget。
+fn classify_verdict(proc_name: &str) -> Verdict {
+    if proc_name.is_empty() {
+        Verdict::Unknown
+    } else if proc_name.eq_ignore_ascii_case(TARGET_PROCESS) {
+        Verdict::Target
+    } else {
+        Verdict::NotTarget
+    }
+}
+
+/// 連向 app log relay 的 socket（多執行緒共享）。未連上時為 None、`hlog` 靜默略過。
+static LOG_SOCK: OnceLock<Mutex<TcpStream>> = OnceLock::new();
+
+/// 連上 app 的 log relay（127.0.0.1:port）。失敗則不設，`hlog` 之後為 no-op（僅 eprintln）。
+fn init_hlog(log_port: u16) {
+    match TcpStream::connect(("127.0.0.1", log_port)) {
+        Ok(s) => {
+            let _ = LOG_SOCK.set(Mutex::new(s));
+        }
+        Err(e) => eprintln!("[warn] 連 log relay 127.0.0.1:{log_port} 失敗:{e}"),
+    }
+}
+
+/// 送一行 `LEVEL\tMESSAGE\n` 給 app 的 log relay（Mutex 序列化多執行緒、poison 復原）。
+/// 未連上時 no-op。同時保留 stderr 供獨立除錯。
+fn hlog(level: &str, msg: &str) {
+    eprintln!("[{level}] {msg}");
+    if let Some(m) = LOG_SOCK.get() {
+        let mut s = m.lock().unwrap_or_else(|e| e.into_inner());
+        let _ = s.write_all(format!("{level}\t{msg}\n").as_bytes());
+    }
+}
+
 /// 跨執行緒共享狀態。
 #[derive(Default)]
 struct Shared {
@@ -65,9 +110,10 @@ struct Shared {
     not_target_ports: HashSet<u16>,
 }
 
-/// 引數：`capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid>]`。
+/// 引數：`capture_helper.exe <mitm_port> [<stop_event_name> <parent_pid> [<log_port>]]`。
 /// `mitm_port`＝主程式 hudsucker 監聽埠；`stop_event_name`/`parent_pid`＝看門狗（主程式設定
-/// 該事件或主程式結束時，helper 自行 exit，WinDivert handle 關閉即還原重導向）。
+/// 該事件或主程式結束時，helper 自行 exit，WinDivert handle 關閉即還原重導向）；
+/// `log_port`＝app 的 log relay 埠，提供時連上該埠、初始化全域 `hlog` 送 log 行給 app。
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let mitm_port: u16 = args
@@ -80,6 +126,10 @@ fn main() {
     ) {
         start_watchdog(ev, pid);
     }
+    if let Some(port) = args.get(4).and_then(|s| s.parse::<u16>().ok()) {
+        init_hlog(port);
+    }
+    hlog("INFO", &format!("capture_helper started, mitm_port={mitm_port}"));
 
     let shared = Arc::new(Mutex::new(Shared::default()));
     {
@@ -123,20 +173,62 @@ fn start_watchdog(event_name: String, parent_pid: u32) {
 
 // ── SOCKET 層：追蹤 KRWebView 的 :443 本機埠 ───────────────────────────────
 
+/// WinDivert open 冷開機重試。剛開機後首次 `WinDivertOpen` 常撞 os error 1058
+/// （ERROR_SERVICE_DISABLED）：WinDivert 的核心驅動服務在上次關機時留下 pending-delete／停用
+/// 殘留，首次開啟要現場重裝會失敗——但**失敗那次通常已把服務重建好**，故退避重試即可成功。
+/// 回傳 `Some(handle)` 成功、`None` 表示重試耗盡。每次嘗試都經 [`hlog`] 送回 app 以利診斷。
+fn open_windivert_with_retry<T, E: std::fmt::Debug>(
+    what: &str,
+    mut open: impl FnMut() -> Result<T, E>,
+) -> Option<T> {
+    const ATTEMPTS: u32 = 8;
+    const DELAY_MS: u64 = 400;
+    for attempt in 1..=ATTEMPTS {
+        match open() {
+            Ok(h) => {
+                if attempt > 1 {
+                    hlog(
+                        "INFO",
+                        &format!("{what} 層 WinDivert open 第 {attempt} 次成功（冷開機重建驅動）"),
+                    );
+                }
+                return Some(h);
+            }
+            Err(e) => {
+                hlog(
+                    "WARNING",
+                    &format!("{what} 層 WinDivert open 第 {attempt}/{ATTEMPTS} 次失敗：{e:?}"),
+                );
+                if attempt < ATTEMPTS {
+                    std::thread::sleep(std::time::Duration::from_millis(DELAY_MS));
+                }
+            }
+        }
+    }
+    None
+}
+
 /// 在 SOCKET 層 CONNECT 當下就記下 :443 連線屬於哪個行程（KRWebView 或非），供 NETWORK 層
 /// O(1) 判斷、不必做昂貴的 GetExtendedTcpTable。CONNECT 事件時間上早於 SYN，故能在 SYN 前記好。
 /// 用 PID 快取避免每個事件都 `proc_name`（那會拖慢、輸掉與 SYN 的競態）。
 fn socket_watcher(shared: Arc<Mutex<Shared>>) {
-    let flags = WinDivertFlags::new().set_sniff().set_recv_only();
-    let divert = match WinDivert::socket("true", 0, flags) {
-        Ok(d) => d,
-        Err(e) => {
-            eprintln!("[error] SOCKET 層開啟失敗：{e:?}（需 admin + dll/sys 在旁）");
+    let divert = match open_windivert_with_retry("SOCKET", || {
+        WinDivert::socket("true", 0, WinDivertFlags::new().set_sniff().set_recv_only())
+    }) {
+        Some(d) => d,
+        None => {
+            hlog(
+                "SEVERE",
+                "SOCKET 層開啟失敗，重試耗盡，helper 退出（需 admin + dll/sys 在旁）",
+            );
+            std::thread::sleep(std::time::Duration::from_millis(250)); // 讓錯誤送達 relay 再退出
             std::process::exit(1);
         }
     };
     let mut sys = System::new();
-    let mut pid_is_target: HashMap<u32, bool> = HashMap::new();
+    // 只快取已定案的 Target/NotTarget；Unknown（映像名一時讀不到）不快取，
+    // 讓後續事件或 network_loop 的 SYN fallback 再判，避免永久誤標。
+    let mut pid_verdict: HashMap<u32, Verdict> = HashMap::new();
     let mut buf = vec![0u8; 65535];
     loop {
         let packet = match divert.recv(Some(&mut buf)) {
@@ -148,14 +240,19 @@ fn socket_watcher(shared: Arc<Mutex<Shared>>) {
             continue;
         }
         let pid = addr.process_id();
-        let is_kr = match pid_is_target.get(&pid) {
-            Some(&v) => v,
+        // 回傳 (verdict, 是否為本次首度分類)：首度才寫 log，避免重複洗版。
+        let (verdict, first_seen) = match pid_verdict.get(&pid) {
+            Some(&v) => (v, false),
             None => {
-                let v = proc_name(pid, &mut sys).eq_ignore_ascii_case(TARGET_PROCESS);
-                pid_is_target.insert(pid, v);
-                v
+                let name = proc_name(pid, &mut sys);
+                let v = classify_verdict(&name);
+                if v != Verdict::Unknown {
+                    pid_verdict.insert(pid, v);
+                }
+                (v, true)
             }
         };
+
         let lport = addr.local_port();
         let proto = addr.protocol();
         let v6 = addr.ipv6();
@@ -168,22 +265,60 @@ fn socket_watcher(shared: Arc<Mutex<Shared>>) {
             g.v6_drop_ports.remove(&lport);
             g.not_target_ports.remove(&lport);
             g.redirects.remove(&lport);
-        } else if is_kr {
-            match (proto, v6) {
-                (6, false) => {
-                    g.tcp_ports.insert(lport);
+            continue;
+        }
+        match verdict {
+            Verdict::Target => {
+                match (proto, v6) {
+                    (6, false) => {
+                        g.tcp_ports.insert(lport);
+                    }
+                    (6, true) => {
+                        g.v6_drop_ports.insert(lport);
+                    }
+                    (17, _) => {
+                        g.udp_ports.insert(lport);
+                    }
+                    _ => {}
                 }
-                (6, true) => {
-                    g.v6_drop_ports.insert(lport);
+                drop(g);
+                if first_seen {
+                    hlog(
+                        "INFO",
+                        &format!(
+                            "connect port={lport} pid={pid} name=KRWebView.exe \
+                             verdict=target proto={proto} v6={v6}"
+                        ),
+                    );
                 }
-                (17, _) => {
-                    g.udp_ports.insert(lport);
-                }
-                _ => {}
             }
-        } else {
-            // 非 KRWebView 的 :443（含 helper 自己對上游的連線）→ 記下供 network_loop 跳過查詢。
-            g.not_target_ports.insert(lport);
+            Verdict::NotTarget => {
+                // 非 KRWebView（含 helper 自己對上游的連線）→ 記下供 network_loop 跳過查詢。
+                g.not_target_ports.insert(lport);
+                drop(g);
+                if first_seen {
+                    hlog(
+                        "INFO",
+                        &format!(
+                            "connect port={lport} pid={pid} verdict=not_target \
+                             proto={proto} v6={v6}"
+                        ),
+                    );
+                }
+            }
+            Verdict::Unknown => {
+                // 映像名一時讀不到：維持未分類（不塞任何集合），交給 SYN fallback。
+                drop(g);
+                if first_seen {
+                    hlog(
+                        "WARNING",
+                        &format!(
+                            "connect port={lport} pid={pid} name=unresolved \
+                             verdict=unknown proto={proto} v6={v6} (defer to SYN fallback)"
+                        ),
+                    );
+                }
+            }
         }
     }
 }
@@ -195,10 +330,13 @@ fn network_loop(shared: Arc<Mutex<Shared>>) {
     let filter = format!(
         "outbound and ((ip and ((tcp and tcp.DstPort == {TARGET_PORT}) or (tcp and tcp.SrcPort == {SHIM_PORT}) or (udp and udp.DstPort == {TARGET_PORT}))) or (ipv6 and ((tcp and tcp.DstPort == {TARGET_PORT}) or (udp and udp.DstPort == {TARGET_PORT}))))"
     );
-    let divert = match WinDivert::network(&filter, 0, WinDivertFlags::new()) {
-        Ok(d) => d,
-        Err(e) => {
-            eprintln!("[error] NETWORK 層開啟失敗：{e:?}");
+    let divert = match open_windivert_with_retry("NETWORK", || {
+        WinDivert::network(&filter, 0, WinDivertFlags::new())
+    }) {
+        Some(d) => d,
+        None => {
+            hlog("SEVERE", "NETWORK 層開啟失敗，重試耗盡，helper 退出");
+            std::thread::sleep(std::time::Duration::from_millis(250)); // 讓錯誤送達 relay 再退出
             std::process::exit(1);
         }
     };
@@ -248,11 +386,35 @@ fn network_loop(shared: Arc<Mutex<Shared>>) {
                 true
             } else if known_not {
                 false
-            } else if is_syn_only(packet.data.as_ref(), p.ihl)
-                && tcp_port_is_target(p.src_port, false, &mut sys)
-            {
-                shared.lock().unwrap().tcp_ports.insert(p.src_port);
-                true
+            } else if is_syn_only(packet.data.as_ref(), p.ihl) {
+                // 未分類的 :443 SYN：扣住重試解析 owner（冷 spawn 行程名一時讀不到）。
+                // 重導向必須在 SYN 當下完成，故在此定案；期間不 reinject 本封包。
+                match resolve_syn_target_with_retry(p.src_port, &mut sys) {
+                    Verdict::Target => {
+                        shared.lock().unwrap().tcp_ports.insert(p.src_port);
+                        hlog(
+                            "INFO",
+                            &format!("syn-fallback port={} verdict=target -> redirect", p.src_port),
+                        );
+                        true
+                    }
+                    Verdict::NotTarget => {
+                        shared.lock().unwrap().not_target_ports.insert(p.src_port);
+                        hlog(
+                            "INFO",
+                            &format!("syn-fallback port={} verdict=not_target -> skip", p.src_port),
+                        );
+                        false
+                    }
+                    Verdict::Unknown => {
+                        // 重試後仍讀不到：維持未分類、不毒化，讓後續（如重送 SYN）再試。
+                        hlog(
+                            "WARNING",
+                            &format!("syn-fallback port={} verdict=unknown -> skip (not poisoned)", p.src_port),
+                        );
+                        false
+                    }
+                }
             } else {
                 false
             }
@@ -357,6 +519,7 @@ fn shim_listener(shared: Arc<Mutex<Shared>>, mitm_port: u16) {
             let sni = peek_sni(&mut client, &mut head);
             if sni.as_deref() == Some(TARGET_API_HOST) {
                 let host = sni.unwrap();
+                hlog("INFO", &format!("shim cport={cport} sni={host} -> mitm"));
                 match connect_via_mitm(&host, &head, mitm_port) {
                     Ok(up) => {
                         let _ = splice(client, up);
@@ -364,6 +527,7 @@ fn shim_listener(shared: Arc<Mutex<Shared>>, mitm_port: u16) {
                     Err(e) => eprintln!("[shim] {cport} ({host}) CONNECT 進 MITM 失敗：{e}"),
                 }
             } else {
+                hlog("INFO", &format!("shim cport={cport} sni=(other) -> passthrough"));
                 // 其餘一律直連原始 server passthrough（conntrack 查 IP，head 先補送）。
                 let server_ip = shared
                     .lock()
@@ -542,6 +706,26 @@ fn tcp_port_is_target(port: u16, v6: bool, sys: &mut System) -> bool {
         .unwrap_or(false)
 }
 
+/// 對剛學到的 :443 SYN，查 owner 行程並分類；剛 spawn 的行程映像名可能一時讀不到，
+/// 故有上限地重試（最多 RETRIES 次、每次間隔 DELAY_MS，總延遲上限 RETRIES*DELAY_MS）。
+/// 回傳 Target/NotTarget 為已定案；Unknown 代表重試後仍無法解析（呼叫端應維持未分類、不毒化）。
+fn resolve_syn_target_with_retry(port: u16, sys: &mut System) -> Verdict {
+    const RETRIES: u32 = 4;
+    const DELAY_MS: u64 = 6;
+    for attempt in 0..=RETRIES {
+        if let Some(pid) = find_tcp_pid(port, false) {
+            let v = classify_verdict(&proc_name(pid, sys));
+            if v != Verdict::Unknown {
+                return v;
+            }
+        }
+        if attempt < RETRIES {
+            std::thread::sleep(std::time::Duration::from_millis(DELAY_MS));
+        }
+    }
+    Verdict::Unknown
+}
+
 /// 掃 TCP（v4/v6）連線表找指定本機埠的擁有者 PID。raw `GetExtendedTcpTable`，零配置線性掃描。
 fn find_tcp_pid(port: u16, v6: bool) -> Option<u32> {
     use windows::Win32::NetworkManagement::IpHelper::{
@@ -716,4 +900,26 @@ fn proc_name(pid: u32, sys: &mut System) -> String {
     sys.process(spid)
         .map(|p| p.name().to_string_lossy().into_owned())
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn classify_empty_name_is_unknown() {
+        assert_eq!(classify_verdict(""), Verdict::Unknown);
+    }
+
+    #[test]
+    fn classify_krwebview_is_target_case_insensitive() {
+        assert_eq!(classify_verdict("KRWebView.exe"), Verdict::Target);
+        assert_eq!(classify_verdict("krwebview.EXE"), Verdict::Target);
+    }
+
+    #[test]
+    fn classify_other_process_is_not_target() {
+        assert_eq!(classify_verdict("chrome.exe"), Verdict::NotTarget);
+        assert_eq!(classify_verdict("capture_helper.exe"), Verdict::NotTarget);
+    }
 }
