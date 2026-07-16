@@ -79,7 +79,7 @@ fn init_hlog(log_port: u16) {
         Ok(s) => {
             let _ = LOG_SOCK.set(Mutex::new(s));
         }
-        Err(e) => eprintln!("[warn] 連 log relay 127.0.0.1:{log_port} 失敗:{e}"),
+        Err(e) => eprintln!("[warn] connect to log relay 127.0.0.1:{log_port} failed: {e}"),
     }
 }
 
@@ -140,7 +140,7 @@ fn main() {
         let s = shared.clone();
         thread::spawn(move || shim_listener(s, mitm_port));
     }
-    eprintln!("capture_helper：鎖 {TARGET_PROCESS}、shim 127.0.0.1:{SHIM_PORT} → MITM 127.0.0.1:{mitm_port}");
+    eprintln!("capture_helper: target {TARGET_PROCESS}, shim 127.0.0.1:{SHIM_PORT} -> MITM 127.0.0.1:{mitm_port}");
     network_loop(shared);
 }
 
@@ -189,7 +189,7 @@ fn open_windivert_with_retry<T, E: std::fmt::Debug>(
                 if attempt > 1 {
                     hlog(
                         "INFO",
-                        &format!("{what} 層 WinDivert open 第 {attempt} 次成功（冷開機重建驅動）"),
+                        &format!("{what} layer WinDivert open succeeded on attempt {attempt} (driver reinstalled after cold boot)"),
                     );
                 }
                 return Some(h);
@@ -197,7 +197,7 @@ fn open_windivert_with_retry<T, E: std::fmt::Debug>(
             Err(e) => {
                 hlog(
                     "WARNING",
-                    &format!("{what} 層 WinDivert open 第 {attempt}/{ATTEMPTS} 次失敗：{e:?}"),
+                    &format!("{what} layer WinDivert open attempt {attempt}/{ATTEMPTS} failed: {e:?}"),
                 );
                 if attempt < ATTEMPTS {
                     std::thread::sleep(std::time::Duration::from_millis(DELAY_MS));
@@ -219,7 +219,7 @@ fn socket_watcher(shared: Arc<Mutex<Shared>>) {
         None => {
             hlog(
                 "SEVERE",
-                "SOCKET 層開啟失敗，重試耗盡，helper 退出（需 admin + dll/sys 在旁）",
+                "SOCKET layer open failed after exhausting retries, helper exiting (needs admin + dll/sys alongside)",
             );
             std::thread::sleep(std::time::Duration::from_millis(250)); // 讓錯誤送達 relay 再退出
             std::process::exit(1);
@@ -335,7 +335,7 @@ fn network_loop(shared: Arc<Mutex<Shared>>) {
     }) {
         Some(d) => d,
         None => {
-            hlog("SEVERE", "NETWORK 層開啟失敗，重試耗盡，helper 退出");
+            hlog("SEVERE", "NETWORK layer open failed after exhausting retries, helper exiting");
             std::thread::sleep(std::time::Duration::from_millis(250)); // 讓錯誤送達 relay 再退出
             std::process::exit(1);
         }
@@ -477,10 +477,10 @@ fn reinject(
     what: &str,
 ) {
     if let Err(e) = packet.recalculate_checksums(ChecksumFlags::default()) {
-        eprintln!("[warn] {what} 重算 checksum 失敗：{e:?}");
+        eprintln!("[warn] {what} checksum recalculation failed: {e:?}");
     }
     if let Err(e) = divert.send(packet) {
-        eprintln!("[warn] {what} send 失敗：{e:?}");
+        eprintln!("[warn] {what} send failed: {e:?}");
     }
 }
 
@@ -493,7 +493,7 @@ fn shim_listener(shared: Arc<Mutex<Shared>>, mitm_port: u16) {
     let listener = match TcpListener::bind(("127.0.0.1", SHIM_PORT)) {
         Ok(l) => l,
         Err(e) => {
-            eprintln!("[error] shim 監聽 127.0.0.1:{SHIM_PORT} 失敗：{e:?}");
+            eprintln!("[error] shim listen on 127.0.0.1:{SHIM_PORT} failed: {e:?}");
             std::process::exit(1);
         }
     };
@@ -501,14 +501,14 @@ fn shim_listener(shared: Arc<Mutex<Shared>>, mitm_port: u16) {
         let mut client = match conn {
             Ok(c) => c,
             Err(e) => {
-                eprintln!("[shim] accept 失敗：{e:?}");
+                eprintln!("[shim] accept failed: {e:?}");
                 continue;
             }
         };
         let cport = match client.peer_addr() {
             Ok(p) => p.port(),
             Err(e) => {
-                eprintln!("[shim] peer_addr 失敗：{e:?}（socket 可能已被 RST）");
+                eprintln!("[shim] peer_addr failed: {e:?} (socket may already be RST)");
                 continue;
             }
         };
@@ -524,7 +524,7 @@ fn shim_listener(shared: Arc<Mutex<Shared>>, mitm_port: u16) {
                     Ok(up) => {
                         let _ = splice(client, up);
                     }
-                    Err(e) => eprintln!("[shim] {cport} ({host}) CONNECT 進 MITM 失敗：{e}"),
+                    Err(e) => eprintln!("[shim] {cport} ({host}) CONNECT to MITM failed: {e}"),
                 }
             } else {
                 hlog("INFO", &format!("shim cport={cport} sni=(other) -> passthrough"));
@@ -536,7 +536,7 @@ fn shim_listener(shared: Arc<Mutex<Shared>>, mitm_port: u16) {
                     .get(&cport)
                     .map(|(s, ..)| *s);
                 let Some(sip) = server_ip else {
-                    eprintln!("[shim] {cport} 查無 conntrack，放棄");
+                    eprintln!("[shim] {cport} no conntrack entry, giving up");
                     return;
                 };
                 let server = (Ipv4Addr::from(sip), TARGET_PORT);
@@ -546,7 +546,7 @@ fn shim_listener(shared: Arc<Mutex<Shared>>, mitm_port: u16) {
                         let _ = splice(client, up);
                     }
                     Err(e) => eprintln!(
-                        "[shim] {cport} passthrough 連 {}:{} 失敗：{e:?}",
+                        "[shim] {cport} passthrough to {}:{} failed: {e:?}",
                         server.0, server.1
                     ),
                 }
@@ -594,7 +594,7 @@ fn read_until_headers_end(s: &mut TcpStream) -> std::io::Result<()> {
         if s.read(&mut one)? == 0 {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::UnexpectedEof,
-                "CONNECT 回應未收完",
+                "CONNECT response truncated",
             ));
         }
         acc.push(one[0]);
@@ -604,7 +604,7 @@ fn read_until_headers_end(s: &mut TcpStream) -> std::io::Result<()> {
         if acc.len() > 16384 {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
-                "CONNECT 回應過長",
+                "CONNECT response too long",
             ));
         }
     }
@@ -838,7 +838,7 @@ fn send_v6_rst(divert: &WinDivert<NetworkLayer>, packet: &mut WinDivertPacket<Ne
     packet.address.set_outbound(false); // inbound 注入給 client
     packet.address.as_mut().set_loopback(false);
     if let Err(e) = packet.recalculate_checksums(ChecksumFlags::default()) {
-        eprintln!("[warn] v6 RST 重算 checksum 失敗：{e:?}");
+        eprintln!("[warn] v6 RST checksum recalculation failed: {e:?}");
     }
     let _ = divert.send(packet);
 }
