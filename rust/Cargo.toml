@@ -15,7 +15,7 @@ once_cell = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "net"] }
-hudsucker = { version = "0.24", default-features = false, features = ["decoder", "rcgen-ca", "rustls-client", "http2"] }
+hudsucker = { version = "0.25", default-features = false, features = ["decoder", "rcgen-ca", "rustls-client", "http2"] }
 hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "http2", "tls12", "webpki-tokio"] }
 # 讀取攔到的 POST body 需要：BodyExt::collect（http-body-util）與 Bytes（bytes）。
 # hudsucker 0.24 未 re-export 這兩者；版本對齊既有 Cargo.lock（http-body-util 0.1.3 / bytes 1.11.1），
