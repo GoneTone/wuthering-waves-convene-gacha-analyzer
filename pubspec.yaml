@@ -28,7 +28,7 @@ dependencies:
   screen_retriever: ^0.2.2
   url_launcher: ^6.3.2
   font_awesome_flutter: ^11.0.0
-  pub_semver: ^2.2.0
+  pub_semver: ^2.2.1
   markdown_widget: ^2.3.2+8
   super_clipboard: ^0.9.1
   synchronized: ^3.4.1
