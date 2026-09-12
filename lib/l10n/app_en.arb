@@ -299,9 +299,15 @@
   "settingsDataLanguageUnifyDone": "Converted {converted}, recovered {backfilled} IDs, {unresolved} could not be converted.",
   "@settingsDataLanguageUnifyDone": {
     "placeholders": {
-      "converted": { "type": "int" },
-      "backfilled": { "type": "int" },
-      "unresolved": { "type": "int" }
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
     }
   },
   "settingsDataLanguageUnifyFailed": "Conversion failed; data unchanged. Check your connection and try again.",
@@ -312,7 +318,13 @@
   "cloudSyncLink": "Link Google account",
   "cloudSyncAwaitingConsent": "Browser opened. Please finish authorization in your browser...",
   "cloudSyncLinkedAs": "Linked: {email}",
-  "@cloudSyncLinkedAs": {"placeholders": {"email": {"type": "String"}}},
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "Auto sync",
   "cloudSyncAutoToggleHint": "Syncs automatically on app start and after data changes; manual sync stays available when off.",
   "cloudSyncNow": "Sync now",
@@ -320,7 +332,13 @@
   "cloudSyncUnlinkConfirmTitle": "Unlink",
   "cloudSyncUnlinkConfirmBody": "Syncing will stop. Both local data and the cloud backup are kept.",
   "cloudSyncLastSynced": "Last synced: {time}",
-  "@cloudSyncLastSynced": {"placeholders": {"time": {"type": "String"}}},
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "Not synced yet",
   "cloudSyncErrorNetwork": "Sync failed: network problem. Will retry automatically.",
   "cloudSyncErrorBusy": "Sync deferred: an update or import is in progress. Will retry automatically.",
@@ -518,15 +536,60 @@
     "description": "Confirm button label in the refetch AlertDialog."
   },
   "settingsItemData": "Item data",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "Re-fetch the latest details for all items (intro, image list, etc.), keeping already-downloaded images; newly added images download when you open that item's details.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "Update item data",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "No gacha records yet, nothing to update",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "Update item data?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "This re-fetches details for all items, keeping already-downloaded images; newly added images download when you open the details. Update now?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "Start updating",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, =1{Updated data for {count} item} other{Updated data for {count} items}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, =1{Downloaded {count} item image} other{Downloaded {count} item images}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, =1{Cleaned up stale-language data for {count} item} other{Cleaned up stale-language data for {count} items}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "Image cache",
   "@settingsImageCache": {
     "description": "Settings page section title for image cache controls."
@@ -587,7 +650,11 @@
   "shareImageCopiedOnly": "Copied to clipboard",
   "shareImageSaved": "Saved: {path}",
   "@shareImageSaved": {
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "shareImageCopyFailed": "Failed to copy to clipboard",
   "shareImageFailed": "Failed to generate share image",
