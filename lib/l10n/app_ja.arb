@@ -270,6 +270,8 @@
   },
   "errorGachaFailed": "再取得しても記録を取得できませんでした。サーバーが一時的に不安定な可能性があります。しばらくしてから再試行してください。",
   "errorNoRecords": "このアカウントには集音の記録がまだありません",
+  "errorNetwork": "ネットの接続に失敗、設定を確認しもう一度お試しください",
+  "errorUnexpected": "予期しないエラー、しばらくしてからもう一度お試しください",
   "pageOverviewTitle": "総合データ（全集音合計）",
   "pageOverviewGachaSection": "集音総合",
   "pageBannerRecordList": "記録一覧",
@@ -297,9 +299,15 @@
   "settingsDataLanguageUnifyDone": "{converted} 件を変換、{backfilled} 件のIDを補完、{unresolved} 件は変換できませんでした。",
   "@settingsDataLanguageUnifyDone": {
     "placeholders": {
-      "converted": { "type": "int" },
-      "backfilled": { "type": "int" },
-      "unresolved": { "type": "int" }
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
     }
   },
   "settingsDataLanguageUnifyFailed": "変換に失敗しました。データは変更されていません。接続を確認して再試行してください。",
@@ -310,7 +318,13 @@
   "cloudSyncLink": "Google アカウントを連携",
   "cloudSyncAwaitingConsent": "ブラウザを開きました。ブラウザで認可を完了してください...",
   "cloudSyncLinkedAs": "連携中：{email}",
-  "@cloudSyncLinkedAs": {"placeholders": {"email": {"type": "String"}}},
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "自動同期",
   "cloudSyncAutoToggleHint": "アプリ起動時とデータ変更後に自動同期します。オフでも手動同期は可能です。",
   "cloudSyncNow": "今すぐ同期",
@@ -318,7 +332,13 @@
   "cloudSyncUnlinkConfirmTitle": "連携を解除",
   "cloudSyncUnlinkConfirmBody": "解除すると同期は停止します。ローカルとクラウドのデータはどちらも保持されます。",
   "cloudSyncLastSynced": "前回の同期：{time}",
-  "@cloudSyncLastSynced": {"placeholders": {"time": {"type": "String"}}},
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "まだ同期していません",
   "cloudSyncErrorNetwork": "同期に失敗しました：ネットワークの問題です。後で自動的に再試行します。",
   "cloudSyncErrorBusy": "同期を保留しました：更新またはインポートが進行中です。後で自動的に再試行します。",
@@ -516,15 +536,60 @@
     "description": "Confirm button label in the refetch AlertDialog."
   },
   "settingsItemData": "アイテムデータ",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "すべてのアイテムの最新の詳細データ（紹介、画像リストなど）を再取得します。ダウンロード済みの画像は保持され、新しく追加された画像はそのアイテムの詳細を開いたときにダウンロードされます。",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "アイテムデータを更新",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "集音記録がないため、アイテムデータを更新できません",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "アイテムデータを更新しますか？",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "すべてのアイテムの詳細データを再取得します。ダウンロード済みの画像は保持され、新しく追加された画像は詳細を開いたときにダウンロードされます。更新しますか？",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "更新を開始",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count} 件のアイテムのデータを更新しました",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "アイテム画像を {count} 件ダウンロード",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count} 件のアイテムの残存言語データを整理しました",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "画像キャッシュ",
   "@settingsImageCache": {
     "description": "Settings page section title for image cache controls."
@@ -585,7 +650,11 @@
   "shareImageCopiedOnly": "クリップボードにコピーしました",
   "shareImageSaved": "保存しました：{path}",
   "@shareImageSaved": {
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "shareImageCopyFailed": "クリップボードへのコピーに失敗しました",
   "shareImageFailed": "シェア画像の生成に失敗しました",
