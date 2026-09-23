@@ -31,7 +31,7 @@ dependencies:
   pub_semver: ^2.2.1
   markdown_widget: ^2.3.2+8
   super_clipboard: ^0.9.1
-  synchronized: ^3.4.1
+  synchronized: ^3.4.2
   flutter_html: ^3.0.0
   html: ^0.15.6
   webview_windows: ^0.4.0
