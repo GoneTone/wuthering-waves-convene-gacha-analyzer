@@ -27,6 +27,9 @@ updates:
           - "screen_retriever"
     ignore:
       - dependency-name: "flutter_rust_bridge"
+      # flutter_html 3.0.0 relies on html's internal query_selector API removed in 0.15.7.
+      - dependency-name: "html"
+        versions: [">=0.15.7"]
 
   - package-ecosystem: "cargo"
     directory: "/rust"

@@ -33,7 +33,8 @@ dependencies:
   super_clipboard: ^0.9.1
   synchronized: ^3.4.2
   flutter_html: ^3.0.0
-  html: ^0.15.6
+  # flutter_html 3.0.0 引用 html 的內部 API `src/query_selector.dart` 的 `matches()`，0.15.7 已移除；待 flutter_html 更新前釘在 0.15.6。
+  html: ">=0.15.6 <0.15.7"
   webview_windows: ^0.4.0
   googleapis: ^17.0.0
   googleapis_auth: ^2.3.3
