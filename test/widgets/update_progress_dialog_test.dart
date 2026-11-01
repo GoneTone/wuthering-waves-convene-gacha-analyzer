@@ -6,6 +6,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/update_progress_dialog.dart';
+import '../helpers/no_game_dir.dart';
 
 /// [GachaRepository] 測試替身：覆寫 [build] 傳回固定 [GachaState]，
 /// 不執行任何真實 bootstrap 或 I/O。
@@ -35,6 +36,7 @@ Future<void> _pumpDialog(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        noGameDirOverride,
         gachaRepositoryProvider.overrideWith(
           () => _FakeGachaRepository(progress),
         ),
@@ -54,6 +56,16 @@ Future<void> _pumpDialog(
 }
 
 void main() {
+  testWidgets('WaitingForCapture shows not-detected link that opens help', (
+    tester,
+  ) async {
+    await _pumpDialog(tester, progress: const WaitingForCapture());
+    await tester.tap(find.text('已經開啟喚取記錄，卻一直沒有反應？'));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('偵測不到喚取記錄'), findsOneWidget);
+  });
+
   group('UpdateProgressDialog — FetchingBanner 卡池本地化', () {
     testWidgets('gachaTypeCharacter（既有池）顯示本地化名稱，不顯示原始 key', (tester) async {
       await _pumpDialog(

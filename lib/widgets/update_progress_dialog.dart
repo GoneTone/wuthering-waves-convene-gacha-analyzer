@@ -6,6 +6,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/game_dir_help_dialog.dart';
 
 /// 顯示喚取資料更新進度的 dialog，包含 [LinearProgressIndicator] 與各狀態文字。
 class UpdateProgressDialog extends ConsumerWidget {
@@ -17,9 +18,12 @@ class UpdateProgressDialog extends ConsumerWidget {
     ref.listen<UpdateProgress?>(
       gachaRepositoryProvider.select((s) => s.progress),
       (prev, next) {
-        if (next == null && Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
+        final route = ModalRoute.of(context);
+        if (next != null || route == null) return;
+        // 上面可能疊著說明視窗，先收回到自己這層再關，避免多 pop 底下的頁面。
+        final nav = Navigator.of(context);
+        nav.popUntil((r) => r == route);
+        if (nav.canPop()) nav.pop();
       },
     );
     final progress = ref.watch(
@@ -175,6 +179,11 @@ class _Body extends StatelessWidget {
             const SizedBox(height: AppSpacing.s),
             Text(l.progressFallbackHint, style: theme.textTheme.bodySmall),
           ],
+          const SizedBox(height: AppSpacing.s),
+          TextButton(
+            onPressed: () => showGameDirHelpDialog(context),
+            child: Text(l.progressNotDetectedLink, textAlign: TextAlign.center),
+          ),
         ],
       ),
       FetchingBanner(

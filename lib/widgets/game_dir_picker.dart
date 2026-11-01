@@ -1,0 +1,42 @@
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
+
+import 'package:wuthering_waves_convene_gacha_analyzer/services/game_dir_locator.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+
+/// 選擇遊戲資料夾的結果。
+enum GameDirPickOutcome {
+  /// 已驗證並存進設定。
+  saved,
+
+  /// 使用者取消選擇。
+  cancelled,
+
+  /// 選到的資料夾找不到遊戲記錄檔。
+  invalid,
+}
+
+final Logger _log = Logger('gacha.clientLog');
+
+/// 開啟選資料夾視窗，用 [GameDirLocator.normalize] 驗證後存進設定。
+///
+/// [pickDirectory] 預設為系統選資料夾視窗，測試可注入替身。
+Future<GameDirPickOutcome> pickAndSaveGameDir(
+  WidgetRef ref, {
+  Future<String?> Function()? pickDirectory,
+}) async {
+  final picked = await (pickDirectory ?? getDirectoryPath)();
+  if (picked == null || !ref.context.mounted) {
+    return GameDirPickOutcome.cancelled;
+  }
+  final dir = await ref.read(gameDirLocatorProvider).normalize(picked);
+  if (dir == null) {
+    _log.info('game dir pick rejected path=${sanitizeFsPath(picked)}');
+    return GameDirPickOutcome.invalid;
+  }
+  if (!ref.context.mounted) return GameDirPickOutcome.cancelled;
+  await ref.read(settingsProvider.notifier).setGameDir(dir);
+  return GameDirPickOutcome.saved;
+}
