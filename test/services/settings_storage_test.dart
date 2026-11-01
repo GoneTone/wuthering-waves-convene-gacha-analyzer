@@ -194,6 +194,25 @@ void main() {
     });
   });
 
+  group('gameDir', () {
+    test('round-trip，null 時移除 pref.gameDir key', () async {
+      const dir = r'D:\Wuthering Waves\Wuthering Waves Game';
+      await SettingsStorage.save(
+        const AppSettings(
+          themeMode: AppThemeMode.system,
+          locale: SystemLanguage(),
+          gameDir: dir,
+        ),
+      );
+      expect((await SettingsStorage.load()).gameDir, dir);
+
+      await SettingsStorage.save(AppSettings.defaults);
+      expect((await SettingsStorage.load()).gameDir, isNull);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('pref.gameDir'), isFalse);
+    });
+  });
+
   group('maskUidInUi', () {
     test('defaults to false when key absent', () async {
       final s = await SettingsStorage.load();
