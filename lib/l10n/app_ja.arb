@@ -328,6 +328,28 @@
   },
   "settingsDataLanguageUnifyFailed": "変換に失敗しました。データは変更されていません。接続を確認して再試行してください。",
   "settingsDataManagement": "データ管理",
+  "settingsGameDir": "ゲームフォルダ",
+  "@settingsGameDir": {
+    "description": "設定頁「遊戲資料夾」區塊標題"
+  },
+  "settingsGameDirAuto": "自動検出：{path}",
+  "@settingsGameDirAuto": {
+    "description": "遊戲資料夾由登錄檔或常見位置自動偵測到時的說明，{path} 為資料夾路徑",
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "settingsGameDirManual": "手動設定：{path}",
+  "@settingsGameDirManual": {
+    "description": "遊戲資料夾為使用者手動設定時的說明，{path} 為資料夾路徑",
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "settingsGameDirNone": "ゲームフォルダが見つかりません",
+  "@settingsGameDirNone": {
+    "description": "沒有設定也偵測不到遊戲資料夾時的說明"
+  },
+  "actionClearGameDir": "クリア",
+  "@actionClearGameDir": {
+    "description": "清除手動設定的遊戲資料夾按鈕"
+  },
   "settingsCloudSync": "クラウド同期",
   "cloudSyncIntro": "Google アカウントを連携すると、喚起履歴が自動的に Google ドライブへバックアップされ、複数の PC 間で同期されます。",
   "cloudSyncUnconfigured": "このビルドには Google OAuth 認証情報が設定されていないため、クラウド同期は利用できません。",
