@@ -169,11 +169,12 @@ void main() {
     required GachaStorage storage,
     required http.Client client,
     GachaCredential? captured,
+    GachaCapture? capture,
   }) => ProviderContainer(
     overrides: [
       noGameDirOverride,
       gachaStorageProvider.overrideWithValue(storage),
-      gachaCaptureProvider.overrideWithValue(_FakeCapture(captured)),
+      gachaCaptureProvider.overrideWithValue(capture ?? _FakeCapture(captured)),
       gachaFetcherProvider.overrideWithValue(
         GachaFetcher(rateLimit: Duration.zero),
       ),
@@ -600,17 +601,24 @@ void main() {
         headers: {'content-type': 'application/json'},
       ),
     );
-    // captured: null → the fallback _runMitm returns null (user cancels recapture)
+    // 使用者在 fallback 重攔的等待畫面按取消。
     final container = makeContainer(
       storage: storage,
       client: mock,
-      captured: null,
+      capture: _ControlledCapture(completeOnCancel: true),
     );
     addTearDown(container.dispose);
     container.read(gachaRepositoryProvider);
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
-    await container.read(gachaRepositoryProvider.notifier).update();
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    final done = repo.update();
+    await _until(
+      () =>
+          container.read(gachaRepositoryProvider).progress is WaitingForCapture,
+    );
+    await repo.cancelCapture();
+    await done;
 
     // cancelling recapture must not pop an error dialog…
     expect(container.read(gachaRepositoryProvider).progress, isNull);
@@ -730,20 +738,26 @@ void main() {
           headers: {'content-type': 'application/json'},
         ),
       );
-      // captured: null → _FakeCapture 模擬「新增帳號後使用者按取消」。
+      // 新增帳號後使用者在等待畫面按取消。
       final container = makeContainer(
         storage: storage,
         client: mock,
-        captured: null,
+        capture: _ControlledCapture(completeOnCancel: true),
       );
       addTearDown(container.dispose);
       container.read(gachaRepositoryProvider);
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(container.read(gachaRepositoryProvider).activeUid, '701000000');
 
-      await container
-          .read(gachaRepositoryProvider.notifier)
-          .forceRecaptureAndUpdate();
+      final repo = container.read(gachaRepositoryProvider.notifier);
+      final done = repo.forceRecaptureAndUpdate();
+      await _until(
+        () =>
+            container.read(gachaRepositoryProvider).progress
+                is WaitingForCapture,
+      );
+      await repo.cancelCapture();
+      await done;
 
       // 取消重攔不得破壞既有快取，否則下次「更新」會被迫重新攔截。
       expect(await storage.loadCapturedCredential('701000000'), isNotNull);
@@ -915,24 +929,78 @@ void main() {
       },
     );
 
-    test('capture error without game dir: update fails', () async {
-      final capture = _ControlledCapture();
-      final watch = _FakeWatch();
-      final locator = _FakeLocator(null);
-      final t = raceContainer(capture: capture, watch: watch, locator: locator);
-      final repo = await bootstrap(t.container);
+    test(
+      'capture error without game dir: shows pick-folder notice, recovers after pick',
+      () async {
+        final capture = _ControlledCapture();
+        final watch = _FakeWatch();
+        final locator = _FakeLocator(null);
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: locator,
+        );
+        final repo = await bootstrap(t.container);
 
-      final done = repo.update();
-      await _until(() => locator.calls > 0);
-      capture.result.completeError(Exception('uac denied'));
-      await done;
+        final done = repo.update();
+        await _until(() => locator.calls > 0);
+        capture.result.completeError(Exception('uac denied'));
+        await _settle();
 
-      expect(t.hits, isEmpty);
-      expect(
-        t.container.read(gachaRepositoryProvider).progress,
-        isA<UpdateFailed>(),
-      );
-    });
+        var waiting =
+            t.container.read(gachaRepositoryProvider).progress!
+                as WaitingForCapture;
+        expect(waiting.captureUnavailable, isTrue);
+        expect(waiting.gameDirMissing, isTrue);
+
+        // 使用者在說明視窗選好資料夾 → 監看啟動，提示換成「只靠 log」。
+        locator.location = loc;
+        await repo.restartClientLogWatch();
+        await _until(() => watch.hits.isNotEmpty);
+        waiting =
+            t.container.read(gachaRepositoryProvider).progress!
+                as WaitingForCapture;
+        expect(waiting.captureUnavailable, isTrue);
+        expect(waiting.gameDirMissing, isFalse);
+
+        watch.hits[0].complete(_cred());
+        await done;
+        expect(t.hits, hasLength(12));
+        expect(
+          t.container.read(gachaRepositoryProvider).progress,
+          isA<UpdateCompleted>(),
+        );
+      },
+    );
+
+    test(
+      'capture ends without hit and no game dir: notice instead of silent close',
+      () async {
+        final capture = _ControlledCapture();
+        final watch = _FakeWatch();
+        final locator = _FakeLocator(null);
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: locator,
+        );
+        final repo = await bootstrap(t.container);
+
+        final done = repo.update();
+        await _until(() => locator.calls > 0);
+        capture.result.complete(null);
+        await _settle();
+
+        final waiting =
+            t.container.read(gachaRepositoryProvider).progress!
+                as WaitingForCapture;
+        expect(waiting.gameDirMissing, isTrue);
+
+        await repo.cancelCapture();
+        await done;
+        expect(t.container.read(gachaRepositoryProvider).progress, isNull);
+      },
+    );
 
     test(
       'capture ends without hit (not cancelled) with log active: falls back',

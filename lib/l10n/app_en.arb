@@ -179,6 +179,10 @@
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
   },
+  "progressCaptureUnavailableNoGameDirHint": "Couldn't start the capture helper (administrator permission may have been denied), and the game folder wasn't found. Choose the game folder via the link below, or cancel and update again allowing administrator permission.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "Opened Convene History but nothing happens?",
   "@progressNotDetectedLink": {
     "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"

@@ -85,6 +85,25 @@ void main() {
     expect(find.text('已經開啟喚取記錄，卻一直沒有反應？'), findsOneWidget);
   });
 
+  testWidgets('captureUnavailable without game dir asks to pick a folder', (
+    tester,
+  ) async {
+    await _pumpDialog(
+      tester,
+      progress: const WaitingForCapture(
+        captureUnavailable: true,
+        gameDirMissing: true,
+      ),
+    );
+    expect(
+      find.text(
+        '無法啟動攔截程式（可能是未允許系統管理員權限），也找不到遊戲資料夾。請點下方連結選擇遊戲資料夾，或取消後重新更新並允許系統管理員權限。',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text(captureUnavailableNotice), findsNothing);
+  });
+
   group('UpdateProgressDialog — FetchingBanner 卡池本地化', () {
     testWidgets('gachaTypeCharacter（既有池）顯示本地化名稱，不顯示原始 key', (tester) async {
       await _pumpDialog(

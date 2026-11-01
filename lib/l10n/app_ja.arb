@@ -179,6 +179,10 @@
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
   },
+  "progressCaptureUnavailableNoGameDirHint": "キャプチャ用プログラムを起動できず（管理者権限が許可されなかった可能性があります）、ゲームフォルダも見つかりませんでした。下のリンクからゲームフォルダを選択するか、キャンセルして管理者権限を許可したうえで再度更新してください。",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "集音履歴を開いたのに反応がありませんか？",
   "@progressNotDetectedLink": {
     "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"

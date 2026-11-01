@@ -170,33 +170,43 @@ class _Body extends StatelessWidget {
           Text(l.progressPreparingHint),
         ],
       ),
-      WaitingForCapture(:final isFallback, :final captureUnavailable) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const LinearProgressIndicator(),
-          const SizedBox(height: AppSpacing.l),
-          Text(l.progressOpenGameHint),
-          if (isFallback) ...[
+      WaitingForCapture(
+        :final isFallback,
+        :final captureUnavailable,
+        :final gameDirMissing,
+      ) =>
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const LinearProgressIndicator(),
+            const SizedBox(height: AppSpacing.l),
+            Text(l.progressOpenGameHint),
+            if (isFallback) ...[
+              const SizedBox(height: AppSpacing.s),
+              Text(l.progressFallbackHint, style: theme.textTheme.bodySmall),
+            ],
+            if (captureUnavailable) ...[
+              const SizedBox(height: AppSpacing.s),
+              Text(
+                gameDirMissing
+                    ? l.progressCaptureUnavailableNoGameDirHint
+                    : l.progressCaptureUnavailableHint,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.gacha.stateWarning,
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.s),
-            Text(l.progressFallbackHint, style: theme.textTheme.bodySmall),
-          ],
-          if (captureUnavailable) ...[
-            const SizedBox(height: AppSpacing.s),
-            Text(
-              l.progressCaptureUnavailableHint,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.gacha.stateWarning,
+            TextButton(
+              onPressed: () => showGameDirHelpDialog(context),
+              child: Text(
+                l.progressNotDetectedLink,
+                textAlign: TextAlign.center,
               ),
             ),
           ],
-          const SizedBox(height: AppSpacing.s),
-          TextButton(
-            onPressed: () => showGameDirHelpDialog(context),
-            child: Text(l.progressNotDetectedLink, textAlign: TextAlign.center),
-          ),
-        ],
-      ),
+        ),
       FetchingBanner(
         :final displayName,
         :final poolIndex,
