@@ -198,7 +198,11 @@
   "gameDirHelpFound": "Game folder in use: {path}. If this path is wrong (for example, more than one copy of the game is installed), press \"Choose again\".",
   "@gameDirHelpFound": {
     "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "gameDirHelpReopen": "Game folder saved. Go back to the game and open Convene History once more.",
   "@gameDirHelpReopen": {
@@ -360,12 +364,20 @@
   "settingsGameDirAuto": "Auto-detected: {path}",
   "@settingsGameDirAuto": {
     "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "settingsGameDirManual": "Set manually: {path}",
   "@settingsGameDirManual": {
     "description": "Description when the game folder was set manually by the user; {path} is the folder path",
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "settingsGameDirNone": "Game folder not found",
   "@settingsGameDirNone": {

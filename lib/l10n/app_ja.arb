@@ -198,7 +198,11 @@
   "gameDirHelpFound": "現在読み取っているゲームフォルダ：{path}。パスが正しくない場合（例：ゲームを複数インストールしている）は、「選び直す」を押してください。",
   "@gameDirHelpFound": {
     "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "gameDirHelpReopen": "ゲームフォルダを設定しました。ゲームに戻り、もう一度集音履歴を開いてください。",
   "@gameDirHelpReopen": {
@@ -360,12 +364,20 @@
   "settingsGameDirAuto": "自動検出：{path}",
   "@settingsGameDirAuto": {
     "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "settingsGameDirManual": "手動設定：{path}",
   "@settingsGameDirManual": {
     "description": "Description when the game folder was set manually by the user; {path} is the folder path",
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "settingsGameDirNone": "ゲームフォルダが見つかりません",
   "@settingsGameDirNone": {
