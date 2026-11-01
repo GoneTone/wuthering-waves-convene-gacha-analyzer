@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
@@ -16,6 +17,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/client_log_watch.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import '../helpers/no_game_dir.dart';
 
 class _FakeCapture implements GachaCapture {
   _FakeCapture(this._cred);
@@ -71,9 +73,13 @@ class _FakeWatch implements ClientLogWatch {
       cancel: () async {
         cancelled.add(i);
         if (!c.isCompleted) c.complete(null);
+        await cancelGate?.future;
       },
     );
   }
+
+  /// 設定後 `cancel()` 會等它完成才返回（模擬真實監看器等待進行中的輪詢）。
+  Completer<void>? cancelGate;
 }
 
 /// 回傳固定定位結果並計數的 locator fake。
@@ -81,8 +87,17 @@ class _FakeLocator extends GameDirLocator {
   /// 建立 fake，[location] 為 `locate` 的固定回傳值。
   _FakeLocator(this.location);
 
-  /// `locate` 的固定回傳值；null 代表找不到遊戲資料夾。
-  final GameDirLocation? location;
+  /// `locate` 的回傳值；null 代表找不到遊戲資料夾。
+  GameDirLocation? location;
+
+  /// 非 null 時 `locate` 丟出它。
+  Object? error;
+
+  /// 為 true 時每次 `locate` 改回傳一個存進 [gates] 的 Completer，由測試決定何時完成。
+  bool gated = false;
+
+  /// [gated] 模式下各次 `locate` 的待完成結果，依呼叫順序排列。
+  final gates = <Completer<GameDirLocation?>>[];
 
   /// `locate` 被呼叫的次數。
   int calls = 0;
@@ -90,6 +105,12 @@ class _FakeLocator extends GameDirLocator {
   @override
   Future<GameDirLocation?> locate({String? settingDir}) async {
     calls++;
+    if (error != null) throw error!;
+    if (gated) {
+      final g = Completer<GameDirLocation?>();
+      gates.add(g);
+      return g.future;
+    }
     return location;
   }
 }
@@ -150,6 +171,7 @@ void main() {
     GachaCredential? captured,
   }) => ProviderContainer(
     overrides: [
+      noGameDirOverride,
       gachaStorageProvider.overrideWithValue(storage),
       gachaCaptureProvider.overrideWithValue(_FakeCapture(captured)),
       gachaFetcherProvider.overrideWithValue(
@@ -225,6 +247,7 @@ void main() {
       });
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWith((ref) {
             captureCalls++;
@@ -301,6 +324,7 @@ void main() {
       });
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWith((ref) {
             captureCalls++;
@@ -377,6 +401,7 @@ void main() {
     });
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWith((ref) {
           captureCalls++;
@@ -455,6 +480,7 @@ void main() {
       });
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWith((ref) {
             captureCalls++;
@@ -519,6 +545,7 @@ void main() {
     );
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWith((ref) {
           captureCalls++;
@@ -646,6 +673,7 @@ void main() {
     );
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWith((ref) {
           captureCalls++;
@@ -1010,6 +1038,107 @@ void main() {
       await done;
 
       expect(t.hits, hasLength(13));
+      expect(
+        t.container.read(gachaRepositoryProvider).progress,
+        isA<UpdateCompleted>(),
+      );
+    });
+    test('locator failure is logged and never fails the update', () async {
+      final records = <LogRecord>[];
+      final sub = Logger.root.onRecord.listen(records.add);
+      addTearDown(sub.cancel);
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final locator = _FakeLocator(loc)..error = StateError('boom');
+      final t = raceContainer(capture: capture, watch: watch, locator: locator);
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => locator.calls > 0);
+      await repo.restartClientLogWatch();
+      capture.result.complete(_cred());
+      await done;
+
+      expect(locator.calls, 2);
+      expect(watch.hits, isEmpty);
+      expect(
+        records.where(
+          (r) =>
+              r.loggerName == 'gacha.clientLog' &&
+              r.level == Level.WARNING &&
+              r.message.startsWith('client log watch start failed'),
+        ),
+        hasLength(2),
+      );
+      expect(
+        t.container.read(gachaRepositoryProvider).progress,
+        isA<UpdateCompleted>(),
+      );
+    });
+
+    test('cancel during slow watcher stop aborts before fetching', () async {
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch()..cancelGate = Completer<void>();
+      final t = raceContainer(
+        capture: capture,
+        watch: watch,
+        locator: _FakeLocator(loc),
+      );
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => watch.hits.isNotEmpty);
+      capture.result.complete(_cred());
+      await _until(() => watch.cancelled.isNotEmpty);
+      await repo.cancelCapture();
+      watch.cancelGate!.complete();
+      await done;
+
+      expect(t.hits, isEmpty);
+      expect(t.container.read(gachaRepositoryProvider).progress, isNull);
+    });
+
+    test('stale locate result is dropped after restart', () async {
+      const newDir = r'E:\Moved\Wuthering Waves Game';
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final locator = _FakeLocator(loc)..gated = true;
+      final t = raceContainer(capture: capture, watch: watch, locator: locator);
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => locator.gates.length == 1);
+      final restart = repo.restartClientLogWatch();
+      await _until(() => locator.gates.length == 2);
+      locator.gates[1].complete(
+        const GameDirLocation(newDir, GameDirSource.setting),
+      );
+      await restart;
+      locator.gates[0].complete(loc);
+      await _settle();
+
+      expect(watch.paths, [GameDirLocator.clientLogPath(newDir)]);
+      capture.result.complete(null);
+      await done;
+      expect(watch.cancelled, [0]);
+    });
+
+    test('restart without game dir stops old session', () async {
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final locator = _FakeLocator(loc);
+      final t = raceContainer(capture: capture, watch: watch, locator: locator);
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => watch.hits.isNotEmpty);
+      locator.location = null;
+      await repo.restartClientLogWatch();
+
+      expect(watch.cancelled, [0]);
+      expect(watch.hits, hasLength(1));
+      capture.result.complete(_cred());
+      await done;
       expect(
         t.container.read(gachaRepositoryProvider).progress,
         isA<UpdateCompleted>(),

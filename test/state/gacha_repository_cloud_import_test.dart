@@ -11,6 +11,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import '../helpers/no_game_dir.dart';
 
 /// 不會被觸發的 fake capture。
 class _FakeCapture implements GachaCapture {
@@ -69,6 +70,7 @@ void main() {
   ProviderContainer makeContainer() {
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
         gachaCaptureProvider.overrideWithValue(_FakeCapture()),
         cancellableHttpClientFactoryProvider.overrideWithValue(

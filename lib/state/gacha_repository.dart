@@ -388,80 +388,99 @@ class GachaRepository extends Notifier<GachaState> {
     state = state.copyWith(progress: WaitingForCapture(isFallback: isFallback));
     final session = ref.read(gachaCaptureProvider).start();
     _activeCancel = session.cancel;
-    _logWinCancelRequested = false;
+    _captureCancelRequested = false;
     final logHit = Completer<GachaCredential>();
     _logHit = logHit;
     _log.info('MITM ${isFallback ? "fallback" : "primary"} session started');
     unawaited(_startClientLogWatch());
+    final GachaCredential? cred;
     try {
-      final (cred, fromLog) = await Future.any([
+      final (winner, fromLog) = await Future.any([
         session.result.then((c) => (c, false)),
         logHit.future.then((c) => (c, true)),
       ]);
-      if (!fromLog) {
+      cred = winner;
+      if (fromLog) {
+        _clientLog.info('credential source=log');
+        // cancel() 丟錯也要等 result：它完成才代表 WinDivert 重導向已還原，之後才能拉取。
+        for (final step in [session.cancel, () => session.result]) {
+          try {
+            await step();
+          } catch (e) {
+            _clientLog.warning('capture teardown error after log win: $e');
+          }
+        }
+      } else {
         _log.info('MITM session done, hasCredential=${cred != null}');
         if (cred != null) _clientLog.info('credential source=capture');
-        return cred;
       }
-      _clientLog.info('credential source=log');
-      // cancel() 丟錯也要等 result：它完成才代表 WinDivert 重導向已還原，之後才能拉取。
-      for (final step in [session.cancel, () => session.result]) {
-        try {
-          await step();
-        } catch (e) {
-          _clientLog.warning('capture teardown error after log win: $e');
-        }
-      }
-      if (_logWinCancelRequested) {
-        _clientLog.info('user cancelled during capture teardown after log win');
-        return null;
-      }
-      return cred;
     } finally {
       _logHit = null;
+      _logWatchGeneration++;
       _activeCancel = null;
       await _stopClientLogWatch();
     }
+    // 收尾（攔截 teardown、停監看）可能跨越事件迴圈，期間按下的取消仍要生效。
+    if (cred != null && _captureCancelRequested) {
+      _clientLog.info('user cancelled before fetch, discarding credential');
+      return null;
+    }
+    return cred;
   }
 
-  /// 定位遊戲資料夾並（重新）啟動 Client.log 監看，命中時完成目前等待中的 [_logHit]。
+  /// 定位遊戲資料夾並啟動 Client.log 監看，命中時完成目前等待中的 [_logHit]。
   ///
-  /// 找不到資料夾時不監看；定位期間等待若已結束或已有命中則什麼都不做。
+  /// 只有最新一次呼叫的定位結果會生效；找不到資料夾時不監看。任何失敗只記 log，不影響更新。
   Future<void> _startClientLogWatch() async {
     final hit = _logHit;
     if (hit == null) return;
-    final location = await ref
-        .read(gameDirLocatorProvider)
-        .locate(settingDir: ref.read(settingsProvider).gameDir);
-    if (!ref.mounted || !identical(_logHit, hit) || hit.isCompleted) return;
-    if (location == null) {
-      _clientLog.warning('client log watch disabled: game dir not found');
-      return;
+    final generation = ++_logWatchGeneration;
+    try {
+      final location = await ref
+          .read(gameDirLocatorProvider)
+          .locate(settingDir: ref.read(settingsProvider).gameDir);
+      if (!ref.mounted ||
+          generation != _logWatchGeneration ||
+          hit.isCompleted) {
+        return;
+      }
+      if (location == null) {
+        _clientLog.warning('client log watch disabled: game dir not found');
+        return;
+      }
+      final watch = ref
+          .read(clientLogWatchProvider)
+          .start(GameDirLocator.clientLogPath(location.path));
+      _logSession = watch;
+      unawaited(
+        watch.result.then((c) {
+          if (c != null && !hit.isCompleted) hit.complete(c);
+        }),
+      );
+    } catch (e) {
+      // FileSystemException 的字串會帶原始路徑，只記型別。
+      _clientLog.warning(
+        'client log watch start failed error=${e.runtimeType}',
+      );
     }
-    // 停舊與啟新之間不可有 await，避免並行重啟時遺漏停掉某個 session。
-    unawaited(_stopClientLogWatch());
-    final watch = ref
-        .read(clientLogWatchProvider)
-        .start(GameDirLocator.clientLogPath(location.path));
-    _logSession = watch;
-    unawaited(
-      watch.result.then((c) {
-        if (c != null && !hit.isCompleted) hit.complete(c);
-      }),
-    );
   }
 
-  /// 停掉目前的 Client.log 監看 session（若有）。
+  /// 停掉目前的 Client.log 監看 session（若有）；失敗只記 log。
   Future<void> _stopClientLogWatch() async {
     final watch = _logSession;
     _logSession = null;
-    await watch?.cancel();
+    try {
+      await watch?.cancel();
+    } catch (e) {
+      _clientLog.warning('client log watch stop failed error=${e.runtimeType}');
+    }
   }
 
-  /// 等待攔截期間重新定位遊戲資料夾並重啟 Client.log 監看（基準點從此刻重算）；其他時候為 no-op。
+  /// 等待攔截期間停掉目前的 Client.log 監看，重新定位後再啟動（基準點從此刻重算）；其他時候為 no-op。
   Future<void> restartClientLogWatch() async {
     if (state.progress is! WaitingForCapture) return;
     _clientLog.info('client log watch restart requested');
+    unawaited(_stopClientLogWatch());
     await _startClientLogWatch();
   }
 
@@ -633,8 +652,11 @@ class GachaRepository extends Notifier<GachaState> {
   /// 目前的 Client.log 監看 session。
   CaptureSession? _logSession;
 
-  /// 使用者在 log 勝出後、攔截收尾完成前按了取消。
-  bool _logWinCancelRequested = false;
+  /// 本次等待期間使用者按過取消（含 log 勝出後的攔截收尾、停監看期間）。
+  bool _captureCancelRequested = false;
+
+  /// Client.log 監看的啟動世代；只有最新世代的定位結果會啟動 session。
+  int _logWatchGeneration = 0;
 
   /// 目前 HTTP 請求的可取消 client，取消後關閉所有連線。
   CancellableHttpClient? _activeCancellable;
@@ -647,7 +669,7 @@ class GachaRepository extends Notifier<GachaState> {
 
   /// 取消正在進行的 MITM 捕獲會話與 Client.log 監看（含 log 勝出後的攔截收尾期間）。
   Future<void> cancelCapture() async {
-    _logWinCancelRequested = true;
+    _captureCancelRequested = true;
     unawaited(_stopClientLogWatch());
     final cancel = _activeCancel;
     if (cancel != null) {

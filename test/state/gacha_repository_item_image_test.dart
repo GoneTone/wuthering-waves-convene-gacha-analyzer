@@ -15,6 +15,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import '../helpers/no_game_dir.dart';
 
 /// 不打網路的 fetcher：[characters]/[weapons] 內的 id 在 catalog 命中、回 icon；
 /// [details] 內的 id 在 fetchItemDetail 回詳情。
@@ -115,6 +116,7 @@ void main() {
     );
     return ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
         itemImageIndexStorageProvider.overrideWithValue(
           ItemImageIndexStorage(tempDir),

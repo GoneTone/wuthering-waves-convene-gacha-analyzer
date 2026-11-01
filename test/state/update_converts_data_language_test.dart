@@ -16,6 +16,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart'
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import '../helpers/no_game_dir.dart';
 
 /// 假的 [GachaCapture]，直接回傳固定憑證而不啟動真實 MITM。
 class _FakeCapture implements GachaCapture {
@@ -58,6 +59,7 @@ ProviderContainer _makeContainer({
   List<dynamic> extraOverrides = const [],
 }) => ProviderContainer(
   overrides: [
+    noGameDirOverride,
     gachaStorageProvider.overrideWithValue(storage),
     gachaCaptureProvider.overrideWithValue(_FakeCapture(captured)),
     gachaFetcherProvider.overrideWithValue(

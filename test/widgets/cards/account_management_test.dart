@@ -17,6 +17,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart'
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/account_management.dart';
+import '../../helpers/no_game_dir.dart';
 
 class _NullCapture implements GachaCapture {
   @override
@@ -35,6 +36,7 @@ Future<ProviderContainer> _setupContainer({
   SharedPreferences.setMockInitialValues(Map<String, Object>.from(prefs));
   final container = ProviderContainer(
     overrides: [
+      noGameDirOverride,
       gachaStorageProvider.overrideWithValue(storage),
       gachaCaptureProvider.overrideWithValue(_NullCapture()),
       cancellableHttpClientFactoryProvider.overrideWithValue(

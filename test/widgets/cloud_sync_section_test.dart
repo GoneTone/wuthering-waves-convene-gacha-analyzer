@@ -19,6 +19,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/cloud_sync_section.dart';
 
 import '../helpers/cloud_sync_fakes.dart';
+import '../helpers/no_game_dir.dart';
 
 void main() {
   late Directory tempDir;
@@ -38,6 +39,7 @@ void main() {
       ProviderScope(
         overrides: [
           appVersionProvider.overrideWithValue('1.5.0'),
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
           gachaCaptureProvider.overrideWithValue(FakeCapture()),
           cancellableHttpClientFactoryProvider.overrideWithValue(

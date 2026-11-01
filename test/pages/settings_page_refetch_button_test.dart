@@ -20,6 +20,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import '../helpers/no_game_dir.dart';
 
 class _NullCapture implements GachaCapture {
   @override
@@ -36,6 +37,7 @@ Future<ProviderContainer> _setupContainer({
 }) async {
   final container = ProviderContainer(
     overrides: [
+      noGameDirOverride,
       gachaStorageProvider.overrideWithValue(storage),
       gachaCaptureProvider.overrideWithValue(_NullCapture()),
       cancellableHttpClientFactoryProvider.overrideWithValue(

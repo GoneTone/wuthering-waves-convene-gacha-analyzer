@@ -19,6 +19,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.da
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../helpers/no_game_dir.dart';
 
 class _FakeCapture implements GachaCapture {
   _FakeCapture(this._cred);
@@ -55,6 +56,7 @@ void main() {
   test('bootstrap load 空目錄 → state 為空', () async {
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -118,6 +120,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -168,6 +171,7 @@ void main() {
     final block = Completer<http.Response>();
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -239,6 +243,7 @@ void main() {
     final block = Completer<http.Response>();
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -297,6 +302,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -324,6 +330,7 @@ void main() {
   test('clearProgress 把 progress 重設為 null', () async {
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -390,6 +397,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -449,6 +457,7 @@ void main() {
 
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
           cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -495,6 +504,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -556,6 +566,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -613,6 +624,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -679,6 +691,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -743,6 +756,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -788,6 +802,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -850,6 +865,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -897,6 +913,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -941,6 +958,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -996,6 +1014,7 @@ void main() {
 
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
           cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -1074,6 +1093,7 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(storage),
         gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
         cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -1128,6 +1148,7 @@ void main() {
       final storage = _FailingStorage(tempDir, failOnUid: '100000002');
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
           cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -1205,6 +1226,7 @@ void main() {
 
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
           cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -1252,6 +1274,7 @@ void main() {
       final storage = GachaStorage(tempDir);
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
           cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -1317,6 +1340,7 @@ void main() {
 
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
           cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -1393,6 +1417,7 @@ void main() {
 
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
           cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -1471,6 +1496,7 @@ void main() {
 
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
           cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -1560,6 +1586,7 @@ void main() {
 
       final container = ProviderContainer(
         overrides: [
+          noGameDirOverride,
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
           cancellableHttpClientFactoryProvider.overrideWithValue(

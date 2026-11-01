@@ -20,6 +20,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 import '../helpers/cloud_sync_fakes.dart';
+import '../helpers/no_game_dir.dart';
 
 /// signIn 卡在 completer 不返回，供測試模擬「cancelLink 後瀏覽器仍完成授權」的情境。
 class _DelayedSignInAuthService extends FakeAuthService {
@@ -138,6 +139,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         appVersionProvider.overrideWithValue('1.5.0'),
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
         gachaCaptureProvider.overrideWithValue(FakeCapture()),
         cancellableHttpClientFactoryProvider.overrideWithValue(() {
@@ -319,6 +321,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         appVersionProvider.overrideWithValue('1.5.0'),
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
         gachaCaptureProvider.overrideWithValue(FakeCapture()),
         cancellableHttpClientFactoryProvider.overrideWithValue(
