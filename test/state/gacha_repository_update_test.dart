@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,9 +9,11 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/game_dir_locator.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/client_log_watch.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 
@@ -20,6 +23,90 @@ class _FakeCapture implements GachaCapture {
   @override
   CaptureSession start() =>
       CaptureSession(result: Future.value(_cred), cancel: () async {});
+}
+
+/// 結果與取消都由測試手動控制的攔截 fake。
+class _ControlledCapture implements GachaCapture {
+  /// 建立 fake；[completeOnCancel] 為 true 時 `cancel()` 會以 null 完成結果（模擬真實取消）。
+  _ControlledCapture({this.completeOnCancel = false});
+
+  /// 為 true 時 `cancel()` 會以 null 完成 [result]。
+  final bool completeOnCancel;
+
+  /// 攔截結果，由測試決定何時完成。
+  final result = Completer<GachaCredential?>();
+
+  /// `cancel()` 被呼叫的次數。
+  int cancelCalls = 0;
+
+  @override
+  CaptureSession start() => CaptureSession(
+    result: result.future,
+    cancel: () async {
+      cancelCalls++;
+      if (completeOnCancel && !result.isCompleted) result.complete(null);
+    },
+  );
+}
+
+/// 記錄每次 `start` 的 log 監看 fake；命中與取消都由測試控制。
+class _FakeWatch implements ClientLogWatch {
+  /// 每個 session 的結果，依 `start` 順序排列。
+  final hits = <Completer<GachaCredential?>>[];
+
+  /// 每次 `start` 收到的 Client.log 路徑。
+  final paths = <String>[];
+
+  /// 被 `cancel()` 的 session 索引。
+  final cancelled = <int>[];
+
+  @override
+  CaptureSession start(String clientLogPath) {
+    final i = hits.length;
+    final c = Completer<GachaCredential?>();
+    hits.add(c);
+    paths.add(clientLogPath);
+    return CaptureSession(
+      result: c.future,
+      cancel: () async {
+        cancelled.add(i);
+        if (!c.isCompleted) c.complete(null);
+      },
+    );
+  }
+}
+
+/// 回傳固定定位結果並計數的 locator fake。
+class _FakeLocator extends GameDirLocator {
+  /// 建立 fake，[location] 為 `locate` 的固定回傳值。
+  _FakeLocator(this.location);
+
+  /// `locate` 的固定回傳值；null 代表找不到遊戲資料夾。
+  final GameDirLocation? location;
+
+  /// `locate` 被呼叫的次數。
+  int calls = 0;
+
+  @override
+  Future<GameDirLocation?> locate({String? settingDir}) async {
+    calls++;
+    return location;
+  }
+}
+
+/// 反覆讓出事件迴圈直到 [cond] 成立（避免固定延遲造成 flake）。
+Future<void> _until(bool Function() cond) async {
+  for (var i = 0; i < 1000 && !cond(); i++) {
+    await Future<void>.delayed(Duration.zero);
+  }
+  expect(cond(), isTrue, reason: 'condition never became true');
+}
+
+/// 讓出事件迴圈數輪，讓尚在排程中的非同步工作有機會執行。
+Future<void> _settle() async {
+  for (var i = 0; i < 20; i++) {
+    await Future<void>.delayed(Duration.zero);
+  }
 }
 
 GachaCredential _cred() => GachaCredential(
@@ -636,4 +723,297 @@ void main() {
       expect(container.read(gachaRepositoryProvider).progress, isNull);
     },
   );
+
+  group('client log race', () {
+    const gameDir = r'D:\Games\Wuthering Waves Game';
+    const loc = GameDirLocation(gameDir, GameDirSource.setting);
+
+    /// 建立比快測試用的 container，並回傳 HTTP 請求計數器。
+    ({ProviderContainer container, List<int> hits}) raceContainer({
+      required _ControlledCapture capture,
+      required _FakeWatch watch,
+      required _FakeLocator locator,
+      GachaStorage? storage,
+      String Function(int hit, int type)? respond,
+    }) {
+      final hits = <int>[];
+      final mock = MockClient((req) async {
+        final type =
+            (jsonDecode(req.body) as Map<String, dynamic>)['cardPoolType']
+                as int;
+        hits.add(type);
+        final payload =
+            respond?.call(hits.length, type) ??
+            (type == 1 ? _ok([_row('1')]) : _ok(const []));
+        return http.Response(
+          payload,
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+      final container = ProviderContainer(
+        overrides: [
+          gachaStorageProvider.overrideWithValue(
+            storage ?? GachaStorage(tempDir),
+          ),
+          gachaCaptureProvider.overrideWithValue(capture),
+          clientLogWatchProvider.overrideWithValue(watch),
+          gameDirLocatorProvider.overrideWithValue(locator),
+          gachaFetcherProvider.overrideWithValue(
+            GachaFetcher(rateLimit: Duration.zero),
+          ),
+          cancellableHttpClientFactoryProvider.overrideWithValue(
+            () => CancellableHttpClient(client: mock, cancel: () {}),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      return (container: container, hits: hits);
+    }
+
+    /// 讀出 repository notifier 並等 bootstrap 完成。
+    Future<GachaRepository> bootstrap(ProviderContainer c) async {
+      c.read(gachaRepositoryProvider);
+      final n = c.read(gachaRepositoryProvider.notifier);
+      await n.waitForBootstrap();
+      return n;
+    }
+
+    test('log wins: waits capture teardown before fetching', () async {
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final t = raceContainer(
+        capture: capture,
+        watch: watch,
+        locator: _FakeLocator(loc),
+      );
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => watch.hits.isNotEmpty);
+      expect(watch.paths.single, GameDirLocator.clientLogPath(gameDir));
+      watch.hits[0].complete(_cred());
+
+      await _until(() => capture.cancelCalls > 0);
+      await _settle();
+      expect(t.hits, isEmpty, reason: 'no fetch before capture teardown');
+
+      capture.result.complete(null);
+      await done;
+
+      expect(t.hits, hasLength(12));
+      expect(
+        t.container.read(gachaRepositoryProvider).progress,
+        isA<UpdateCompleted>(),
+      );
+    });
+
+    test('log wins: capture teardown error is ignored', () async {
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final t = raceContainer(
+        capture: capture,
+        watch: watch,
+        locator: _FakeLocator(loc),
+      );
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => watch.hits.isNotEmpty);
+      watch.hits[0].complete(_cred());
+      await _until(() => capture.cancelCalls > 0);
+      capture.result.completeError(Exception('helper stop failed'));
+      await done;
+
+      expect(
+        t.container.read(gachaRepositoryProvider).progress,
+        isA<UpdateCompleted>(),
+      );
+    });
+
+    test('capture wins: log watch cancelled', () async {
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final t = raceContainer(
+        capture: capture,
+        watch: watch,
+        locator: _FakeLocator(loc),
+      );
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => watch.hits.isNotEmpty);
+      capture.result.complete(_cred());
+      await done;
+
+      expect(watch.cancelled, [0]);
+      expect(capture.cancelCalls, 0);
+      expect(
+        t.container.read(gachaRepositoryProvider).progress,
+        isA<UpdateCompleted>(),
+      );
+    });
+
+    test(
+      'capture error before log: update fails and log watch cancelled',
+      () async {
+        final capture = _ControlledCapture();
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: _FakeLocator(loc),
+        );
+        final repo = await bootstrap(t.container);
+
+        final done = repo.update();
+        await _until(() => watch.hits.isNotEmpty);
+        capture.result.completeError(Exception('uac denied'));
+        await done;
+
+        expect(watch.cancelled, [0]);
+        expect(t.hits, isEmpty);
+        expect(
+          t.container.read(gachaRepositoryProvider).progress,
+          isA<UpdateFailed>(),
+        );
+      },
+    );
+
+    test('user cancel stops both', () async {
+      final capture = _ControlledCapture(completeOnCancel: true);
+      final watch = _FakeWatch();
+      final t = raceContainer(
+        capture: capture,
+        watch: watch,
+        locator: _FakeLocator(loc),
+      );
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => watch.hits.isNotEmpty);
+      await repo.cancelCapture();
+      await done;
+
+      expect(capture.cancelCalls, greaterThan(0));
+      expect(watch.cancelled, contains(0));
+      expect(t.hits, isEmpty);
+      expect(t.container.read(gachaRepositoryProvider).progress, isNull);
+    });
+
+    test('user cancel during log-won teardown aborts', () async {
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final t = raceContainer(
+        capture: capture,
+        watch: watch,
+        locator: _FakeLocator(loc),
+      );
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => watch.hits.isNotEmpty);
+      watch.hits[0].complete(_cred());
+      await _until(() => capture.cancelCalls > 0);
+      await repo.cancelCapture();
+      capture.result.complete(null);
+      await done;
+
+      expect(t.hits, isEmpty);
+      expect(t.container.read(gachaRepositoryProvider).progress, isNull);
+    });
+
+    test('no game dir: capture only', () async {
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final locator = _FakeLocator(null);
+      final t = raceContainer(capture: capture, watch: watch, locator: locator);
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => locator.calls > 0);
+      await _settle();
+      capture.result.complete(_cred());
+      await done;
+
+      expect(watch.hits, isEmpty);
+      expect(t.hits, hasLength(12));
+      expect(
+        t.container.read(gachaRepositoryProvider).progress,
+        isA<UpdateCompleted>(),
+      );
+    });
+
+    test('restartClientLogWatch re-locates and restarts', () async {
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final locator = _FakeLocator(loc);
+      final t = raceContainer(capture: capture, watch: watch, locator: locator);
+      final repo = await bootstrap(t.container);
+
+      // 不在等待攔截時呼叫應為 no-op。
+      await repo.restartClientLogWatch();
+      expect(locator.calls, 0);
+
+      final done = repo.update();
+      await _until(() => watch.hits.isNotEmpty);
+      await repo.restartClientLogWatch();
+
+      expect(locator.calls, 2);
+      expect(watch.hits, hasLength(2));
+      expect(watch.cancelled, [0]);
+
+      watch.hits[1].complete(_cred());
+      await _until(() => capture.cancelCalls > 0);
+      capture.result.complete(null);
+      await done;
+
+      expect(t.hits, hasLength(12));
+      expect(
+        t.container.read(gachaRepositoryProvider).progress,
+        isA<UpdateCompleted>(),
+      );
+    });
+
+    test('fallback recapture also races the client log', () async {
+      final storage = GachaStorage(tempDir);
+      await storage.save(
+        BannerStorage(
+          playerId: '701000000',
+          languageCode: 'zh-Hant',
+          lastUpdated: DateTime.utc(2026),
+          banners: const {'1': [], '2': []},
+        ),
+      );
+      await storage.saveCapturedCredential('701000000', _cred().toJsonString());
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final t = raceContainer(
+        capture: capture,
+        watch: watch,
+        locator: _FakeLocator(loc),
+        storage: storage,
+        // 第一輪 pool 0（第 1 個請求）失敗 → 重攔；第二輪正常。
+        respond: (hit, type) => hit == 1
+            ? _fail(-1)
+            : (type == 1 ? _ok([_row('1')]) : _ok(const [])),
+      );
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => watch.hits.isNotEmpty);
+      final waiting = t.container.read(gachaRepositoryProvider).progress;
+      expect((waiting as WaitingForCapture).isFallback, isTrue);
+      watch.hits[0].complete(_cred());
+      await _until(() => capture.cancelCalls > 0);
+      capture.result.complete(null);
+      await done;
+
+      expect(t.hits, hasLength(13));
+      expect(
+        t.container.read(gachaRepositoryProvider).progress,
+        isA<UpdateCompleted>(),
+      );
+    });
+  });
 }
