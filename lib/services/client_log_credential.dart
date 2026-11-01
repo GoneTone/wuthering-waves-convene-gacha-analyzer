@@ -5,7 +5,8 @@ final RegExp _conveneUrlPattern = RegExp(
   r'https://aki-gm-resources-oversea\.aki-game\.net/aki/gacha/index\.html#/record[^"\s,]*',
 );
 
-/// 解碼（亦即編碼，運算互為反函式）遊戲 Client.log 的逐位元組 XOR 混淆，回傳新 buffer。
+/// 解碼遊戲 Client.log 的逐位元組 XOR 混淆，回傳新 buffer；金鑰依「原始（檔案內）位元組」奇偶選擇，
+/// 因此並非自反運算（編碼只存在於測試 helper）。
 Uint8List decodeClientLogBytes(Uint8List raw) {
   final out = Uint8List(raw.length);
   for (var i = 0; i < raw.length; i++) {

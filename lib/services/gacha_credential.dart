@@ -64,7 +64,12 @@ class GachaCredential {
     final query = fragment.contains('?')
         ? fragment.substring(fragment.indexOf('?') + 1)
         : '';
-    final params = Uri.splitQueryString(query);
+    final Map<String, String> params;
+    try {
+      params = Uri.splitQueryString(query);
+    } on ArgumentError {
+      throw const FormatException('convene url has malformed percent encoding');
+    }
     String require(String key) {
       final v = params[key];
       if (v == null || v.isEmpty) {

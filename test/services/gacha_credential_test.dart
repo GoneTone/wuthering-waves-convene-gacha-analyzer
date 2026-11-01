@@ -116,6 +116,24 @@ void main() {
       );
     });
 
+    test('percent escape 格式錯誤丟 FormatException', () {
+      expect(
+        () => GachaCredential.fromConveneUrl(
+          '$base${full.replaceFirst('zh-Hant', '%zz')}',
+        ),
+        throwsFormatException,
+      );
+    });
+
+    test('欄位值為空字串丟 FormatException', () {
+      expect(
+        () => GachaCredential.fromConveneUrl(
+          '$base${full.replaceFirst('record_id=R', 'record_id=')}',
+        ),
+        throwsFormatException,
+      );
+    });
+
     test('值做 percent-decoding', () {
       final cred = GachaCredential.fromConveneUrl(
         '$base${full.replaceFirst('zh-Hant', 'zh%2DHant')}',
