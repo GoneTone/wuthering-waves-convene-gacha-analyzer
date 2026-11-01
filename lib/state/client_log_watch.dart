@@ -25,16 +25,30 @@ class PollingClientLogWatch implements ClientLogWatch {
   /// 輪詢間隔。
   final Duration interval;
 
+  /// 本監看器的 logger。
   static final _log = Logger('gacha.clientLog');
 
   /// 未遇換行時 carry 的上限，超過即丟棄以防無限成長。
   static const _maxCarryBytes = 1024 * 1024;
 
+  /// 描述例外但不含原始路徑（`FileSystemException.toString()` 會帶路徑）。
+  static String _describe(Object e) => e is FileSystemException
+      ? 'os=${e.osError?.message}'
+      : 'error=${e.runtimeType}';
+
   @override
   CaptureSession start(String clientLogPath) {
     final file = File(clientLogPath);
     final completer = Completer<GachaCredential?>();
-    var offset = file.existsSync() ? file.lengthSync() : 0;
+    var offset = 0;
+    try {
+      if (file.existsSync()) offset = file.lengthSync();
+    } on Object catch (e) {
+      _log.warning(
+        'client log baseline failed path=${sanitizeFsPath(clientLogPath)} '
+        '${_describe(e)}; using offset=0',
+      );
+    }
     var carry = Uint8List(0);
     var polling = false;
     _log.info(
@@ -46,7 +60,8 @@ class PollingClientLogWatch implements ClientLogWatch {
       if (polling || completer.isCompleted) return;
       polling = true;
       try {
-        final length = await file.length();
+        // 檔案尚未建立是支援情境，視為長度 0 且不記 warning。
+        final length = await file.exists() ? await file.length() : 0;
         if (length < offset) {
           offset = 0;
           carry = Uint8List(0);
@@ -87,19 +102,28 @@ class PollingClientLogWatch implements ClientLogWatch {
           _log.warning('client log url rejected reason=${e.message}');
         }
       } on Object catch (e) {
-        _log.warning('client log read failed error=$e');
+        _log.warning(
+          'client log read failed path=${sanitizeFsPath(clientLogPath)} '
+          '${_describe(e)}',
+        );
       } finally {
         polling = false;
       }
     }
 
-    final timer = Timer.periodic(interval, (_) => unawaited(poll()));
+    Future<void>? inFlight;
+    final timer = Timer.periodic(interval, (_) {
+      if (polling || completer.isCompleted) return;
+      inFlight = poll();
+    });
     unawaited(completer.future.whenComplete(timer.cancel));
 
     return CaptureSession(
       result: completer.future,
       cancel: () async {
         if (!completer.isCompleted) completer.complete(null);
+        timer.cancel();
+        await inFlight;
       },
     );
   }

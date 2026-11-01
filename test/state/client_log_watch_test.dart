@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/client_log_watch.dart';
 
@@ -81,11 +82,17 @@ void main() {
   });
 
   test('missing file then created', () async {
+    final warnings = <LogRecord>[];
+    final sub = Logger('gacha.clientLog').onRecord.listen((r) {
+      if (r.level >= Level.WARNING) warnings.add(r);
+    });
     final s = begin();
-    await Future<void>.delayed(const Duration(milliseconds: 60));
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    expect(warnings, isEmpty);
     _append(file, '${_url('D')}\n');
     expect((await _await(s.result))!.recordId, 'D');
     await s.cancel();
+    await sub.cancel();
   });
 
   test('malformed url keeps waiting', () async {
