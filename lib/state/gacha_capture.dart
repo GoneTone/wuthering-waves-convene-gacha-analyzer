@@ -52,8 +52,9 @@ class RustGachaCapture implements GachaCapture {
         // 不在此 complete：等 stream onDone（MITM graceful shutdown + helper 停止、
         // WinDivert 重導向已還原），此時呼叫 HTTP fetcher 才不會被重導向誤導。
       },
-      onError: (Object e, StackTrace st) {
-        _log.severe('capture error', e, st);
+      onError: (Object e) {
+        // 含 UAC 被拒等啟動失敗；呼叫端會改走 Client.log，故記 warning 而非 severe。
+        _log.warning('capture error: $e');
         if (!completer.isCompleted) completer.completeError(e);
       },
       onDone: () {
