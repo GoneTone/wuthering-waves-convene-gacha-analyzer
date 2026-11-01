@@ -197,19 +197,19 @@ class _Body extends StatelessWidget {
                   color: theme.gacha.stateWarning,
                 ),
               ),
-              if (gameDirMissing) ...[
-                const SizedBox(height: AppSpacing.s),
-                const _ChooseGameDirButton(),
-              ],
             ],
             const SizedBox(height: AppSpacing.s),
-            TextButton(
-              onPressed: () => showGameDirHelpDialog(context),
-              child: Text(
-                l.progressNotDetectedLink,
-                textAlign: TextAlign.center,
+            // 提示已說明原因並直接給選資料夾按鈕，「沒有反應？」連結此時多餘，二擇一。
+            if (captureUnavailable && gameDirMissing)
+              const _ChooseGameDirButton()
+            else
+              TextButton(
+                onPressed: () => showGameDirHelpDialog(context),
+                child: Text(
+                  l.progressNotDetectedLink,
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
           ],
         ),
       FetchingBanner(

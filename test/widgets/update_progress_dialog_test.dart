@@ -89,7 +89,7 @@ void main() {
   });
 
   testWidgets(
-    'captureUnavailable without game dir shows notice and choose-folder button',
+    'captureUnavailable without game dir shows choose-folder button instead of link',
     (tester) async {
       await _pumpDialog(
         tester,
@@ -106,6 +106,7 @@ void main() {
       );
       expect(find.text(captureUnavailableNotice), findsNothing);
       expect(find.text(chooseGameDir), findsOneWidget);
+      expect(find.text('已經開啟喚取記錄，卻一直沒有反應？'), findsNothing);
     },
   );
 
