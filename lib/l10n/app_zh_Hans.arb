@@ -1,5 +1,5 @@
 {
-  "@@locale": "zh_Hans",
+  "@@locale": "zh-CN",
   "localeNativeName": "简体中文",
   "localeTranslatorLabel": "翻译者：{translator}",
   "@localeNativeName": {
@@ -194,7 +194,11 @@
   "gameDirHelpFound": "当前读取的游戏文件夹：{path}。若路径不正确（例如电脑上装了多份游戏），请按「重新选择」。",
   "@gameDirHelpFound": {
     "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "gameDirHelpReopen": "已设置游戏文件夹。请回到游戏，再打开一次唤取记录。",
   "@gameDirHelpReopen": {
@@ -354,12 +358,20 @@
   "settingsGameDirAuto": "自动检测：{path}",
   "@settingsGameDirAuto": {
     "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "settingsGameDirManual": "手动设置：{path}",
   "@settingsGameDirManual": {
     "description": "Description when the game folder was set manually by the user; {path} is the folder path",
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "settingsGameDirNone": "找不到游戏文件夹",
   "@settingsGameDirNone": {
