@@ -1,6 +1,6 @@
 # 喚取憑證改由「攔截＋讀遊戲 Client.log」雙來源取得 — 設計 spec
 
-- 狀態：草案（待使用者審核）
+- 狀態：已核准，已實作（分支 feat/client-log-credential-fallback）
 - 日期：2026-11-01
 - 前因：issue #92。回報者（歐服、Win10 19045、app v1.7.1）開啟喚取記錄後，helper 整段沒看到任何 `KRWebView.exe` 的 :443 連線（全部 `verdict=not_target`），導致攔不到請求、一直停在等待畫面。對照影片時間軸，歷史頁載入的時間點只出現一個非 `KRWebView.exe` 的新行程連線，推測他的環境改由別的行程載入歷史頁（尚待回報者提供行程名確認）。同時期 WuWa Tracker 仍然正常，因為它讀的是遊戲本機 log，不依賴發請求的是哪個行程。
 

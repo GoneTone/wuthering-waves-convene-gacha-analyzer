@@ -145,21 +145,38 @@
   "progressOpenGameHint": "請開啟鳴潮 → 喚取 → 喚取記錄",
   "progressFallbackHint": "（先前的擷取已失效，需重新攔截）",
   "progressNotDetectedLink": "已經開啟喚取記錄，卻一直沒有反應？",
-  "@progressNotDetectedLink": {"description": "等待擷取畫面的「偵測不到」連結"},
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "偵測不到喚取記錄",
-  "@gameDirHelpTitle": {"description": "偵測說明視窗標題"},
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "找不到鳴潮的遊戲資料夾。選擇遊戲資料夾後，本工具也能改從遊戲記錄檔讀取喚取記錄。",
-  "@gameDirHelpNotFound": {"description": "找不到遊戲資料夾時的說明"},
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "目前讀取的遊戲資料夾：{path}。如果不是你正在玩的那份遊戲，請重新選擇。",
-  "@gameDirHelpFound": {"description": "已找到遊戲資料夾時的說明", "placeholders": {"path": {"type": "String"}}},
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": { "path": { "type": "String" } }
+  },
   "gameDirHelpReopen": "已設定遊戲資料夾。請回到遊戲，再開啟一次喚取記錄。",
-  "@gameDirHelpReopen": {"description": "選好資料夾後的提示"},
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "這個資料夾裡找不到遊戲記錄檔，請選擇「Wuthering Waves Game」資料夾。",
-  "@gameDirInvalid": {"description": "選到無效資料夾的錯誤"},
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \\\"Wuthering Waves Game\\\" folder"
+  },
   "actionChooseGameDir": "選擇遊戲資料夾",
-  "@actionChooseGameDir": {"description": "選擇遊戲資料夾按鈕"},
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "重新選擇",
-  "@actionRechooseGameDir": {"description": "重新選擇遊戲資料夾按鈕"},
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "正在抓取：{name}",
   "@progressFetchingBanner": {
     "placeholders": { "name": { "type": "String" } }
@@ -254,25 +271,25 @@
   "settingsDataManagement": "資料管理",
   "settingsGameDir": "遊戲資料夾",
   "@settingsGameDir": {
-    "description": "設定頁「遊戲資料夾」區塊標題"
+    "description": "Title of the game folder section in the settings page"
   },
   "settingsGameDirAuto": "自動偵測：{path}",
   "@settingsGameDirAuto": {
-    "description": "遊戲資料夾由登錄檔或常見位置自動偵測到時的說明，{path} 為資料夾路徑",
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
     "placeholders": { "path": { "type": "String" } }
   },
   "settingsGameDirManual": "手動設定：{path}",
   "@settingsGameDirManual": {
-    "description": "遊戲資料夾為使用者手動設定時的說明，{path} 為資料夾路徑",
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
     "placeholders": { "path": { "type": "String" } }
   },
   "settingsGameDirNone": "找不到遊戲資料夾",
   "@settingsGameDirNone": {
-    "description": "沒有設定也偵測不到遊戲資料夾時的說明"
+    "description": "Description when no game folder is set and none can be detected"
   },
   "actionClearGameDir": "清除",
   "@actionClearGameDir": {
-    "description": "清除手動設定的遊戲資料夾按鈕"
+    "description": "Button that clears the manually set game folder"
   },
   "settingsCloudSync": "雲端同步",
   "cloudSyncIntro": "連結 Google 帳號後，喚取紀錄會自動備份到你的 Google 雲端硬碟，並在多台電腦間同步。",

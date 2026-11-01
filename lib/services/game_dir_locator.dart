@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:win32_registry/win32_registry.dart';
 
 import 'log_sanitize.dart';
 
@@ -53,26 +54,42 @@ class GameDirLocator {
     r'C:\Program Files (x86)\Steam\steamapps\common\Wuthering Waves\Wuthering Waves Game',
   ];
 
-  /// 存放啟動器 InstallPath 的解除安裝登錄檔 key。
-  static const List<String> _registryKeys = [
-    r'HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\KRInstall Wuthering Waves Overseas',
-    r'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\KRInstall Wuthering Waves Overseas',
-    r'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\KRInstall Wuthering Waves Overseas',
+  /// 啟動器解除安裝項目在登錄檔的子路徑（WOW6432Node 以外的 hive 共用）。
+  static const String _uninstallPath =
+      r'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\KRInstall Wuthering Waves Overseas';
+
+  /// 依序查詢的（hive，子路徑），InstallPath 值存於其下。
+  static const List<(RegistryHive, String)> _registryKeys = [
+    (
+      RegistryHive.localMachine,
+      r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\KRInstall Wuthering Waves Overseas',
+    ),
+    (RegistryHive.localMachine, _uninstallPath),
+    (RegistryHive.currentUser, _uninstallPath),
   ];
 
+  /// 讀取登錄檔 InstallPath 的函式。
   final RegistryInstallPathReader _readInstallPaths;
+
+  /// 常見安裝路徑清單。
   final List<String> _commonDirs;
 
-  /// 依序查 [_registryKeys]，回傳所有讀到的 InstallPath。
+  /// 依序查 [_registryKeys]，回傳所有讀到的 InstallPath；key 或值不存在就略過。
   static Future<List<String>> _readRegistryInstallPaths() async {
-    final re = RegExp(r'InstallPath\s+REG_SZ\s+(.+)$', multiLine: true);
     final paths = <String>[];
-    for (final key in _registryKeys) {
-      final r = await Process.run('reg', ['query', key, '/v', 'InstallPath']);
-      if (r.exitCode != 0) continue;
-      final m = re.firstMatch(r.stdout.toString());
-      final value = m?.group(1)?.trim();
-      if (value != null && value.isNotEmpty) paths.add(value);
+    for (final (hive, path) in _registryKeys) {
+      final RegistryKey key;
+      try {
+        key = Registry.openPath(hive, path: path);
+      } on Exception {
+        continue;
+      }
+      try {
+        final value = key.getStringValue('InstallPath')?.trim();
+        if (value != null && value.isNotEmpty) paths.add(value);
+      } finally {
+        key.close();
+      }
     }
     return paths;
   }

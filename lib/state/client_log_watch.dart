@@ -88,18 +88,21 @@ class PollingClientLogWatch implements ClientLogWatch {
           carry = Uint8List(0);
         }
         if (end < 0) return;
-        final url = findLastConveneUrl(
+        final urls = findConveneUrls(
           utf8.decode(buf.sublist(0, end + 1), allowMalformed: true),
         );
-        if (url == null) return;
-        try {
-          final cred = GachaCredential.fromConveneUrl(url);
-          _log.info(
-            'client log hit cred=${sanitizeCredential(cred.toJsonString())}',
-          );
-          if (!completer.isCompleted) completer.complete(cred);
-        } on FormatException catch (e) {
-          _log.warning('client log url rejected reason=${e.message}');
+        // 由新到舊嘗試：最新一筆若被截斷或格式錯誤，仍可退回較早的有效 URL。
+        for (final url in urls.reversed) {
+          try {
+            final cred = GachaCredential.fromConveneUrl(url);
+            _log.info(
+              'client log hit cred=${sanitizeCredential(cred.toJsonString())}',
+            );
+            if (!completer.isCompleted) completer.complete(cred);
+            break;
+          } on FormatException catch (e) {
+            _log.warning('client log url rejected reason=${e.message}');
+          }
         }
       } on Object catch (e) {
         _log.warning(

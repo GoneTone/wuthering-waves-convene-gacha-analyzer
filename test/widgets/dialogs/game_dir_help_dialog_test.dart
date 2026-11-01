@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -105,6 +106,39 @@ void main() {
       final (outcome, c) = await run(tester, () async => tmp.path);
       expect(outcome, GameDirPickOutcome.invalid);
       expect(c.read(settingsProvider).gameDir, isNull);
+    });
+
+    testWidgets('folder chosen after the host unmounts is still saved', (
+      tester,
+    ) async {
+      final game = _makeGameDir(tmp);
+      late WidgetRef captured;
+      await tester.pumpWidget(
+        ProviderScope(
+          child: Consumer(
+            builder: (_, ref, _) {
+              captured = ref;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(Consumer)),
+      );
+      final outcome = await tester.runAsync(() async {
+        await container.read(settingsProvider.notifier).waitForLoad();
+        final picked = Completer<String?>();
+        final future = pickAndSaveGameDir(
+          captured,
+          pickDirectory: () => picked.future,
+        );
+        await tester.pumpWidget(const ProviderScope(child: SizedBox()));
+        picked.complete(game.path);
+        return future;
+      });
+      expect(outcome, GameDirPickOutcome.saved);
+      expect(container.read(settingsProvider).gameDir, game.path);
     });
 
     testWidgets('null pick is cancelled', (tester) async {

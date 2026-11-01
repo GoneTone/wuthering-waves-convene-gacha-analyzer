@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/client_log_watch.dart';
-
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import '../helpers/client_log_fixtures.dart';
 
@@ -38,8 +37,7 @@ void main() {
     dir.deleteSync(recursive: true);
   });
 
-  /// 啟動監看並登記，tearDown 前由測試自行 cancel。
-  /// 啟動監看。
+  /// 啟動監看，tearDown 前由測試自行 cancel。
   CaptureSession begin() => PollingClientLogWatch(
     interval: const Duration(milliseconds: 20),
   ).start(file.path);
@@ -104,6 +102,14 @@ void main() {
     expect(done, isFalse);
     _append(file, '${_url('E')}\n');
     expect((await _await(s.result))!.recordId, 'E');
+    await s.cancel();
+  });
+
+  test('falls back to an earlier valid url in the same chunk', () async {
+    final s = begin();
+    final bad = _url('X').replaceAll('&record_id=X', '');
+    _append(file, '${_url('V')}\n$bad\n');
+    expect((await _await(s.result))!.recordId, 'V');
     await s.cancel();
   });
 }

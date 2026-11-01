@@ -28,16 +28,21 @@ Future<GameDirPickOutcome> pickAndSaveGameDir(
   WidgetRef ref, {
   Future<String?> Function()? pickDirectory,
 }) async {
+  final locator = ref.read(gameDirLocatorProvider);
+  final settings = ref.read(settingsProvider.notifier);
   final picked = await (pickDirectory ?? getDirectoryPath)();
-  if (picked == null || !ref.context.mounted) {
-    return GameDirPickOutcome.cancelled;
-  }
-  final dir = await ref.read(gameDirLocatorProvider).normalize(picked);
+  if (picked == null) return GameDirPickOutcome.cancelled;
+  final dir = await locator.normalize(picked);
   if (dir == null) {
     _log.info('game dir pick rejected path=${sanitizeFsPath(picked)}');
     return GameDirPickOutcome.invalid;
   }
-  if (!ref.context.mounted) return GameDirPickOutcome.cancelled;
-  await ref.read(settingsProvider.notifier).setGameDir(dir);
+  // 使用者已明確選好資料夾；即使 widget 已卸載仍存檔，只是呼叫端不再有 UI 可更新。
+  await settings.setGameDir(dir);
+  if (!ref.context.mounted) {
+    _log.info(
+      'game dir saved after host unmounted path=${sanitizeFsPath(dir)}',
+    );
+  }
   return GameDirPickOutcome.saved;
 }

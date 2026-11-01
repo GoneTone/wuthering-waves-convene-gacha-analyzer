@@ -176,21 +176,38 @@
   "progressOpenGameHint": "Open Wuthering Waves → Convene → Convene History",
   "progressFallbackHint": "(The previous capture expired. Please reopen the Convene History page.)",
   "progressNotDetectedLink": "Opened Convene History but nothing happens?",
-  "@progressNotDetectedLink": {"description": "等待擷取畫面的「偵測不到」連結"},
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "Convene history not detected",
-  "@gameDirHelpTitle": {"description": "偵測說明視窗標題"},
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "Couldn't find the Wuthering Waves game folder. Once you choose it, this tool can also read the convene history from the game's log file.",
-  "@gameDirHelpNotFound": {"description": "找不到遊戲資料夾時的說明"},
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "Game folder in use: {path}. If this isn't the game you are playing, please choose again.",
-  "@gameDirHelpFound": {"description": "已找到遊戲資料夾時的說明", "placeholders": {"path": {"type": "String"}}},
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": { "path": { "type": "String" } }
+  },
   "gameDirHelpReopen": "Game folder saved. Go back to the game and open Convene History once more.",
-  "@gameDirHelpReopen": {"description": "選好資料夾後的提示"},
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "No game log file was found in this folder. Please choose the \"Wuthering Waves Game\" folder.",
-  "@gameDirInvalid": {"description": "選到無效資料夾的錯誤"},
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \\\"Wuthering Waves Game\\\" folder"
+  },
   "actionChooseGameDir": "Choose game folder",
-  "@actionChooseGameDir": {"description": "選擇遊戲資料夾按鈕"},
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "Choose again",
-  "@actionRechooseGameDir": {"description": "重新選擇遊戲資料夾按鈕"},
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "Fetching: {name}",
   "@progressFetchingBanner": {
     "placeholders": {
@@ -330,25 +347,25 @@
   "settingsDataManagement": "Data management",
   "settingsGameDir": "Game folder",
   "@settingsGameDir": {
-    "description": "設定頁「遊戲資料夾」區塊標題"
+    "description": "Title of the game folder section in the settings page"
   },
   "settingsGameDirAuto": "Auto-detected: {path}",
   "@settingsGameDirAuto": {
-    "description": "遊戲資料夾由登錄檔或常見位置自動偵測到時的說明，{path} 為資料夾路徑",
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
     "placeholders": { "path": { "type": "String" } }
   },
   "settingsGameDirManual": "Set manually: {path}",
   "@settingsGameDirManual": {
-    "description": "遊戲資料夾為使用者手動設定時的說明，{path} 為資料夾路徑",
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
     "placeholders": { "path": { "type": "String" } }
   },
   "settingsGameDirNone": "Game folder not found",
   "@settingsGameDirNone": {
-    "description": "沒有設定也偵測不到遊戲資料夾時的說明"
+    "description": "Description when no game folder is set and none can be detected"
   },
   "actionClearGameDir": "Clear",
   "@actionClearGameDir": {
-    "description": "清除手動設定的遊戲資料夾按鈕"
+    "description": "Button that clears the manually set game folder"
   },
   "settingsCloudSync": "Cloud sync",
   "cloudSyncIntro": "Link your Google account to automatically back up convene records to your Google Drive and keep multiple computers in sync.",

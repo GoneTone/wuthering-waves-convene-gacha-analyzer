@@ -24,22 +24,22 @@ void main() {
     });
   });
 
-  group('findLastConveneUrl', () {
-    test('多筆時回傳最後一筆', () {
+  group('findConveneUrls', () {
+    test('多筆時依出現順序全部回傳', () {
       final text = 'a $host${path}A1 b\n$host${path}B2 c';
-      expect(findLastConveneUrl(text), '$host${path}B2');
+      expect(findConveneUrls(text), ['$host${path}A1', '$host${path}B2']);
     });
 
     for (final end in ['"', ',', ' ', '\n']) {
       test('遇到 ${jsonEncode(end)} 結尾即停止', () {
-        expect(findLastConveneUrl('$host${path}X$end tail'), '$host${path}X');
+        expect(findConveneUrls('$host${path}X$end tail'), ['$host${path}X']);
       });
     }
 
-    test('只有國服 host 時回傳 null', () {
+    test('只有國服 host 時回傳空清單', () {
       const cn =
           'https://aki-gm-resources.aki-game.com/aki/gacha/index.html#/record?record_id=A';
-      expect(findLastConveneUrl(cn), isNull);
+      expect(findConveneUrls(cn), isEmpty);
     });
   });
 }

@@ -16,8 +16,7 @@ Uint8List decodeClientLogBytes(Uint8List raw) {
   return out;
 }
 
-/// 取 [text] 中最後一筆國際服喚取記錄 URL（最新、token 最可能有效）；無則回傳 null。
-String? findLastConveneUrl(String text) {
-  final matches = _conveneUrlPattern.allMatches(text);
-  return matches.isEmpty ? null : matches.last.group(0);
-}
+/// 依出現順序（舊→新）回傳 [text] 中所有國際服喚取記錄 URL；呼叫端應由新往舊嘗試。
+List<String> findConveneUrls(String text) => [
+  for (final m in _conveneUrlPattern.allMatches(text)) m.group(0)!,
+];
