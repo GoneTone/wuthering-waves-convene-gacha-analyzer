@@ -18,6 +18,7 @@ enum GameDirPickOutcome {
   invalid,
 }
 
+/// 選資料夾流程的 logger。
 final Logger _log = Logger('gacha.clientLog');
 
 /// 開啟選資料夾視窗，用 [GameDirLocator.normalize] 驗證後存進設定。

@@ -192,12 +192,27 @@ void main() {
     testWidgets('both dialogs close when progress becomes null', (
       tester,
     ) async {
+      // 進度視窗的 listener 先於說明視窗訂閱（riverpod 依插入順序通知），退化成單純 pop() 時才抓得到。
       final c = await open(tester);
       (c.read(gachaRepositoryProvider.notifier) as _FakeRepo).setProgress(null);
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('偵測不到喚取記錄'), findsNothing);
       expect(find.byType(UpdateProgressDialog), findsNothing);
+      expect(find.text('BASE'), findsOneWidget);
+    });
+
+    testWidgets('null, value, null within exit animation keeps base page', (
+      tester,
+    ) async {
+      final c = await open(tester);
+      final repo = c.read(gachaRepositoryProvider.notifier) as _FakeRepo;
+      repo.setProgress(null);
+      await tester.pump(const Duration(milliseconds: 50));
+      repo.setProgress(const WaitingForCapture());
+      await tester.pump(const Duration(milliseconds: 50));
+      repo.setProgress(null);
+      await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('BASE'), findsOneWidget);
     });
 

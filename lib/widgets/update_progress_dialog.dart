@@ -19,7 +19,8 @@ class UpdateProgressDialog extends ConsumerWidget {
       gachaRepositoryProvider.select((s) => s.progress),
       (prev, next) {
         final route = ModalRoute.of(context);
-        if (next != null || route == null) return;
+        // route 已離開 stack 時 popUntil 永遠比不到，會把所有頁面 pop 光。
+        if (next != null || route == null || !route.isActive) return;
         // 上面可能疊著說明視窗，先收回到自己這層再關，避免多 pop 底下的頁面。
         final nav = Navigator.of(context);
         nav.popUntil((r) => r == route);
