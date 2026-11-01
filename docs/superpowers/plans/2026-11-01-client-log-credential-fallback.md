@@ -265,6 +265,29 @@
 
 ---
 
+### Task 7b: helper 目標行程白名單
+
+**Files:**
+- Modify: `rust_capture_helper/src/main.rs`（`TARGET_PROCESS` 改成白名單；`classify_verdict`、`tcp_port_is_target`、啟動訊息、`connect ... verdict=target` 和 `verdict=not_target` 的 log；相關的模組／欄位註解）
+- Modify: `rust/src/api/capture.rs:26`（註解提到 KRWebView 的地方，改成泛稱「目標行程」）
+- Test: `rust_capture_helper/src/main.rs` 的 `mod tests`
+
+**Interfaces:**
+- Produces：`const TARGET_PROCESSES: [&str; 3] = ["KRWebView.exe", "KRWebClient.exe", "KRWebRender.exe"];`。`classify_verdict(name)` 只要大小寫不敏感地符合其中任一個，就回傳 `Target`。**`tcp_port_is_target` 必須改走 `classify_verdict`**（目前 :705 自己另外比對 `TARGET_PROCESS`，是第二份判斷邏輯）。
+
+- [ ] **Step 1: 寫失敗測試**：`classify_verdict("KRWebClient.exe")`、`classify_verdict("krwebrender.EXE")` 都是 `Target`；`"KRWebView.exe"` 仍然是 `Target`；`"KRWebClientX.exe"`、`"chrome.exe"` 是 `NotTarget`；`""` 是 `Unknown`。
+- [ ] **Step 2: 跑測試確認失敗**：`cargo test --manifest-path rust_capture_helper/Cargo.toml`
+- [ ] **Step 3: 實作**
+  - 改成白名單，`tcp_port_is_target` 改用 `classify_verdict`。
+  - `connect ... verdict=target` 的 log 改成帶實際的行程名稱，不再寫死 `name=KRWebView.exe`。
+  - **`verdict=not_target` 的 log 也加上 `name=<行程名稱>`**：這次 #92 就是因為這行沒有名稱，才看不出是哪個行程，補上之後可以直接定位。
+  - 啟動訊息列出所有目標行程。
+  - 註解裡寫 KRWebView 的地方改成泛稱「目標行程（喚取記錄的 WebView）」，必要的地方註明新舊兩套元件。
+- [ ] **Step 4: 跑測試確認通過**，並跑 `cargo clippy --manifest-path rust_capture_helper/Cargo.toml`（如果專案有在用），確認沒有新增警告。
+- [ ] **Step 5: Commit**：`feat(capture): recognize KRWebClient and KRWebRender in capture helper`
+
+---
+
 ### Task 8: 收尾驗證
 
 - [ ] **Step 1**：`fvm dart format lib/ test/`
@@ -272,7 +295,7 @@
 - [ ] **Step 3**：`fvm flutter test`，必須輸出 `All tests passed!`
 - [ ] **Step 4: 手動 E2E（維護者本機，`fvm flutter run -d windows`）**
   1. 正常更新：log 拿到 `credential source=...`，更新完成。
-  2. 暫時把 `rust_capture_helper/src/main.rs` 的 `TARGET_PROCESS` 改成 `"NoSuchProcess.exe"` 並重新 build，模擬 #92：只靠 log 也能完成，log 有 `credential source=log`、`capture teardown`，而且沒有錯誤。**驗證完要把這個修改還原，不能 commit。**
+  2. 暫時把 `rust_capture_helper/src/main.rs` 的 `TARGET_PROCESSES` 改成只有 `"NoSuchProcess.exe"` 並重新 build，模擬 #92：只靠 log 也能完成，log 有 `credential source=log`、`capture teardown`，而且沒有錯誤。**驗證完要把這個修改還原，不能 commit。**
   3. 清除設定裡的遊戲資料夾，再把 locator 暫時指到不存在的路徑（或在沒裝遊戲的環境測）：點連結 → 顯示「找不到」→ 選擇資料夾 → 提示再開一次 → 開歷史頁 → 完成。
   4. 匯出 log，檢查裡面沒有喚取 URL 原文，也沒有完整的 `record_id`。
 - [ ] **Step 5: Commit**（如果 format 有改動）：`style: format`

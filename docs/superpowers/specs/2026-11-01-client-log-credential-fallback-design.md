@@ -28,7 +28,7 @@
 
 **非目標**
 
-- 不修改攔截這條路（helper、WinDivert、MITM）。#92 的 `TARGET_PROCESS` 擴充等回報者回覆後另案處理。
+- 不改攔截這條路的機制（WinDivert、MITM）。**例外**（2026-11-01 使用者決定併入本分支）：#92 回報者已確認新版遊戲改用 `KRWebClient.exe`（常駐），每開一次歷史頁會多開一個 `KRWebRender.exe`（關頁就消失），另外還有幾個常駐的 `KRWebRender.exe`。所以 helper 的目標行程要擴充為 `KRWebView.exe`、`KRWebClient.exe`、`KRWebRender.exe`。新元件是常駐的，可能沿用既有的連線，所以攔截不保證每次都有效，讀 log 才是穩定的那條路。
 - 不支援國服（`aki-gm-resources.aki-game.com`／`gmserver-api.aki-game2.com`）。現有 fetcher 和 MITM 都只處理國際服 `gmserver-api.aki-game2.net`，這次維持一致。
 - 不讀 `KRSDKWebView\debug.log`。本機實測它在 2026-06-14 之後就沒再寫入。
 - 不修改遊戲檔案的 ACL（WuWa Tracker 會 `takeown`／`icacls`，我們不做）。

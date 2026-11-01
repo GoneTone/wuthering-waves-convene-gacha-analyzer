@@ -1,5 +1,5 @@
 //! 提權的喚取攔截 helper：由主程式（一般權限）UAC 提權 spawn（見 `rust/src/helper.rs`）。
-//! WinDivert 把 `KRWebView.exe` 的 :443 透明重導向到本機 shim；shim 只對喚取記錄查詢 API
+//! WinDivert 把目標行程（喚取記錄的 WebView；舊版 `KRWebView.exe`，新版 `KRWebClient.exe`／`KRWebRender.exe`）的 :443 透明重導向到本機 shim；shim 只對喚取記錄查詢 API
 //! （`gmserver-api.aki-game2.net`）對**主程式的 hudsucker** 發 CONNECT 做 MITM（埠由 argv[1]
 //! 傳入），其餘一律直連 passthrough（避免 MITM 重的圖片資源 aki-gm-resources 拖慢頁面；
 //! gmserver 為獨立連線、未 coalesce，故不需 MITM 它）。
@@ -13,13 +13,13 @@
 //! ifidx 設回實體網卡**，app 的 ESTABLISHED socket 才認得。
 //!
 //! ## 行程鎖定（避免 GetExtendedTcpTable 拖慢熱路徑）
-//! SOCKET 層 sniff 在 CONNECT 當下（早於 SYN）把 :443 埠分類記入 tcp_ports（KRWebView→導向）
-//! 或 not_target_ports（非 KRWebView，含 helper 自己的上游→跳過），用 PID 快取保持 near-instant；
+//! SOCKET 層 sniff 在 CONNECT 當下（早於 SYN）把 :443 埠分類記入 tcp_ports（目標行程→導向）
+//! 或 not_target_ports（非目標行程，含 helper 自己的上游→跳過），用 PID 快取保持 near-instant；
 //! 行程名一時讀不到則分類為 `Unknown`——不快取、不塞進任何集合，留給 NETWORK 層的 SYN fallback
 //! 重新判定，避免被永久誤標成非目標。network_loop 只查 set，僅罕見 race 才 fallback 查連線表。
 //!
 //! ## IPv6 / QUIC
-//! gmserver 偏好 v6 會繞過 v4 重導向 → 對 KRWebView 的 v6 :443 SYN 送 **RST** 逼退 v4（RST 讓
+//! gmserver 偏好 v6 會繞過 v4 重導向 → 對目標行程的 v6 :443 SYN 送 **RST** 逼退 v4（RST 讓
 //! Happy Eyeballs 即時 fallback，不等 ~250ms timeout）；UDP 443（QUIC）靜默 drop 逼退 TCP。
 //!
 //! 跑法：通常由主程式 spawn。獨立除錯時以系統管理員執行：
@@ -36,8 +36,9 @@ use sysinfo::{Pid, System};
 use windivert::prelude::*;
 use windivert_sys::ChecksumFlags;
 
-/// 目標行程（鳴潮喚取 WebView，CEF）。
-const TARGET_PROCESS: &str = "KRWebView.exe";
+/// 目標行程白名單（鳴潮喚取記錄的 WebView，CEF）。舊版元件為 `KRWebView.exe`；新版改由常駐的
+/// `KRWebClient.exe` 加上每個開啟頁面各一的 `KRWebRender.exe` 子行程承載（issue #92）。
+const TARGET_PROCESSES: [&str; 3] = ["KRWebView.exe", "KRWebClient.exe", "KRWebRender.exe"];
 /// 本機 shim 監聽埠（重導向目的埠）。
 const SHIM_PORT: u16 = 18081;
 /// 預設 MITM proxy 埠（shim 對它發 CONNECT）。實際值由 argv[1] 覆寫（主程式傳入）。
@@ -59,11 +60,11 @@ enum Verdict {
     Unknown,
 }
 
-/// 依映像名分類：空字串 → Unknown、等於目標行程 → Target、其餘 → NotTarget。
+/// 依映像名分類：空字串 → Unknown、符合任一目標行程（不分大小寫）→ Target、其餘 → NotTarget。
 fn classify_verdict(proc_name: &str) -> Verdict {
     if proc_name.is_empty() {
         Verdict::Unknown
-    } else if proc_name.eq_ignore_ascii_case(TARGET_PROCESS) {
+    } else if TARGET_PROCESSES.iter().any(|t| proc_name.eq_ignore_ascii_case(t)) {
         Verdict::Target
     } else {
         Verdict::NotTarget
@@ -96,16 +97,16 @@ fn hlog(level: &str, msg: &str) {
 /// 跨執行緒共享狀態。
 #[derive(Default)]
 struct Shared {
-    /// KRWebView 的 TCP 443 本機埠（要重導向）。
+    /// 目標行程的 TCP 443 本機埠（要重導向）。
     tcp_ports: HashSet<u16>,
-    /// KRWebView 的 UDP 443 本機埠（要 drop / 擋 QUIC）。
+    /// 目標行程的 UDP 443 本機埠（要 drop / 擋 QUIC）。
     udp_ports: HashSet<u16>,
     /// conntrack：client 本機埠 → (原始 server IP, 原始 client IP, ifidx, sub_ifidx)。
     /// 正向記下原始實體網卡 ifidx，反向時用來把 loopback 回包改回實體 inbound。
     redirects: HashMap<u16, ([u8; 4], [u8; 4], u32, u32)>,
-    /// KRWebView 的 IPv6 :443 本機埠（要 drop，逼退回 v4，否則 gmserver 走 v6 繞過重導向）。
+    /// 目標行程的 IPv6 :443 本機埠（要 drop，逼退回 v4，否則 gmserver 走 v6 繞過重導向）。
     v6_drop_ports: HashSet<u16>,
-    /// 已知「非 KRWebView」的 :443 本機埠（含 helper 自己的上游連線）。socket_watcher 在
+    /// 已知「非目標行程」的 :443 本機埠（含 helper 自己的上游連線）。socket_watcher 在
     /// CONNECT 當下就記下，讓 network_loop 直接跳過、不做昂貴的 GetExtendedTcpTable 查詢。
     not_target_ports: HashSet<u16>,
 }
@@ -140,7 +141,7 @@ fn main() {
         let s = shared.clone();
         thread::spawn(move || shim_listener(s, mitm_port));
     }
-    eprintln!("capture_helper: target {TARGET_PROCESS}, shim 127.0.0.1:{SHIM_PORT} -> MITM 127.0.0.1:{mitm_port}");
+    eprintln!("capture_helper: targets {TARGET_PROCESSES:?}, shim 127.0.0.1:{SHIM_PORT} -> MITM 127.0.0.1:{mitm_port}");
     network_loop(shared);
 }
 
@@ -171,7 +172,7 @@ fn start_watchdog(event_name: String, parent_pid: u32) {
     });
 }
 
-// ── SOCKET 層：追蹤 KRWebView 的 :443 本機埠 ───────────────────────────────
+// ── SOCKET 層：追蹤目標行程的 :443 本機埠 ───────────────────────────────
 
 /// WinDivert open 冷開機重試。剛開機後首次 `WinDivertOpen` 常撞 os error 1058
 /// （ERROR_SERVICE_DISABLED）：WinDivert 的核心驅動服務在上次關機時留下 pending-delete／停用
@@ -208,7 +209,7 @@ fn open_windivert_with_retry<T, E: std::fmt::Debug>(
     None
 }
 
-/// 在 SOCKET 層 CONNECT 當下就記下 :443 連線屬於哪個行程（KRWebView 或非），供 NETWORK 層
+/// 在 SOCKET 層 CONNECT 當下就記下 :443 連線屬於哪個行程（目標行程或非），供 NETWORK 層
 /// O(1) 判斷、不必做昂貴的 GetExtendedTcpTable。CONNECT 事件時間上早於 SYN，故能在 SYN 前記好。
 /// 用 PID 快取避免每個事件都 `proc_name`（那會拖慢、輸掉與 SYN 的競態）。
 fn socket_watcher(shared: Arc<Mutex<Shared>>) {
@@ -240,16 +241,17 @@ fn socket_watcher(shared: Arc<Mutex<Shared>>) {
             continue;
         }
         let pid = addr.process_id();
-        // 回傳 (verdict, 是否為本次首度分類)：首度才寫 log，避免重複洗版。
-        let (verdict, first_seen) = match pid_verdict.get(&pid) {
-            Some(&v) => (v, false),
+        // 回傳 (verdict, 本次首度分類時解析到的行程名)：首度才寫 log，避免重複洗版，
+        // 也避免為了 log 在熱路徑多查一次行程。
+        let (verdict, first_name) = match pid_verdict.get(&pid) {
+            Some(&v) => (v, None),
             None => {
                 let name = proc_name(pid, &mut sys);
                 let v = classify_verdict(&name);
                 if v != Verdict::Unknown {
                     pid_verdict.insert(pid, v);
                 }
-                (v, true)
+                (v, Some(name))
             }
         };
 
@@ -282,25 +284,25 @@ fn socket_watcher(shared: Arc<Mutex<Shared>>) {
                     _ => {}
                 }
                 drop(g);
-                if first_seen {
+                if let Some(name) = &first_name {
                     hlog(
                         "INFO",
                         &format!(
-                            "connect port={lport} pid={pid} name=KRWebView.exe \
+                            "connect port={lport} pid={pid} name={name} \
                              verdict=target proto={proto} v6={v6}"
                         ),
                     );
                 }
             }
             Verdict::NotTarget => {
-                // 非 KRWebView（含 helper 自己對上游的連線）→ 記下供 network_loop 跳過查詢。
+                // 非目標行程（含 helper 自己對上游的連線）→ 記下供 network_loop 跳過查詢。
                 g.not_target_ports.insert(lport);
                 drop(g);
-                if first_seen {
+                if let Some(name) = &first_name {
                     hlog(
                         "INFO",
                         &format!(
-                            "connect port={lport} pid={pid} verdict=not_target \
+                            "connect port={lport} pid={pid} name={name} verdict=not_target \
                              proto={proto} v6={v6}"
                         ),
                     );
@@ -309,7 +311,7 @@ fn socket_watcher(shared: Arc<Mutex<Shared>>) {
             Verdict::Unknown => {
                 // 映像名一時讀不到：維持未分類（不塞任何集合），交給 SYN fallback。
                 drop(g);
-                if first_seen {
+                if first_name.is_some() {
                     hlog(
                         "WARNING",
                         &format!(
@@ -325,7 +327,7 @@ fn socket_watcher(shared: Arc<Mutex<Shared>>) {
 
 // ── NETWORK 層：正向重導向 / UDP drop / 反向改寫 ───────────────────────────
 
-/// 攔截：KRWebView UDP 443 drop、TCP 443 重導向到 shim（loopback）、shim 回程改回真實 server。
+/// 攔截：目標行程 UDP 443 drop、TCP 443 重導向到 shim（loopback）、shim 回程改回真實 server。
 fn network_loop(shared: Arc<Mutex<Shared>>) {
     let filter = format!(
         "outbound and ((ip and ((tcp and tcp.DstPort == {TARGET_PORT}) or (tcp and tcp.SrcPort == {SHIM_PORT}) or (udp and udp.DstPort == {TARGET_PORT}))) or (ipv6 and ((tcp and tcp.DstPort == {TARGET_PORT}) or (udp and udp.DstPort == {TARGET_PORT}))))"
@@ -349,7 +351,7 @@ fn network_loop(shared: Arc<Mutex<Shared>>) {
             Err(_) => continue,
         };
 
-        // IPv6 分支：擋 KRWebView 的 v6 :443 逼退回 v4。TCP 用 RST 讓它「即時失敗」（不是
+        // IPv6 分支：擋目標行程的 v6 :443 逼退回 v4。TCP 用 RST 讓它「即時失敗」（不是
         // silent drop——後者要等 ~250ms Happy Eyeballs timeout，頁面會很慢）；UDP/QUIC 靜默 drop。
         if packet.data.as_ref().first().map(|b| b >> 4) == Some(6) {
             match v6_drop_decision(packet.data.as_ref(), &shared, &mut sys) {
@@ -372,7 +374,7 @@ fn network_loop(shared: Arc<Mutex<Shared>>) {
             && shared.lock().unwrap().udp_ports.contains(&p.src_port);
         let is_reverse = p.proto == 6 && p.src_port == SHIM_PORT;
 
-        // TCP :443 是否屬 KRWebView：socket_watcher 多半已在 CONNECT 當下把埠記入
+        // TCP :443 是否屬目標行程：socket_watcher 多半已在 CONNECT 當下把埠記入
         // tcp_ports（→導向）或 not_target_ports（→跳過）；只有罕見 race 才 fallback 查 OS 連線表。
         let is_kr_tcp = p.proto == 6 && p.dst_port == TARGET_PORT && {
             let (known_kr, known_not) = {
@@ -698,11 +700,11 @@ fn is_syn_only(p: &[u8], ihl: usize) -> bool {
     (f & 0x02) != 0 && (f & 0x10) == 0
 }
 
-/// 查 TCP 本機埠是否屬於目標行程（KRWebView）。socket_watcher 競態 fallback 用（罕見）。
+/// 查 TCP 本機埠是否屬於目標行程（見 `classify_verdict`）。socket_watcher 競態 fallback 用（罕見）。
 /// raw `GetExtendedTcpTable` 掃描，找到即返回。
 fn tcp_port_is_target(port: u16, v6: bool, sys: &mut System) -> bool {
     find_tcp_pid(port, v6)
-        .map(|pid| proc_name(pid, sys).eq_ignore_ascii_case(TARGET_PROCESS))
+        .map(|pid| classify_verdict(&proc_name(pid, sys)) == Verdict::Target)
         .unwrap_or(false)
 }
 
@@ -777,7 +779,7 @@ fn be16(dw: u32) -> u16 {
     (((dw & 0xff) << 8) | ((dw >> 8) & 0xff)) as u16
 }
 
-/// IPv6 出站 :443 是否要擋（KRWebView 的，逼退回 v4）。回傳要擋的 proto（6=TCP→RST、
+/// IPv6 出站 :443 是否要擋（目標行程的，逼退回 v4）。回傳要擋的 proto（6=TCP→RST、
 /// 17=UDP→靜默 drop），不擋回 None。已知埠直接擋；未知 TCP 埠且是 SYN 時查 PID 判斷並記錄；
 /// UDP 沿用 socket_watcher 的 udp_ports（QUIC，容忍競態）。
 fn v6_drop_decision(p: &[u8], shared: &Arc<Mutex<Shared>>, sys: &mut System) -> Option<u8> {
@@ -794,7 +796,7 @@ fn v6_drop_decision(p: &[u8], shared: &Arc<Mutex<Shared>>, sys: &mut System) -> 
             return Some(17);
         }
         if g.not_target_ports.contains(&src_port) {
-            return None; // socket_watcher 已判定非 KRWebView，跳過查表
+            return None; // socket_watcher 已判定非目標行程，跳過查表
         }
     }
     if proto == 6 && is_syn_only_v6(p) && tcp_port_is_target(src_port, true, sys) {
@@ -918,7 +920,14 @@ mod tests {
     }
 
     #[test]
+    fn classify_new_webclient_and_render_are_target() {
+        assert_eq!(classify_verdict("KRWebClient.exe"), Verdict::Target);
+        assert_eq!(classify_verdict("krwebrender.EXE"), Verdict::Target);
+    }
+
+    #[test]
     fn classify_other_process_is_not_target() {
+        assert_eq!(classify_verdict("KRWebClientX.exe"), Verdict::NotTarget);
         assert_eq!(classify_verdict("chrome.exe"), Verdict::NotTarget);
         assert_eq!(classify_verdict("capture_helper.exe"), Verdict::NotTarget);
     }

@@ -23,7 +23,7 @@ pub struct CapturedRequest {
 
 struct Session {
     // Drop 順序刻意（宣告序＝drop 序）：_helper 先 drop → 設停止事件、等 helper 退出、WinDivert
-    // 重導向還原（KRWebView :443 恢復直連）；_mitm 後 drop → graceful shutdown。命中後的
+    // 重導向還原（目標行程的 :443 恢復直連）；_mitm 後 drop → graceful shutdown。命中後的
     // gmserver response 早在 mitm.rs 的延遲 auto-stop 前已回傳，故先停重導向不影響 in-flight。
     // _relay 最後 drop：helper 停止時其 log socket 會 EOF，relay 的 reader 執行緒隨後自然退出。
     _helper: helper::HelperHandle,
