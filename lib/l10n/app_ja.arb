@@ -198,7 +198,7 @@
   },
   "gameDirInvalid": "このフォルダにゲームのログファイルが見つかりません。「Wuthering Waves Game」フォルダを選択してください。",
   "@gameDirInvalid": {
-    "description": "Error shown when the chosen folder contains no game log file; asks for the \\\"Wuthering Waves Game\\\" folder"
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
   },
   "actionChooseGameDir": "ゲームフォルダを選択",
   "@actionChooseGameDir": {

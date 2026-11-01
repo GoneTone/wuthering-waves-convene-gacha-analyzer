@@ -74,7 +74,7 @@ class GameDirLocator {
   /// 常見安裝路徑清單。
   final List<String> _commonDirs;
 
-  /// 依序查 [_registryKeys]，回傳所有讀到的 InstallPath；key 或值不存在就略過。
+  /// 依序查 [_registryKeys]，回傳所有讀到的 InstallPath；key 或值不存在、讀值失敗都只略過該 key。
   static Future<List<String>> _readRegistryInstallPaths() async {
     final paths = <String>[];
     for (final (hive, path) in _registryKeys) {
@@ -87,6 +87,10 @@ class GameDirLocator {
       try {
         final value = key.getStringValue('InstallPath')?.trim();
         if (value != null && value.isNotEmpty) paths.add(value);
+      } on Exception catch (e) {
+        _log.warning(
+          'registry value read failed hive=${hive.name} error=${e.runtimeType}',
+        );
       } finally {
         key.close();
       }

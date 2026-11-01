@@ -192,22 +192,15 @@ void main() {
     expect(find.text(r'Set manually: D:\good'), findsOneWidget);
   });
 
-  testWidgets('long path does not overflow on narrow width', (tester) async {
-    // 設定頁其他區塊（語言下拉）在窄寬度本來就會溢位；只接受溢位類錯誤，其餘一律失敗。
-    final original = FlutterError.onError;
-    final errors = <FlutterErrorDetails>[];
-    FlutterError.onError = errors.add;
-    addTearDown(() => FlutterError.onError = original);
+  testWidgets('settings page does not overflow on narrow width', (
+    tester,
+  ) async {
     await pump(
       tester,
       settingDir: r'D:\' + 'VeryLongFolderName' * 12 + r'\Wuthering Waves Game',
       size: const Size(360, 2000),
     );
-    FlutterError.onError = original;
-    expect(
-      errors.map((e) => e.exceptionAsString()),
-      everyElement(contains('overflowed')),
-    );
+    expect(tester.takeException(), isNull);
     for (final f in [
       find.textContaining('Set manually'),
       find.byKey(const ValueKey('settings.gameDirChoose')),

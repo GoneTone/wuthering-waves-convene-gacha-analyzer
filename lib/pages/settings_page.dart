@@ -236,6 +236,7 @@ class _LocaleDropdown extends ConsumerWidget {
         : const SystemLanguage();
     final dropdown = DropdownButtonFormField<LanguagePreference>(
       initialValue: effectiveCurrent,
+      isExpanded: true,
       decoration: const InputDecoration(
         border: OutlineInputBorder(),
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -362,6 +363,7 @@ class _DataLanguageSectionState extends ConsumerState<_DataLanguageSection> {
         const SizedBox(height: AppSpacing.s),
         DropdownButtonFormField<String?>(
           initialValue: current,
+          isExpanded: true,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -427,33 +429,44 @@ class _AboutContent extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        // 寬視窗：版本在左、按鈕靠右；窄到放不下時按鈕整組換行。
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: AppSpacing.s,
+          runSpacing: AppSpacing.s,
           children: [
-            Expanded(child: Text(l.settingsAboutVersion(version))),
-            const SizedBox(width: AppSpacing.s),
-            OutlinedButton.icon(
-              onPressed: () => showDialog<void>(
-                context: context,
-                builder: (_) => CurrentReleaseDialog(version: version),
-              ),
-              icon: const Icon(Icons.description_outlined, size: 18),
-              label: Text(l.aboutViewReleaseNotes),
-            ),
-            const SizedBox(width: AppSpacing.s),
-            OutlinedButton.icon(
-              onPressed: checking
-                  ? null
-                  : () => ref
-                        .read(appReleaseProvider.notifier)
-                        .check(manual: true),
-              icon: checking
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.refresh, size: 18),
-              label: Text(checking ? l.updateChecking : l.updateCheckButton),
+            Text(l.settingsAboutVersion(version)),
+            Wrap(
+              spacing: AppSpacing.s,
+              runSpacing: AppSpacing.s,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => CurrentReleaseDialog(version: version),
+                  ),
+                  icon: const Icon(Icons.description_outlined, size: 18),
+                  label: Text(l.aboutViewReleaseNotes),
+                ),
+                OutlinedButton.icon(
+                  onPressed: checking
+                      ? null
+                      : () => ref
+                            .read(appReleaseProvider.notifier)
+                            .check(manual: true),
+                  icon: checking
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh, size: 18),
+                  label: Text(
+                    checking ? l.updateChecking : l.updateCheckButton,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

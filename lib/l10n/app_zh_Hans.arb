@@ -194,7 +194,7 @@
   },
   "gameDirInvalid": "这个文件夹里找不到游戏日志文件，请选择「Wuthering Waves Game」文件夹。",
   "@gameDirInvalid": {
-    "description": "Error shown when the chosen folder contains no game log file; asks for the \\\"Wuthering Waves Game\\\" folder"
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
   },
   "actionChooseGameDir": "选择游戏文件夹",
   "@actionChooseGameDir": {

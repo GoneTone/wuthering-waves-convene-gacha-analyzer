@@ -167,7 +167,7 @@
   },
   "gameDirInvalid": "這個資料夾裡找不到遊戲記錄檔，請選擇「Wuthering Waves Game」資料夾。",
   "@gameDirInvalid": {
-    "description": "Error shown when the chosen folder contains no game log file; asks for the \\\"Wuthering Waves Game\\\" folder"
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
   },
   "actionChooseGameDir": "選擇遊戲資料夾",
   "@actionChooseGameDir": {
