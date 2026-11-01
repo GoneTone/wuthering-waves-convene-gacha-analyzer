@@ -506,10 +506,12 @@ class _AboutContent extends ConsumerWidget {
   }
 }
 
-/// 沒有手動設定時，自動偵測到的遊戲資料夾。
-final _autoGameDirProvider = FutureProvider.autoDispose<GameDirLocation?>(
-  (ref) => ref.read(gameDirLocatorProvider).locate(),
-);
+/// 以手動設定 [manual] 為起點解析實際使用的遊戲資料夾（設定失效時退回自動偵測）。
+final _gameDirLocationProvider = FutureProvider.autoDispose
+    .family<GameDirLocation?, String?>(
+      (ref, manual) =>
+          ref.read(gameDirLocatorProvider).locate(settingDir: manual),
+    );
 
 /// 遊戲資料夾區塊：顯示目前使用的資料夾來源與路徑，並可手動選擇或清除。
 class _GameDirSection extends ConsumerWidget {
@@ -523,15 +525,15 @@ class _GameDirSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final manual = ref.watch(settingsProvider.select((s) => s.gameDir));
-    final String text;
-    if (manual != null) {
-      text = l.settingsGameDirManual(manual);
-    } else {
-      final auto = ref.watch(_autoGameDirProvider).value;
-      text = auto == null
-          ? l.settingsGameDirNone
-          : l.settingsGameDirAuto(auto.path);
-    }
+    final location = ref.watch(_gameDirLocationProvider(manual));
+    final text = location.isLoading
+        ? ''
+        : switch (location.value) {
+            null => l.settingsGameDirNone,
+            final loc when loc.source == GameDirSource.setting =>
+              l.settingsGameDirManual(loc.path),
+            final loc => l.settingsGameDirAuto(loc.path),
+          };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

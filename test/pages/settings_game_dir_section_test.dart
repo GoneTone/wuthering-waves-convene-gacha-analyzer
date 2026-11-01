@@ -28,16 +28,19 @@ class _NullCapture implements GachaCapture {
       CaptureSession(result: Future.value(null), cancel: () async {});
 }
 
-/// 回傳固定結果、`normalize` 一律通過的 locator 替身；[location] 為 null 代表偵測不到。
+/// `normalize` 以路徑是否含 `bad` 判斷有效的 locator 替身；設定值有效時回報 setting 來源，否則回傳 [location]。
 class _FakeLocator extends GameDirLocator {
   /// 建立替身。
   _FakeLocator(this.location);
 
-  /// `locate` 在沒有設定值時回傳的結果。
+  /// 設定值失效或未設定時 `locate` 回傳的結果。
   final GameDirLocation? location;
 
   @override
-  Future<GameDirLocation?> locate({String? settingDir}) async => location;
+  Future<GameDirLocation?> locate({String? settingDir}) async =>
+      settingDir != null && !settingDir.contains('stale')
+      ? GameDirLocation(settingDir, GameDirSource.setting)
+      : location;
 
   @override
   Future<String?> normalize(String picked) async =>
@@ -74,7 +77,8 @@ void main() {
       container = ProviderContainer(
         overrides: [
           gameDirLocatorProvider.overrideWithValue(
-            locator ?? NoGameDirLocator(),
+            locator ??
+                (settingDir != null ? _FakeLocator(null) : NoGameDirLocator()),
           ),
           gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
           gachaCaptureProvider.overrideWithValue(_NullCapture()),
@@ -135,6 +139,20 @@ void main() {
     expect(find.text('Game folder not found'), findsOneWidget);
   });
 
+  testWidgets('stale manual dir falls back to auto-detected path', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      settingDir: r'D:\stale',
+      locator: _FakeLocator(
+        const GameDirLocation(r'C:\WW\Game', GameDirSource.registry),
+      ),
+    );
+    expect(find.text(r'Auto-detected: C:\WW\Game'), findsOneWidget);
+    expect(find.textContaining('stale'), findsNothing);
+  });
+
   testWidgets('shows auto-detected path when no setting', (tester) async {
     await pump(
       tester,
@@ -175,13 +193,21 @@ void main() {
   });
 
   testWidgets('long path does not overflow on narrow width', (tester) async {
+    // 設定頁其他區塊（語言下拉）在窄寬度本來就會溢位；只接受溢位類錯誤，其餘一律失敗。
+    final original = FlutterError.onError;
+    final errors = <FlutterErrorDetails>[];
+    FlutterError.onError = errors.add;
+    addTearDown(() => FlutterError.onError = original);
     await pump(
       tester,
       settingDir: r'D:\' + 'VeryLongFolderName' * 12 + r'\Wuthering Waves Game',
       size: const Size(360, 2000),
     );
-    // 設定頁其他區塊在窄寬度本來就會溢位，這裡只驗證本區塊的元件都落在視窗內。
-    tester.takeException();
+    FlutterError.onError = original;
+    expect(
+      errors.map((e) => e.exceptionAsString()),
+      everyElement(contains('overflowed')),
+    );
     for (final f in [
       find.textContaining('Set manually'),
       find.byKey(const ValueKey('settings.gameDirChoose')),
