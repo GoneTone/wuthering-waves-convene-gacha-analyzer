@@ -81,6 +81,7 @@ class AppSettings {
     this.uidOrder = const [],
     this.skippedReleaseTag,
     this.maskUidInUi = false,
+    this.gameDir,
     this.dataLanguage,
     this.dataLanguageSeeded = false,
     this.cloudAccountEmail,
@@ -110,6 +111,9 @@ class AppSettings {
   /// 是否在介面中遮蔽 UID（前 3 碼搭配 `x`）；資料檔與刪除確認框不受影響。
   final bool maskUidInUi;
 
+  /// 遊戲安裝資料夾（含 `Client\Saved\Logs\Client.log` 的根目錄）；null 代表尚未設定。僅存本機，不參與雲端同步。
+  final String? gameDir;
+
   /// 資料語言代碼（如 `ja`）；null 代表未設定（停用轉換）。獨立於 App UI 語言。
   final String? dataLanguage;
 
@@ -136,7 +140,7 @@ class AppSettings {
 
   /// 回傳以指定欄位覆寫的新 [AppSettings]；
   /// 傳 `clearLastActiveUid: true`、`clearSkippedReleaseTag: true` 或
-  /// `clearDataLanguage: true` 可將對應欄位清為 null。
+  /// `clearDataLanguage: true`、`clearGameDir: true` 可將對應欄位清為 null。
   AppSettings copyWith({
     AppThemeMode? themeMode,
     LanguagePreference? locale,
@@ -147,6 +151,8 @@ class AppSettings {
     String? skippedReleaseTag,
     bool clearSkippedReleaseTag = false,
     bool? maskUidInUi,
+    String? gameDir,
+    bool clearGameDir = false,
     String? dataLanguage,
     bool clearDataLanguage = false,
     bool? dataLanguageSeeded,
@@ -168,6 +174,7 @@ class AppSettings {
         ? null
         : (skippedReleaseTag ?? this.skippedReleaseTag),
     maskUidInUi: maskUidInUi ?? this.maskUidInUi,
+    gameDir: clearGameDir ? null : (gameDir ?? this.gameDir),
     dataLanguage: clearDataLanguage
         ? null
         : (dataLanguage ?? this.dataLanguage),
@@ -209,6 +216,9 @@ abstract final class SettingsStorage {
   /// SharedPreferences key：是否在介面中遮蔽 UID。
   static const _kMaskUidInUi = 'pref.maskUidInUi';
 
+  /// SharedPreferences key：遊戲安裝資料夾。
+  static const _kGameDir = 'pref.gameDir';
+
   /// SharedPreferences key：資料語言（語言碼／`"none"`／不存在三態）。
   static const _kDataLanguage = 'pref.dataLanguage';
 
@@ -236,6 +246,7 @@ abstract final class SettingsStorage {
       uidOrder: _parseOrder(prefs.getString(_kUidOrder), label: 'uidOrder'),
       skippedReleaseTag: prefs.getString(_kSkippedReleaseTag),
       maskUidInUi: prefs.getBool(_kMaskUidInUi) ?? false,
+      gameDir: prefs.getString(_kGameDir),
       dataLanguage: dataLangRaw == null || dataLangRaw == 'none'
           ? null
           : dataLangRaw,
@@ -268,6 +279,11 @@ abstract final class SettingsStorage {
       await prefs.setString(_kSkippedReleaseTag, s.skippedReleaseTag!);
     }
     await prefs.setBool(_kMaskUidInUi, s.maskUidInUi);
+    if (s.gameDir == null) {
+      await prefs.remove(_kGameDir);
+    } else {
+      await prefs.setString(_kGameDir, s.gameDir!);
+    }
     if (!s.dataLanguageSeeded) {
       await prefs.remove(_kDataLanguage);
     } else {

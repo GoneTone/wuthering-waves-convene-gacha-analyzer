@@ -29,7 +29,7 @@ fn open_root_and_find(hash: &mut [u8; 20]) -> anyhow::Result<(HCERTSTORE, *mut C
             CERT_OPEN_STORE_FLAGS(CERT_SYSTEM_STORE_CURRENT_USER),
             Some(store_name.as_ptr() as *const core::ffi::c_void),
         )
-        .context("CertOpenStore Root 失敗")?;
+        .context("CertOpenStore Root failed")?;
 
         let blob = CRYPT_INTEGER_BLOB {
             cbData: hash.len() as u32,
@@ -88,7 +88,7 @@ pub fn install_to_current_user_root(cert_der: &[u8]) -> anyhow::Result<()> {
 
         let _ = CertCloseStore(Some(store), 0);
 
-        result.context("CertAddEncodedCertificateToStore 失敗")
+        result.context("CertAddEncodedCertificateToStore failed")
     }
 }
 
@@ -116,7 +116,7 @@ pub fn remove_from_current_user_root(cert_der: &[u8]) -> anyhow::Result<()> {
         let result = CertDeleteCertificateFromStore(existing as *const _);
         let _ = CertCloseStore(Some(store), 0);
 
-        result.context("CertDeleteCertificateFromStore 失敗")
+        result.context("CertDeleteCertificateFromStore failed")
     }
 }
 

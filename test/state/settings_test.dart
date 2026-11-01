@@ -219,6 +219,24 @@ void main() {
     expect(reloaded.skippedReleaseTag, isNull);
   });
 
+  test('setGameDir 寫入、清除 state 與 prefs', () async {
+    const dir = r'D:\Wuthering Waves\Wuthering Waves Game';
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(settingsProvider.notifier);
+    await notifier.waitForLoad();
+
+    await notifier.setGameDir(dir);
+    expect(container.read(settingsProvider).gameDir, dir);
+    expect((await SettingsStorage.load()).gameDir, dir);
+
+    await notifier.setGameDir(null);
+    expect(container.read(settingsProvider).gameDir, isNull);
+    expect((await SettingsStorage.load()).gameDir, isNull);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.containsKey('pref.gameDir'), isFalse);
+  });
+
   group('setMaskUidInUi', () {
     setUp(() async {
       SharedPreferences.setMockInitialValues(<String, Object>{});

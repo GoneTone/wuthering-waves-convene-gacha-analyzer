@@ -42,14 +42,14 @@ pub fn spawn(mitm_port: u16, log_port: u16) -> Result<HelperHandle> {
     let exe = helper_exe_path()?;
     let dir = exe
         .parent()
-        .ok_or_else(|| anyhow!("helper 路徑無上層目錄"))?
+        .ok_or_else(|| anyhow!("helper path has no parent directory"))?
         .to_string_lossy()
         .into_owned();
     let event_name = format!("capture_helper_stop_{}", std::process::id());
 
     let stop_event = unsafe {
         CreateEventW(None, true, false, &HSTRING::from(&event_name))
-            .context("CreateEventW 建立停止事件失敗")?
+            .context("CreateEventW failed to create stop event")?
     };
 
     let params = format!("{mitm_port} {event_name} {} {log_port}", std::process::id());
@@ -72,14 +72,14 @@ pub fn spawn(mitm_port: u16, log_port: u16) -> Result<HelperHandle> {
     unsafe {
         if let Err(e) = ShellExecuteExW(&mut info) {
             let _ = CloseHandle(stop_event);
-            return Err(anyhow!("提權啟動 helper 失敗（UAC 取消？）：{e}"));
+            return Err(anyhow!("elevated helper launch failed (UAC declined?): {e}"));
         }
     }
     if info.hProcess.is_invalid() {
         unsafe {
             let _ = CloseHandle(stop_event);
         }
-        return Err(anyhow!("ShellExecuteExW 未回傳 helper 行程 handle"));
+        return Err(anyhow!("ShellExecuteExW returned no helper process handle"));
     }
 
     Ok(HelperHandle {
@@ -90,13 +90,13 @@ pub fn spawn(mitm_port: u16, log_port: u16) -> Result<HelperHandle> {
 
 /// helper exe 路徑：與主程式 exe 同目錄（build 時 bundle 進去）。
 fn helper_exe_path() -> Result<PathBuf> {
-    let exe = std::env::current_exe().context("取得主程式 exe 路徑失敗")?;
+    let exe = std::env::current_exe().context("failed to get app executable path")?;
     let helper = exe
         .parent()
-        .ok_or_else(|| anyhow!("主程式 exe 無上層目錄"))?
+        .ok_or_else(|| anyhow!("app executable has no parent directory"))?
         .join("capture_helper.exe");
     if !helper.exists() {
-        return Err(anyhow!("找不到 capture_helper.exe：{}", helper.display()));
+        return Err(anyhow!("capture_helper.exe not found next to the app executable"));
     }
     Ok(helper)
 }

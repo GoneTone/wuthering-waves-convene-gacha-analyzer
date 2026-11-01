@@ -6,6 +6,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/game_dir_help_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/game_dir_picker.dart';
 
 /// 顯示喚取資料更新進度的 dialog，包含 [LinearProgressIndicator] 與各狀態文字。
 class UpdateProgressDialog extends ConsumerWidget {
@@ -17,9 +19,13 @@ class UpdateProgressDialog extends ConsumerWidget {
     ref.listen<UpdateProgress?>(
       gachaRepositoryProvider.select((s) => s.progress),
       (prev, next) {
-        if (next == null && Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
+        final route = ModalRoute.of(context);
+        // route 已離開 stack 時 popUntil 永遠比不到，會把所有頁面 pop 光。
+        if (next != null || route == null || !route.isActive) return;
+        // 上面可能疊著說明視窗，先收回到自己這層再關，避免多 pop 底下的頁面。
+        final nav = Navigator.of(context);
+        nav.popUntil((r) => r == route);
+        if (nav.canPop()) nav.pop();
       },
     );
     final progress = ref.watch(
@@ -165,18 +171,47 @@ class _Body extends StatelessWidget {
           Text(l.progressPreparingHint),
         ],
       ),
-      WaitingForCapture(:final isFallback) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const LinearProgressIndicator(),
-          const SizedBox(height: AppSpacing.l),
-          Text(l.progressOpenGameHint),
-          if (isFallback) ...[
+      WaitingForCapture(
+        :final isFallback,
+        :final captureUnavailable,
+        :final gameDirMissing,
+      ) =>
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const LinearProgressIndicator(),
+            const SizedBox(height: AppSpacing.l),
+            Text(l.progressOpenGameHint),
+            if (isFallback) ...[
+              const SizedBox(height: AppSpacing.s),
+              Text(l.progressFallbackHint, style: theme.textTheme.bodySmall),
+            ],
+            if (captureUnavailable) ...[
+              const SizedBox(height: AppSpacing.s),
+              Text(
+                gameDirMissing
+                    ? l.progressCaptureUnavailableNoGameDirHint
+                    : l.progressCaptureUnavailableHint,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.gacha.stateWarning,
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.s),
-            Text(l.progressFallbackHint, style: theme.textTheme.bodySmall),
+            // 提示已說明原因並直接給選資料夾按鈕，「沒有反應？」連結此時多餘，二擇一。
+            if (captureUnavailable && gameDirMissing)
+              const _ChooseGameDirButton()
+            else
+              TextButton(
+                onPressed: () => showGameDirHelpDialog(context),
+                child: Text(
+                  l.progressNotDetectedLink,
+                  textAlign: TextAlign.center,
+                ),
+              ),
           ],
-        ],
-      ),
+        ),
       FetchingBanner(
         :final displayName,
         :final poolIndex,
@@ -288,4 +323,50 @@ class _Body extends StatelessWidget {
         UpdateErrorWipeItemImageCache(:final detail) =>
           l.updateErrorWipeItemImageCache(detail),
       };
+}
+
+/// 攔截失效且找不到遊戲資料夾時，在等待畫面直接選擇遊戲資料夾的按鈕；選錯時在下方顯示錯誤。
+class _ChooseGameDirButton extends ConsumerStatefulWidget {
+  /// 建立 [_ChooseGameDirButton]。
+  const _ChooseGameDirButton();
+
+  @override
+  ConsumerState<_ChooseGameDirButton> createState() =>
+      _ChooseGameDirButtonState();
+}
+
+/// [_ChooseGameDirButton] 的狀態，記錄上次選擇是否無效。
+class _ChooseGameDirButtonState extends ConsumerState<_ChooseGameDirButton> {
+  /// 上次選到的資料夾找不到遊戲記錄檔。
+  bool _invalid = false;
+
+  /// 開啟選資料夾流程；成功後監看會接上，等待畫面自動換掉這顆按鈕。
+  Future<void> _choose() async {
+    final outcome = await pickGameDirAndRewatch(ref);
+    if (!mounted || outcome == GameDirPickOutcome.cancelled) return;
+    setState(() => _invalid = outcome == GameDirPickOutcome.invalid);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FilledButton.icon(
+          onPressed: _choose,
+          icon: const Icon(Icons.folder_open, size: 18),
+          label: Text(l.actionChooseGameDir),
+        ),
+        if (_invalid) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l.gameDirInvalid,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Theme.of(context).gacha.stateDanger),
+          ),
+        ],
+      ],
+    );
+  }
 }

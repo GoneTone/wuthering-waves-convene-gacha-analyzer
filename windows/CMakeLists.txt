@@ -72,7 +72,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/../rust_builder/cargokit/cmake/cargokit.cma
 apply_cargokit(${CARGOKIT_RUST_PROJECT} ../rust ${CARGOKIT_RUST_PROJECT} "")
 
 # === 提權攔截 helper（capture_helper.exe，獨立 cargo binary）===
-# 用 WinDivert 把 KRWebView.exe 的 :443 重導向進主程式 hudsucker。需 admin（由主程式 UAC
+# 用 WinDivert 把喚取記錄 WebView（KRWebView／KRWebClient／KRWebRender）的 :443 重導向進主程式 hudsucker。需 admin（由主程式 UAC
 # spawn）。建置需 WINDIVERT_PATH 指向 vendored 的 WinDivert.lib；執行期需 WinDivert.dll +
 # WinDivert64.sys 在 exe 同目錄（下方 install 一併複製）。
 set(CAPTURE_HELPER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../rust_capture_helper")

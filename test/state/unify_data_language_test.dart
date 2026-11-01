@@ -16,6 +16,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_language_conv
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import '../helpers/no_game_dir.dart';
 
 // ─── Helper: GachaRecord ──────────────────────────────────────────────────────
 
@@ -87,6 +88,7 @@ ProviderContainer _buildContainer({
   );
   return ProviderContainer(
     overrides: [
+      noGameDirOverride,
       gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
       itemImageIndexStorageProvider.overrideWithValue(
         ItemImageIndexStorage(tempDir),
@@ -375,6 +377,7 @@ void main() {
     );
     final container = ProviderContainer(
       overrides: [
+        noGameDirOverride,
         gachaStorageProvider.overrideWithValue(failStorage),
         itemImageIndexStorageProvider.overrideWithValue(
           ItemImageIndexStorage(tempDir),

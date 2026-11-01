@@ -23,7 +23,7 @@ pub struct CapturedRequest {
 
 struct Session {
     // Drop 順序刻意（宣告序＝drop 序）：_helper 先 drop → 設停止事件、等 helper 退出、WinDivert
-    // 重導向還原（KRWebView :443 恢復直連）；_mitm 後 drop → graceful shutdown。命中後的
+    // 重導向還原（目標行程的 :443 恢復直連）；_mitm 後 drop → graceful shutdown。命中後的
     // gmserver response 早在 mitm.rs 的延遲 auto-stop 前已回傳，故先停重導向不影響 in-flight。
     // _relay 最後 drop：helper 停止時其 log socket 會 EOF，relay 的 reader 執行緒隨後自然退出。
     _helper: helper::HelperHandle,
@@ -33,7 +33,18 @@ struct Session {
 
 static SESSION: Lazy<Mutex<Option<Session>>> = Lazy::new(|| Mutex::new(None));
 
+/// 啟動捕獲會話；啟動失敗（UAC 取消等）以 stream 錯誤事件回報，函式本身一律回 Ok。
 pub fn start_capture(sink: StreamSink<CapturedRequest>) -> Result<()> {
+    // FRB 產生的 Dart 端以 unawaited 呼叫本函式，回傳 Err 只會變成 Zone uncaught、呼叫端收不到；
+    // 改送進 stream。外層持有的 sink clone 讓 stream 在送出錯誤前不會因 mitm drop 而先關閉。
+    if let Err(e) = start_session(sink.clone()) {
+        let _ = sink.add_error(e);
+    }
+    Ok(())
+}
+
+/// 依序起 MITM、log relay、提權 helper，全部成功才登記為目前會話。
+fn start_session(sink: StreamSink<CapturedRequest>) -> Result<()> {
     let mut guard = SESSION.lock().unwrap_or_else(|e| e.into_inner());
     if guard.is_some() {
         return Err(anyhow!("capture already running"));

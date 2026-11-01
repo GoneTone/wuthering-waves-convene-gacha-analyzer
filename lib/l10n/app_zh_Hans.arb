@@ -171,6 +171,47 @@
   "progressFailed": "失败",
   "progressOpenGameHint": "请打开鸣潮 → 唤取 → 唤取记录",
   "progressFallbackHint": "（先前的拦截已失效，需重新拦截）",
+  "progressCaptureUnavailableHint": "无法启动拦截程序（可能是 Windows 权限提示被拒绝），改为只从游戏记录文件检测。请打开唤取记录。",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
+  "progressCaptureUnavailableNoGameDirHint": "无法启动拦截程序（可能是 Windows 权限提示被拒绝），也找不到游戏文件夹。请按下方「选择游戏文件夹」手动指定；或取消后再按一次「更新数据」，并在权限提示中选「是」。",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
+  "progressNotDetectedLink": "已经打开唤取记录，却一直没有反应？",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
+  "gameDirHelpTitle": "检测不到唤取记录",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
+  "gameDirHelpNotFound": "找不到鸣潮的游戏文件夹。选择游戏文件夹后，本工具也能改从游戏日志文件读取唤取记录。",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
+  "gameDirHelpFound": "当前读取的游戏文件夹：{path}。若路径不正确（例如电脑上装了多份游戏），请按「重新选择」。",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "gameDirHelpReopen": "已设置游戏文件夹。请回到游戏，再打开一次唤取记录。",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
+  "gameDirInvalid": "这个文件夹里找不到游戏日志文件，请选择「Wuthering Waves Game」文件夹。",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
+  "actionChooseGameDir": "选择游戏文件夹",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
+  "actionRechooseGameDir": "重新选择",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "正在抓取：{name}",
   "@progressFetchingBanner": {
     "placeholders": {
@@ -306,6 +347,28 @@
   },
   "settingsDataLanguageUnifyFailed": "转换失败，数据未变更。请检查网络后重试。",
   "settingsDataManagement": "数据管理",
+  "settingsGameDir": "游戏文件夹",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
+  "settingsGameDirAuto": "自动检测：{path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "settingsGameDirManual": "手动设置：{path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "settingsGameDirNone": "找不到游戏文件夹",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
+  "actionClearGameDir": "清除",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "云端同步",
   "cloudSyncIntro": "关联 Google 账号后，唤取记录会自动备份到你的 Google 云端硬盘，并在多台电脑间同步。",
   "cloudSyncUnconfigured": "此构建未设置 Google OAuth 凭据，云端同步无法使用。",

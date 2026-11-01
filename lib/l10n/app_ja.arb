@@ -175,6 +175,47 @@
   "progressFailed": "失敗",
   "progressOpenGameHint": "鳴潮 → 集音 → 集音履歴 を開いてください",
   "progressFallbackHint": "（前回の取得が失効しました。集音履歴ページを開き直してください）",
+  "progressCaptureUnavailableHint": "キャプチャ用プログラムを起動できませんでした（Windows の権限確認が拒否された可能性があります）。ゲームのログファイルのみで検出します。集音履歴を開いてください。",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
+  "progressCaptureUnavailableNoGameDirHint": "キャプチャ用プログラムを起動できず（Windows の権限確認が拒否された可能性があります）、ゲームフォルダも見つかりませんでした。下の「ゲームフォルダを選択」から手動で指定するか、キャンセルして「データ更新」をもう一度押し、権限確認で「はい」を選んでください。",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
+  "progressNotDetectedLink": "集音履歴を開いたのに反応がありませんか？",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
+  "gameDirHelpTitle": "集音履歴を検出できません",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
+  "gameDirHelpNotFound": "鳴潮のゲームフォルダが見つかりません。ゲームフォルダを選択すると、ゲームのログファイルからも集音履歴を読み取れます。",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
+  "gameDirHelpFound": "現在読み取っているゲームフォルダ：{path}。パスが正しくない場合（例：ゲームを複数インストールしている）は、「選び直す」を押してください。",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "gameDirHelpReopen": "ゲームフォルダを設定しました。ゲームに戻り、もう一度集音履歴を開いてください。",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
+  "gameDirInvalid": "このフォルダにゲームのログファイルが見つかりません。「Wuthering Waves Game」フォルダを選択してください。",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
+  "actionChooseGameDir": "ゲームフォルダを選択",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
+  "actionRechooseGameDir": "選び直す",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "取得中：{name}",
   "@progressFetchingBanner": {
     "placeholders": {
@@ -312,6 +353,28 @@
   },
   "settingsDataLanguageUnifyFailed": "変換に失敗しました。データは変更されていません。接続を確認して再試行してください。",
   "settingsDataManagement": "データ管理",
+  "settingsGameDir": "ゲームフォルダ",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
+  "settingsGameDirAuto": "自動検出：{path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "settingsGameDirManual": "手動設定：{path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "settingsGameDirNone": "ゲームフォルダが見つかりません",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
+  "actionClearGameDir": "クリア",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "クラウド同期",
   "cloudSyncIntro": "Google アカウントを連携すると、喚起履歴が自動的に Google ドライブへバックアップされ、複数の PC 間で同期されます。",
   "cloudSyncUnconfigured": "このビルドには Google OAuth 認証情報が設定されていないため、クラウド同期は利用できません。",
