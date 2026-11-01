@@ -71,7 +71,8 @@ class RustGachaCapture implements GachaCapture {
     return CaptureSession(
       result: completer.future,
       cancel: () async {
-        _log.info('capture cancelled by user');
+        // 使用者取消與 Client.log 勝出後的收尾都走這裡，故不寫成「使用者取消」。
+        _log.info('capture stop requested');
         await rust_capture.stopCapture();
       },
     );

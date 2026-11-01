@@ -430,45 +430,49 @@ class _AboutContent extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 寬視窗：版本在左、按鈕靠右；窄到放不下時按鈕整組換行。
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: AppSpacing.s,
-          runSpacing: AppSpacing.s,
-          children: [
-            Text(l.settingsAboutVersion(version)),
-            Wrap(
-              spacing: AppSpacing.s,
-              runSpacing: AppSpacing.s,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => showDialog<void>(
-                    context: context,
-                    builder: (_) => CurrentReleaseDialog(version: version),
+        // Wrap 預設縮到內容寬，要撐滿整列 spaceBetween 才會把按鈕推到右側。
+        SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.s,
+            runSpacing: AppSpacing.s,
+            children: [
+              Text(l.settingsAboutVersion(version)),
+              Wrap(
+                spacing: AppSpacing.s,
+                runSpacing: AppSpacing.s,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => CurrentReleaseDialog(version: version),
+                    ),
+                    icon: const Icon(Icons.description_outlined, size: 18),
+                    label: Text(l.aboutViewReleaseNotes),
                   ),
-                  icon: const Icon(Icons.description_outlined, size: 18),
-                  label: Text(l.aboutViewReleaseNotes),
-                ),
-                OutlinedButton.icon(
-                  onPressed: checking
-                      ? null
-                      : () => ref
-                            .read(appReleaseProvider.notifier)
-                            .check(manual: true),
-                  icon: checking
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh, size: 18),
-                  label: Text(
-                    checking ? l.updateChecking : l.updateCheckButton,
+                  OutlinedButton.icon(
+                    onPressed: checking
+                        ? null
+                        : () => ref
+                              .read(appReleaseProvider.notifier)
+                              .check(manual: true),
+                    icon: checking
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh, size: 18),
+                    label: Text(
+                      checking ? l.updateChecking : l.updateCheckButton,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Wrap(
