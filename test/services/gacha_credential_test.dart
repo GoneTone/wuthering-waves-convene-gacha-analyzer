@@ -91,4 +91,36 @@ void main() {
       expect(json['languageCode'], 'zh-Hant');
     });
   });
+
+  group('GachaCredential.fromConveneUrl', () {
+    const base =
+        'https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record?';
+    const full =
+        'svr_id=S&player_id=123456789&lang=zh-Hant&gacha_id=G&gacha_type=1&svr_area=global&record_id=R&resources_id=C&platform=PC';
+
+    test('解析 URL fragment 內的五欄位', () {
+      final cred = GachaCredential.fromConveneUrl('$base$full');
+      expect(cred.playerId, '123456789');
+      expect(cred.serverId, 'S');
+      expect(cred.cardPoolId, 'C');
+      expect(cred.recordId, 'R');
+      expect(cred.languageCode, 'zh-Hant');
+    });
+
+    test('缺 record_id 丟 FormatException', () {
+      expect(
+        () => GachaCredential.fromConveneUrl(
+          '$base${full.replaceFirst('record_id=R&', '')}',
+        ),
+        throwsFormatException,
+      );
+    });
+
+    test('值做 percent-decoding', () {
+      final cred = GachaCredential.fromConveneUrl(
+        '$base${full.replaceFirst('zh-Hant', 'zh%2DHant')}',
+      );
+      expect(cred.languageCode, 'zh-Hant');
+    });
+  });
 }

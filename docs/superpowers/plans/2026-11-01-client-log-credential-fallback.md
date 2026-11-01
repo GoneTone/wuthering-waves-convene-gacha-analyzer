@@ -49,7 +49,8 @@
   - `factory GachaCredential.fromConveneUrl(String url)`：缺欄位或格式錯誤時丟 `FormatException`。
 
 - [ ] **Step 1: 寫失敗測試**
-  - `decodeClientLogBytes([0xE5])` 等於 `[0x0A]`；`decodeClientLogBytes([0x0A])` 等於 `[0xE5]`；`decodeClientLogBytes(encode('abc'))` 等於 `'abc'`（測試裡用同一套 XOR 寫個 `encode` helper，因為這套運算自己就是反函式）。
+  - `decodeClientLogBytes([0xAF])` 等於 `[0x0A]`；`decodeClientLogBytes([0x0A])` 等於 `[0xE5]`；`decodeClientLogBytes(encodeClientLog('abc\n'))` 解成 UTF-8 等於 `'abc\n'`。
+  - 解碼依**原始 byte** 的奇偶選 key，所以**不是**自己的反函式。編碼 helper 放在 `test/helpers/client_log_fixtures.dart`：`Uint8List encodeClientLog(String text)`，對 UTF-8 bytes 逐一做 `p ^ ((p & 1) == 0 ? 0xA5 : 0xEF)`。Task 4 會共用這個 helper。
   - `findLastConveneUrl`：文字裡有兩筆 `https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record?...&record_id=A...` 和 `...record_id=B...` 時，回傳 B 那筆。URL 結尾在 `"`、`,`、空白或換行時都要停下。只有國服 host `aki-gm-resources.aki-game.com` 時回傳 null。
   - `fromConveneUrl`：輸入 `...#/record?svr_id=S&player_id=123456789&lang=zh-Hant&gacha_id=G&gacha_type=1&svr_area=global&record_id=R&resources_id=C&platform=PC`，期望 `playerId=='123456789'`、`serverId=='S'`、`cardPoolId=='C'`、`recordId=='R'`、`languageCode=='zh-Hant'`。缺 `record_id` 時丟 `FormatException`。值有 percent-encoding 時要解碼（例如 `lang=zh%2DHant` 變成 `zh-Hant`）。
 - [ ] **Step 2: 跑測試確認失敗**：`fvm flutter test test/services/client_log_credential_test.dart test/services/gacha_credential_test.dart`，期望 FAIL（找不到函式）。
@@ -135,7 +136,7 @@
   ```
   `result` 在命中時 complete 成憑證；`cancel()` 後 complete 成 null。**永遠不會 completeError**（錯誤只記 log）。
 
-- [ ] **Step 1: 寫失敗測試**（用真的 temp 檔案，`interval: Duration(milliseconds: 20)`；寫入時用 Task 1 測試的 `encode`）
+- [ ] **Step 1: 寫失敗測試**（用真的 temp 檔案，`interval: Duration(milliseconds: 20)`；寫入時用 `test/helpers/client_log_fixtures.dart` 的 `encodeClientLog`）
   - `ignores url written before start`：先寫入一筆 URL A 再 `start`，等 200ms，`result` 還沒 complete；`cancel()` 後 `result` 是 null。
   - `completes with url appended after start`：`start` 之後 append 一行含 URL B 的內容加 `\n`，`result` 的 `recordId` 是 B。
   - `joins url split across two reads`：先 append URL 的前半（沒有 `\n`），等 100ms，再 append 後半加 `\n`，最後要拿到完整的憑證。

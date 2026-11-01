@@ -57,6 +57,31 @@ class GachaCredential {
     );
   }
 
+  /// 從遊戲 Client.log 內的喚取記錄頁 URL（憑證在 `#` 之後的 query）解析；缺必要欄位時丟
+  /// [FormatException]。`cardPoolId` 取自 `resources_id`（非 `gacha_id`）。
+  factory GachaCredential.fromConveneUrl(String url) {
+    final fragment = url.substring(url.indexOf('#') + 1);
+    final query = fragment.contains('?')
+        ? fragment.substring(fragment.indexOf('?') + 1)
+        : '';
+    final params = Uri.splitQueryString(query);
+    String require(String key) {
+      final v = params[key];
+      if (v == null || v.isEmpty) {
+        throw FormatException('convene url missing field "$key"');
+      }
+      return v;
+    }
+
+    return GachaCredential(
+      playerId: require('player_id'),
+      cardPoolId: require('resources_id'),
+      serverId: require('svr_id'),
+      recordId: require('record_id'),
+      languageCode: require('lang'),
+    );
+  }
+
   /// 組出查詢指定 [cardPoolType]（int）的請求 body，共用五個憑證欄位。
   ///
   /// 這是 int → 請求 body 的唯一轉換點（對應 spec D4）：除此處與
