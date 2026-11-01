@@ -27,7 +27,7 @@ dependencies:
   package_info_plus: ^9.0.1
   window_manager: ^0.5.2
   screen_retriever: ^0.2.2
-  url_launcher: ^6.3.2
+  url_launcher: ^6.3.3
   font_awesome_flutter: ^11.0.0
   pub_semver: ^2.2.1
   markdown_widget: ^2.3.2+8
