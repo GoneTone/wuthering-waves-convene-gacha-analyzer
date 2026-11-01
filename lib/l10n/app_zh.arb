@@ -144,6 +144,10 @@
   "progressFailed": "失敗",
   "progressOpenGameHint": "請開啟鳴潮 → 喚取 → 喚取記錄",
   "progressFallbackHint": "（先前的擷取已失效，需重新攔截）",
+  "progressCaptureUnavailableHint": "無法啟動攔截程式（可能是未允許系統管理員權限），改為只從遊戲記錄檔偵測。請開啟喚取記錄。",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressNotDetectedLink": "已經開啟喚取記錄，卻一直沒有反應？",
   "@progressNotDetectedLink": {
     "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"

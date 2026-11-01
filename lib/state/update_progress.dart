@@ -16,10 +16,16 @@ class Preparing extends UpdateProgress {
 /// 等待 MITM 捕獲喚取憑證。
 class WaitingForCapture extends UpdateProgress {
   /// 建立 [WaitingForCapture]；[isFallback] 表示 recordId 全池失效後的二次（fallback）捕獲。
-  const WaitingForCapture({this.isFallback = false});
+  const WaitingForCapture({
+    this.isFallback = false,
+    this.captureUnavailable = false,
+  });
 
   /// true 表示 recordId 全池失效後的二次捕獲（UI 顯示重新攔取提示）。
   final bool isFallback;
+
+  /// true 表示攔截程式沒能運作（例如 UAC 被拒），目前只靠遊戲 Client.log 偵測。
+  final bool captureUnavailable;
 }
 
 /// 正在拉取指定卡池的完整歷史。

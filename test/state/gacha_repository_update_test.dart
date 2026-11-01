@@ -883,7 +883,7 @@ void main() {
     });
 
     test(
-      'capture error before log: update fails and log watch cancelled',
+      'capture error with log active: keeps waiting on log and tells user',
       () async {
         final capture = _ControlledCapture();
         final watch = _FakeWatch();
@@ -897,16 +897,93 @@ void main() {
         final done = repo.update();
         await _until(() => watch.hits.isNotEmpty);
         capture.result.completeError(Exception('uac denied'));
+        await _settle();
+
+        final waiting = t.container.read(gachaRepositoryProvider).progress;
+        expect(waiting, isA<WaitingForCapture>());
+        expect((waiting! as WaitingForCapture).captureUnavailable, isTrue);
+        expect(watch.cancelled, isEmpty);
+
+        watch.hits[0].complete(_cred());
         await done;
 
-        expect(watch.cancelled, [0]);
-        expect(t.hits, isEmpty);
+        expect(t.hits, hasLength(12));
         expect(
           t.container.read(gachaRepositoryProvider).progress,
-          isA<UpdateFailed>(),
+          isA<UpdateCompleted>(),
         );
       },
     );
+
+    test('capture error without game dir: update fails', () async {
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final locator = _FakeLocator(null);
+      final t = raceContainer(capture: capture, watch: watch, locator: locator);
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => locator.calls > 0);
+      capture.result.completeError(Exception('uac denied'));
+      await done;
+
+      expect(t.hits, isEmpty);
+      expect(
+        t.container.read(gachaRepositoryProvider).progress,
+        isA<UpdateFailed>(),
+      );
+    });
+
+    test(
+      'capture ends without hit (not cancelled) with log active: falls back',
+      () async {
+        final capture = _ControlledCapture();
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: _FakeLocator(loc),
+        );
+        final repo = await bootstrap(t.container);
+
+        final done = repo.update();
+        await _until(() => watch.hits.isNotEmpty);
+        capture.result.complete(null);
+        await _settle();
+
+        final waiting = t.container.read(gachaRepositoryProvider).progress;
+        expect((waiting! as WaitingForCapture).captureUnavailable, isTrue);
+
+        watch.hits[0].complete(_cred());
+        await done;
+        expect(
+          t.container.read(gachaRepositoryProvider).progress,
+          isA<UpdateCompleted>(),
+        );
+      },
+    );
+
+    test('user cancel during log-only wait clears progress', () async {
+      final capture = _ControlledCapture();
+      final watch = _FakeWatch();
+      final t = raceContainer(
+        capture: capture,
+        watch: watch,
+        locator: _FakeLocator(loc),
+      );
+      final repo = await bootstrap(t.container);
+
+      final done = repo.update();
+      await _until(() => watch.hits.isNotEmpty);
+      capture.result.completeError(Exception('uac denied'));
+      await _settle();
+      await repo.cancelCapture();
+      await done;
+
+      expect(watch.cancelled, contains(0));
+      expect(t.hits, isEmpty);
+      expect(t.container.read(gachaRepositoryProvider).progress, isNull);
+    });
 
     test('user cancel stops both', () async {
       final capture = _ControlledCapture(completeOnCancel: true);
@@ -1118,6 +1195,7 @@ void main() {
       await _settle();
 
       expect(watch.paths, [GameDirLocator.clientLogPath(newDir)]);
+      await repo.cancelCapture();
       capture.result.complete(null);
       await done;
       expect(watch.cancelled, [0]);

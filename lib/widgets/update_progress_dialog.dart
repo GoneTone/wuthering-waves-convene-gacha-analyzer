@@ -170,7 +170,7 @@ class _Body extends StatelessWidget {
           Text(l.progressPreparingHint),
         ],
       ),
-      WaitingForCapture(:final isFallback) => Column(
+      WaitingForCapture(:final isFallback, :final captureUnavailable) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const LinearProgressIndicator(),
@@ -179,6 +179,16 @@ class _Body extends StatelessWidget {
           if (isFallback) ...[
             const SizedBox(height: AppSpacing.s),
             Text(l.progressFallbackHint, style: theme.textTheme.bodySmall),
+          ],
+          if (captureUnavailable) ...[
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              l.progressCaptureUnavailableHint,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.gacha.stateWarning,
+              ),
+            ),
           ],
           const SizedBox(height: AppSpacing.s),
           TextButton(

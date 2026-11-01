@@ -66,6 +66,25 @@ void main() {
     expect(find.text('偵測不到喚取記錄'), findsOneWidget);
   });
 
+  const captureUnavailableNotice =
+      '無法啟動攔截程式（可能是未允許系統管理員權限），改為只從遊戲記錄檔偵測。請開啟喚取記錄。';
+
+  testWidgets('normal wait does not show log-only notice', (tester) async {
+    await _pumpDialog(tester, progress: const WaitingForCapture());
+    expect(find.text(captureUnavailableNotice), findsNothing);
+  });
+
+  testWidgets('captureUnavailable shows log-only notice and keeps the link', (
+    tester,
+  ) async {
+    await _pumpDialog(
+      tester,
+      progress: const WaitingForCapture(captureUnavailable: true),
+    );
+    expect(find.text(captureUnavailableNotice), findsOneWidget);
+    expect(find.text('已經開啟喚取記錄，卻一直沒有反應？'), findsOneWidget);
+  });
+
   group('UpdateProgressDialog — FetchingBanner 卡池本地化', () {
     testWidgets('gachaTypeCharacter（既有池）顯示本地化名稱，不顯示原始 key', (tester) async {
       await _pumpDialog(
