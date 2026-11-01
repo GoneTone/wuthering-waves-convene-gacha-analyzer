@@ -7,6 +7,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.da
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/game_dir_help_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/game_dir_picker.dart';
 
 /// 顯示喚取資料更新進度的 dialog，包含 [LinearProgressIndicator] 與各狀態文字。
 class UpdateProgressDialog extends ConsumerWidget {
@@ -196,6 +197,10 @@ class _Body extends StatelessWidget {
                   color: theme.gacha.stateWarning,
                 ),
               ),
+              if (gameDirMissing) ...[
+                const SizedBox(height: AppSpacing.s),
+                const _ChooseGameDirButton(),
+              ],
             ],
             const SizedBox(height: AppSpacing.s),
             TextButton(
@@ -318,4 +323,50 @@ class _Body extends StatelessWidget {
         UpdateErrorWipeItemImageCache(:final detail) =>
           l.updateErrorWipeItemImageCache(detail),
       };
+}
+
+/// 攔截失效且找不到遊戲資料夾時，在等待畫面直接選擇遊戲資料夾的按鈕；選錯時在下方顯示錯誤。
+class _ChooseGameDirButton extends ConsumerStatefulWidget {
+  /// 建立 [_ChooseGameDirButton]。
+  const _ChooseGameDirButton();
+
+  @override
+  ConsumerState<_ChooseGameDirButton> createState() =>
+      _ChooseGameDirButtonState();
+}
+
+/// [_ChooseGameDirButton] 的狀態，記錄上次選擇是否無效。
+class _ChooseGameDirButtonState extends ConsumerState<_ChooseGameDirButton> {
+  /// 上次選到的資料夾找不到遊戲記錄檔。
+  bool _invalid = false;
+
+  /// 開啟選資料夾流程；成功後監看會接上，等待畫面自動換掉這顆按鈕。
+  Future<void> _choose() async {
+    final outcome = await pickGameDirAndRewatch(ref);
+    if (!mounted || outcome == GameDirPickOutcome.cancelled) return;
+    setState(() => _invalid = outcome == GameDirPickOutcome.invalid);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FilledButton.icon(
+          onPressed: _choose,
+          icon: const Icon(Icons.folder_open, size: 18),
+          label: Text(l.actionChooseGameDir),
+        ),
+        if (_invalid) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l.gameDirInvalid,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Theme.of(context).gacha.stateDanger),
+          ),
+        ],
+      ],
+    );
+  }
 }

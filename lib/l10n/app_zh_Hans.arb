@@ -171,11 +171,11 @@
   "progressFailed": "失败",
   "progressOpenGameHint": "请打开鸣潮 → 唤取 → 唤取记录",
   "progressFallbackHint": "（先前的拦截已失效，需重新拦截）",
-  "progressCaptureUnavailableHint": "无法启动拦截程序（可能是未允许系统管理员权限），改为只从游戏记录文件检测。请打开唤取记录。",
+  "progressCaptureUnavailableHint": "无法启动拦截程序（可能是 Windows 权限提示被拒绝），改为只从游戏记录文件检测。请打开唤取记录。",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
   },
-  "progressCaptureUnavailableNoGameDirHint": "无法启动拦截程序（可能是未允许系统管理员权限），也找不到游戏文件夹。请点下方链接选择游戏文件夹，或取消后重新更新并允许系统管理员权限。",
+  "progressCaptureUnavailableNoGameDirHint": "无法启动拦截程序（可能是 Windows 权限提示被拒绝），也找不到游戏文件夹。请按下方「选择游戏文件夹」手动指定；或取消后再按一次「更新数据」，并在权限提示中选「是」。",
   "@progressCaptureUnavailableNoGameDirHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
   },
@@ -191,7 +191,7 @@
   "@gameDirHelpNotFound": {
     "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
   },
-  "gameDirHelpFound": "当前读取的游戏文件夹：{path}。如果不是你正在玩的那份游戏，请重新选择。",
+  "gameDirHelpFound": "当前读取的游戏文件夹：{path}。若路径不正确（例如电脑上装了多份游戏），请按「重新选择」。",
   "@gameDirHelpFound": {
     "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
     "placeholders": { "path": { "type": "String" } }

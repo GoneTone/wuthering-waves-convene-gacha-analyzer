@@ -175,11 +175,11 @@
   "progressFailed": "失敗",
   "progressOpenGameHint": "鳴潮 → 集音 → 集音履歴 を開いてください",
   "progressFallbackHint": "（前回の取得が失効しました。集音履歴ページを開き直してください）",
-  "progressCaptureUnavailableHint": "キャプチャ用プログラムを起動できませんでした（管理者権限が許可されなかった可能性があります）。ゲームのログファイルのみで検出します。集音履歴を開いてください。",
+  "progressCaptureUnavailableHint": "キャプチャ用プログラムを起動できませんでした（Windows の権限確認が拒否された可能性があります）。ゲームのログファイルのみで検出します。集音履歴を開いてください。",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
   },
-  "progressCaptureUnavailableNoGameDirHint": "キャプチャ用プログラムを起動できず（管理者権限が許可されなかった可能性があります）、ゲームフォルダも見つかりませんでした。下のリンクからゲームフォルダを選択するか、キャンセルして管理者権限を許可したうえで再度更新してください。",
+  "progressCaptureUnavailableNoGameDirHint": "キャプチャ用プログラムを起動できず（Windows の権限確認が拒否された可能性があります）、ゲームフォルダも見つかりませんでした。下の「ゲームフォルダを選択」から手動で指定するか、キャンセルして「データ更新」をもう一度押し、権限確認で「はい」を選んでください。",
   "@progressCaptureUnavailableNoGameDirHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
   },
@@ -195,7 +195,7 @@
   "@gameDirHelpNotFound": {
     "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
   },
-  "gameDirHelpFound": "現在読み取っているゲームフォルダ：{path}。プレイ中のゲームと異なる場合は、選び直してください。",
+  "gameDirHelpFound": "現在読み取っているゲームフォルダ：{path}。パスが正しくない場合（例：ゲームを複数インストールしている）は、「選び直す」を押してください。",
   "@gameDirHelpFound": {
     "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
     "placeholders": { "path": { "type": "String" } }

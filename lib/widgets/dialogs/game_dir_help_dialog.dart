@@ -53,7 +53,7 @@ class _GameDirHelpDialogState extends ConsumerState<_GameDirHelpDialog> {
 
   /// 開啟選資料夾視窗；成功後重新定位並重啟 Client.log 監看。
   Future<void> _choose() async {
-    final outcome = await pickAndSaveGameDir(
+    final outcome = await pickGameDirAndRewatch(
       ref,
       pickDirectory: widget.pickDirectory,
     );
@@ -62,9 +62,6 @@ class _GameDirHelpDialogState extends ConsumerState<_GameDirHelpDialog> {
       _outcome = outcome;
       if (outcome == GameDirPickOutcome.saved) _location = _locate();
     });
-    if (outcome == GameDirPickOutcome.saved) {
-      await ref.read(gachaRepositoryProvider.notifier).restartClientLogWatch();
-    }
   }
 
   @override

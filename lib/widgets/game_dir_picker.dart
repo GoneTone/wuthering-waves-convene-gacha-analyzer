@@ -4,6 +4,7 @@ import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/game_dir_locator.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 /// 選擇遊戲資料夾的結果。
@@ -45,4 +46,17 @@ Future<GameDirPickOutcome> pickAndSaveGameDir(
     );
   }
   return GameDirPickOutcome.saved;
+}
+
+/// 等待攔截期間選擇遊戲資料夾：存檔成功後重啟 Client.log 監看（基準點從此刻起算）。
+Future<GameDirPickOutcome> pickGameDirAndRewatch(
+  WidgetRef ref, {
+  Future<String?> Function()? pickDirectory,
+}) async {
+  final repository = ref.read(gachaRepositoryProvider.notifier);
+  final outcome = await pickAndSaveGameDir(ref, pickDirectory: pickDirectory);
+  if (outcome == GameDirPickOutcome.saved) {
+    await repository.restartClientLogWatch();
+  }
+  return outcome;
 }
