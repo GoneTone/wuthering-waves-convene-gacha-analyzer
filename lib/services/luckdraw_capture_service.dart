@@ -186,6 +186,14 @@ class LuckdrawCaptureService {
   }
 }
 
+/// 依 [dpr] 算出擷取用的 viewport 邏輯寬度，使 encore 的喚取 canvas 寬約 1600 實體像素。
+///
+/// encore 的版面隨 viewport 寬度切換：約 768 以下是手機版面（canvas CSS 寬約 viewport 的
+/// 0.775），以上是桌面版面（約 0.58，實測 1000～1400 寬時）。斷點附近比例會驟降（786 寬時
+/// 只剩 ~0.49），所以固定使用桌面版面並限制在 1000～1400 之間。
+double luckdrawViewportWidth(double dpr) =>
+    (1600 / (dpr * 0.58)).clamp(1000.0, 1400.0);
+
 /// 以 [HeadlessInAppWebView] 實作的 [LuckdrawWebEngine]（Android／Windows 共用）。
 class _InAppWebEngine implements LuckdrawWebEngine {
   /// 包住已執行的 headless webview、其 controller 與（Windows 才有的）WebView2 環境。
@@ -199,12 +207,6 @@ class _InAppWebEngine implements LuckdrawWebEngine {
 
   /// headless webview 的 controller。
   final InAppWebViewController _controller;
-
-  /// canvas 寬度目標（實體像素）；encore 的 canvas 寬度＝其 CSS 寬度 × dpr。
-  static const _targetCanvasPx = 1600.0;
-
-  /// Android 上 encore canvas CSS 寬度約為 viewport 寬度的比例（實機量測，700 寬時）。
-  static const _canvasToViewport = 0.775;
 
   /// Windows 以 CDP 模擬的 dpr（headless 預設 1，canvas 只有 ~1246 寬）。
   static const _windowsDeviceScaleFactor = 2.0;
@@ -256,16 +258,13 @@ class _InAppWebEngine implements LuckdrawWebEngine {
     return _InAppWebEngine(webview, controller, environment);
   }
 
-  /// 依平台決定 viewport 邏輯尺寸，使 canvas 寬度接近 [_targetCanvasPx]。
-  /// encore 版面隨 viewport 寬度切換，canvas 佔 viewport 的比例不固定：Windows 用實測值
-  /// （1400 寬、dpr 2 → canvas 1624）；Android 依裝置 dpr 反推。
+  /// 依平台的 dpr 決定 viewport 邏輯尺寸（見 [luckdrawViewportWidth]）。Windows 的 dpr
+  /// 由 CDP 模擬；Android 取裝置本身的 dpr。
   static Size _viewportSize() {
-    if (Platform.isWindows) return const Size(1400, 1180);
-    final dpr = PlatformDispatcher.instance.views.first.devicePixelRatio;
-    final width = (_targetCanvasPx / dpr / _canvasToViewport).clamp(
-      600.0,
-      1400.0,
-    );
+    final dpr = Platform.isWindows
+        ? _windowsDeviceScaleFactor
+        : PlatformDispatcher.instance.views.first.devicePixelRatio;
+    final width = luckdrawViewportWidth(dpr);
     return Size(width, width * 0.843);
   }
 
