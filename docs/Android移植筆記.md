@@ -137,3 +137,16 @@ Android 回報的語言帶 script code，格式是 `zh-Hant-TW`（Windows 是 `z
 
 - **canvas 解析度由裝置像素比（dpr）決定，和 viewport 寬度無關**（Windows dpr 1 時把寬度從 2000 加到 3200，結果都還是 1246）。Windows 可以用 `callDevToolsProtocolMethod('Emulation.setDeviceMetricsOverride', {deviceScaleFactor})` 把 dpr 調高。所以「1422×1185 是 encore 上限」這個舊結論是錯的。
 - 手機上的 AdGuard 之類的廣告攔截會讓頁面的部分資源 `ERR_CONNECTION_CLOSED`，但不影響擷取。
+
+### 17. 正式實作的做法（通用）
+
+- `pubspec.yaml` 移除 `webview_windows`，改成 `flutter_inappwebview: 6.2.0-beta.3`，**版本釘死不加 `^`**。之後要升級或換套件時，只需要改 `LuckdrawCaptureService` 裡的 `_InAppWebEngine`：服務只透過 `LuckdrawWebEngine` 介面（`loadUrl`、`evaluate`、`dispose`）操作 webview。
+- 服務自己延遲建立並重用一個 `HeadlessInAppWebView`，**不再需要掛在 UI 上的宿主元件**，`MaterialApp.builder` 裡的 `Stack` 也拿掉了。建立失敗只試一次，之後 `capture` 都回傳 `null`。
+- probe 腳本改成回傳 `JSON.stringify(...)` 字串，Dart 端再 `jsonDecode`。因為 `flutter_inappwebview` 回傳 JS 物件時，各平台給的 Dart 型別不一致，用字串最穩。
+- viewport：Windows 固定 1400×1180，並用 CDP 把 `deviceScaleFactor` 設成 2；Android 依裝置的 dpr 反推寬度。encore 的版面會隨 viewport 寬度切換，canvas 占 viewport 的比例不是固定值：Android 700 寬時約 0.775，Windows 1400 寬時約 0.58。
+- Windows 檢查 runtime：`WebViewEnvironment.getAvailableVersion() == null` 時代表沒有 WebView2，直接放棄。
+- **Windows 建置**：
+  - `flutter_inappwebview_windows` 在建置時會用 **NuGet** 下載 WIL 和 CppWinRT。開發機要先安裝（`winget install Microsoft.NuGet`）；GitHub Actions 的 `windows-latest` 已經內建。
+  - 它的 CMakeLists 同樣會觸發 CMP0175 警告，`windows/CMakeLists.txt` 裡的 `set(CMAKE_POLICY_DEFAULT_CMP0175 OLD)` 要保留。
+  - 原本為了 `webview_windows` 在 `build_release.ps1` 用 `CL` 注入 `_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS`，現在可以拿掉，因為新套件沒有用到 `<experimental/coroutine>`，release 建置已驗證通過。
+- 延遲初始化已驗證：Windows App 啟動後閒置時，沒有任何屬於本 App 的 `msedgewebview2.exe`。
