@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
+import 'dart:ui' show Size;
 
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:logging/logging.dart';
@@ -186,14 +186,6 @@ class LuckdrawCaptureService {
   }
 }
 
-/// 依 [dpr] 算出擷取用的 viewport 邏輯寬度，使 encore 的喚取 canvas 寬約 1600 實體像素。
-///
-/// encore 的版面隨 viewport 寬度切換：約 768 以下是手機版面（canvas CSS 寬約 viewport 的
-/// 0.775），以上是桌面版面（約 0.58，實測 1000～1400 寬時）。斷點附近比例會驟降（786 寬時
-/// 只剩 ~0.49），所以固定使用桌面版面並限制在 1000～1400 之間。
-double luckdrawViewportWidth(double dpr) =>
-    (1600 / (dpr * 0.58)).clamp(1000.0, 1400.0);
-
 /// 以 [HeadlessInAppWebView] 實作的 [LuckdrawWebEngine]（Android／Windows 共用）。
 class _InAppWebEngine implements LuckdrawWebEngine {
   /// 包住已執行的 headless webview、其 controller 與（Windows 才有的）WebView2 環境。
@@ -207,6 +199,11 @@ class _InAppWebEngine implements LuckdrawWebEngine {
 
   /// headless webview 的 controller。
   final InAppWebViewController _controller;
+
+  /// viewport 邏輯尺寸（兩平台共用）。encore 的 canvas CSS 寬度隨 viewport 寬度依版面斷點
+  /// 階梯變化（實測：≤760 約 542、1050 約 472、1400 約 822），與高度無關；1400 為最大一階，
+  /// 乘上 dpr 後 Windows（CDP dpr 2）約 1624、Android（dpr 2～3.5）約 1644～2877 px。
+  static const _viewportSize = Size(1400, 1180);
 
   /// Windows 以 CDP 模擬的 dpr（headless 預設 1，canvas 只有 ~1246 寬）。
   static const _windowsDeviceScaleFactor = 2.0;
@@ -227,7 +224,7 @@ class _InAppWebEngine implements LuckdrawWebEngine {
             ),
           )
         : null;
-    final size = _viewportSize();
+    const size = _viewportSize;
     final created = Completer<InAppWebViewController>();
     final webview = HeadlessInAppWebView(
       webViewEnvironment: environment,
@@ -256,16 +253,6 @@ class _InAppWebEngine implements LuckdrawWebEngine {
       );
     }
     return _InAppWebEngine(webview, controller, environment);
-  }
-
-  /// 依平台的 dpr 決定 viewport 邏輯尺寸（見 [luckdrawViewportWidth]）。Windows 的 dpr
-  /// 由 CDP 模擬；Android 取裝置本身的 dpr。
-  static Size _viewportSize() {
-    final dpr = Platform.isWindows
-        ? _windowsDeviceScaleFactor
-        : PlatformDispatcher.instance.views.first.devicePixelRatio;
-    final width = luckdrawViewportWidth(dpr);
-    return Size(width, width * 0.843);
   }
 
   @override

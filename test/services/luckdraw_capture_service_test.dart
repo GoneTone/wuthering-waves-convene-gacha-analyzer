@@ -188,16 +188,4 @@ void main() {
       itemLuckdrawCacheFile(baseDir: tempDir, resourceId: 1211).path,
     );
   });
-
-  group('luckdrawViewportWidth', () {
-    test('依 dpr 反推桌面版面寬度，使 canvas 約 1600 px', () {
-      expect(luckdrawViewportWidth(2.625), closeTo(1051, 1));
-      expect(luckdrawViewportWidth(2), closeTo(1379, 1));
-    });
-
-    test('限制在 1000～1400（低於 1000 會切到手機版面，canvas 占比改變）', () {
-      expect(luckdrawViewportWidth(3.5), 1000);
-      expect(luckdrawViewportWidth(1), 1400);
-    });
-  });
 }
