@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:image/image.dart' as img;
 
-/// 從單一主檔產生 app icon 的各尺寸 UI 資產與 Windows 多解析度 `.ico`。
+/// 從單一主檔產生 app icon 的各尺寸 UI 資產、Windows 多解析度 `.ico` 與 Android 各密度 mipmap。
 ///
 /// 用法：`dart run tool/generate_app_icons.dart`
 /// 來源：`tool/app_icon_source.png`（白底滿版方圖，建議 512×512 以上，避免放大失真）。
@@ -43,6 +43,22 @@ void main() {
   const icoPath = 'windows/runner/resources/app_icon.ico';
   File(icoPath).writeAsBytesSync(img.IcoEncoder().encodeImages(icoImages));
   stdout.writeln('✓ $icoPath  ${icoSizes.join('/')}');
+
+  // Android 啟動器圖示（各密度 mipmap）。
+  const androidMipmaps = <String, int>{
+    'mdpi': 48,
+    'hdpi': 72,
+    'xhdpi': 96,
+    'xxhdpi': 144,
+    'xxxhdpi': 192,
+  };
+  for (final entry in androidMipmaps.entries) {
+    final path = 'android/app/src/main/res/mipmap-${entry.key}/ic_launcher.png';
+    File(path)
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(img.encodePng(_resize(source, entry.value)));
+    stdout.writeln('✓ $path  ${entry.value}x${entry.value}');
+  }
 }
 
 /// 將來源縮放成 `size`×`size` 正方形，使用 average 內插取得較佳的縮小品質。
