@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,10 +10,25 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/luckdraw_capture
 /// 假 webview：依腳本內容回應 probe／arm／分塊讀回，並記錄載入過的網址。
 class _FakeEngine implements LuckdrawWebEngine {
   /// 建立假 engine；[capData] 為 null 時 probe 永遠回「尚未擷取完成」。
-  _FakeEngine({this.capData});
+  /// [throwOnEvaluate] 模擬 webview 已死（renderer 被回收等）；[armsNeeded] 模擬頁面
+  /// 在 arm 之後自行重載、需要再 arm 幾次才會擷取完成。
+  _FakeEngine({
+    this.capData,
+    this.throwOnEvaluate = false,
+    this.armsNeeded = 1,
+  });
 
   /// 模擬 `window.__cap` 的 data URL；null 代表頁面一直沒有可擷取的 canvas。
   final String? capData;
+
+  /// 每次 evaluate 都丟例外。
+  final bool throwOnEvaluate;
+
+  /// 需要 arm 的次數才會進入擷取完成狀態。
+  final int armsNeeded;
+
+  /// 已收到的 arm 次數。
+  int arms = 0;
 
   /// 依序載入過的網址。
   final loadedUrls = <String>[];
@@ -25,6 +41,7 @@ class _FakeEngine implements LuckdrawWebEngine {
 
   @override
   Future<dynamic> evaluate(String js) async {
+    if (throwOnEvaluate) throw StateError('webview gone');
     final substr = RegExp(r'__cap\.substr\((\d+),(\d+)\)').firstMatch(js);
     if (substr != null) {
       final start = int.parse(substr.group(1)!);
@@ -34,17 +51,20 @@ class _FakeEngine implements LuckdrawWebEngine {
     }
     if (js.contains('hasCanvas')) {
       final data = capData;
+      final ready = data != null && arms >= armsNeeded;
       return jsonEncode({
         'hasCanvas': data != null,
-        'armed': false,
-        'capReady': data != null,
-        'capLen': data?.length ?? 0,
+        // 達到所需 arm 次數前，頁面每次 arm 後都會自行重載而失去旗標。
+        'armed': arms >= armsNeeded,
+        'capReady': ready,
+        'capLen': ready ? data.length : 0,
         'cw': 1600,
         'ch': 1334,
         'dpr': 2,
         'vw': 1400,
       });
     }
+    if (js.contains('__capArmed = true')) arms++;
     return 'armed';
   }
 
@@ -179,6 +199,97 @@ void main() {
     );
     await service.dispose();
     expect(engine.disposed, isTrue);
+  });
+
+  test('webview 中途死掉（evaluate 丟例外）→ 下次擷取會重建 webview', () async {
+    final engines = <_FakeEngine>[];
+    final service = serviceWith(() async {
+      final e = _FakeEngine(
+        throwOnEvaluate: engines.isEmpty,
+        capData: 'data:image/png;base64,${base64Encode([0x89, 0x50])}',
+      );
+      engines.add(e);
+      return e;
+    });
+    expect(
+      await service.capture(
+        resourceId: 1,
+        kind: kItemKindCharacter,
+        lang: 'zh-Hant',
+      ),
+      isNull,
+    );
+    expect(engines.first.disposed, isTrue);
+    expect(
+      await service.capture(
+        resourceId: 1,
+        kind: kItemKindCharacter,
+        lang: 'zh-Hant',
+      ),
+      isNotNull,
+    );
+    expect(engines, hasLength(2));
+  });
+
+  test('建立 webview 丟例外（可能是暫時的）→ 下次擷取會再試', () async {
+    var calls = 0;
+    final service = serviceWith(() async {
+      calls++;
+      if (calls == 1) throw TimeoutException('cold start');
+      return _FakeEngine(
+        capData: 'data:image/png;base64,${base64Encode([0x89, 0x50])}',
+      );
+    });
+    expect(
+      await service.capture(
+        resourceId: 1,
+        kind: kItemKindCharacter,
+        lang: 'zh-Hant',
+      ),
+      isNull,
+    );
+    expect(
+      await service.capture(
+        resourceId: 1,
+        kind: kItemKindCharacter,
+        lang: 'zh-Hant',
+      ),
+      isNotNull,
+    );
+    expect(calls, 2);
+  });
+
+  test('頁面在 arm 之後自行重載 → 依頁面狀態重新 arm 並完成擷取', () async {
+    final engine = _FakeEngine(
+      capData: 'data:image/png;base64,${base64Encode([0x89, 0x50])}',
+      armsNeeded: 2,
+    );
+    final service = serviceWith(() async => engine);
+    final got = await service.capture(
+      resourceId: 1,
+      kind: kItemKindCharacter,
+      lang: 'zh-Hant',
+    );
+    expect(got, isNotNull);
+    expect(engine.arms, 2);
+  });
+
+  test('dispose 之後不再建立 webview', () async {
+    var calls = 0;
+    final service = serviceWith(() async {
+      calls++;
+      return _FakeEngine();
+    });
+    await service.dispose();
+    expect(
+      await service.capture(
+        resourceId: 1,
+        kind: kItemKindCharacter,
+        lang: 'zh-Hant',
+      ),
+      isNull,
+    );
+    expect(calls, 0);
   });
 
   test('cacheFileFor：<id>_luckdraw.png', () {

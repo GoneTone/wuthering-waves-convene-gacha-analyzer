@@ -141,7 +141,13 @@ Android 回報的語言帶 script code，格式是 `zh-Hant-TW`（Windows 是 `z
 ### 17. 正式實作的做法（通用）
 
 - `pubspec.yaml` 移除 `webview_windows`，改成 `flutter_inappwebview: 6.2.0-beta.3`，**版本釘死不加 `^`**。之後要升級或換套件時，只需要改 `LuckdrawCaptureService` 裡的 `_InAppWebEngine`：服務只透過 `LuckdrawWebEngine` 介面（`loadUrl`、`evaluate`、`dispose`）操作 webview。
-- 服務自己延遲建立並重用一個 `HeadlessInAppWebView`，**不再需要掛在 UI 上的宿主元件**，`MaterialApp.builder` 裡的 `Stack` 也拿掉了。建立失敗只試一次，之後 `capture` 都回傳 `null`。
+- 服務自己延遲建立並重用一個 `HeadlessInAppWebView`，**不再需要掛在 UI 上的宿主元件**，`MaterialApp.builder` 裡的 `Stack` 也拿掉了。
+  - 工廠回傳 `null`（平台不支援，例如 Windows 沒有 WebView2）時記住，不再嘗試。
+  - 建立時丟例外（例如低階手機冷啟系統 WebView 逾時）**不鎖死**，下次擷取會再試。
+  - 擷取途中 webview 出錯（renderer 被系統回收、WebView2 程序崩潰）時，丟掉這個 engine，下次重建。否則之後每次擷取都會卡到逾時。
+  - `run()` 之後的步驟（等 controller、CDP 設定）失敗時，要把已經啟動的 webview 和 `WebViewEnvironment` 一起 dispose，不然 webview 程序會一直留到 App 結束。
+  - `dispose()` 要等鎖內進行中的擷取結束才釋放，之後也不再建立新的 webview。
+  - 判斷是否已經 arm，要看**頁面上的** `window.__capArmed`，不要用 Dart 端的區域變數：頁面自行重載或轉址後旗標會消失，必須重新 arm。
 - probe 腳本改成回傳 `JSON.stringify(...)` 字串，Dart 端再 `jsonDecode`。因為 `flutter_inappwebview` 回傳 JS 物件時，各平台給的 Dart 型別不一致，用字串最穩。
 - viewport：**兩個平台都固定 1400×1180**，Windows 再用 CDP 把 `deviceScaleFactor` 設成 2。
   - 實機量測（Android dpr 2.625）：encore 的 canvas CSS 寬度會隨 viewport 寬度**依版面斷點階梯式變化**，和高度無關。760 以下約 542，1050 約 472，1400 約 822。
@@ -164,8 +170,11 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 原本的程式只看 HTTP 200 就把內容存成 `.webp`，而且判斷「已有快取」只看檔案在不在。結果壞檔永遠不會重抓，畫面顯示 `Invalid image data`。
 - 舊快取在 encore 改版前就下載好的使用者看起來正常，所以很難發現。是在 Android 上**全新安裝**時才發現的。
 - **處理**（hotfix `fix/encore-resource-url`）：
-  1. `downloadImage` 下載前先把網址的 `/api/resource/` 改成 `/resource/`，這樣索引裡已經存的舊網址也一併修好。
+  1. `downloadImage` **先用原網址**下載。只有「2xx 但內容不是圖片」，而且網址是 `https://api-v2.encore.moe/api/resource/...` 這種格式時，才改用去掉 `/api` 的 `/resource/...` 重試一次。encore 修好後原網址會直接成功，不需要更新 App。連線失敗或非 2xx 不重試，以免逾時時間加倍。
   2. 用檔頭（magic bytes）確認是 PNG、JPEG、WebP 或 GIF 才寫進快取。
   3. 載入圖片索引時，自動刪掉內容不是圖片的快取檔，讓已經中招的使用者更新後自動恢復。
+     - 只檢查 `_icon.`、`_illustration`、`_luckdraw` 這幾種檔名，跳過 `.tmp`、其他檔案和子目錄。
+     - **只執行一次**：完成後在快取目錄留下 `.non_image_purged_v1` 標記檔。
+     - 用**自己的 try/catch** 包住，失敗也不能擋住索引載入。否則 state 會停在空索引，之後的寫入會把磁碟上的索引覆寫掉。
 - 原神版如果也用第三方資源站，**一律要用檔頭檢查下載內容**，不要只信 HTTP 狀態碼或副檔名。
 

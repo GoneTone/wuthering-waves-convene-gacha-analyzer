@@ -62,6 +62,7 @@
 3. **移除 `LuckdrawCaptureHost`**（`lib/widgets/luckdraw_capture_host.dart`），以及 `main.dart` 裡 `MaterialApp.builder` 中為了它而存在的 `Stack`。headless 不需要掛在 UI 上。
 4. **畫質**：兩個平台都固定使用 1400×1180 的 viewport，Windows 再用 CDP 設 `deviceScaleFactor: 2`。（2026-11-05 實作時實機校準後更正：canvas CSS 寬度會依 encore 版面斷點階梯式變化，原本「依 dpr 反推寬度」的做法不成立；1400 是最大的一階，Windows 約 1624、Android 約 1644～2877 px，都高於 1422 的底線。）
 5. **環境不支援的時候**：Windows 缺少 WebView2 runtime，或 Android 的系統 WebView 無法使用時，`capture` 回傳 `null` 並記一筆 warning，「喚取」頁籤就不顯示。這和現行行為一致，只嘗試一次，不反覆重試。
+   （2026-11-05 依審查意見補充：「只嘗試一次」僅適用於平台確定不支援；建立時丟例外、或擷取中 webview 出錯，都會在下次擷取時重建。）
 6. **log**：沿用 `gacha.luckdraw.capture`，記錄平台、viewport、dpr、canvas 尺寸、耗時。
 
 ### 3.4 不需要改的部分

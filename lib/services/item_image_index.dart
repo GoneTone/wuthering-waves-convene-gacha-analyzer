@@ -289,7 +289,7 @@ class ItemImageIndexStorage {
 
   /// 刪除 [baseDir] 內所有造型大圖檔（檔名含 `_illustration` 或 `_luckdraw`），
   /// 保留 icon 小圖；回傳刪除的檔案數。index 不動 —— 下次打開角色詳情會 lazy
-  /// 重新下載造型圖，luckdraw 立繪則由 WebView2 擷取補回。
+  /// 重新下載造型圖，luckdraw 立繪則由 headless webview 擷取補回。
   Future<int> deleteIllustrationCacheFiles() async {
     if (!await baseDir.exists()) return 0;
     var deleted = 0;

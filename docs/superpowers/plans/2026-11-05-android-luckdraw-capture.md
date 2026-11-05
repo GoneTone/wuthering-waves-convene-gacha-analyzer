@@ -14,7 +14,7 @@
 
 - `flutter_inappwebview` 版本釘死 `6.2.0-beta.3`（不用 `^`）；移除 `webview_windows`。
 - `LuckdrawCaptureService.capture({resourceId, kind, lang, force})` 與 `cacheFileFor` 介面不變；`luckdrawCaptureServiceProvider` 建構方式不變。
-- 延遲初始化：首次 `capture` 未命中快取時才建立 webview；建立失敗只試一次，之後一律回 null。
+- 延遲初始化：首次 `capture` 未命中快取時才建立 webview；平台不支援（工廠回 null）時不再嘗試，建立丟例外或擷取中 webview 出錯則下次重建（2026-11-05 依審查意見更正）。
 - 畫質：canvas 寬 ≥ 1422，目標約 1600 px。
 - log 一律英文、Logger `gacha.luckdraw.capture`；新宣告都有 `///` dartdoc；註解中文全形。
 - 每次 commit 前 `fvm dart format lib/ test/`、`fvm flutter analyze`、`fvm flutter test` 全綠；commit 帶 session 的 Co-Authored-By／Claude-Session 兩行。

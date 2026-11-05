@@ -51,8 +51,12 @@ class LuckdrawCaptureService {
   /// 已建立、跨擷取重用的 webview；null 表示尚未建立或建立失敗。
   LuckdrawWebEngine? _engine;
 
-  /// 是否已嘗試建立過 webview（失敗只試一次，不反覆重試）。
-  bool _engineAttempted = false;
+  /// 平台確定不支援 webview（工廠回 null，例如 Windows 缺 WebView2 runtime）；確定後不再嘗試。
+  /// 工廠丟例外（可能是冷啟逾時等暫時狀況）不算，下次擷取會再試。
+  bool _engineUnavailable = false;
+
+  /// 是否已 [dispose]；之後不再建立 webview。
+  bool _disposed = false;
 
   /// 序列化擷取與 webview 建立：單一 webview 一次只跑一個。
   final _lock = Lock();
@@ -85,14 +89,15 @@ class LuckdrawCaptureService {
     });
   }
 
-  /// 延遲建立 webview：首次擷取才建立（從不看喚取立繪的使用者不付常駐 webview 成本）；
-  /// 失敗只試一次。須在 [_lock] 內呼叫。
+  /// 延遲建立 webview：首次擷取才建立（從不看喚取立繪的使用者不付常駐 webview 成本）。
+  /// 平台不支援時只確認一次；建立時丟例外則下次擷取再試。須在 [_lock] 內呼叫。
   Future<LuckdrawWebEngine?> _ensureEngine() async {
-    if (_engine != null || _engineAttempted) return _engine;
-    _engineAttempted = true;
+    if (_disposed) return null;
+    if (_engine != null || _engineUnavailable) return _engine;
     try {
       _engine = await _engineFactory();
       if (_engine == null) {
+        _engineUnavailable = true;
         _log.warning('webview engine unavailable; luckdraw capture disabled');
       } else {
         _log.info('webview engine ready (lazy, ${Platform.operatingSystem})');
@@ -114,19 +119,19 @@ class LuckdrawCaptureService {
   ) async {
     final url = encoreItemUrl(kind: kind, resourceId: resourceId, lang: lang);
     final sw = Stopwatch()..start();
+    var engineBroken = false;
     try {
       await engine.loadUrl(url);
       final deadline = DateTime.now().add(timeout);
       Map<String, dynamic>? probe;
-      var armed = false;
       while (DateTime.now().isBefore(deadline)) {
         await Future<void>.delayed(const Duration(milliseconds: 400));
         final raw = await engine.evaluate(_jsProbe);
         if (raw is! String) continue;
         probe = jsonDecode(raw) as Map<String, dynamic>;
-        if (probe['hasCanvas'] == true && probe['armed'] != true && !armed) {
+        // 以頁面上的旗標判斷是否已 arm：頁面自行重載或轉址後旗標會消失，需要重新 arm。
+        if (probe['hasCanvas'] == true && probe['armed'] != true) {
           await engine.evaluate(_jsArm);
-          armed = true;
         }
         final capLen = probe['capLen'];
         if (probe['capReady'] == true && capLen is num && capLen > 0) break;
@@ -159,30 +164,46 @@ class LuckdrawCaptureService {
       );
       return file;
     } catch (e, st) {
+      // webview 本身出錯（renderer 被系統回收、WebView2 程序崩潰等）：丟掉這個 engine，
+      // 下次擷取重建，避免之後每次都卡到逾時。
+      engineBroken = true;
       _log.warning(
-        'capture failed rid=$resourceId url=${sanitizeUrl(url)}',
+        'capture failed rid=$resourceId url=${sanitizeUrl(url)}; '
+        'discarding webview engine',
         e,
         st,
       );
       return null;
     } finally {
-      // 擷取後導回空白頁，停止 encore 頁面渲染、釋放資源。
-      try {
-        await engine.loadUrl('about:blank');
-      } catch (_) {}
+      if (engineBroken) {
+        await _discardEngine(engine);
+      } else {
+        // 擷取後導回空白頁，停止 encore 頁面渲染、釋放資源。
+        try {
+          await engine.loadUrl('about:blank');
+        } catch (_) {}
+      }
     }
   }
 
-  /// 釋放已建立的 webview（provider dispose 時呼叫）。
-  Future<void> dispose() async {
-    final engine = _engine;
-    _engine = null;
-    if (engine == null) return;
+  /// 釋放 [engine]，若它仍是目前的 engine 則清掉，讓下次擷取重建。
+  Future<void> _discardEngine(LuckdrawWebEngine engine) async {
+    if (identical(_engine, engine)) _engine = null;
     try {
       await engine.dispose();
     } catch (e, st) {
       _log.warning('webview engine dispose failed', e, st);
     }
+  }
+
+  /// 釋放已建立的 webview（provider dispose 時呼叫）；等進行中的擷取或建立結束才釋放，
+  /// 之後不再建立新的 webview。
+  Future<void> dispose() async {
+    _disposed = true;
+    await _lock.synchronized(() async {
+      final engine = _engine;
+      if (engine != null) await _discardEngine(engine);
+    });
   }
 }
 
@@ -226,33 +247,46 @@ class _InAppWebEngine implements LuckdrawWebEngine {
         : null;
     const size = _viewportSize;
     final created = Completer<InAppWebViewController>();
-    final webview = HeadlessInAppWebView(
-      webViewEnvironment: environment,
-      initialSize: size,
-      initialSettings: InAppWebViewSettings(
-        javaScriptEnabled: true,
-        transparentBackground: true,
-      ),
-      onWebViewCreated: (c) {
-        if (!created.isCompleted) created.complete(c);
-      },
-    );
-    await webview.run();
-    final controller = await created.future.timeout(
-      const Duration(seconds: 15),
-    );
-    if (Platform.isWindows) {
-      await controller.callDevToolsProtocolMethod(
-        methodName: 'Emulation.setDeviceMetricsOverride',
-        parameters: {
-          'width': size.width.toInt(),
-          'height': size.height.toInt(),
-          'deviceScaleFactor': _windowsDeviceScaleFactor,
-          'mobile': false,
+    HeadlessInAppWebView? webview;
+    try {
+      webview = HeadlessInAppWebView(
+        webViewEnvironment: environment,
+        initialSize: size,
+        initialSettings: InAppWebViewSettings(
+          javaScriptEnabled: true,
+          transparentBackground: true,
+        ),
+        onWebViewCreated: (c) {
+          if (!created.isCompleted) created.complete(c);
         },
       );
+      await webview.run();
+      final controller = await created.future.timeout(
+        const Duration(seconds: 15),
+      );
+      if (Platform.isWindows) {
+        await controller.callDevToolsProtocolMethod(
+          methodName: 'Emulation.setDeviceMetricsOverride',
+          parameters: {
+            'width': size.width.toInt(),
+            'height': size.height.toInt(),
+            'deviceScaleFactor': _windowsDeviceScaleFactor,
+            'mobile': false,
+          },
+        );
+      }
+      return _InAppWebEngine(webview, controller, environment);
+    } catch (_) {
+      // run() 之後的步驟（等 controller、CDP 設定）失敗時，已啟動的 webview 與環境要一併釋放，
+      // 否則 webview 程序會留到 App 結束。
+      try {
+        await webview?.dispose();
+      } catch (_) {}
+      try {
+        await environment?.dispose();
+      } catch (_) {}
+      rethrow;
     }
-    return _InAppWebEngine(webview, controller, environment);
   }
 
   @override
