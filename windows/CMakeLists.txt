@@ -10,7 +10,7 @@ set(BINARY_NAME "wuthering_waves_convene_gacha_analyzer")
 # versions of CMake.
 cmake_policy(VERSION 3.14...3.25)
 
-# webview_windows 的 CMakeLists 用了 CMP0175（CMake ≥3.31）視為無效的
+# flutter_inappwebview_windows 的 CMakeLists 用了 CMP0175（CMake ≥3.31）視為無效的
 # add_custom_command(TARGET ... DEPENDS) 寫法，會跳「policy CMP0175 is not set」
 # 開發者警告。把該 policy 的子目錄預設設為 OLD（沿用既有寬鬆行為）以消除噪音；
 # 不影響建置產物。外掛屬 vendored 檔不手改，故在 app 端設預設讓它傳播到外掛子目錄。

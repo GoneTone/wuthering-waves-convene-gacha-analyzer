@@ -27,7 +27,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/log_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luckdraw_capture_host.dart';
 
 /// 應用程式入口：初始化 Flutter、Rust bridge（僅 Windows）、視窗管理、log 服務，然後啟動 app。
 ///
@@ -184,13 +183,6 @@ class _MainAppState extends ConsumerState<MainApp> {
       supportedLocales: ref.watch(releasedLocalesProvider),
       localeListResolutionCallback: localeListResolution,
       routerConfig: _router,
-      builder: (context, child) => Stack(
-        clipBehavior: Clip.none,
-        children: [
-          const Positioned(left: 0, top: 0, child: LuckdrawCaptureHost()),
-          if (child != null) Positioned.fill(child: child),
-        ],
-      ),
     );
   }
 }
