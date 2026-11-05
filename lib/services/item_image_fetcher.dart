@@ -47,8 +47,9 @@ String encoreItemUrl({
   return 'https://encore.moe/$seg/$resourceId?lang=${encoreLang(lang)}';
 }
 
-/// encore 的 API（2026-11 起）回傳的資源網址為 `https://api-v2.encore.moe/api/resource/...`，
-/// 但該路徑回的是網站 HTML；真正的檔案在去掉 `/api` 的 `/resource/...`。其他網址原樣回傳。
+/// encore 改版後（2026-11）API 回傳的資源網址為 `https://api-v2.encore.moe/api/resource/...`，
+/// 但該路徑回的是網站 HTML；真正的檔案在去掉 `/api` 的 `/resource/...`。回傳修正後的網址，
+/// 其他網址原樣回傳。只作為 [ItemImageFetcher.downloadImage] 原網址失敗時的備援。
 String normalizeEncoreResourceUrl(String url) {
   const broken = 'https://api-v2.encore.moe/api/resource/';
   return url.startsWith(broken)
@@ -429,30 +430,40 @@ class ItemImageFetcher {
     }
   }
 
-  /// GET [url] 的圖檔 bytes；任何失敗（非 2xx / 例外）回 null，caller 不寫檔
+  /// GET [url] 的圖檔 bytes；任何失敗（非 2xx／例外／內容不是圖片）回 null，caller 不寫檔
   /// 並於下次更新重試。
   ///
-  /// 下載前先以 [normalizeEncoreResourceUrl] 修正 encore 回傳的錯誤路徑（也涵蓋 index 裡
-  /// 已存的舊網址）；回應不是圖片（例如 encore 回 HTML 網頁）一律視為失敗。
+  /// 先用原網址；拿不到圖片且網址屬於 encore 改版後的錯誤路徑時，才改用
+  /// [normalizeEncoreResourceUrl] 修正後的網址重試一次。encore 修好後原網址就會直接成功，
+  /// 不需要再更新本程式。
   Future<Uint8List?> downloadImage(String url, http.Client client) async {
+    final bytes = await _downloadImageOnce(url, client);
+    if (bytes != null) return bytes;
     final fixedUrl = normalizeEncoreResourceUrl(url);
+    if (fixedUrl == url) return null;
+    _log.info('download retry with fixed encore url=${sanitizeUrl(fixedUrl)}');
+    return _downloadImageOnce(fixedUrl, client);
+  }
+
+  /// 對 [url] 發一次 GET；回應須為 2xx 且內容是圖片（[looksLikeImageBytes]），否則回 null。
+  Future<Uint8List?> _downloadImageOnce(String url, http.Client client) async {
     try {
-      final res = await client.get(Uri.parse(fixedUrl)).timeout(timeout);
+      final res = await client.get(Uri.parse(url)).timeout(timeout);
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final bytes = res.bodyBytes;
         if (looksLikeImageBytes(bytes)) return bytes;
         _log.warning(
           'download not an image type=${res.headers['content-type']} '
-          'bytes=${bytes.length} url=${sanitizeUrl(fixedUrl)}',
+          'bytes=${bytes.length} url=${sanitizeUrl(url)}',
         );
         return null;
       }
       _log.warning(
-        'download non-2xx status=${res.statusCode} url=${sanitizeUrl(fixedUrl)}',
+        'download non-2xx status=${res.statusCode} url=${sanitizeUrl(url)}',
       );
       return null;
     } catch (e) {
-      _log.warning('download failed url=${sanitizeUrl(fixedUrl)} err=$e');
+      _log.warning('download failed url=${sanitizeUrl(url)} err=$e');
       return null;
     }
   }

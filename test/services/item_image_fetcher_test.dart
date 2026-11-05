@@ -109,20 +109,50 @@ void main() {
       expect(out, bytes);
     });
 
-    test('api-v2 的 /api/resource/ 網址會改成 /resource/ 再下載', () async {
-      Uri? requested;
+    test('原網址能回圖片時直接使用，不改寫', () async {
+      final requested = <String>[];
       final mock = MockClient((req) async {
-        requested = req.url;
+        requested.add(req.url.toString());
         return http.Response.bytes([0x89, 0x50, 0x4E, 0x47, 0], 200);
       });
-      await ItemImageFetcher().downloadImage(
+      final out = await ItemImageFetcher().downloadImage(
         'https://api-v2.encore.moe/api/resource/Data/Game/Aki/x_UI.webp',
         mock,
       );
-      expect(
-        requested.toString(),
-        'https://api-v2.encore.moe/resource/Data/Game/Aki/x_UI.webp',
+      expect(out, isNotNull);
+      expect(requested, [
+        'https://api-v2.encore.moe/api/resource/Data/Game/Aki/x_UI.webp',
+      ]);
+    });
+
+    test('原網址回 HTML 時改用去掉 /api 的 /resource/ 網址重試', () async {
+      final requested = <String>[];
+      final mock = MockClient((req) async {
+        requested.add(req.url.toString());
+        return req.url.path.startsWith('/api/')
+            ? http.Response('<!DOCTYPE html><html></html>', 200)
+            : http.Response.bytes([0x89, 0x50, 0x4E, 0x47, 0], 200);
+      });
+      final out = await ItemImageFetcher().downloadImage(
+        'https://api-v2.encore.moe/api/resource/Data/Game/Aki/x_UI.webp',
+        mock,
       );
+      expect(out, isNotNull);
+      expect(requested, [
+        'https://api-v2.encore.moe/api/resource/Data/Game/Aki/x_UI.webp',
+        'https://api-v2.encore.moe/resource/Data/Game/Aki/x_UI.webp',
+      ]);
+    });
+
+    test('原網址與修正網址都不是圖片 → null', () async {
+      final mock = MockClient(
+        (_) async => http.Response('<!DOCTYPE html><html></html>', 200),
+      );
+      final out = await ItemImageFetcher().downloadImage(
+        'https://api-v2.encore.moe/api/resource/Data/Game/Aki/x_UI.webp',
+        mock,
+      );
+      expect(out, isNull);
     });
 
     test('其他網址不改寫', () async {
