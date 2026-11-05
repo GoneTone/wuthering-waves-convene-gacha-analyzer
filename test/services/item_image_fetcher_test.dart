@@ -144,6 +144,25 @@ void main() {
       ]);
     });
 
+    test('原網址連線失敗或非 2xx 時不重試（避免逾時加倍）', () async {
+      for (final fail in <Future<http.Response> Function()>[
+        () async => throw const SocketException('refused'),
+        () async => http.Response('', 404),
+      ]) {
+        var calls = 0;
+        final mock = MockClient((_) {
+          calls++;
+          return fail();
+        });
+        final out = await ItemImageFetcher().downloadImage(
+          'https://api-v2.encore.moe/api/resource/Data/Game/Aki/x_UI.webp',
+          mock,
+        );
+        expect(out, isNull);
+        expect(calls, 1);
+      }
+    });
+
     test('原網址與修正網址都不是圖片 → null', () async {
       final mock = MockClient(
         (_) async => http.Response('<!DOCTYPE html><html></html>', 200),

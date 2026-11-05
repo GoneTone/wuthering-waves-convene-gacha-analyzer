@@ -437,34 +437,54 @@ class ItemImageFetcher {
   /// [normalizeEncoreResourceUrl] 修正後的網址重試一次。encore 修好後原網址就會直接成功，
   /// 不需要再更新本程式。
   Future<Uint8List?> downloadImage(String url, http.Client client) async {
-    final bytes = await _downloadImageOnce(url, client);
-    if (bytes != null) return bytes;
+    final first = await _downloadImageOnce(url, client);
+    if (first.bytes != null) return first.bytes;
     final fixedUrl = normalizeEncoreResourceUrl(url);
-    if (fixedUrl == url) return null;
-    _log.info('download retry with fixed encore url=${sanitizeUrl(fixedUrl)}');
-    return _downloadImageOnce(fixedUrl, client);
+    // 只有「2xx 但不是圖片」才重試；連線失敗／非 2xx 重試也沒用，還會讓逾時時間加倍。
+    if (!first.notImage || fixedUrl == url) {
+      if (first.notImage) _logNotImage(url, first.contentType, first.length);
+      return null;
+    }
+    _log.fine('download retry with fixed encore url=${sanitizeUrl(fixedUrl)}');
+    final second = await _downloadImageOnce(fixedUrl, client);
+    if (second.notImage) {
+      _logNotImage(fixedUrl, second.contentType, second.length);
+    }
+    return second.bytes;
   }
 
-  /// 對 [url] 發一次 GET；回應須為 2xx 且內容是圖片（[looksLikeImageBytes]），否則回 null。
-  Future<Uint8List?> _downloadImageOnce(String url, http.Client client) async {
+  /// 記錄「回應不是圖片」的 warning。
+  void _logNotImage(String url, String? contentType, int length) {
+    _log.warning(
+      'download not an image type=$contentType bytes=$length '
+      'url=${sanitizeUrl(url)}',
+    );
+  }
+
+  /// 對 [url] 發一次 GET；2xx 且內容是圖片（[looksLikeImageBytes]）才回傳 bytes。
+  /// `notImage` 為 true 表示 2xx 但內容不是圖片（呼叫端據此決定是否改網址重試）。
+  Future<({Uint8List? bytes, bool notImage, String? contentType, int length})>
+  _downloadImageOnce(String url, http.Client client) async {
+    const failed = (bytes: null, notImage: false, contentType: null, length: 0);
     try {
       final res = await client.get(Uri.parse(url)).timeout(timeout);
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final bytes = res.bodyBytes;
-        if (looksLikeImageBytes(bytes)) return bytes;
-        _log.warning(
-          'download not an image type=${res.headers['content-type']} '
-          'bytes=${bytes.length} url=${sanitizeUrl(url)}',
+        final isImage = looksLikeImageBytes(bytes);
+        return (
+          bytes: isImage ? bytes : null,
+          notImage: !isImage,
+          contentType: res.headers['content-type'],
+          length: bytes.length,
         );
-        return null;
       }
       _log.warning(
         'download non-2xx status=${res.statusCode} url=${sanitizeUrl(url)}',
       );
-      return null;
+      return failed;
     } catch (e) {
       _log.warning('download failed url=${sanitizeUrl(url)} err=$e');
-      return null;
+      return failed;
     }
   }
 }

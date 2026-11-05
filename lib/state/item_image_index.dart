@@ -77,7 +77,13 @@ class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
   Future<void> _load() async {
     try {
       final storage = ref.read(itemImageIndexStorageProvider);
-      await storage.purgeNonImageFiles();
+      // 清壞檔失敗（目錄被鎖等）只記錄、不可擋住 index 載入：載入失敗會讓 state 停在空 index，
+      // 之後的寫入會把磁碟上的 index 覆寫成只剩新條目。
+      try {
+        await storage.purgeNonImageFiles();
+      } catch (e, st) {
+        _log.warning('purge non-image cache files failed', e, st);
+      }
       final loaded = await storage.load();
       if (!ref.mounted) return;
       state = loaded;
