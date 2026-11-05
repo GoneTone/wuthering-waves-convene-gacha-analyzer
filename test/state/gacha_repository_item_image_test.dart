@@ -112,7 +112,7 @@ void main() {
     Set<int> details = const {},
   }) {
     final mockClient = MockClient(
-      (_) async => http.Response.bytes([1, 2, 3], 200),
+      (_) async => http.Response.bytes([0x89, 0x50, 0x4E, 0x47, 1, 2, 3], 200),
     );
     return ProviderContainer(
       overrides: [
@@ -372,7 +372,9 @@ void main() {
 
   test('既有角色詳情已抓但 hasLuckdraw 未評估 → 重抓評估（legacy backfill）', () async {
     // 預植：角色 1211 icon 已快取、kind 已分類、該語言詳情已抓，但 hasLuckdraw 為 null。
-    await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
+    await File(
+      '${tempDir.path}/1211_icon.png',
+    ).writeAsBytes([0x89, 0x50, 0x4E, 0x47, 9, 9, 9]);
     await ItemImageIndexStorage(tempDir).save(
       const ItemImageIndex(
         items: {
@@ -415,7 +417,9 @@ void main() {
   });
 
   test('既有快取 icon 但 kind==null → 補 kind、不重下載', () async {
-    await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
+    await File(
+      '${tempDir.path}/1211_icon.png',
+    ).writeAsBytes([0x89, 0x50, 0x4E, 0x47, 9, 9, 9]);
     await ItemImageIndexStorage(tempDir).save(
       const ItemImageIndex(
         items: {
@@ -447,6 +451,10 @@ void main() {
     expect(e.kind, kItemKindCharacter);
     // 未重下載：磁碟檔仍是預寫的 bytes（重下載會被 MockClient 覆成 [1,2,3]）。
     expect(await File('${tempDir.path}/1211_icon.png').readAsBytes(), [
+      0x89,
+      0x50,
+      0x4E,
+      0x47,
       9,
       9,
       9,
@@ -455,7 +463,9 @@ void main() {
 
   test('forceDetailRefetch：detail 已存在仍重抓，偵測新 skins；icon 不重下', () async {
     // 預植：1211 角色 icon 已快取、kind 已分類、zh-Hant 詳情已抓但 skins 為空、hasLuckdraw 已評估。
-    await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
+    await File(
+      '${tempDir.path}/1211_icon.png',
+    ).writeAsBytes([0x89, 0x50, 0x4E, 0x47, 9, 9, 9]);
     await ItemImageIndexStorage(tempDir).save(
       const ItemImageIndex(
         items: {
@@ -500,6 +510,10 @@ void main() {
     expect(e.detailByLang['zh-Hant']!.skins, isNotEmpty);
     // 非破壞：icon 檔未被重下載（仍是預寫 bytes；重下載會被 MockClient 覆成 [1,2,3]）。
     expect(await File('${tempDir.path}/1211_icon.png').readAsBytes(), [
+      0x89,
+      0x50,
+      0x4E,
+      0x47,
       9,
       9,
       9,
@@ -507,7 +521,9 @@ void main() {
   });
 
   test('非 force 時 detail 已存在不重抓（守衛維持）', () async {
-    await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
+    await File(
+      '${tempDir.path}/1211_icon.png',
+    ).writeAsBytes([0x89, 0x50, 0x4E, 0x47, 9, 9, 9]);
     await ItemImageIndexStorage(tempDir).save(
       const ItemImageIndex(
         items: {
@@ -581,7 +597,9 @@ void main() {
         },
       ),
     );
-    await File('${tempDir.path}/1503_icon.png').writeAsBytes([9, 9, 9]);
+    await File(
+      '${tempDir.path}/1503_icon.png',
+    ).writeAsBytes([0x89, 0x50, 0x4E, 0x47, 9, 9, 9]);
     final container = build(characters: {1503}, details: {1503});
     addTearDown(container.dispose);
     final repo = container.read(gachaRepositoryProvider.notifier);
@@ -611,7 +629,9 @@ void main() {
 
   test('refreshAllItemDetails 非破壞性重抓 + 完成訊息帶物品資料摘要', () async {
     // 預植：1211 角色 icon 已快取、詳情已抓但 skins 空。
-    await File('${tempDir.path}/1211_icon.png').writeAsBytes([9, 9, 9]);
+    await File(
+      '${tempDir.path}/1211_icon.png',
+    ).writeAsBytes([0x89, 0x50, 0x4E, 0x47, 9, 9, 9]);
     await ItemImageIndexStorage(tempDir).save(
       const ItemImageIndex(
         items: {

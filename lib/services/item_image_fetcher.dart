@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
@@ -44,6 +45,16 @@ String encoreItemUrl({
 }) {
   final seg = _kindToSegment[kind] ?? 'character';
   return 'https://encore.moe/$seg/$resourceId?lang=${encoreLang(lang)}';
+}
+
+/// encore 改版後（2026-11）API 回傳的資源網址為 `https://api-v2.encore.moe/api/resource/...`，
+/// 但該路徑回的是網站 HTML；真正的檔案在去掉 `/api` 的 `/resource/...`。回傳修正後的網址，
+/// 其他網址原樣回傳。只作為 [ItemImageFetcher.downloadImage] 原網址失敗時的備援。
+String normalizeEncoreResourceUrl(String url) {
+  const broken = 'https://api-v2.encore.moe/api/resource/';
+  return url.startsWith(broken)
+      ? 'https://api-v2.encore.moe/resource/${url.substring(broken.length)}'
+      : url;
 }
 
 /// encore API base（list／detail 共用）。
@@ -419,21 +430,61 @@ class ItemImageFetcher {
     }
   }
 
-  /// GET [url] 的圖檔 bytes；任何失敗（非 2xx / 例外）回 null，caller 不寫檔
+  /// GET [url] 的圖檔 bytes；任何失敗（非 2xx／例外／內容不是圖片）回 null，caller 不寫檔
   /// 並於下次更新重試。
+  ///
+  /// 先用原網址；拿不到圖片且網址屬於 encore 改版後的錯誤路徑時，才改用
+  /// [normalizeEncoreResourceUrl] 修正後的網址重試一次。encore 修好後原網址就會直接成功，
+  /// 不需要再更新本程式。
   Future<Uint8List?> downloadImage(String url, http.Client client) async {
+    final first = await _downloadImageOnce(url, client);
+    if (first.bytes != null) return first.bytes;
+    final fixedUrl = normalizeEncoreResourceUrl(url);
+    // 只有「2xx 但不是圖片」才重試；連線失敗／非 2xx 重試也沒用，還會讓逾時時間加倍。
+    if (!first.notImage || fixedUrl == url) {
+      if (first.notImage) _logNotImage(url, first.contentType, first.length);
+      return null;
+    }
+    _log.fine('download retry with fixed encore url=${sanitizeUrl(fixedUrl)}');
+    final second = await _downloadImageOnce(fixedUrl, client);
+    if (second.notImage) {
+      _logNotImage(fixedUrl, second.contentType, second.length);
+    }
+    return second.bytes;
+  }
+
+  /// 記錄「回應不是圖片」的 warning。
+  void _logNotImage(String url, String? contentType, int length) {
+    _log.warning(
+      'download not an image type=$contentType bytes=$length '
+      'url=${sanitizeUrl(url)}',
+    );
+  }
+
+  /// 對 [url] 發一次 GET；2xx 且內容是圖片（[looksLikeImageBytes]）才回傳 bytes。
+  /// `notImage` 為 true 表示 2xx 但內容不是圖片（呼叫端據此決定是否改網址重試）。
+  Future<({Uint8List? bytes, bool notImage, String? contentType, int length})>
+  _downloadImageOnce(String url, http.Client client) async {
+    const failed = (bytes: null, notImage: false, contentType: null, length: 0);
     try {
       final res = await client.get(Uri.parse(url)).timeout(timeout);
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        return res.bodyBytes;
+        final bytes = res.bodyBytes;
+        final isImage = looksLikeImageBytes(bytes);
+        return (
+          bytes: isImage ? bytes : null,
+          notImage: !isImage,
+          contentType: res.headers['content-type'],
+          length: bytes.length,
+        );
       }
       _log.warning(
         'download non-2xx status=${res.statusCode} url=${sanitizeUrl(url)}',
       );
-      return null;
+      return failed;
     } catch (e) {
       _log.warning('download failed url=${sanitizeUrl(url)} err=$e');
-      return null;
+      return failed;
     }
   }
 }

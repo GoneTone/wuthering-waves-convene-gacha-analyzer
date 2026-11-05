@@ -147,6 +147,22 @@ class ItemImageIndex {
   ItemImageEntry? lookupImage(int resourceId) => items[resourceId];
 }
 
+/// [head]（檔案開頭至少 12 bytes）是否為 PNG／JPEG／WebP／GIF 的檔頭。
+bool looksLikeImageBytes(List<int> head) {
+  bool startsWith(List<int> sig, [int offset = 0]) {
+    if (head.length < offset + sig.length) return false;
+    for (var i = 0; i < sig.length; i++) {
+      if (head[offset + i] != sig[i]) return false;
+    }
+    return true;
+  }
+
+  return startsWith(const [0x89, 0x50, 0x4E, 0x47]) ||
+      startsWith(const [0xFF, 0xD8, 0xFF]) ||
+      (startsWith('RIFF'.codeUnits) && startsWith('WEBP'.codeUnits, 8)) ||
+      startsWith('GIF8'.codeUnits);
+}
+
 /// 負責 `item_image_index.json` 的讀寫（atomic write，跨帳號共用）。
 class ItemImageIndexStorage {
   /// 建立 [ItemImageIndexStorage]，需指定圖檔快取根目錄 [baseDir]。
@@ -217,6 +233,46 @@ class ItemImageIndexStorage {
   Future<void> clearAll() async {
     await save(const ItemImageIndex.empty());
     _log.info('clearAll: index reset to empty');
+  }
+
+  /// 已執行過 [purgeNonImageFiles] 的標記檔名（放在 [baseDir]）。
+  static const _purgedMarker = '.non_image_purged_v1';
+
+  /// 刪除 [baseDir] 內「內容不是圖片」的圖片快取檔（encore 改版期間存下的 HTML），回傳刪除數。
+  /// 刪掉後 [needsItemImageFetch] 會因檔案不存在而重新下載。
+  ///
+  /// 只檢查 icon／立繪／喚取立繪的檔名（`.tmp` 暫存檔、其他檔案與子目錄不碰），且只執行一次：
+  /// 完成後留下標記檔，之後直接回 0（下載端已會擋掉非圖片，不會再產生壞檔）。
+  Future<int> purgeNonImageFiles() async {
+    final marker = File('${baseDir.path}/$_purgedMarker');
+    if (!await baseDir.exists() || await marker.exists()) return 0;
+    var deleted = 0;
+    await for (final entity in baseDir.list()) {
+      if (entity is! File) continue;
+      final path = entity.path;
+      final isImageCache =
+          path.contains('_icon.') ||
+          path.contains('_illustration') ||
+          path.contains('_luckdraw');
+      if (!isImageCache || path.endsWith('.tmp')) continue;
+      try {
+        final raf = await entity.open();
+        final head = await raf.read(12);
+        await raf.close();
+        if (looksLikeImageBytes(head)) continue;
+        await entity.delete();
+        deleted++;
+      } catch (e) {
+        _log.warning('purgeNonImageFiles skip ${sanitizeFsPath(path)} err=$e');
+      }
+    }
+    await marker.writeAsString('');
+    if (deleted > 0) {
+      _log.warning(
+        'purgeNonImageFiles: removed $deleted non-image cache files',
+      );
+    }
+    return deleted;
   }
 
   /// 刪除 [baseDir] 內所有圖檔並重建空目錄。

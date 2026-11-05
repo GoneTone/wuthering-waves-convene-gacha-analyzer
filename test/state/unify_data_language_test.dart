@@ -84,7 +84,7 @@ ProviderContainer _buildContainer({
   bool useRealConverter = false,
 }) {
   final mockClient = MockClient(
-    (_) async => http.Response.bytes([1, 2, 3], 200),
+    (_) async => http.Response.bytes([0x89, 0x50, 0x4E, 0x47, 1, 2, 3], 200),
   );
   return ProviderContainer(
     overrides: [
@@ -373,7 +373,7 @@ void main() {
     final failStorage = _FailingStorage(tempDir, failOnUid: 'FAIL_UID');
 
     final mockClient = MockClient(
-      (_) async => http.Response.bytes([1, 2, 3], 200),
+      (_) async => http.Response.bytes([0x89, 0x50, 0x4E, 0x47, 1, 2, 3], 200),
     );
     final container = ProviderContainer(
       overrides: [
