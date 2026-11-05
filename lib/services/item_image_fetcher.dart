@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
@@ -44,6 +45,15 @@ String encoreItemUrl({
 }) {
   final seg = _kindToSegment[kind] ?? 'character';
   return 'https://encore.moe/$seg/$resourceId?lang=${encoreLang(lang)}';
+}
+
+/// encore 的 API（2026-11 起）回傳的資源網址為 `https://api-v2.encore.moe/api/resource/...`，
+/// 但該路徑回的是網站 HTML；真正的檔案在去掉 `/api` 的 `/resource/...`。其他網址原樣回傳。
+String normalizeEncoreResourceUrl(String url) {
+  const broken = 'https://api-v2.encore.moe/api/resource/';
+  return url.startsWith(broken)
+      ? 'https://api-v2.encore.moe/resource/${url.substring(broken.length)}'
+      : url;
 }
 
 /// encore API base（list／detail 共用）。
@@ -421,18 +431,28 @@ class ItemImageFetcher {
 
   /// GET [url] 的圖檔 bytes；任何失敗（非 2xx / 例外）回 null，caller 不寫檔
   /// 並於下次更新重試。
+  ///
+  /// 下載前先以 [normalizeEncoreResourceUrl] 修正 encore 回傳的錯誤路徑（也涵蓋 index 裡
+  /// 已存的舊網址）；回應不是圖片（例如 encore 回 HTML 網頁）一律視為失敗。
   Future<Uint8List?> downloadImage(String url, http.Client client) async {
+    final fixedUrl = normalizeEncoreResourceUrl(url);
     try {
-      final res = await client.get(Uri.parse(url)).timeout(timeout);
+      final res = await client.get(Uri.parse(fixedUrl)).timeout(timeout);
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        return res.bodyBytes;
+        final bytes = res.bodyBytes;
+        if (looksLikeImageBytes(bytes)) return bytes;
+        _log.warning(
+          'download not an image type=${res.headers['content-type']} '
+          'bytes=${bytes.length} url=${sanitizeUrl(fixedUrl)}',
+        );
+        return null;
       }
       _log.warning(
-        'download non-2xx status=${res.statusCode} url=${sanitizeUrl(url)}',
+        'download non-2xx status=${res.statusCode} url=${sanitizeUrl(fixedUrl)}',
       );
       return null;
     } catch (e) {
-      _log.warning('download failed url=${sanitizeUrl(url)} err=$e');
+      _log.warning('download failed url=${sanitizeUrl(fixedUrl)} err=$e');
       return null;
     }
   }

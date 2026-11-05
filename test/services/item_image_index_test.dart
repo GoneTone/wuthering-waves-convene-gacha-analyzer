@@ -205,6 +205,30 @@ void main() {
       expect(loaded.items, isEmpty);
     });
 
+    test('purgeNonImageFiles 刪掉內容不是圖片的快取檔，保留圖片與 index', () async {
+      await storage.save(const ItemImageIndex.empty());
+      await File(
+        '${tempDir.path}/1_icon.webp',
+      ).writeAsString('<!DOCTYPE html><html></html>');
+      await File(
+        '${tempDir.path}/2_icon.webp',
+      ).writeAsBytes([...'RIFF'.codeUnits, 0, 0, 0, 0, ...'WEBP'.codeUnits]);
+      await File(
+        '${tempDir.path}/3_illustration.png',
+      ).writeAsBytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A]);
+
+      final removed = await storage.purgeNonImageFiles();
+
+      expect(removed, 1);
+      expect(File('${tempDir.path}/1_icon.webp').existsSync(), isFalse);
+      expect(File('${tempDir.path}/2_icon.webp').existsSync(), isTrue);
+      expect(File('${tempDir.path}/3_illustration.png').existsSync(), isTrue);
+      expect(
+        File('${tempDir.path}/item_image_index.json').existsSync(),
+        isTrue,
+      );
+    });
+
     test('wipeCacheDirectory 刪光圖檔並重建目錄', () async {
       await File('${tempDir.path}/1211_icon.png').writeAsBytes([1, 2, 3]);
       await File(
@@ -619,6 +643,30 @@ void main() {
     test('itemLuckdrawCacheFile：<id>_luckdraw.png', () {
       final f = itemLuckdrawCacheFile(baseDir: tempDir, resourceId: 1211);
       expect(f.path, '${tempDir.path}/1211_luckdraw.png');
+    });
+  });
+
+  group('looksLikeImageBytes', () {
+    test('PNG／JPEG／WebP／GIF 開頭 → true', () {
+      expect(looksLikeImageBytes([0x89, 0x50, 0x4E, 0x47, 0, 0]), isTrue);
+      expect(looksLikeImageBytes([0xFF, 0xD8, 0xFF, 0xE0]), isTrue);
+      expect(
+        looksLikeImageBytes([
+          ...'RIFF'.codeUnits,
+          1,
+          2,
+          3,
+          4,
+          ...'WEBP'.codeUnits,
+        ]),
+        isTrue,
+      );
+      expect(looksLikeImageBytes('GIF89a'.codeUnits), isTrue);
+    });
+
+    test('HTML 或太短 → false', () {
+      expect(looksLikeImageBytes('<!DOCTYPE html>'.codeUnits), isFalse);
+      expect(looksLikeImageBytes([0x89, 0x50]), isFalse);
     });
   });
 }

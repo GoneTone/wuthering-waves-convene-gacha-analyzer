@@ -72,10 +72,12 @@ class ItemImageIndexNotifier extends Notifier<ItemImageIndex> {
     return const ItemImageIndex.empty();
   }
 
-  /// 從 storage 載入並 emit 給 state。
+  /// 先清掉內容不是圖片的快取檔（讓先前存成 HTML 的壞圖自動重抓），再從 storage 載入並
+  /// emit 給 state。
   Future<void> _load() async {
     try {
       final storage = ref.read(itemImageIndexStorageProvider);
+      await storage.purgeNonImageFiles();
       final loaded = await storage.load();
       if (!ref.mounted) return;
       state = loaded;
