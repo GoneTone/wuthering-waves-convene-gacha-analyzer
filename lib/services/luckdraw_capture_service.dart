@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:logging/logging.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:synchronized/synchronized.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
@@ -187,11 +188,14 @@ class LuckdrawCaptureService {
 
 /// 以 [HeadlessInAppWebView] 實作的 [LuckdrawWebEngine]（Android／Windows 共用）。
 class _InAppWebEngine implements LuckdrawWebEngine {
-  /// 包住已執行的 headless webview 與其 controller。
-  _InAppWebEngine(this._webview, this._controller);
+  /// 包住已執行的 headless webview、其 controller 與（Windows 才有的）WebView2 環境。
+  _InAppWebEngine(this._webview, this._controller, this._environment);
 
   /// 執行中的 headless webview。
   final HeadlessInAppWebView _webview;
+
+  /// Windows 的 WebView2 環境（指定資料資料夾）；其他平台為 null。
+  final WebViewEnvironment? _environment;
 
   /// headless webview 的 controller。
   final InAppWebViewController _controller;
@@ -211,9 +215,20 @@ class _InAppWebEngine implements LuckdrawWebEngine {
         await WebViewEnvironment.getAvailableVersion() == null) {
       return null;
     }
+    // WebView2 未指定資料資料夾時會寫在執行檔旁（`<exe>.WebView2`），安裝在 Program Files
+    // 的版本沒有寫入權限而啟動失敗；改放使用者可寫的 app 快取目錄。
+    final environment = Platform.isWindows
+        ? await WebViewEnvironment.create(
+            settings: WebViewEnvironmentSettings(
+              userDataFolder:
+                  '${(await getApplicationCacheDirectory()).path}${Platform.pathSeparator}webview2',
+            ),
+          )
+        : null;
     final size = _viewportSize();
     final created = Completer<InAppWebViewController>();
     final webview = HeadlessInAppWebView(
+      webViewEnvironment: environment,
       initialSize: size,
       initialSettings: InAppWebViewSettings(
         javaScriptEnabled: true,
@@ -238,7 +253,7 @@ class _InAppWebEngine implements LuckdrawWebEngine {
         },
       );
     }
-    return _InAppWebEngine(webview, controller);
+    return _InAppWebEngine(webview, controller, environment);
   }
 
   /// 依平台決定 viewport 邏輯尺寸，使 canvas 寬度接近 [_targetCanvasPx]。
@@ -263,7 +278,10 @@ class _InAppWebEngine implements LuckdrawWebEngine {
       _controller.evaluateJavascript(source: js);
 
   @override
-  Future<void> dispose() => _webview.dispose();
+  Future<void> dispose() async {
+    await _webview.dispose();
+    await _environment?.dispose();
+  }
 }
 
 /// 探測腳本：以 JSON 字串回傳頁面與 canvas 狀態（同步、非 rAF）。
