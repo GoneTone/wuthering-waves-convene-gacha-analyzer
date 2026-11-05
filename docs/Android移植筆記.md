@@ -143,7 +143,9 @@ Android 回報的語言帶 script code，格式是 `zh-Hant-TW`（Windows 是 `z
 - `pubspec.yaml` 移除 `webview_windows`，改成 `flutter_inappwebview: 6.2.0-beta.3`，**版本釘死不加 `^`**。之後要升級或換套件時，只需要改 `LuckdrawCaptureService` 裡的 `_InAppWebEngine`：服務只透過 `LuckdrawWebEngine` 介面（`loadUrl`、`evaluate`、`dispose`）操作 webview。
 - 服務自己延遲建立並重用一個 `HeadlessInAppWebView`，**不再需要掛在 UI 上的宿主元件**，`MaterialApp.builder` 裡的 `Stack` 也拿掉了。建立失敗只試一次，之後 `capture` 都回傳 `null`。
 - probe 腳本改成回傳 `JSON.stringify(...)` 字串，Dart 端再 `jsonDecode`。因為 `flutter_inappwebview` 回傳 JS 物件時，各平台給的 Dart 型別不一致，用字串最穩。
-- viewport：Windows 固定 1400×1180，並用 CDP 把 `deviceScaleFactor` 設成 2；Android 依裝置的 dpr 反推寬度。encore 的版面會隨 viewport 寬度切換，canvas 占 viewport 的比例不是固定值：Android 700 寬時約 0.775，Windows 1400 寬時約 0.58。
+- viewport：**兩個平台都固定 1400×1180**，Windows 再用 CDP 把 `deviceScaleFactor` 設成 2。
+  - 實機量測（Android dpr 2.625）：encore 的 canvas CSS 寬度會隨 viewport 寬度**依版面斷點階梯式變化**，和高度無關。760 以下約 542，1050 約 472，1400 約 822。
+  - 用「比例反推寬度」是錯的：踩過兩次，先拿到 1011，再拿到 1239。1400 是最大的一階，乘上 dpr 之後，Windows 約 1624，Android 約 1644～2877。
 - Windows 檢查 runtime：`WebViewEnvironment.getAvailableVersion() == null` 時代表沒有 WebView2，直接放棄。
 - **Windows 建置**：
   - `flutter_inappwebview_windows` 在建置時會用 **NuGet** 下載 WIL 和 CppWinRT。開發機要先安裝（`winget install Microsoft.NuGet`）；GitHub Actions 的 `windows-latest` 已經內建。
@@ -151,3 +153,19 @@ Android 回報的語言帶 script code，格式是 `zh-Hant-TW`（Windows 是 `z
   - 原本為了 `webview_windows` 在 `build_release.ps1` 用 `CL` 注入 `_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS`，現在可以拿掉，因為新套件沒有用到 `<experimental/coroutine>`，release 建置已驗證通過。
 - 延遲初始化已驗證：Windows App 啟動後閒置時，沒有任何屬於本 App 的 `msedgewebview2.exe`。
 - **WebView2 資料資料夾一定要自己指定（Windows）**：`flutter_inappwebview_windows` 沒有傳 `WebViewEnvironment` 時，會用 `userDataFolder = nullptr`，WebView2 就把資料寫在**執行檔旁邊**（`<exe>.WebView2`）。安裝在 `Program Files` 的版本沒有寫入權限，WebView2 啟動會失敗，功能就靜靜地消失了。開發時從 `build` 資料夾執行一切正常，所以測不出來。**處理**：用 `WebViewEnvironment.create(settings: WebViewEnvironmentSettings(userDataFolder: <getApplicationCacheDirectory()>/webview2))` 建立環境，傳給 `HeadlessInAppWebView(webViewEnvironment: ...)`，dispose 時一起釋放。舊的 `webview_windows` 預設就放在使用者可寫的位置，所以以前沒遇過這個問題。
+
+---
+
+## 五、外部資料來源
+
+### 18. encore 的資源網址變成回傳 HTML（通用，2026-11 起）
+
+encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/...`，但這個路徑回的是網站的 HTML，不是圖片；真正的檔案在去掉 `/api` 的 `/resource/...`。
+- 原本的程式只看 HTTP 200 就把內容存成 `.webp`，而且判斷「已有快取」只看檔案在不在。結果壞檔永遠不會重抓，畫面顯示 `Invalid image data`。
+- 舊快取在 encore 改版前就下載好的使用者看起來正常，所以很難發現。是在 Android 上**全新安裝**時才發現的。
+- **處理**（hotfix `fix/encore-resource-url`）：
+  1. `downloadImage` 下載前先把網址的 `/api/resource/` 改成 `/resource/`，這樣索引裡已經存的舊網址也一併修好。
+  2. 用檔頭（magic bytes）確認是 PNG、JPEG、WebP 或 GIF 才寫進快取。
+  3. 載入圖片索引時，自動刪掉內容不是圖片的快取檔，讓已經中招的使用者更新後自動恢復。
+- 原神版如果也用第三方資源站，**一律要用檔頭檢查下載內容**，不要只信 HTTP 狀態碼或副檔名。
+

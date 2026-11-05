@@ -60,10 +60,7 @@
 1. **依賴**：移除 `webview_windows`，新增 `flutter_inappwebview: 6.2.0-beta.3`（釘死版本，不用 `^`）。
 2. **`LuckdrawCaptureService`**：自己管理一個延遲建立、可重複使用的 `HeadlessInAppWebView`。第一次擷取時才 `run()`，之後重複使用；擷取完導回 `about:blank`（和現行一樣）。對外介面 `capture({resourceId, kind, lang, force})` 和 `cacheFileFor` 完全不變。原本給宿主元件用的 `registerInitializer`、`attachWebview`、`detachWebview` 都移除。
 3. **移除 `LuckdrawCaptureHost`**（`lib/widgets/luckdraw_capture_host.dart`），以及 `main.dart` 裡 `MaterialApp.builder` 中為了它而存在的 `Stack`。headless 不需要掛在 UI 上。
-4. **畫質**：兩個平台都以 canvas 寬度約 1600 px 為目標。
-   - Windows：viewport 1400×1180，加上 CDP `deviceScaleFactor: 2`。
-   - Android：用手機本身的 dpr，依 dpr 算出 viewport 寬度，讓 canvas 接近同樣的目標。
-   - 具體數值交給實作時在實機上校準，驗收以「不低於 1422 寬」為底線。
+4. **畫質**：兩個平台都固定使用 1400×1180 的 viewport，Windows 再用 CDP 設 `deviceScaleFactor: 2`。（2026-11-05 實作時實機校準後更正：canvas CSS 寬度會依 encore 版面斷點階梯式變化，原本「依 dpr 反推寬度」的做法不成立；1400 是最大的一階，Windows 約 1624、Android 約 1644～2877 px，都高於 1422 的底線。）
 5. **環境不支援的時候**：Windows 缺少 WebView2 runtime，或 Android 的系統 WebView 無法使用時，`capture` 回傳 `null` 並記一筆 warning，「喚取」頁籤就不顯示。這和現行行為一致，只嘗試一次，不反覆重試。
 6. **log**：沿用 `gacha.luckdraw.capture`，記錄平台、viewport、dpr、canvas 尺寸、耗時。
 
