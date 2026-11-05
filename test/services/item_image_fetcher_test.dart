@@ -100,13 +100,56 @@ void main() {
 
   group('ItemImageFetcher.downloadImage', () {
     test('200 OK → 回 bytes', () async {
-      final bytes = Uint8List.fromList([1, 2, 3, 4]);
+      final bytes = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47, 1, 2, 3, 4]);
       final mock = MockClient((_) async => http.Response.bytes(bytes, 200));
       final out = await ItemImageFetcher().downloadImage(
         'https://x/icon.png',
         mock,
       );
       expect(out, bytes);
+    });
+
+    test('api-v2 的 /api/resource/ 網址會改成 /resource/ 再下載', () async {
+      Uri? requested;
+      final mock = MockClient((req) async {
+        requested = req.url;
+        return http.Response.bytes([0x89, 0x50, 0x4E, 0x47, 0], 200);
+      });
+      await ItemImageFetcher().downloadImage(
+        'https://api-v2.encore.moe/api/resource/Data/Game/Aki/x_UI.webp',
+        mock,
+      );
+      expect(
+        requested.toString(),
+        'https://api-v2.encore.moe/resource/Data/Game/Aki/x_UI.webp',
+      );
+    });
+
+    test('其他網址不改寫', () async {
+      Uri? requested;
+      final mock = MockClient((req) async {
+        requested = req.url;
+        return http.Response.bytes([0x89, 0x50, 0x4E, 0x47, 0], 200);
+      });
+      await ItemImageFetcher().downloadImage(
+        'https://api.encore.moe/resource/Data/Game/Aki/x_UI.webp',
+        mock,
+      );
+      expect(
+        requested.toString(),
+        'https://api.encore.moe/resource/Data/Game/Aki/x_UI.webp',
+      );
+    });
+
+    test('200 但內容是 HTML（不是圖片）→ null，不寫快取', () async {
+      final mock = MockClient(
+        (_) async => http.Response('<!DOCTYPE html><html></html>', 200),
+      );
+      final out = await ItemImageFetcher().downloadImage(
+        'https://x/icon.webp',
+        mock,
+      );
+      expect(out, isNull);
     });
 
     test('404 → null', () async {
