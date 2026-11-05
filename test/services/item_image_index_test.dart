@@ -229,6 +229,39 @@ void main() {
       );
     });
 
+    test('purgeNonImageFiles 只檢查圖片快取檔名，其他檔案與子目錄不碰', () async {
+      const html = '<!DOCTYPE html><html></html>';
+      await File('${tempDir.path}/1_illustration_x.webp').writeAsString(html);
+      await File('${tempDir.path}/2_icon.webp.tmp').writeAsString(html);
+      await File('${tempDir.path}/desktop.ini').writeAsString('[x]');
+      await Directory('${tempDir.path}/lang_catalog').create();
+      await File(
+        '${tempDir.path}/3_luckdraw.png',
+      ).writeAsBytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A]);
+
+      final removed = await storage.purgeNonImageFiles();
+
+      expect(removed, 1);
+      expect(
+        File('${tempDir.path}/1_illustration_x.webp').existsSync(),
+        isFalse,
+      );
+      expect(File('${tempDir.path}/2_icon.webp.tmp').existsSync(), isTrue);
+      expect(File('${tempDir.path}/desktop.ini').existsSync(), isTrue);
+      expect(Directory('${tempDir.path}/lang_catalog').existsSync(), isTrue);
+      expect(File('${tempDir.path}/3_luckdraw.png').existsSync(), isTrue);
+    });
+
+    test('purgeNonImageFiles 只執行一次（之後不再掃描）', () async {
+      const html = '<!DOCTYPE html><html></html>';
+      await File('${tempDir.path}/1_icon.webp').writeAsString(html);
+      expect(await storage.purgeNonImageFiles(), 1);
+
+      await File('${tempDir.path}/2_icon.webp').writeAsString(html);
+      expect(await storage.purgeNonImageFiles(), 0);
+      expect(File('${tempDir.path}/2_icon.webp').existsSync(), isTrue);
+    });
+
     test('wipeCacheDirectory 刪光圖檔並重建目錄', () async {
       await File('${tempDir.path}/1211_icon.png').writeAsBytes([1, 2, 3]);
       await File(

@@ -330,7 +330,9 @@ void main() {
           },
         ),
       );
-      await File('${dir.path}/1211_icon.png').writeAsBytes([1, 2, 3]);
+      await File(
+        '${dir.path}/1211_icon.png',
+      ).writeAsBytes([0x89, 0x50, 0x4E, 0x47, 1, 2, 3]);
 
       final c = ProviderContainer(
         overrides: [
@@ -432,4 +434,42 @@ void main() {
       expect(identical(container.read(itemImageIndexProvider), before), isTrue);
     });
   });
+
+  test('清壞檔失敗（例如目錄被鎖）不影響 index 載入', () async {
+    final dir = await Directory.systemTemp.createTemp('item_image_purge_fail_');
+    addTearDown(() async {
+      if (await dir.exists()) await dir.delete(recursive: true);
+    });
+    final storage = _ThrowingPurgeStorage(dir);
+    await storage.save(
+      const ItemImageIndex(
+        items: {
+          1211: ItemImageEntry(
+            iconUrl: 'https://x/card.png',
+            noImage: false,
+            permanentNoImage: false,
+          ),
+        },
+      ),
+    );
+    final c = ProviderContainer(
+      overrides: [
+        itemImageIndexStorageProvider.overrideWithValue(storage),
+        itemImageCacheDirProvider.overrideWithValue(dir),
+      ],
+    );
+    addTearDown(c.dispose);
+    await c.read(itemImageIndexProvider.notifier).waitForLoad();
+    expect(c.read(itemImageIndexProvider).items.keys, [1211]);
+  });
+}
+
+/// 清壞檔時一律丟例外的 storage，用來確認不會擋住 index 載入。
+class _ThrowingPurgeStorage extends ItemImageIndexStorage {
+  /// 建立 [_ThrowingPurgeStorage]。
+  _ThrowingPurgeStorage(super.baseDir);
+
+  @override
+  Future<int> purgeNonImageFiles() async =>
+      throw const FileSystemException('locked');
 }

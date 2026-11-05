@@ -235,15 +235,26 @@ class ItemImageIndexStorage {
     _log.info('clearAll: index reset to empty');
   }
 
-  /// 刪除 [baseDir] 內「內容不是圖片」的快取檔（例如 encore 回錯網址時存下的 HTML），
-  /// 回傳刪除數。刪掉後 [needsItemImageFetch] 會因檔案不存在而重新下載。
+  /// 已執行過 [purgeNonImageFiles] 的標記檔名（放在 [baseDir]）。
+  static const _purgedMarker = '.non_image_purged_v1';
+
+  /// 刪除 [baseDir] 內「內容不是圖片」的圖片快取檔（encore 改版期間存下的 HTML），回傳刪除數。
+  /// 刪掉後 [needsItemImageFetch] 會因檔案不存在而重新下載。
+  ///
+  /// 只檢查 icon／立繪／喚取立繪的檔名（`.tmp` 暫存檔、其他檔案與子目錄不碰），且只執行一次：
+  /// 完成後留下標記檔，之後直接回 0（下載端已會擋掉非圖片，不會再產生壞檔）。
   Future<int> purgeNonImageFiles() async {
-    if (!await baseDir.exists()) return 0;
+    final marker = File('${baseDir.path}/$_purgedMarker');
+    if (!await baseDir.exists() || await marker.exists()) return 0;
     var deleted = 0;
     await for (final entity in baseDir.list()) {
       if (entity is! File) continue;
       final path = entity.path;
-      if (path.endsWith('.json') || path.endsWith('.tmp')) continue;
+      final isImageCache =
+          path.contains('_icon.') ||
+          path.contains('_illustration') ||
+          path.contains('_luckdraw');
+      if (!isImageCache || path.endsWith('.tmp')) continue;
       try {
         final raf = await entity.open();
         final head = await raf.read(12);
@@ -255,6 +266,7 @@ class ItemImageIndexStorage {
         _log.warning('purgeNonImageFiles skip ${sanitizeFsPath(path)} err=$e');
       }
     }
+    await marker.writeAsString('');
     if (deleted > 0) {
       _log.warning(
         'purgeNonImageFiles: removed $deleted non-image cache files',
