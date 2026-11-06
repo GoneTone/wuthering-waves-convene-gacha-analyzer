@@ -115,7 +115,7 @@ Android 回報的語言帶 script code，格式是 `zh-Hant-TW`（Windows 是 `z
 
 ### 15. 手機版面會溢出（通用）
 
-桌面版的標題列（App 名稱、UID、更新按鈕排成一列）在約 400 dp 寬的手機上會溢出，側邊欄也會一直占掉寬度。這是子專案 3 的範圍。
+桌面版的標題列（App 名稱、UID、更新按鈕排成一列）在約 400 dp 寬的手機上會溢出，側邊欄也會一直占掉寬度。已在子專案 3 處理，見「七、手機版面」。
 
 ---
 
@@ -249,3 +249,41 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **ROG 手機閒置時可能自動進入「鎖定觸控模式」**，要雙指上滑才能解除，adb 做不到，需要人工操作。
 - **Android 13 模擬器要用 `-gpu host` 啟動**：用 `swiftshader_indirect`（即使加 `-feature -Vulkan`）時，一打開 Flutter App 模擬器就會 Segmentation fault；API 28／29 沒有這個問題。
 - **用 `settings put global development_settings_enabled 1` 開開發人員選項不完整**：設定 App 不會啟用開發人員選項相關的頁面，直接跳轉會找不到 Activity。測試時要用正規方式（連點版本號碼 7 次）。
+
+---
+
+## 七、手機版面（子專案 3）
+
+設計：`docs/superpowers/specs/2026-11-06-mobile-layout-design.md`。原則是**和桌面版一致，只做 RWD 和觸控調整**，不另做一套手機 UI。
+
+### 22. 什麼時候切成手機排版（通用）
+
+- 判斷集中在 `isCompactLayout()`（`lib/theme/layout.dart`），門檻 600 dp。**手機作業系統看短邊**，轉向時不會在兩種排版間跳來跳去，橫向仍是手機排版；**電腦作業系統只看寬度**，寬而矮的筆電視窗維持側欄，只有把視窗拉窄才切換（Windows 縮小視窗也能用手機排版，算是附帶好處）。
+- Windows 最小視窗寬度從 800 降到 360，才拉得到手機排版。
+- 個別元件依「自己拿到的寬度」切換（`LayoutBuilder`，例如紀錄表格在 600 dp 以下改成卡片、搜尋框獨占一行），不是看整個畫面。
+
+### 23. 各元件的手機版做法（通用）
+
+- **導覽**：側欄改成抽屜（漢堡選單），項目高 48 dp。標題列只留圖示、可縮到看不見的 App 名稱、帳號選單和更新鈕（改成圓形圖示鈕）。底部狀態列直向橫向都顯示，只隱藏團隊名稱和分隔線，按鈕 48 dp。
+- **紀錄表格**：窄寬度改成卡片列表，每張卡顯示名稱、類型、稀有度、時間（相對時間）、總抽數、保底內；排序改成「排序：xxx」按鈕叫出底部面板。
+- **對話框**：`AppDialog` 在手機上邊距 12 dp。物品詳情在手機橫向改成左右兩欄（左：說明與造型說明，右：立繪），避免立繪被壓扁。
+- **看圖**：觸控單擊不做事（避免誤觸），雙擊放大／還原，雙指縮放，長按叫出選單（取代右鍵），未放大時往下滑關閉。滑鼠行為維持桌面版（單擊縮放、右鍵選單）。
+- **觸控目標**：所有可點的東西至少 48 dp（捲動箭頭、拖曳把手、底部狀態列按鈕等），畫面上可以畫得比較小，但點擊範圍要夠。
+- **文字會變長**：日文、英文和放大字級（1.3 倍）下都要測，單行資訊用一段 `Text.rich` 加省略號，不要用多個 `Text` 排一列。
+
+### 24. 實機才發現的問題（通用，2026-11-06，ASUS ROG Phone 1080×2400）
+
+- **抽屜開著按返回會直接離開 App**：Android 16 的預測返回只看頁面堆疊，抽屜不是一個頁面，所以系統以為可以直接結束。要用 `PopScope` 在抽屜開著時宣告「由 App 處理返回」，收到後關抽屜。
+- **底部面板跑到標題列和狀態列下面**：頁面放在 go_router `ShellRoute` 的巢狀 Navigator 裡，`showModalBottomSheet` 要加 `useRootNavigator: true` 才會蓋住整個 App。
+- **橫向開鍵盤後內容幾乎看不到**：橫向高度只剩約 390 dp，鍵盤再占掉一半，底部狀態列也還在。鍵盤開著（`viewInsets.bottom > 0`）時隱藏底部狀態列。
+- **關掉對話框後鍵盤又跳出來**：Flutter 在手機上點文字欄位外部**不會**收焦點（桌面會）。按返回收起鍵盤後欄位仍有焦點，之後開任何對話框再關掉，焦點回到欄位、鍵盤就跳出來；「失焦才儲存」的帳號別名欄位也因此一直沒存。處理：在 `MaterialApp.actions` 覆寫 `EditableTextTapOutsideIntent`，任何裝置點外部都收焦點（`appActions`）。
+- **滑鼠按久一點會叫出長按選單**：長按只給觸控與觸控筆（`GestureDetector(supportedDevices: ...)`），否則桌面上按住再放開會跳選單而不是縮放。
+- **`InteractiveViewer` 開了雙指縮放，滑鼠滾輪也會一起縮放**，而且每一格疊加到約 1.8 倍：設 `scaleFactor: double.infinity` 關掉它自己的滾輪縮放，保留我們原本的滾輪處理。
+- **帳號選單被壓窄**：手機上標題列的帳號按鈕很窄，選單預設跟按鈕一樣寬，別名和 UID 都被截掉。改成至少和按鈕一樣寬、最多 336 dp。
+
+### 25. 測試手機版面的方法（通用）
+
+- 用 `TargetPlatformVariant.only(TargetPlatform.android)` 指定平台；直接設 `debugDefaultTargetPlatformOverride` 再 `addTearDown` 還原，會在測試結束的檢查時失敗。
+- 字級用 `tester.platformDispatcher.textScaleFactorTestValue`，鍵盤用 `tester.view.viewInsets = FakeViewPadding(bottom: ...)` 模擬。
+- `tester.takeException()` 只回傳溢出的摘要，看不出是哪個元件；要找來源時先拿掉 `takeException`，讓測試印出完整的 render tree。
+- 實機轉向：`adb shell cmd window user-rotation lock 1`（橫向），測完用 `cmd window user-rotation free`，並把 `settings` 的 `accelerometer_rotation` 改回 1。只改 `settings put system user_rotation` 有時不會立刻轉。
