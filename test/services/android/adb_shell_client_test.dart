@@ -161,4 +161,27 @@ void main() {
       await client.close();
     },
   );
+
+  test('keeps a minimum gap between shell streams', () async {
+    final starts = <int>[];
+    final ends = <int>[];
+    final sw = Stopwatch()..start();
+    final s = _FakeSession(
+      1,
+      reply: (c) {
+        starts.add(sw.elapsedMilliseconds);
+        ends.add(sw.elapsedMilliseconds);
+        return 'uid=2000';
+      },
+    );
+    final client = AdbShellClient(
+      connect: (_) async => s,
+      minGap: const Duration(milliseconds: 60),
+    );
+    await client.connectAny([1]);
+    await client.exec('a');
+    await client.exec('b');
+    expect(starts[1] - ends[0], greaterThanOrEqualTo(55), reason: 'id → a');
+    expect(starts[2] - ends[1], greaterThanOrEqualTo(55), reason: 'a → b');
+  });
 }

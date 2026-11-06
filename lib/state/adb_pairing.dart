@@ -60,12 +60,26 @@ class AdbPairingController extends Notifier<AdbPairingState> {
   /// 本流程的 logger。
   static final _log = Logger('capture.pairing');
 
-  /// 系統功能。
-  LogAccessPlatform get _platform => ref.read(logAccessPlatformProvider);
+  /// 系統功能（build 時取得，流程途中 provider 被回收也能安全使用）。
+  late LogAccessPlatform _platform;
+
+  /// 配對與連線操作。
+  late AdbPairingOps _ops;
+
+  /// 用來找連接埠的 resolver。
+  late LogAccessResolver _resolver;
+
+  /// 切換階段；玩家已離開設定頁（provider 已回收）時忽略。
+  void _go(PairingPhase phase) {
+    if (ref.mounted) state = state.to(phase);
+  }
 
   @override
   AdbPairingState build() {
     final platform = ref.read(logAccessPlatformProvider);
+    _platform = platform;
+    _ops = ref.read(adbPairingOpsProvider);
+    _resolver = ref.read(logAccessResolverProvider);
     platform.setPairingCodeHandler(handlePairingCode);
     ref.onDispose(() {
       platform.setPairingCodeHandler(null);
@@ -77,15 +91,16 @@ class AdbPairingController extends Notifier<AdbPairingState> {
   /// 玩家在說明頁按「開始設定」。
   Future<void> startSetup() async {
     _log.info('setup started');
-    state = state.to(PairingPhase.needDevOptions);
+    _go(PairingPhase.needDevOptions);
     await refresh();
   }
 
   /// 從設定頁「重試授權」進入：直接到授權步驟。
-  void startAtGrant() => state = state.to(PairingPhase.grantFailed);
+  void startAtGrant() => _go(PairingPhase.grantFailed);
 
   /// 依目前系統狀態更新階段（頁面回到前景時呼叫）；配對服務停了（逾時）就重新啟動。
   Future<void> refresh() async {
+    if (!ref.mounted) return;
     final phase = state.phase;
     if (phase
         case PairingPhase.disclosure ||
@@ -96,11 +111,11 @@ class AdbPairingController extends Notifier<AdbPairingState> {
       return;
     }
     if (!await _platform.isDevelopmentSettingsEnabled()) {
-      state = state.to(PairingPhase.needDevOptions);
+      _go(PairingPhase.needDevOptions);
       return;
     }
     if (!await _platform.areNotificationsEnabled()) {
-      state = state.to(PairingPhase.needNotifications);
+      _go(PairingPhase.needNotifications);
       return;
     }
     if (phase == PairingPhase.waitingCode) {
@@ -110,7 +125,7 @@ class AdbPairingController extends Notifier<AdbPairingState> {
       }
       return;
     }
-    state = state.to(PairingPhase.ready);
+    _go(PairingPhase.ready);
   }
 
   /// 請求通知權限；被拒絕時記下來，畫面改為引導到 App 通知設定。
@@ -118,7 +133,9 @@ class AdbPairingController extends Notifier<AdbPairingState> {
     final granted = await _platform.requestNotificationPermission();
     _log.info('notification permission granted=$granted');
     if (!granted) {
-      state = AdbPairingState(state.phase, notificationsDenied: true);
+      if (ref.mounted) {
+        state = AdbPairingState(state.phase, notificationsDenied: true);
+      }
       return;
     }
     await refresh();
@@ -128,7 +145,7 @@ class AdbPairingController extends Notifier<AdbPairingState> {
   Future<void> openWirelessDebugging() async {
     await _platform.startPairingService();
     await _platform.openWirelessDebugging();
-    state = state.to(PairingPhase.waitingCode);
+    _go(PairingPhase.waitingCode);
   }
 
   /// 配對服務收到配對碼時呼叫：配對、連線並授權自己開關無線偵錯。回傳給通知顯示的結果（不含配對碼）。
@@ -136,11 +153,11 @@ class AdbPairingController extends Notifier<AdbPairingState> {
     int port,
     String code,
   ) async {
-    state = state.to(PairingPhase.pairing);
-    final ok = await ref.read(adbPairingOpsProvider).pair(port, code);
+    _go(PairingPhase.pairing);
+    final ok = await _ops.pair(port, code);
     _log.info('pairing ok=$ok');
     if (!ok) {
-      state = state.to(PairingPhase.waitingCode);
+      _go(PairingPhase.waitingCode);
       return (ok: false, message: 'pairing failed');
     }
     await _grant();
@@ -149,29 +166,26 @@ class AdbPairingController extends Notifier<AdbPairingState> {
 
   /// 授權失敗後，玩家開了安全性選項再試一次。
   Future<void> retryGrant() async {
-    state = state.to(PairingPhase.pairing);
+    _go(PairingPhase.pairing);
     await _grant();
   }
 
   /// 玩家略過授權：之後每次更新手動開啟無線偵錯。
   void skipGrant() {
     _log.info('grant skipped, manual toggle mode');
-    state = state.to(PairingPhase.doneManual);
+    _go(PairingPhase.doneManual);
   }
 
   /// 連上無線偵錯並授權自己 `WRITE_SECURE_SETTINGS`，依結果進入完成或授權失敗。
   Future<void> _grant() async {
     final platform = _platform;
     if (await platform.hasWriteSecureSettings()) {
-      state = state.to(PairingPhase.done);
+      _go(PairingPhase.done);
       return;
     }
-    final ops = ref.read(adbPairingOpsProvider);
-    final client = AdbShellClient(connect: ops.connect);
+    final client = AdbShellClient(connect: _ops.connect);
     try {
-      final ports = await ref
-          .read(logAccessResolverProvider)
-          .discoverConnectPorts();
+      final ports = await _resolver.discoverConnectPorts();
       if (await client.connectAny(ports)) {
         await client.exec(grantWriteSecureSettingsCommand);
       } else {
@@ -184,7 +198,7 @@ class AdbPairingController extends Notifier<AdbPairingState> {
     }
     final granted = await platform.hasWriteSecureSettings();
     _log.info('write secure settings granted=$granted');
-    state = state.to(granted ? PairingPhase.done : PairingPhase.grantFailed);
+    _go(granted ? PairingPhase.done : PairingPhase.grantFailed);
   }
 }
 

@@ -5,6 +5,8 @@
     <uses-permission
         android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions"/>
+    <!-- 判斷是否連著 Wi‑Fi（無線偵錯只能在 Wi‑Fi 下使用）。 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <!-- Android 10 以下直接讀其他 App 的 Android/data。 -->

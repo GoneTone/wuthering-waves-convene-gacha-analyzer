@@ -141,6 +141,9 @@ void main() {
   });
   tearDown(() => c.dispose());
 
+  // 頁面在畫面上時會一直監聽；測試同樣保持監聽，避免 autoDispose 在流程途中回收。
+  setUp(() => c.listen(adbPairingProvider, (_, _) {}));
+
   AdbPairingController ctl() => c.read(adbPairingProvider.notifier);
   PairingPhase phase() => c.read(adbPairingProvider).phase;
 

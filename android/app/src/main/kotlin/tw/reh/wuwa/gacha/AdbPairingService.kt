@@ -74,8 +74,9 @@ class AdbPairingService : Service() {
             ACTION_REPLY -> {
                 // 回覆經 getForegroundService 送達，必須再呼叫一次 startForeground。
                 goForeground(simple(getString(R.string.pairing_in_progress), null))
+                // 通知輸入框無法指定數字鍵盤，注音等輸入法可能夾帶組字殘留，只保留數字。
                 val code = RemoteInput.getResultsFromIntent(intent)
-                    ?.getCharSequence(KEY_CODE)?.toString()?.trim().orEmpty()
+                    ?.getCharSequence(KEY_CODE)?.toString().orEmpty().filter { it.isDigit() }
                 onCode(intent.getIntExtra(EXTRA_PORT, port), code)
             }
             ACTION_STOP -> finish(keepNotification = false)

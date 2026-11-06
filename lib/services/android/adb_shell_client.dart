@@ -40,11 +40,21 @@ class AdbShellClient {
     required AdbConnector connect,
     Future<List<int>> Function()? rediscover,
     this.retryDelay = const Duration(milliseconds: 300),
+    this.minGap = const Duration(milliseconds: 250),
   }) : _connect = connect,
        _rediscover = rediscover;
 
   /// 失敗後重試前等待的時間。
   final Duration retryDelay;
+
+  /// 兩個 shell 串流之間至少間隔多久。
+  ///
+  /// 前一個串流剛結束就開下一個，`flutter_adb` 常會等滿 10 秒才回 `Stream open failed`
+  /// （實機上連上後的第一條指令就踩到），所以每條指令前先補足間隔。
+  final Duration minGap;
+
+  /// 上一個 shell 串流結束的時間。
+  final _sinceLast = Stopwatch();
 
   /// 連線函式。
   final AdbConnector _connect;
@@ -83,7 +93,10 @@ class AdbShellClient {
           _log.info('adb connect refused port=$port');
           continue;
         }
-        final id = utf8.decode(await session.shell('id'), allowMalformed: true);
+        final id = utf8.decode(
+          await _shell(session, 'id'),
+          allowMalformed: true,
+        );
         if (id.contains('uid=2000')) {
           await _session?.close();
           _session = session;
@@ -116,13 +129,13 @@ class AdbShellClient {
     final session = _session;
     if (session != null) {
       try {
-        return await session.shell(command);
+        return await _shell(session, command);
       } catch (e) {
         _log.info('adb shell failed, retrying error=${e.runtimeType}');
       }
       await Future<void>.delayed(retryDelay);
       try {
-        return await session.shell(command);
+        return await _shell(session, command);
       } catch (e) {
         _log.warning('adb shell retry failed error=${e.runtimeType}');
       }
@@ -136,9 +149,24 @@ class AdbShellClient {
       throw AdbShellException('reconnect failed ports=${ports.length}');
     }
     try {
-      return await _session!.shell(command);
+      return await _shell(_session!, command);
     } catch (e) {
       throw AdbShellException('shell failed after reconnect ${e.runtimeType}');
+    }
+  }
+
+  /// 補足與上一個串流的間隔後在 [session] 執行 [command]。
+  Future<Uint8List> _shell(AdbSession session, String command) async {
+    if (_sinceLast.isRunning) {
+      final wait = minGap - _sinceLast.elapsed;
+      if (wait > Duration.zero) await Future<void>.delayed(wait);
+    }
+    try {
+      return await session.shell(command);
+    } finally {
+      _sinceLast
+        ..reset()
+        ..start();
     }
   }
 
