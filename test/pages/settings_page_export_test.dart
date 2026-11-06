@@ -19,6 +19,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http
 import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
@@ -27,7 +28,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/log_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import '../helpers/no_game_dir.dart';
 
 /// 空 [GachaCapture] 替身。
