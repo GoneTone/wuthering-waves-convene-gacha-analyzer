@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +13,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/pages/settings_page.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
@@ -76,6 +79,7 @@ void main() {
   });
 
   tearDown(() async {
+    resetFileAccessSeams();
     if (await tempDir.exists()) await tempDir.delete(recursive: true);
   });
 
@@ -183,4 +187,72 @@ void main() {
       reason: 'progress 非 null 時其他平台匯入按鈕應 disabled',
     );
   });
+
+  /// 以 [bytes] 當選檔內容，點擊 [buttonText] 並等流程跑完。
+  Future<void> tapImportWith(
+    WidgetTester tester,
+    Uint8List bytes,
+    String buttonText,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    late ProviderContainer container;
+    await tester.runAsync(() async {
+      container = await _setupContainer(
+        storage: GachaStorage(tempDir),
+        tempDir: tempDir,
+      );
+    });
+    addTearDown(container.dispose);
+    fileOpenDialog = (_) async => bytes;
+
+    await tester.pumpWidget(_wrap(container));
+    await tester.pump();
+    final btn = find.widgetWithText(OutlinedButton, buttonText);
+    await tester.ensureVisible(btn);
+    await tester.tap(btn);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+
+  testWidgets(
+    'importing a backup with invalid UTF-8 shows the unreadable message',
+    (tester) async {
+      await tapImportWith(
+        tester,
+        Uint8List.fromList([0xff, 0xfe, 0xfd]),
+        '匯入資料',
+      );
+
+      expect(find.textContaining('無法讀取'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'importing reads Chinese aliases correctly through pickTextFile',
+    (tester) async {
+      final json = jsonEncode({
+        'schema_version': 2,
+        'app': 'wuthering_waves_convene_gacha_analyzer',
+        'exported_at': '2026-05-12T08:30:00.000Z',
+        'app_version': '1.0.0',
+        'last_active_uid': null,
+        'accounts': [
+          {
+            'player_id': '100000001',
+            'alias': '我的帳號',
+            'language_code': 'zh-Hant',
+            'last_updated': '2026-05-12T08:30:00.000Z',
+            'banners': {'1': []},
+          },
+        ],
+      });
+      await tapImportWith(
+        tester,
+        Uint8List.fromList(utf8.encode(json)),
+        '匯入資料',
+      );
+
+      expect(find.textContaining('我的帳號'), findsOneWidget);
+    },
+  );
 }

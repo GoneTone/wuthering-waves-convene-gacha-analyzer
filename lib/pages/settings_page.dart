@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -784,16 +783,9 @@ class _DataManagement extends ConsumerWidget {
   /// 匯入帳號資料：讀取 JSON、讓使用者選取帳號與確認後寫入 repository。
   Future<void> _import(BuildContext ctx, WidgetRef ref) async {
     final l = AppLocalizations.of(ctx)!;
-    final file = await openFile(
-      acceptedTypeGroups: const [
-        XTypeGroup(label: 'JSON', extensions: ['json']),
-      ],
-    );
-    if (file == null) return;
-
-    final String text;
+    final String? text;
     try {
-      text = await file.readAsString();
+      text = await pickTextFile(extensions: const ['json']);
     } catch (e, st) {
       Logger(
         'accounts.io',
@@ -802,6 +794,7 @@ class _DataManagement extends ConsumerWidget {
       _showSnack(ctx, l.settingsImportFailed(l.importReasonUnreadable));
       return;
     }
+    if (text == null) return;
 
     final AccountsBundle bundle;
     try {
@@ -940,16 +933,9 @@ class _DataManagement extends ConsumerWidget {
     if (platform == null) return;
     if (!ctx.mounted) return;
 
-    final file = await openFile(
-      acceptedTypeGroups: [
-        XTypeGroup(label: 'JSON', extensions: platform.fileExtensions),
-      ],
-    );
-    if (file == null) return;
-
-    final String text;
+    final String? text;
     try {
-      text = await file.readAsString();
+      text = await pickTextFile(extensions: platform.fileExtensions);
     } catch (e, st) {
       Logger(
         'wish.import.platform',
@@ -958,6 +944,7 @@ class _DataManagement extends ConsumerWidget {
       _showSnack(ctx, l.settingsImportFailed(l.importReasonUnreadable));
       return;
     }
+    if (text == null) return;
 
     final nameResolver = await _buildEncoreNameResolver(ref);
     if (!ctx.mounted) return;

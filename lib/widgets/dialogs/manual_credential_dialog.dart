@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +8,7 @@ import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_credential.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
@@ -28,12 +28,6 @@ Future<void> showManualCredentialDialog(
   context: context,
   builder: (_) => _ManualCredentialDialog(pickClientLog: pickClientLog),
 );
-
-/// 用系統選檔視窗選一個檔案並讀出內容；使用者取消時回 null。
-Future<Uint8List?> _pickFileBytes() async {
-  final file = await openFile();
-  return file?.readAsBytes();
-}
 
 /// 手動輸入對話框實作。
 class _ManualCredentialDialog extends ConsumerStatefulWidget {
@@ -92,7 +86,7 @@ class _ManualCredentialDialogState
     final l = AppLocalizations.of(context)!;
     final Uint8List? bytes;
     try {
-      bytes = await (widget.pickClientLog ?? _pickFileBytes)();
+      bytes = await (widget.pickClientLog ?? pickFileBytes)();
     } catch (e) {
       _log.warning('manual input file read failed error=${e.runtimeType}');
       if (mounted) setState(() => _error = l.manualCredentialNotFoundInLog);
