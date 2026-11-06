@@ -1,12 +1,15 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 
 void main() {
-  tearDown(resetFileAccessSeams);
+  tearDown(() {
+    resetFileAccessSeams();
+    debugDefaultTargetPlatformOverride = null;
+  });
 
   final bytes = Uint8List.fromList([1, 2, 3]);
 
@@ -26,20 +29,32 @@ void main() {
   );
 
   test('saveBytes on desktop returns the file path and its basename', () async {
-    fileSaveDialog = (_, _, _, _, _) async => Uri.file(r'C:\tmp\a.json');
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    fileSaveDialog = (_, _, _, _, _) async => r'C:\tmp\a.json';
     final saved = await save();
-    expect(saved!.path, Uri.file(r'C:\tmp\a.json').toFilePath());
+    expect(saved!.path, r'C:\tmp\a.json');
     expect(saved.displayName, 'a.json');
   });
 
   test('saveBytes on Android returns no path', () async {
-    fileSaveDialog = (_, _, _, _, _) async => Uri.parse(
-      'content://com.android.externalstorage.documents/document/primary%3ADownload%2Fa.json',
-    );
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    fileSaveDialog = (_, _, _, _, _) async =>
+        '/document/primary:Download/a.json';
     final saved = await save();
     expect(saved!.path, isNull);
     expect(saved.displayName, 'a.json');
   });
+
+  test(
+    'saveBytes on Android falls back to the suggested name for opaque ids',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      fileSaveDialog = (_, _, _, _, _) async => '/document/msf:1234';
+      final saved = await save();
+      expect(saved!.path, isNull);
+      expect(saved.displayName, 'wuwa.json');
+    },
+  );
 
   test('saveBytes passes the dialog title through', () async {
     String? title;
@@ -58,29 +73,11 @@ void main() {
   });
 
   test(
-    'displayNameForSavedUri falls back to the suggested name when the uri has no file name',
+    'displayNameForSavedPath falls back when the extension does not match',
     () {
-      final uri = Uri.parse(
-        'content://com.android.providers.downloads.documents/document/msf%3A1234',
-      );
       expect(
-        displayNameForSavedUri(
-          uri,
-          suggestedName: 'wuwa.json',
-          extension: 'json',
-        ),
-        'wuwa.json',
-      );
-    },
-  );
-
-  test(
-    'displayNameForSavedUri falls back when the extension does not match',
-    () {
-      final uri = Uri.parse('content://x/document/primary%3ADownload%2Fa.txt');
-      expect(
-        displayNameForSavedUri(
-          uri,
+        displayNameForSavedPath(
+          '/document/primary:Download/a.txt',
           suggestedName: 'wuwa.json',
           extension: 'json',
         ),

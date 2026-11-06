@@ -12,7 +12,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dar
 /// 檔案存取（存檔／分享／剪貼簿／選檔）流程的 logger。
 final _log = Logger('io.file');
 
-/// 存檔結果：[displayName] 給成功訊息顯示；[path] 只在桌面（`file:` Uri）有值。
+/// 存檔結果：[displayName] 給成功訊息顯示；[path] 只在桌面有值。
 class SavedFile {
   /// 建立存檔結果。
   const SavedFile({required this.displayName, this.path});
@@ -20,13 +20,13 @@ class SavedFile {
   /// 顯示給使用者看的檔名。
   final String displayName;
 
-  /// 桌面的實際檔案路徑；Android（`content:` Uri）為 null。
+  /// 桌面的實際檔案路徑；Android 為 null。
   final String? path;
 }
 
-/// 開啟系統存檔對話框並寫入 bytes，回傳使用者選的 Uri（取消為 null）。
+/// 開啟系統存檔對話框並寫入 bytes，回傳 file_picker 給的原始字串（取消為 null）。
 typedef FileSaveDialog =
-    Future<Uri?> Function(
+    Future<String?> Function(
       Uint8List bytes,
       String suggestedName,
       String extension,
@@ -44,24 +44,21 @@ typedef DirectoryDialog = Future<String?> Function();
 typedef FileSharer =
     Future<void> Function(Uint8List bytes, String fileName, String mimeType);
 
-/// 預設存檔對話框：file_picker 在桌面回傳選擇路徑、Android 回傳 `content:` Uri 字串。
-Future<Uri?> _defaultSaveDialog(
+/// 預設存檔對話框：桌面回傳選擇路徑；Android 回傳 content Uri 去掉 scheme 的路徑
+/// （如 `/document/primary:Download/a.json`）。
+Future<String?> _defaultSaveDialog(
   Uint8List bytes,
   String suggestedName,
   String extension,
   String mimeType,
   String? dialogTitle,
-) async {
-  final result = await FilePicker.saveFile(
-    dialogTitle: dialogTitle,
-    fileName: suggestedName,
-    bytes: bytes,
-    type: FileType.custom,
-    allowedExtensions: [extension],
-  );
-  if (result == null) return null;
-  return result.startsWith('content:') ? Uri.parse(result) : Uri.file(result);
-}
+) => FilePicker.saveFile(
+  dialogTitle: dialogTitle,
+  fileName: suggestedName,
+  bytes: bytes,
+  type: FileType.custom,
+  allowedExtensions: [extension],
+);
 
 /// 預設選檔對話框；拿不到 bytes 時退回讀 path。
 Future<Uint8List?> _defaultOpenDialog(List<String>? extensions) async {
@@ -143,9 +140,9 @@ Future<SavedFile?> saveBytes(
   required String mimeType,
   String? dialogTitle,
 }) async {
-  final Uri? uri;
+  final String? saved;
   try {
-    uri = await fileSaveDialog(
+    saved = await fileSaveDialog(
       bytes,
       suggestedName,
       extension,
@@ -156,33 +153,30 @@ Future<SavedFile?> saveBytes(
     _log.severe('save failed name=$suggestedName mime=$mimeType', e, st);
     rethrow;
   }
-  if (uri == null) {
+  if (saved == null) {
     _log.info('save cancelled name=$suggestedName');
     return null;
   }
-  final isFile = uri.scheme == 'file';
-  final saved = SavedFile(
-    displayName: displayNameForSavedUri(
-      uri,
-      suggestedName: suggestedName,
-      extension: extension,
-    ),
-    path: isFile ? uri.toFilePath() : null,
+  final displayName = displayNameForSavedPath(
+    saved,
+    suggestedName: suggestedName,
+    extension: extension,
   );
+  final isAndroid = defaultTargetPlatform == TargetPlatform.android;
   _log.info(
-    'save ok target=${isFile ? sanitizeFsPath(saved.path!) : '${uri.scheme}://${uri.authority}'} bytes=${bytes.length}',
+    'save ok name=$displayName ${isAndroid ? '' : 'path=${sanitizeFsPath(saved)} '}bytes=${bytes.length}',
   );
-  return saved;
+  return SavedFile(displayName: displayName, path: isAndroid ? null : saved);
 }
 
-/// 從存檔 Uri 取出顯示檔名；取不到或副檔名不符（如 `msf:1234`）時退回 [suggestedName]。
-String displayNameForSavedUri(
-  Uri uri, {
+/// 從存檔結果字串取出顯示檔名（最後一個分隔符之後）；副檔名不符
+/// （如 Downloads provider 的 `/document/msf:1234`）時退回 [suggestedName]。
+String displayNameForSavedPath(
+  String saved, {
   required String suggestedName,
   required String extension,
 }) {
-  final last = uri.pathSegments.isEmpty ? '' : uri.pathSegments.last;
-  final name = last.substring(last.lastIndexOf(RegExp(r'[/\:]')) + 1);
+  final name = saved.substring(saved.lastIndexOf(RegExp(r'[/\\]')) + 1);
   return name.toLowerCase().endsWith('.${extension.toLowerCase()}')
       ? name
       : suggestedName;
