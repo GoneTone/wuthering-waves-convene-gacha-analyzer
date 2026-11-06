@@ -41,9 +41,9 @@ Size computeDefaultWindowSize(Size workArea, {double margin = _kMargin}) {
     raw = Size(w - margin, h - margin);
   }
 
-  // 兩個維度都低於最小尺寸 → 視為螢幕太小，fallback 到 min。
+  // 兩個維度都低於保底尺寸 → 視為螢幕太小，退回保底尺寸 800×450。
   // 單一維度低於（例如 portrait 螢幕 9:16 寬度<800）則保留比例信任公式，
-  // 由 setMinimumSize 在使用者拖拉時提供下限保護。
+  // 使用者拖拉的下限另由 setMinimumSize（[kMinWindowSize]）保護。
   if (raw.width < _kFallbackWindowSize.width &&
       raw.height < _kFallbackWindowSize.height) {
     return _kFallbackWindowSize;

@@ -256,7 +256,7 @@ class _RowState extends State<_Row> {
                 cursor: SystemMouseCursors.resizeUpDown,
                 // 手機排版時把手的觸控區放大到 48dp，圖示大小不變。
                 child: SizedBox.square(
-                  dimension: isCompactLayout(context) ? 48 : null,
+                  dimension: compact ? 48 : null,
                   child: Icon(
                     Icons.drag_handle,
                     color: tokens.textMuted,
