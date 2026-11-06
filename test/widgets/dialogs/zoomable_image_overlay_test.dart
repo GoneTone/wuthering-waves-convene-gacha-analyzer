@@ -773,6 +773,19 @@ void main() {
       expect(currentScale(tester), 1.0);
     });
 
+    testWidgets('landscape notch keeps the image out of the cutout', (
+      tester,
+    ) async {
+      // showDialog 預設 useSafeArea，瀏海那一側的邊距要算在 8dp 之外。
+      tester.view.physicalSize = const Size(800, 360);
+      tester.view.devicePixelRatio = 1;
+      tester.view.padding = const FakeViewPadding(left: 44);
+      tester.view.viewPadding = const FakeViewPadding(left: 44);
+      addTearDown(tester.view.reset);
+      await openOverlay(tester);
+      expect(tester.getRect(find.byType(InteractiveViewer)).left, 44 + 8);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
     testWidgets('phone padding is 8', (tester) async {
       tester.view.physicalSize = const Size(360, 800);
       tester.view.devicePixelRatio = 1;
