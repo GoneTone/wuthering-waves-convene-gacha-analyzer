@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
+
 /// Dialog 寬度語意尺寸。
 ///
 /// 三檔對應的最大內容寬：sm = 480、md = 640、lg = 720。
@@ -31,6 +33,8 @@ enum AppDialogSize {
 ///   （標題內的長文字會在此寬度內換行，不會把 dialog 撐寬）
 /// - 高：`min(maxHeight ?? 720, mq.size.height - 120)`（透過
 ///   `AlertDialog.constraints` 設定）
+/// - 手機排版（[isCompactLayout]）時四周只留 [_compactInset]：寬
+///   `min(size.maxWidth, mq.size.width - 24)`、高 `min(maxHeight ?? 720, mq.size.height - 24)`
 ///
 /// 整體需要捲動時設 `scrollable: true`；內容已自帶捲動元件（`ListView` 等）
 /// 維持預設 `false` 避免雙層捲動衝突。
@@ -70,12 +74,22 @@ class AppDialog extends StatelessWidget {
   /// `mq.size.height - 120` 限制，小視窗下會自動 fit。
   final double? maxHeight;
 
+  /// 手機排版時 dialog 四周的留白（dp）。
+  static const double _compactInset = 12;
+
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    final dialogWidth = math.min(size.maxWidth, mq.size.width - 80);
+    final compact = isCompactLayout(context);
+    final dialogWidth = math.min(
+      size.maxWidth,
+      mq.size.width - (compact ? _compactInset * 2 : 80),
+    );
     final ceiling = maxHeight ?? 720.0;
-    final dialogMaxHeight = math.min(ceiling, mq.size.height - 120);
+    final dialogMaxHeight = math.min(
+      ceiling,
+      mq.size.height - (compact ? _compactInset * 2 : 120),
+    );
 
     Widget body = SizedBox(width: dialogWidth, child: content);
     if (scrollable) {
@@ -83,6 +97,7 @@ class AppDialog extends StatelessWidget {
     }
 
     return AlertDialog(
+      insetPadding: compact ? const EdgeInsets.all(_compactInset) : null,
       constraints: BoxConstraints(maxHeight: dialogMaxHeight),
       // title 與 content 同鎖 dialogWidth：避免標題內的長文字（如詳情 dialog 的
       // 簡介 Html）以 intrinsic 單行寬度把整個 dialog 撐寬，而非在寬度內換行。
