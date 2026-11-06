@@ -22,6 +22,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/log_access_section.dart';
 import '../helpers/no_game_dir.dart';
 
 /// 空 [GachaCapture] 替身。
@@ -126,6 +127,20 @@ void main() {
     expect(find.text(l.settingsGameDir), findsNothing);
     expect(find.text(l.logAccessMethodWireless), findsOneWidget);
     expect(find.text(l.settingsPaired), findsOneWidget);
+  });
+
+  testWidgets('values are aligned to the end of the row', (tester) async {
+    final (_, l) = await pump(
+      tester,
+      method: LogAccessMethod.wirelessDebugging,
+    );
+    final sectionRight = tester.getTopRight(find.byType(LogAccessSection)).dx;
+    for (final value in [l.logAccessMethodWireless, l.settingsPaired]) {
+      expect(
+        tester.getTopRight(find.text(value)).dx,
+        moreOrLessEquals(sectionRight, epsilon: 1),
+      );
+    }
   });
 
   testWidgets('windows hides log access section', (tester) async {

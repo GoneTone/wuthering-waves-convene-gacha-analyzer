@@ -148,7 +148,7 @@ class _Row extends StatelessWidget {
       children: [
         Expanded(child: Text(label)),
         const SizedBox(width: AppSpacing.s),
-        Flexible(
+        Expanded(
           child: Text(
             value,
             textAlign: TextAlign.end,
