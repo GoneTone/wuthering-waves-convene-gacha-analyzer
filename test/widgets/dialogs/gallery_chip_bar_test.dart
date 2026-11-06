@@ -150,4 +150,23 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('phone arrows get room for their 48dp targets', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _wrap(
+        GalleryChipBar(
+          labels: const ['A', 'B', 'C'],
+          selectedIndex: 1,
+          onSelected: (_) {},
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    for (final arrow in find.byType(ScrollArrowButton).evaluate()) {
+      expect(tester.getSize(find.byWidget(arrow.widget)).width, 48);
+    }
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 }
