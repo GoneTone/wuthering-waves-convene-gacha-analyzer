@@ -405,10 +405,14 @@
     "description": "Button that clears the manually set game folder"
   },
   "settingsCloudSync": "Cloud sync",
-  "cloudSyncIntro": "Link your Google account to automatically back up convene records to your Google Drive and keep multiple computers in sync.",
+  "cloudSyncIntro": "Link your Google account to automatically back up convene records to your Google Drive and keep multiple devices in sync.",
   "cloudSyncUnconfigured": "This build has no Google OAuth credentials configured; cloud sync is unavailable.",
   "cloudSyncLink": "Link Google account",
   "cloudSyncAwaitingConsent": "Browser opened. Please finish authorization in your browser...",
+  "cloudSyncAwaitingConsentAndroid": "Please finish authorization in the Google window...",
+  "@cloudSyncAwaitingConsentAndroid": {
+    "description": "Hint shown on Android while the Google account/consent sheet is open"
+  },
   "cloudSyncLinkedAs": "Linked: {email}",
   "@cloudSyncLinkedAs": {
     "placeholders": {

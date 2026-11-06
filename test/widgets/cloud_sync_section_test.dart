@@ -10,11 +10,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/cloud_sync_section.dart';
 
@@ -35,37 +37,43 @@ void main() {
     if (await tempDir.exists()) await tempDir.delete(recursive: true);
   });
 
-  Widget wrap({GoogleAuthService? auth, VoidCallback? onForeground}) =>
-      ProviderScope(
-        overrides: [
-          appVersionProvider.overrideWithValue('1.5.0'),
-          noGameDirOverride,
-          gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
-          gachaCaptureProvider.overrideWithValue(FakeCapture()),
-          cancellableHttpClientFactoryProvider.overrideWithValue(
-            () => CancellableHttpClient(
-              client: MockClient((_) async => http.Response('', 500)),
-              cancel: () {},
-            ),
-          ),
-          tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
-          if (auth != null) googleAuthServiceProvider.overrideWithValue(auth),
-          cloudSyncRemoteFactoryProvider.overrideWithValue((_) => FakeRemote()),
-          cloudSyncUrlOpenerProvider.overrideWithValue((_) {}),
-          windowForegroundProvider.overrideWithValue(() async {
-            onForeground?.call();
-          }),
-        ],
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          theme: buildDarkTheme(),
-          home: const Scaffold(
-            body: SingleChildScrollView(child: CloudSyncSection()),
-          ),
+  Widget wrap({
+    GoogleAuthService? auth,
+    VoidCallback? onForeground,
+    bool android = false,
+    CloudAuth? cloudAuth,
+  }) => ProviderScope(
+    overrides: [
+      if (android) isAndroidProvider.overrideWithValue(true),
+      if (cloudAuth != null) cloudAuthProvider.overrideWithValue(cloudAuth),
+      appVersionProvider.overrideWithValue('1.5.0'),
+      noGameDirOverride,
+      gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
+      gachaCaptureProvider.overrideWithValue(FakeCapture()),
+      cancellableHttpClientFactoryProvider.overrideWithValue(
+        () => CancellableHttpClient(
+          client: MockClient((_) async => http.Response('', 500)),
+          cancel: () {},
         ),
-      );
+      ),
+      tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
+      if (auth != null) googleAuthServiceProvider.overrideWithValue(auth),
+      cloudSyncRemoteFactoryProvider.overrideWithValue((_) => FakeRemote()),
+      cloudSyncUrlOpenerProvider.overrideWithValue((_) {}),
+      windowForegroundProvider.overrideWithValue(() async {
+        onForeground?.call();
+      }),
+    ],
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('en'),
+      theme: buildDarkTheme(),
+      home: const Scaffold(
+        body: SingleChildScrollView(child: CloudSyncSection()),
+      ),
+    ),
+  );
 
   testWidgets('未連結：顯示說明與連結按鈕', (tester) async {
     await tester.pumpWidget(wrap());
@@ -143,6 +151,44 @@ void main() {
     expect(foregroundCalls, 1);
   });
 
+  testWidgets('android: awaiting consent shows the Google window hint', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(android: true, cloudAuth: _FakeCloudAuth(hang: true)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Link Google account'));
+    await tester.pump();
+
+    final l = AppLocalizations.of(
+      tester.element(find.byType(CloudSyncSection)),
+    )!;
+    expect(find.text(l.cloudSyncAwaitingConsentAndroid), findsOneWidget);
+    expect(find.text(l.cloudSyncAwaitingConsent), findsNothing);
+    expect(find.text('Cancel'), findsOneWidget);
+  });
+
+  testWidgets('android: leaving consent does not bring the window to front', (
+    tester,
+  ) async {
+    var foregroundCalls = 0;
+    await tester.pumpWidget(
+      wrap(
+        android: true,
+        cloudAuth: _FakeCloudAuth(hang: false),
+        onForeground: () => foregroundCalls++,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Link Google account'));
+    await tester.pumpAndSettle();
+
+    expect(foregroundCalls, 0);
+  });
+
   testWidgets('已連結（授權失效）重連 → 顯示等待授權列與取消', (tester) async {
     SharedPreferences.setMockInitialValues({
       'pref.cloudAccountEmail': 'u@example.com',
@@ -190,4 +236,31 @@ class _GatedSignInAuthService extends FakeAuthService {
     openUrl('https://accounts.google.com/consent');
     return gate.future;
   }
+}
+
+/// 測試用 [CloudAuth]：link 依 [hang] 永不完成或拋 scope 缺失。
+class _FakeCloudAuth implements CloudAuth {
+  /// 建立 [_FakeCloudAuth]。
+  _FakeCloudAuth({required this.hang});
+
+  /// true 時 link 永不完成（停在等待授權）。
+  final bool hang;
+
+  @override
+  bool get keepsClientAcrossRounds => false;
+
+  @override
+  Future<CloudLinkResult> link({
+    required void Function(String url) openUrl,
+    String? postAuthPage,
+  }) => hang
+      ? Completer<CloudLinkResult>().future
+      : Future.error(const CloudScopeMissingException());
+
+  @override
+  Future<http.Client?> restoreClient({required String expectedEmail}) async =>
+      null;
+
+  @override
+  Future<void> unlink() async {}
 }
