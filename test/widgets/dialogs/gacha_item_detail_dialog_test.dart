@@ -1231,6 +1231,50 @@ void main() {
       expect(find.text('重抓圖片'), findsOneWidget);
     });
 
+    testWidgets('long press on the image opens the image menu', (tester) async {
+      final illustFile = await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await tester.longPress(find.byKey(ValueKey(illustFile.path)));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('儲存圖片'), findsOneWidget);
+    });
+
+    /// 以 [size] 的手機畫面開啟詳情，回傳名稱與圖片的位置。
+    Future<(Rect, Rect)> pumpPhone(WidgetTester tester, Size size) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final illustFile = await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      expect(tester.takeException(), isNull);
+      return (
+        tester.getRect(find.text('Char')),
+        tester.getRect(find.byKey(ValueKey(illustFile.path))),
+      );
+    }
+
+    testWidgets('phone landscape puts details and image side by side', (
+      tester,
+    ) async {
+      final (name, image) = await pumpPhone(tester, const Size(800, 360));
+      expect(name.right, lessThan(image.left));
+      expect((name.top - image.top).abs(), lessThan(100));
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('phone portrait stacks details above the image', (
+      tester,
+    ) async {
+      final (name, image) = await pumpPhone(tester, const Size(360, 800));
+      expect(name.bottom, lessThan(image.top));
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
     testWidgets('點 dialog 外圍 → barrier 仍能關閉（Scaffold 包裹不擋 barrier）', (
       tester,
     ) async {

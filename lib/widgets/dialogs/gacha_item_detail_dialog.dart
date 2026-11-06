@@ -17,6 +17,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/encore_entry_text.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_html.dart';
@@ -65,6 +66,9 @@ class GachaItemDetailDialog extends ConsumerStatefulWidget {
 
 /// [GachaItemDetailDialog] 的 state：維護 chip 選中索引與各圖 lazy 下載狀態。
 class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
+  /// 兩欄（手機橫向）時左欄的寬度。
+  static const double _twoColumnDetailsWidth = 240;
+
   /// 當前選中 chip 的 index；超出範圍由 `clampedIndex` 收斂。
   int _selectedIndex = 0;
 
@@ -400,6 +404,14 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                       current,
                     ),
                   ),
+                  // 觸控沒有右鍵，長按叫出同一個選單。
+                  onLongPressStart: (details) => unawaited(
+                    _showImageContextMenu(
+                      context,
+                      details.globalPosition,
+                      current,
+                    ),
+                  ),
                   child: Image.file(
                     file,
                     key: ValueKey(file.path),
@@ -665,139 +677,174 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
       _ => tokens.textPrimary,
     };
 
+    final header = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (iconFile != null) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: Image.file(
+              iconFile,
+              key: ValueKey('${iconFile.path}#$cacheRevision'),
+              width: 64,
+              height: 64,
+              fit: BoxFit.cover,
+              errorBuilder: (_, e, st) => const SizedBox.shrink(),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.m),
+        ],
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                record.name,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: nameColor,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (intro.trim().isNotEmpty)
+                Padding(
+                  // 名稱與簡介間留一點間距，避免兩者貼齊（2dp，無對應 token 故用字面值）。
+                  padding: const EdgeInsets.only(top: 2),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    child: SingleChildScrollView(
+                      child: _detailHtml(theme, intro),
+                    ),
+                  ),
+                ),
+              if (_tagsFor(
+                l,
+                record,
+                elementName,
+                weaponTypeName,
+              ).isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.s),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final t in _tagsFor(
+                      l,
+                      record,
+                      elementName,
+                      weaponTypeName,
+                    ))
+                      Chip(
+                        label: Text(t),
+                        backgroundColor: tokens.textPrimary.withValues(
+                          alpha: 0.15,
+                        ),
+                        side: BorderSide.none,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppRadius.sm),
+                          ),
+                        ),
+                        labelStyle: theme.textTheme.bodySmall?.copyWith(
+                          color: tokens.textPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.s,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+    final gallery = Column(
+      mainAxisSize: current != null ? MainAxisSize.max : MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (chipEntries.length > 1) ...[
+          GalleryChipBar(
+            labels: [for (final e in chipEntries) e.label],
+            selectedIndex: clampedIndex,
+            onSelected: (i) => setState(() => _selectedIndex = i),
+          ),
+          const SizedBox(height: AppSpacing.m),
+        ],
+        if (current != null)
+          Expanded(child: _buildCurrentImageArea(context, current)),
+        if (current?.skin != null) _buildSkinCaption(context, current!.skin!),
+      ],
+    );
+    final actions = <Widget>[
+      TextButton.icon(
+        icon: const Icon(Icons.open_in_new, size: 18),
+        label: Text(l.actionViewOnEncore),
+        onPressed: () {
+          _log.info(
+            'open encore kind=${itemTypeKeyOf(record, index)} id=${record.resourceId}',
+          );
+          openExternalUrl(
+            Uri.parse(
+              encoreItemUrl(
+                kind: itemTypeKeyOf(record, index),
+                resourceId: record.resourceId,
+                lang: record.languageCode,
+              ),
+            ),
+          );
+        },
+      ),
+      FilledButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: Text(l.actionClose),
+      ),
+    ];
+
+    // 手機橫向時高度不夠，改成左右兩欄，避免立繪被標題區擠扁。
+    final size = MediaQuery.sizeOf(context);
+    if (isCompactLayout(context) && size.width > size.height) {
+      return AppDialog(
+        size: AppDialogSize.lg,
+        maxHeight: 880,
+        content: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: _twoColumnDetailsWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: SingleChildScrollView(child: header)),
+                  const SizedBox(height: AppSpacing.s),
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: AppSpacing.s,
+                    runSpacing: AppSpacing.xs,
+                    children: actions,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.l),
+            Expanded(child: gallery),
+          ],
+        ),
+      );
+    }
+
     return AppDialog(
       size: AppDialogSize.md,
       maxHeight: 880,
-      title: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (iconFile != null) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              child: Image.file(
-                iconFile,
-                key: ValueKey('${iconFile.path}#$cacheRevision'),
-                width: 64,
-                height: 64,
-                fit: BoxFit.cover,
-                errorBuilder: (_, e, st) => const SizedBox.shrink(),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.m),
-          ],
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record.name,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: nameColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (intro.trim().isNotEmpty)
-                  Padding(
-                    // 名稱與簡介間留一點間距，避免兩者貼齊（2dp，無對應 token 故用字面值）。
-                    padding: const EdgeInsets.only(top: 2),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 120),
-                      child: SingleChildScrollView(
-                        child: _detailHtml(theme, intro),
-                      ),
-                    ),
-                  ),
-                if (_tagsFor(
-                  l,
-                  record,
-                  elementName,
-                  weaponTypeName,
-                ).isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.s),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      for (final t in _tagsFor(
-                        l,
-                        record,
-                        elementName,
-                        weaponTypeName,
-                      ))
-                        Chip(
-                          label: Text(t),
-                          backgroundColor: tokens.textPrimary.withValues(
-                            alpha: 0.15,
-                          ),
-                          side: BorderSide.none,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(AppRadius.sm),
-                            ),
-                          ),
-                          labelStyle: theme.textTheme.bodySmall?.copyWith(
-                            color: tokens.textPrimary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.s,
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: current != null ? MainAxisSize.max : MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (chipEntries.length > 1) ...[
-            GalleryChipBar(
-              labels: [for (final e in chipEntries) e.label],
-              selectedIndex: clampedIndex,
-              onSelected: (i) => setState(() => _selectedIndex = i),
-            ),
-            const SizedBox(height: AppSpacing.m),
-          ],
-          if (current != null)
-            Expanded(child: _buildCurrentImageArea(context, current)),
-          if (current?.skin != null) _buildSkinCaption(context, current!.skin!),
-        ],
-      ),
-      actions: [
-        TextButton.icon(
-          icon: const Icon(Icons.open_in_new, size: 18),
-          label: Text(l.actionViewOnEncore),
-          onPressed: () {
-            _log.info(
-              'open encore kind=${itemTypeKeyOf(record, index)} id=${record.resourceId}',
-            );
-            openExternalUrl(
-              Uri.parse(
-                encoreItemUrl(
-                  kind: itemTypeKeyOf(record, index),
-                  resourceId: record.resourceId,
-                  lang: record.languageCode,
-                ),
-              ),
-            );
-          },
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l.actionClose),
-        ),
-      ],
+      title: header,
+      content: gallery,
+      actions: actions,
     );
   }
 }

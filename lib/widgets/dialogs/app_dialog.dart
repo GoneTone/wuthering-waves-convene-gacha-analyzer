@@ -47,7 +47,7 @@ class AppDialog extends StatelessWidget {
   /// 建立 [AppDialog]。
   const AppDialog({
     super.key,
-    required this.title,
+    this.title,
     required this.content,
     this.actions = const <Widget>[],
     this.size = AppDialogSize.sm,
@@ -55,8 +55,8 @@ class AppDialog extends StatelessWidget {
     this.maxHeight,
   });
 
-  /// dialog 標題 widget，傳給 [AlertDialog.title]。
-  final Widget title;
+  /// dialog 標題 widget，傳給 [AlertDialog.title]；null 時不顯示標題區。
+  final Widget? title;
 
   /// dialog 內容 widget；[scrollable] 為 true 時會被包在 [SingleChildScrollView] 內。
   final Widget content;
@@ -101,7 +101,7 @@ class AppDialog extends StatelessWidget {
       constraints: BoxConstraints(maxHeight: dialogMaxHeight),
       // title 與 content 同鎖 dialogWidth：避免標題內的長文字（如詳情 dialog 的
       // 簡介 Html）以 intrinsic 單行寬度把整個 dialog 撐寬，而非在寬度內換行。
-      title: SizedBox(width: dialogWidth, child: title),
+      title: title == null ? null : SizedBox(width: dialogWidth, child: title),
       content: body,
       actions: actions.isEmpty ? null : actions,
     );
