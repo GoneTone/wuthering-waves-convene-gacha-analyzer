@@ -351,3 +351,10 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - Android 用戶端以「套件名稱＋SHA-1」辨識 App，同一個 App 可能有三把金鑰，每把都要在 Android 用戶端登記一筆：
   - 開發用 debug 金鑰：`F8:09:DC:34:0C:1C:D5:92:C5:0A:44:8E:0B:DB:1C:96:8D:30:08:1B`（`~/.android/debug.keystore`，已登記）。
   - **上傳金鑰、Play 應用程式簽署金鑰：子專案 7 必須回來補登記**（Play 簽署金鑰的 SHA-1 在 Play Console 查）。只登記 debug 金鑰時實機測試一切正常，但從 Play 下載的版本授權會失敗。依套件原始碼推論（未實測），會回報成 `GoogleSignInException(unknownError, "SDK reported an exception: 10: ...")`（Play 服務狀態碼 10 = `DEVELOPER_ERROR`），畫面顯示「授權失敗」。
+
+### 33. 實機驗收結果（2026-11-06）
+
+- **ROG Phone**：連結成功（專案已有授權時不跳任何畫面）。App 強制關閉後重開會自動同步，不必重新連結。手機中斷連結後 PC 照常同步；再連結時會跳出帳號選擇。
+- **模擬器（Android 13，Google API 映像）**：在帳號選擇畫面按返回會回到「連結 Google 帳號」按鈕，不顯示「授權失敗」。全新裝置連結後，PC 的 3 個帳號都同步下來，並自動補抓 114 張物品圖片。**同一個 App 程序開 63 分鐘後按「立即同步」仍成功**，通行證過期後由 Play 服務自動換發。
+- **Windows**：加入 `google_sign_in` 後仍可建置（套件沒有 Windows 實作，只是不被呼叫）。中斷連結 log 為 `signOut done (local only)`，模擬器照常同步；重新連結（瀏覽器授權）正常。
+- 未實測：在 Google 帳戶設定撤銷 App 存取權後的反應。因為授權是整個專案共用，撤銷會讓所有裝置都需要重新連結，所以只用單元測試涵蓋（快取的失效通行證：清掉重取，重取不到就進入「需要重新連結」）。
