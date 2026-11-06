@@ -314,6 +314,7 @@ git commit -m "feat(android): add log access platform channel"
   - `class AdbShellClient { AdbShellClient({required AdbConnector connect, Future<List<int>> Function()? rediscover, Duration retryDelay = const Duration(milliseconds: 300)}); Future<bool> connectAny(List<int> ports); Future<Uint8List> exec(String command); Future<void> close(); bool get isConnected; }`
     - `connectAny`：依序嘗試，對每個連上的 session 先跑 `id`，輸出含 `uid=2000` 才算成功；全部失敗回 false。
     - `exec`：用 `synchronized` 的 `Lock` 排隊；失敗等 `retryDelay` 重試一次；仍失敗且有 `rediscover` → 呼叫它取得新連接埠、`connectAny` 後再試一次；都失敗丟 `AdbShellException`。
+    - `Stream<bool> get healthChanges`（broadcast）：`exec` 最終丟 `AdbShellException` 時發 false；之後第一次成功時發 true。狀態沒變不重複發。`close()` 時關閉 stream。
   - `class AdbShellException implements Exception { AdbShellException(this.message); final String message; }`
   - `class FlutterAdbSession implements AdbSession`、`Future<AdbSession?> connectFlutterAdb(AdbCrypto crypto, int port)`（host `127.0.0.1`）
   - `class AdbKeyStore { AdbKeyStore({FlutterSecureStorage storage = const FlutterSecureStorage()}); Future<bool> hasKey(); Future<AdbCrypto> loadOrCreate(); Future<void> delete(); }`（key `adb.keypair.v1`，`adbKeyName: 'wuwa-gacha'`；讀取例外 → `hasKey()` 回 false 並記 warning）
@@ -330,6 +331,7 @@ test('connectAny skips refused stale port and uses the next', ...);       // con
 test('exec retries once after a stream open failure', ...);               // fake session 第一次 shell 丟例外、第二次成功；只重試一次
 test('exec reconnects via rediscover when retry also fails', ...);
 test('exec calls are serialized', ...);                                    // 兩個 exec 同時呼叫，fake 記錄進出順序不交錯
+test('healthChanges emits false on final failure and true on recovery', ...); // 連續兩次失敗只發一次 false
 test('key store read failure is treated as not paired', ...);             // FlutterSecureStorage fake read 丟例外 → hasKey() false
 test('root verify requires uid=0', ...);                                  // run 回 'uid=2000' → false；'uid=0(root)' → true
 test('su absent means no process is spawned', ...);                       // suPaths 都不存在 → isSuPresent false，run 未被呼叫
@@ -370,7 +372,7 @@ git commit -m "feat(android): add adb shell client, key store and root shell"
 - Produces:
   - `enum LogAccessMethod { root, legacyDirect, wirelessDebugging }`
   - `enum LogAccessUnavailable { notPaired, noWifi, adbConnectFailed, wirelessDebuggingOff, storagePermissionDenied, unsupported }`
-  - `sealed class LogAccessOutcome`；`final class LogAccessReady extends LogAccessOutcome { LogAccessReady({required this.source, required this.method, required this.release}); final ClientLogSource source; final LogAccessMethod method; final Future<bool> Function() release; }`（`release` 回傳 true 代表「照規則應該關掉無線偵錯，但沒有權限關」，也就是手動開關模式下要提示玩家自行關閉）；`final class LogAccessBlocked extends LogAccessOutcome { LogAccessBlocked(this.reason); final LogAccessUnavailable reason; }`
+  - `sealed class LogAccessOutcome`；`final class LogAccessReady extends LogAccessOutcome { LogAccessReady({required this.source, required this.method, required this.release}); final ClientLogSource source; final LogAccessMethod method; final Future<bool> Function() release; final Stream<bool> healthChanges; }`（`healthChanges`：無線偵錯接 `AdbShellClient.healthChanges`，root／直接讀為 `Stream.empty()`；`release` 回傳 true 代表「照規則應該關掉無線偵錯，但沒有權限關」，也就是手動開關模式下要提示玩家自行關閉）；`final class LogAccessBlocked extends LogAccessOutcome { LogAccessBlocked(this.reason); final LogAccessUnavailable reason; }`
   - `class LogAccessResolver { Future<LogAccessOutcome> resolve({LogAccessMethod? preferred, bool forceDisableAfterUse = false}); }`，provider `logAccessResolverProvider`
   - `SettingsNotifier.setLogAccessMethod(LogAccessMethod? method)`；`SettingsState.logAccessMethod`（存 `pref.logAccessMethod`，enum name 字串）
 
@@ -420,7 +422,7 @@ git commit -m "feat(android): resolve how to read the game log"
 **Interfaces:**
 - Consumes: Task 5 `LogAccessResolver`／`LogAccessOutcome`／`setLogAccessMethod`、Task 2 `isAndroidProvider`／`submitManualCredential`、Task 3 `isGameInstalled`／`launchGame`／`openWirelessDebugging`／`requestStoragePermission`
 - Produces:
-  - `WaitingForCapture({..., LogAccessUnavailable? logAccessUnavailable})`：非 null 表示沒有自動讀取方式（畫面不顯示進度條）
+  - `WaitingForCapture({..., LogAccessUnavailable? logAccessUnavailable, bool logConnectionLost = false})`：`logAccessUnavailable` 非 null 表示沒有自動讀取方式（畫面不顯示進度條）；`logConnectionLost` 為 true 表示等待中連線中斷、正在重試
   - `GachaRepository.retryLogAccess() → Future<void>`：只在 `WaitingForCapture.logAccessUnavailable != null` 時重新 resolve；成功就切到正常等待
   - `GachaRepository.update({bool afterPairing = false})`：`afterPairing` 傳給 `resolve(forceDisableAfterUse: true)`
   - 兩處 `_runMitm(isFallback: ...)` 改呼叫 `_acquireCredential(isFallback: ...)`：Android → `_runAndroidWait`，其他 → 原 `_runMitm`
@@ -428,13 +430,13 @@ git commit -m "feat(android): resolve how to read the game log"
 `_runAndroidWait` 流程：
 1. `state = WaitingForCapture(isFallback)`；建立 `_logHit`、`_waitCancelled`（沿用既有欄位，讓 `submitManualCredential`／`cancelCapture` 直接可用）。
 2. `resolve(preferred: settings.logAccessMethod, forceDisableAfterUse: afterPairing)`；resolve 期間被取消 → 拿到 `Ready` 也立刻 `release()` 並回 null。
-3. `Ready` → `setLogAccessMethod(method)`、`await watch.start(source)`、等 `logHit`／`waitCancelled`；結束一律停監看並 `release()`（`finally`）。`release()` 回 true 時記下來，這次的 `UpdateCompleted` 帶 `wirelessDebuggingLeftOn: true`（新欄位，預設 false），完成畫面多一行 `progressWirelessLeftOnHint`「無線偵錯仍是開啟的，可以到系統設定自行關閉。」。
+3. `Ready` → `setLogAccessMethod(method)`、`await watch.start(source)`、等 `logHit`／`waitCancelled`；結束一律停監看並 `release()`（`finally`）。等待期間訂閱 `healthChanges`，依值切換 `WaitingForCapture.logConnectionLost`（不中斷等待），結束時取消訂閱。`release()` 回 true 時記下來，這次的 `UpdateCompleted` 帶 `wirelessDebuggingLeftOn: true`（新欄位，預設 false），完成畫面多一行 `progressWirelessLeftOnHint`「無線偵錯仍是開啟的，可以到系統設定自行關閉。」。
 4. `Blocked` → `state = WaitingForCapture(isFallback, logAccessUnavailable: reason)`，等 `logHit`（手動）／`waitCancelled`／`retryLogAccess` 觸發的重新 resolve。
 5. log：`capture.android` 記 method、reason、耗時；命中記 `credential source=log`／`manual`。
 
 等待畫面（`update_progress_dialog.dart`，`isAndroidProvider` 為 true 時）：
 - 標題 `progressWaitingLog`「等待喚取記錄...」（電腦版維持 `progressWaiting`）。
-- 正常：既有提示＋「開啟鳴潮」`FilledButton`（`isGameInstalled()` 為 true 才顯示）＋「手動輸入喚取記錄」；不顯示「沒有反應？」。
+- 正常：既有提示＋「開啟鳴潮」`FilledButton`（`isGameInstalled()` 為 true 才顯示）＋「手動輸入喚取記錄」；不顯示「沒有反應？」。`logConnectionLost` 為 true 時在提示下方用警告色顯示 `progressLogConnectionLost`「與無線偵錯的連線中斷，正在重新連線...如果一直無法恢復，請確認 Wi‑Fi 是否連線，或改用手動輸入。」
 - `logAccessUnavailable != null`：標題 `progressLogUnavailableTitle`「無法自動讀取喚取記錄」、不顯示進度條、顯示原因文字與按鈕：
 
 | reason | 原因文字 key | 主要按鈕 |
@@ -459,6 +461,7 @@ test('fallback after all pools fail waits again on android', ...);
 test('afterPairing passes forceDisableAfterUse', ...);
 test('release left wireless debugging on → UpdateCompleted.wirelessDebuggingLeftOn', ...);
 test('shell read failures during wait keep waiting', ...);                  // fake source 連續丟例外後恢復，最後仍命中
+test('health false shows connection lost, true clears it', ...);          // fake healthChanges 發 false → logConnectionLost true；發 true → false
 test('windows path still uses capture race', ...);                          // isAndroidProvider false → _ControlledCapture 被 start
 ```
 
