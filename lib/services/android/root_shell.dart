@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:logging/logging.dart';
+import 'package:synchronized/synchronized.dart';
 
-/// 執行外部程式；測試以替身取代 [Process.run]。
-typedef ProcessRunner =
-    Future<ProcessResult> Function(String executable, List<String> arguments);
+/// 啟動外部程式；測試以替身取代 [Process.start]。
+typedef ProcessStarter =
+    Future<Process> Function(String executable, List<String> arguments);
 
 /// 常見 root 工具放 `su` 的位置。
 const defaultSuPaths = [
@@ -18,7 +21,7 @@ const defaultSuPaths = [
   '/system_ext/bin/su',
 ];
 
-/// `su` 執行失敗（被拒絕或非 0 結束）。
+/// `su` 執行失敗（被拒絕、程序結束或逾時）。
 class RootShellException implements Exception {
   /// 建立例外。
   RootShellException(this.message);
@@ -30,24 +33,46 @@ class RootShellException implements Exception {
   String toString() => 'RootShellException: $message';
 }
 
-/// 用 `su -c` 以 root 執行指令。
+/// 以一個常駐的 `su` 程序執行 root 指令。
+///
+/// 等待喚取記錄時每秒要讀兩次檔，若每次都重新執行 `su -c`，root 工具每次都會跳授權提示、
+/// 寫授權記錄；所以整個 session 只開一次 `su`，指令都從它的 stdin 送進去，
+/// 每條指令後印一個隨機結束標記來切出輸出。
 class RootShell {
-  /// 建立 root shell；[run] 與 [suPaths] 僅供測試替換。
-  RootShell({ProcessRunner? run, this.suPaths = defaultSuPaths})
-    : _run = run ?? _defaultRun;
+  /// 建立 root shell；[start] 與 [suPaths] 僅供測試替換。
+  RootShell({ProcessStarter? start, this.suPaths = defaultSuPaths})
+    : _start = start ?? Process.start;
 
   /// 檢查 `su` 是否存在的路徑。
   final List<String> suPaths;
 
-  /// 執行外部程式的函式。
-  final ProcessRunner _run;
+  /// 啟動外部程式的函式。
+  final ProcessStarter _start;
+
+  /// 讓指令一條一條送進 `su` 的鎖。
+  final _lock = Lock();
+
+  /// 本 session 的結束標記（隨機，避免和檔案內容撞到）。
+  final _marker =
+      '__wuwa_end_${Random.secure().nextInt(1 << 32).toRadixString(16)}__';
+
+  /// 常駐的 `su` 程序；尚未啟動或已結束時為 null。
+  Process? _process;
+
+  /// 尚未切出的 stdout 位元組。
+  final _buffer = BytesBuilder(copy: false);
+
+  /// 等待下一個結束標記的 completer。
+  Completer<Uint8List>? _pending;
 
   /// 本類別的 logger。
   static final _log = Logger('capture.android');
 
-  /// 預設的 [ProcessRunner]：stdout 保留原始位元組。
-  static Future<ProcessResult> _defaultRun(String exe, List<String> args) =>
-      Process.run(exe, args, stdoutEncoding: null);
+  /// 第一條指令的等待上限（玩家要在 root 工具的授權視窗按允許）。
+  static const _grantTimeout = Duration(seconds: 60);
+
+  /// 之後每條指令的等待上限。
+  static const _commandTimeout = Duration(seconds: 20);
 
   /// 裝置上是否有 `su` 執行檔；沒有時不呼叫 `su`，避免沒有 root 的裝置多等一次逾時。
   Future<bool> isSuPresent() async {
@@ -57,31 +82,112 @@ class RootShell {
     return false;
   }
 
-  /// 執行 `su -c id` 確認拿得到 root（會跳出 root 工具的授權詢問）。
+  /// 啟動常駐 `su` 並執行 `id` 確認拿得到 root（會跳出 root 工具的授權詢問）。
   Future<bool> verify() async {
     try {
-      final r = await _run('su', ['-c', 'id']);
-      final out = r.stdout is List<int>
-          ? utf8.decode(r.stdout as List<int>, allowMalformed: true)
-          : '${r.stdout}';
-      final ok = r.exitCode == 0 && out.contains('uid=0');
-      _log.info('root verify ok=$ok exit=${r.exitCode}');
+      final out = utf8.decode(
+        await _execInternal('id', _grantTimeout),
+        allowMalformed: true,
+      );
+      final ok = out.contains('uid=0');
+      _log.info('root verify ok=$ok');
+      if (!ok) await close();
       return ok;
     } catch (e) {
       _log.info('root verify failed error=${e.runtimeType}');
+      await close();
       return false;
     }
   }
 
-  /// 以 root 執行 [command]，回傳 stdout 原始位元組；非 0 結束時丟 [RootShellException]。
-  Future<Uint8List> exec(String command) async {
-    final r = await _run('su', ['-c', command]);
-    if (r.exitCode != 0) {
-      throw RootShellException('su exited with ${r.exitCode}');
+  /// 以 root 執行 [command]，回傳 stdout 原始位元組；`su` 已結束或逾時時丟 [RootShellException]。
+  Future<Uint8List> exec(String command) =>
+      _execInternal(command, _commandTimeout);
+
+  /// 送出 [command] 並等它的結束標記。
+  Future<Uint8List> _execInternal(String command, Duration timeout) =>
+      _lock.synchronized(() async {
+        final process = _process ?? await _spawn();
+        final pending = Completer<Uint8List>();
+        _pending = pending;
+        process.stdin
+          ..writeln(command)
+          ..writeln("printf '\\n%s %d\\n' $_marker \$?");
+        await process.stdin.flush();
+        try {
+          return await pending.future.timeout(timeout);
+        } on TimeoutException {
+          await close();
+          throw RootShellException('su command timed out');
+        } finally {
+          _pending = null;
+        }
+      });
+
+  /// 啟動常駐 `su`，接上 stdout 解析與結束偵測。
+  Future<Process> _spawn() async {
+    final process = await _start('su', const []);
+    _process = process;
+    _buffer.clear();
+    process.stdout.listen(
+      _onStdout,
+      onDone: () => _onExit(process),
+      cancelOnError: true,
+    );
+    unawaited(process.stderr.drain<void>());
+    unawaited(process.exitCode.then((_) => _onExit(process)));
+    _log.info('root su session started');
+    return process;
+  }
+
+  /// 收到輸出時，找到結束標記就把標記前的內容交給等待中的指令。
+  void _onStdout(List<int> data) {
+    _buffer.add(data);
+    final pending = _pending;
+    if (pending == null || pending.isCompleted) return;
+    final bytes = _buffer.toBytes();
+    final head = utf8.encode('\n$_marker ');
+    final at = _indexOf(bytes, head);
+    if (at < 0) return;
+    final lineEnd = bytes.indexOf(0x0A, at + head.length);
+    if (lineEnd < 0) return;
+    _buffer.clear();
+    if (lineEnd + 1 < bytes.length) _buffer.add(bytes.sublist(lineEnd + 1));
+    pending.complete(Uint8List.sublistView(bytes, 0, at));
+  }
+
+  /// `su` 結束（授權被拒、被 kill）時，讓等待中的指令失敗。
+  void _onExit(Process process) {
+    if (!identical(_process, process)) return;
+    _process = null;
+    final pending = _pending;
+    if (pending != null && !pending.isCompleted) {
+      pending.completeError(RootShellException('su exited'));
     }
-    final out = r.stdout;
-    return out is List<int>
-        ? Uint8List.fromList(out)
-        : Uint8List.fromList(utf8.encode('$out'));
+  }
+
+  /// 結束常駐的 `su`。
+  Future<void> close() async {
+    final process = _process;
+    _process = null;
+    if (process == null) return;
+    try {
+      process.stdin.writeln('exit');
+      await process.stdin.flush();
+    } catch (_) {}
+    process.kill();
+    _log.info('root su session closed');
+  }
+
+  /// 在 [haystack] 中找 [needle] 第一次出現的位置。
+  static int _indexOf(Uint8List haystack, List<int> needle) {
+    outer:
+    for (var i = 0; i + needle.length <= haystack.length; i++) {
+      for (var j = 0; j < needle.length; j++) {
+        if (haystack[i + j] != needle[j]) continue outer;
+      }
+      return i;
+    }
+    return -1;
   }
 }

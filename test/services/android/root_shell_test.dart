@@ -1,9 +1,77 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/root_shell.dart';
+
+/// 模擬常駐 `su` 的程序：讀 stdin 的每一行指令，依 [reply] 產生輸出後印出結束標記。
+class _FakeSu implements Process {
+  _FakeSu(this.reply) {
+    _stdinCtl.stream
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen(_onLine);
+  }
+
+  /// 指令 → 輸出位元組；回傳 null 代表 `su` 直接結束（例如授權被拒）。
+  final List<int>? Function(String command) reply;
+
+  final _stdinCtl = StreamController<List<int>>();
+  final _stdoutCtl = StreamController<List<int>>();
+  final _exit = Completer<int>();
+
+  /// 收到的指令（不含框架用的 echo）。
+  final commands = <String>[];
+
+  /// 是否被 kill。
+  bool killed = false;
+
+  String? _pending;
+
+  void _onLine(String line) {
+    if (line.startsWith('echo') || line.startsWith('printf')) {
+      final marker = RegExp(r'__wuwa_end_\w+__').firstMatch(line)!.group(0)!;
+      final out = reply(_pending!);
+      if (out == null) {
+        _stdoutCtl.close();
+        if (!_exit.isCompleted) _exit.complete(1);
+        return;
+      }
+      _stdoutCtl.add([...out, 0x0A, ...utf8.encode('$marker 0\n')]);
+      return;
+    }
+    if (line == 'exit') {
+      _stdoutCtl.close();
+      if (!_exit.isCompleted) _exit.complete(0);
+      return;
+    }
+    commands.add(line);
+    _pending = line;
+  }
+
+  late final IOSink _stdin = IOSink(_stdinCtl.sink);
+
+  @override
+  IOSink get stdin => _stdin;
+  @override
+  Stream<List<int>> get stdout => _stdoutCtl.stream;
+  @override
+  Stream<List<int>> get stderr => const Stream.empty();
+  @override
+  Future<int> get exitCode => _exit.future;
+  @override
+  int get pid => 1;
+  @override
+  bool kill([ProcessSignal signal = ProcessSignal.sigterm]) {
+    killed = true;
+    if (!_exit.isCompleted) _exit.complete(-9);
+    _stdoutCtl.close();
+    return true;
+  }
+}
 
 void main() {
   late Directory tmp;
@@ -12,69 +80,108 @@ void main() {
   tearDown(() => tmp.deleteSync(recursive: true));
 
   /// 建一個假的 su 執行檔路徑。
-  String fakeSu() {
+  String fakeSuPath() {
     final f = File('${tmp.path}/su')..writeAsStringSync('');
     return f.path;
   }
 
   test('su absent means no process is spawned', () async {
-    var runs = 0;
+    var starts = 0;
     final shell = RootShell(
       suPaths: ['${tmp.path}/nope'],
-      run: (exe, args) async {
-        runs++;
-        return ProcessResult(0, 0, '', '');
+      start: (exe, args) async {
+        starts++;
+        return _FakeSu((_) => []);
       },
     );
     expect(await shell.isSuPresent(), isFalse);
-    expect(runs, 0);
+    expect(starts, 0);
   });
 
-  test('root verify requires uid=0', () async {
+  test('verify requires uid=0', () async {
     for (final (out, want) in [
       ('uid=2000(shell)', false),
       ('uid=0(root)', true),
     ]) {
       final shell = RootShell(
-        suPaths: [fakeSu()],
-        run: (exe, args) async => ProcessResult(0, 0, utf8.encode(out), ''),
+        suPaths: [fakeSuPath()],
+        start: (exe, args) async => _FakeSu((_) => utf8.encode(out)),
       );
-      expect(await shell.isSuPresent(), isTrue);
       expect(await shell.verify(), want, reason: out);
     }
   });
 
-  test('verify is false when su is denied or throws', () async {
+  test('verify is false when su is denied or cannot start', () async {
     final denied = RootShell(
-      suPaths: [fakeSu()],
-      run: (exe, args) async => ProcessResult(0, 1, <int>[], 'denied'),
+      suPaths: [fakeSuPath()],
+      start: (exe, args) async => _FakeSu((_) => null),
     );
     expect(await denied.verify(), isFalse);
     final broken = RootShell(
-      suPaths: [fakeSu()],
-      run: (exe, args) => throw const ProcessException('su', []),
+      suPaths: [fakeSuPath()],
+      start: (exe, args) => throw const ProcessException('su', []),
     );
     expect(await broken.verify(), isFalse);
   });
 
-  test('exec runs su -c and returns raw stdout bytes', () async {
-    late List<String> got;
+  test('one su process serves verify and every exec', () async {
+    var starts = 0;
+    late _FakeSu su;
     final shell = RootShell(
-      suPaths: [fakeSu()],
-      run: (exe, args) async {
-        got = [exe, ...args];
-        return ProcessResult(0, 0, [0xAF, 0x0A], '');
+      suPaths: [fakeSuPath()],
+      start: (exe, args) async {
+        starts++;
+        return su = _FakeSu(
+          (c) => c == 'id' ? utf8.encode('uid=0(root)') : utf8.encode('out:$c'),
+        );
       },
     );
-    expect(await shell.exec('cat x'), [0xAF, 0x0A]);
-    expect(got, ['su', '-c', 'cat x']);
+    expect(await shell.verify(), isTrue);
+    for (var i = 0; i < 3; i++) {
+      expect(utf8.decode(await shell.exec('stat $i')), 'out:stat $i');
+    }
+    expect(starts, 1, reason: 'only one su grant per session');
+    expect(su.commands, ['id', 'stat 0', 'stat 1', 'stat 2']);
   });
 
-  test('exec throws on non-zero exit', () async {
+  test(
+    'exec returns raw bytes including ones that look like newlines',
+    () async {
+      final shell = RootShell(
+        suPaths: [fakeSuPath()],
+        start: (exe, args) async => _FakeSu(
+          (c) => c == 'id' ? utf8.encode('uid=0') : [0xAF, 0x0A, 0x00, 0x0A],
+        ),
+      );
+      await shell.verify();
+      expect(
+        await shell.exec('tail'),
+        Uint8List.fromList([0xAF, 0x0A, 0x00, 0x0A]),
+      );
+    },
+  );
+
+  test('exec fails when the su process died', () async {
+    var calls = 0;
     final shell = RootShell(
-      suPaths: [fakeSu()],
-      run: (exe, args) async => ProcessResult(0, 1, <int>[], 'nope'),
+      suPaths: [fakeSuPath()],
+      start: (exe, args) async => _FakeSu((c) {
+        calls++;
+        return calls == 1 ? utf8.encode('uid=0') : null;
+      }),
     );
+    await shell.verify();
     await expectLater(shell.exec('x'), throwsA(isA<RootShellException>()));
+  });
+
+  test('close kills the su process', () async {
+    late _FakeSu su;
+    final shell = RootShell(
+      suPaths: [fakeSuPath()],
+      start: (exe, args) async => su = _FakeSu((_) => utf8.encode('uid=0')),
+    );
+    await shell.verify();
+    await shell.close();
+    expect(su.killed, isTrue);
   });
 }

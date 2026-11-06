@@ -160,7 +160,10 @@ class LogAccessResolver {
     return LogAccessReady(
       source: ShellLogSource(exec: root.exec, label: 'root'),
       method: LogAccessMethod.root,
-      release: () async => false,
+      release: () async {
+        await root.close();
+        return false;
+      },
     );
   }
 

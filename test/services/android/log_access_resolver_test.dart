@@ -62,6 +62,12 @@ class _FakeRoot extends RootShell {
 
   @override
   Future<Uint8List> exec(String command) async => Uint8List(0);
+
+  /// close 被呼叫的次數。
+  int closes = 0;
+
+  @override
+  Future<void> close() async => closes++;
 }
 
 /// 是否已配對可設定的金鑰替身。
@@ -119,6 +125,15 @@ void main() {
     expect(r.method, LogAccessMethod.root);
     expect(r.source, isA<ShellLogSource>());
     expect(platform.adbWifiWrites, isEmpty);
+  });
+
+  test('root release closes the su session', () async {
+    root
+      ..present = true
+      ..granted = true;
+    final r = await resolver().resolve() as LogAccessReady;
+    expect(await r.release(), isFalse);
+    expect(root.closes, 1);
   });
 
   test('root denied falls through to wireless debugging', () async {
