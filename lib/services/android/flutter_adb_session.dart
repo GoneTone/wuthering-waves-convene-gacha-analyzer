@@ -1,0 +1,144 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:isolate';
+import 'dart:typed_data';
+
+import 'package:flutter_adb/flutter_adb.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:logging/logging.dart';
+
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/adb_shell_client.dart';
+
+/// 本檔的 logger。
+final _log = Logger('capture.adb');
+
+/// 無線偵錯一律連本機。
+const _host = '127.0.0.1';
+
+/// 單一指令最長等待時間。
+const _commandTimeout = Duration(seconds: 20);
+
+/// 以 `flutter_adb` 實作的 [AdbSession]。
+class FlutterAdbSession implements AdbSession {
+  /// 包住已連上的 [_connection]。
+  FlutterAdbSession(this._connection);
+
+  /// 底層連線。
+  final AdbConnection _connection;
+
+  @override
+  Future<Uint8List> shell(String command) async {
+    final stream = await _connection.open('shell:$command');
+    final out = BytesBuilder(copy: false);
+    final done = Completer<void>();
+    final sub = stream.onPayload.listen(
+      out.add,
+      onDone: () {
+        if (!done.isCompleted) done.complete();
+      },
+    );
+    try {
+      await done.future.timeout(_commandTimeout);
+    } finally {
+      await sub.cancel();
+    }
+    return out.takeBytes();
+  }
+
+  @override
+  Future<void> close() async {
+    try {
+      await _connection.disconnect();
+    } catch (e) {
+      _log.info('adb disconnect failed error=${e.runtimeType}');
+    }
+  }
+}
+
+/// 用 [crypto] 連到本機 [port] 的無線偵錯；連不上時回 null。
+Future<AdbSession?> connectFlutterAdb(AdbCrypto crypto, int port) async {
+  final connection = AdbConnection(_host, port, crypto);
+  try {
+    if (await connection.connect()) return FlutterAdbSession(connection);
+  } catch (e) {
+    _log.info('adb connect error port=$port error=${e.runtimeType}');
+  }
+  try {
+    await connection.disconnect();
+  } catch (_) {}
+  return null;
+}
+
+/// 用配對碼和本機 [port] 的配對服務配對；任何失敗都回 false。
+Future<bool> pairWithCode({
+  required AdbCrypto crypto,
+  required int port,
+  required String code,
+}) async {
+  try {
+    return await AdbPairing.pair(_host, port, code, crypto);
+  } catch (e) {
+    _log.warning('adb pairing error=${e.runtimeType}');
+    return false;
+  }
+}
+
+/// 保存無線偵錯配對用的 RSA 金鑰（`flutter_secure_storage` 加密）。
+class AdbKeyStore {
+  /// 建立金鑰保存；[storage] 僅供測試替換。
+  AdbKeyStore({FlutterSecureStorage storage = const FlutterSecureStorage()})
+    : _storage = storage;
+
+  /// secure storage 的 key。
+  static const _key = 'adb.keypair.v1';
+
+  /// 金鑰在裝置「已配對的裝置」清單顯示的名稱。
+  static const _keyName = 'wuwa-gacha';
+
+  /// 底層 secure storage。
+  final FlutterSecureStorage _storage;
+
+  /// 讀出保存的金鑰 JSON；讀取失敗視為沒有金鑰。
+  Future<String?> _read() async {
+    try {
+      return await _storage.read(key: _key);
+    } catch (e) {
+      _log.warning('adb key read failed error=${e.runtimeType}');
+      return null;
+    }
+  }
+
+  /// 是否已有配對用的金鑰。
+  Future<bool> hasKey() async => await _read() != null;
+
+  /// 讀出金鑰；沒有就產生一組新的並保存（RSA 2048 在背景 isolate 產生）。
+  Future<AdbCrypto> loadOrCreate() async {
+    final stored = await _read();
+    if (stored != null) {
+      try {
+        final map = jsonDecode(stored) as Map<String, dynamic>;
+        return AdbCrypto(
+          keyPair: AdbCrypto.keyPairFromStorageMap(map),
+          adbKeyName: _keyName,
+        );
+      } catch (e) {
+        _log.warning('adb key corrupt, regenerating error=${e.runtimeType}');
+      }
+    }
+    final keyPair = await Isolate.run(AdbCrypto.generateAdbKeyPair);
+    final crypto = AdbCrypto(keyPair: keyPair, adbKeyName: _keyName);
+    await _storage.write(
+      key: _key,
+      value: jsonEncode(crypto.exportKeyPairForStorage()),
+    );
+    _log.info('adb key generated');
+    return crypto;
+  }
+
+  /// 刪除金鑰（解除配對）。
+  Future<void> delete() => _storage.delete(key: _key);
+}
+
+/// 提供 [AdbKeyStore]，測試可 override。
+final adbKeyStoreProvider = Provider<AdbKeyStore>((ref) => AdbKeyStore());
