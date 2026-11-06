@@ -84,6 +84,9 @@ const grantWriteSecureSettingsCommand =
 const revokeWriteSecureSettingsCommand =
     'pm revoke $_appPackage android.permission.WRITE_SECURE_SETTINGS';
 
+/// 透過 shell 關閉無線偵錯（解除配對收回權限後，App 自己已經不能關，交給 shell 做；會中斷目前連線）。
+const disableAdbWifiCommand = 'settings put global adb_wifi_enabled 0';
+
 /// 依 root → Android 10 以下直接讀 → 無線偵錯的順序決定怎麼讀遊戲記錄。
 class LogAccessResolver {
   /// 建立 resolver；[makeConnector] 讀出配對金鑰並回傳連線函式。

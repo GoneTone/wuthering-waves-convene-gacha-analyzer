@@ -1293,5 +1293,69 @@
   "setupDoneReturning": "戻って更新を開始します...",
   "@setupDoneReturning": {
     "description": "Shown just before returning and starting the update"
+  },
+  "settingsLogAccess": "ゲーム記録の読み取り",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
+  "settingsLogAccessMethod": "読み取り方法",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
+  "logAccessMethodRoot": "root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
+  "logAccessMethodLegacy": "直接読み取り",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
+  "logAccessMethodWireless": "ワイヤレスデバッグ",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
+  "logAccessMethodNone": "未設定",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
+  "settingsPairingStatus": "ペア設定",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
+  "settingsPaired": "ペア設定済み",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
+  "settingsPairedManual": "ペア設定済み（ワイヤレスデバッグは手動でオン）",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
+  "settingsRetryGrant": "権限を再試行",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
+  "settingsSetupLogAccess": "設定",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
+  "settingsUnpair": "ペア設定を解除",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
+  "settingsUnpairConfirmTitle": "ペア設定を解除しますか？",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
+  "settingsUnpairConfirmBody": "この端末のキーを削除し、アプリのワイヤレスデバッグ切り替え権限を取り消します。再び使うにはもう一度ペア設定が必要です。",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
+  "settingsUnpairDone": "ペア設定を解除しました",
+  "@settingsUnpairDone": {
+    "description": "Snackbar after the pairing was removed"
+  },
+  "settingsUnpairUnreachable": "この端末のキーを削除しました。ワイヤレスデバッグに接続できず権限を取り消せませんでした。システムの「ワイヤレスデバッグ → ペア設定済みのデバイス」からこのアプリを削除できます。",
+  "@settingsUnpairUnreachable": {
+    "description": "Snackbar when the key was deleted but the app could not connect to revoke the permission"
   }
 }

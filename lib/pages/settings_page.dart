@@ -23,6 +23,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/platform_import.
 import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/localization_metadata.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
@@ -38,6 +39,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/account_management.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/cloud_sync_section.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/log_access_section.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/section_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/accounts_picker_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
@@ -117,11 +119,19 @@ class SettingsPage extends ConsumerWidget {
                 child: const _DataManagement(),
               ),
               const SizedBox(height: AppSpacing.xl),
-              SectionCard(
-                title: l.settingsGameDir,
-                icon: Icons.sports_esports_outlined,
-                child: _GameDirSection(pickDirectory: pickGameDir),
-              ),
+              // 手機上的遊戲資料夾是固定的，改為顯示讀取遊戲記錄的方式。
+              if (ref.watch(isAndroidProvider))
+                SectionCard(
+                  title: l.settingsLogAccess,
+                  icon: Icons.sports_esports_outlined,
+                  child: const LogAccessSection(),
+                )
+              else
+                SectionCard(
+                  title: l.settingsGameDir,
+                  icon: Icons.sports_esports_outlined,
+                  child: _GameDirSection(pickDirectory: pickGameDir),
+                ),
               const SizedBox(height: AppSpacing.xl),
               SectionCard(
                 title: l.settingsCloudSync,

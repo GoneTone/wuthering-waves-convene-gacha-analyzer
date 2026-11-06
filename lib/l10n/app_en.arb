@@ -1294,5 +1294,69 @@
   "setupDoneReturning": "Returning and starting the update...",
   "@setupDoneReturning": {
     "description": "Shown just before returning and starting the update"
+  },
+  "settingsLogAccess": "Game Log Access",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
+  "settingsLogAccessMethod": "Method",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
+  "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
+  "logAccessMethodLegacy": "Direct access",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
+  "logAccessMethodWireless": "Wireless debugging",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
+  "logAccessMethodNone": "Not set up",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
+  "settingsPairingStatus": "Pairing",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
+  "settingsPaired": "Paired",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
+  "settingsPairedManual": "Paired (turn on wireless debugging manually)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
+  "settingsRetryGrant": "Retry permission",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
+  "settingsSetupLogAccess": "Set up",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
+  "settingsUnpair": "Remove pairing",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
+  "settingsUnpairConfirmTitle": "Remove pairing?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
+  "settingsUnpairConfirmBody": "This deletes the key on this device and removes this app's permission to toggle wireless debugging. You'll need to pair again to use wireless debugging later.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
+  "settingsUnpairDone": "Pairing removed",
+  "@settingsUnpairDone": {
+    "description": "Snackbar after the pairing was removed"
+  },
+  "settingsUnpairUnreachable": "Deleted the key on this device. Couldn't connect to wireless debugging to remove the permission; you can remove this app under Wireless debugging → Paired devices.",
+  "@settingsUnpairUnreachable": {
+    "description": "Snackbar when the key was deleted but the app could not connect to revoke the permission"
   }
 }

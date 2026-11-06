@@ -1287,5 +1287,69 @@
   "setupDoneReturning": "即将返回并开始更新...",
   "@setupDoneReturning": {
     "description": "Shown just before returning and starting the update"
+  },
+  "settingsLogAccess": "读取游戏记录",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
+  "settingsLogAccessMethod": "读取方式",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
+  "logAccessMethodRoot": "root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
+  "logAccessMethodLegacy": "直接读取",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
+  "logAccessMethodWireless": "无线调试",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
+  "logAccessMethodNone": "尚未设置",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
+  "settingsPairingStatus": "配对状态",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
+  "settingsPaired": "已配对",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
+  "settingsPairedManual": "已配对（需手动开启无线调试）",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
+  "settingsRetryGrant": "重试授权",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
+  "settingsSetupLogAccess": "设置",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
+  "settingsUnpair": "解除配对",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
+  "settingsUnpairConfirmTitle": "解除配对？",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
+  "settingsUnpairConfirmBody": "解除配对会删除本机密钥，并收回本 App 开关无线调试的权限。之后要再使用无线调试，需要重新配对。",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
+  "settingsUnpairDone": "已解除配对",
+  "@settingsUnpairDone": {
+    "description": "Snackbar after the pairing was removed"
+  },
+  "settingsUnpairUnreachable": "已删除本机密钥。无法连上无线调试收回权限，可以到系统的「无线调试 → 已配对的设备」移除本 App。",
+  "@settingsUnpairUnreachable": {
+    "description": "Snackbar when the key was deleted but the app could not connect to revoke the permission"
   }
 }

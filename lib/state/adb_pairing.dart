@@ -7,6 +7,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/android/adb_shel
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/flutter_adb_session.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 /// 無線偵錯設定流程的階段。
 enum PairingPhase {
@@ -192,3 +193,64 @@ final adbPairingProvider =
     NotifierProvider.autoDispose<AdbPairingController, AdbPairingState>(
       AdbPairingController.new,
     );
+
+/// 解除配對：能連上無線偵錯時先收回自己的 `WRITE_SECURE_SETTINGS`，再刪除本機金鑰。
+///
+/// 回傳 true 代表有連上並收回權限；false 代表連不上（只刪了金鑰，需提示玩家到系統設定移除）。
+/// 原本沒開無線偵錯時，最後也用 shell 把它關回去（收回權限後 App 自己就關不了）。
+Future<bool> unpairWirelessDebugging({
+  required LogAccessPlatform platform,
+  required AdbPairingOps ops,
+  required LogAccessResolver resolver,
+  required AdbKeyStore keyStore,
+}) async {
+  final log = Logger('capture.pairing');
+  final wasOn = await platform.isAdbWifiEnabled();
+  if (!wasOn) await platform.setAdbWifiEnabled(true);
+  final client = AdbShellClient(connect: ops.connect);
+  var revoked = false;
+  try {
+    if (await client.connectAny(await resolver.discoverConnectPorts())) {
+      await client.exec(revokeWriteSecureSettingsCommand);
+      revoked = true;
+      if (!wasOn) {
+        try {
+          await client.exec(disableAdbWifiCommand);
+        } on AdbShellException {
+          // 關閉無線偵錯會切斷這條連線，指令本身可能來不及回應。
+        }
+      }
+    }
+  } on AdbShellException catch (e) {
+    log.warning('unpair revoke failed: ${e.message}');
+  } finally {
+    await client.close();
+  }
+  await keyStore.delete();
+  log.info('unpaired revoked=$revoked');
+  return revoked;
+}
+
+/// 解除配對（含清除記住的讀取方式）；Widget 測試可 override。
+final unpairWirelessDebuggingProvider = Provider<Future<bool> Function()>(
+  (ref) => () async {
+    final revoked = await unpairWirelessDebugging(
+      platform: ref.read(logAccessPlatformProvider),
+      ops: ref.read(adbPairingOpsProvider),
+      resolver: ref.read(logAccessResolverProvider),
+      keyStore: ref.read(adbKeyStoreProvider),
+    );
+    await ref.read(settingsProvider.notifier).setLogAccessMethod(null);
+    return revoked;
+  },
+);
+
+/// 設定頁顯示用的無線偵錯配對狀態：是否有金鑰、App 能否自己開關無線偵錯。
+final wirelessPairingStatusProvider =
+    FutureProvider.autoDispose<({bool paired, bool canToggle})>((ref) async {
+      final paired = await ref.read(adbKeyStoreProvider).hasKey();
+      final canToggle = await ref
+          .read(logAccessPlatformProvider)
+          .hasWriteSecureSettings();
+      return (paired: paired, canToggle: canToggle);
+    });

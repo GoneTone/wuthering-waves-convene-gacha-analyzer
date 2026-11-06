@@ -43,8 +43,19 @@ class _Platform extends LogAccessPlatform {
   Future<void> openWirelessDebugging() async => wirelessOpens++;
   @override
   Future<bool> hasWriteSecureSettings() async => wss;
+  bool adbWifiOn = true;
+  final adbWifiWrites = <bool>[];
+
   @override
-  Future<bool> isAdbWifiEnabled() async => true;
+  Future<bool> isAdbWifiEnabled() async => adbWifiOn;
+  @override
+  Future<bool> setAdbWifiEnabled(bool enabled) async {
+    if (!wss) return false;
+    adbWifiWrites.add(enabled);
+    adbWifiOn = enabled;
+    return true;
+  }
+
   @override
   Future<List<int>> discoverAdbConnectPorts() async => [5555];
   @override
@@ -60,6 +71,8 @@ class _Ops extends AdbPairingOps {
   final _Platform platform;
   bool pairOk = true;
   bool grantWorks = true;
+  bool reachable = true;
+  final commands = <String>[];
   final pairs = <(int, String)>[];
 
   @override
@@ -69,10 +82,21 @@ class _Ops extends AdbPairingOps {
   }
 
   @override
-  Future<AdbSession?> connect(int port) async => _Session(this);
+  Future<AdbSession?> connect(int port) async =>
+      reachable ? _Session(this) : null;
 }
 
 /// 回應 id 與 pm grant 的連線替身。
+/// 金鑰是否存在可設定、記錄刪除的替身。
+class _Keys extends AdbKeyStore {
+  bool has = true;
+
+  @override
+  Future<bool> hasKey() async => has;
+  @override
+  Future<void> delete() async => has = false;
+}
+
 class _Session implements AdbSession {
   _Session(this.ops);
 
@@ -80,6 +104,7 @@ class _Session implements AdbSession {
 
   @override
   Future<Uint8List> shell(String command) async {
+    ops.commands.add(command);
     if (command == grantWriteSecureSettingsCommand && ops.grantWorks) {
       ops.platform.wss = true;
     }
@@ -214,5 +239,45 @@ void main() {
   test('startAtGrant jumps straight to the grant step', () {
     ctl().startAtGrant();
     expect(phase(), PairingPhase.grantFailed);
+  });
+
+  group('unpairWirelessDebugging', () {
+    late _Keys keys;
+
+    Future<bool> unpair() => unpairWirelessDebugging(
+      platform: platform,
+      ops: ops,
+      resolver: c.read(logAccessResolverProvider),
+      keyStore: keys,
+    );
+
+    setUp(() => keys = _Keys());
+
+    test(
+      'revokes, turns wireless debugging back off and deletes the key',
+      () async {
+        platform
+          ..wss = true
+          ..adbWifiOn = false;
+        expect(await unpair(), isTrue);
+        expect(ops.commands, contains(revokeWriteSecureSettingsCommand));
+        expect(ops.commands.last, disableAdbWifiCommand);
+        expect(keys.has, isFalse);
+      },
+    );
+
+    test('keeps wireless debugging on if it already was', () async {
+      platform
+        ..wss = true
+        ..adbWifiOn = true;
+      await unpair();
+      expect(ops.commands, isNot(contains(disableAdbWifiCommand)));
+    });
+
+    test('unreachable still deletes the key and reports it', () async {
+      ops.reachable = false;
+      expect(await unpair(), isFalse);
+      expect(keys.has, isFalse);
+    });
   });
 }
