@@ -1,12 +1,14 @@
 import 'dart:io';
 
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
 
@@ -112,21 +114,25 @@ void main() {
   Future<void> openOverlay(
     WidgetTester tester, {
     String? suggestedFileName,
+    bool android = false,
   }) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: buildDarkTheme(),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Builder(
-          builder: (ctx) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => showZoomableImageOverlay(
-                ctx,
-                imageFile: imageFile,
-                suggestedFileName: suggestedFileName,
+      ProviderScope(
+        overrides: [isAndroidProvider.overrideWithValue(android)],
+        child: MaterialApp(
+          theme: buildDarkTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (ctx) => Scaffold(
+              body: ElevatedButton(
+                onPressed: () => showZoomableImageOverlay(
+                  ctx,
+                  imageFile: imageFile,
+                  suggestedFileName: suggestedFileName,
+                ),
+                child: const Text('open'),
               ),
-              child: const Text('open'),
             ),
           ),
         ),
@@ -514,7 +520,10 @@ void main() {
     AppLocalizations loc(WidgetTester tester) =>
         AppLocalizations.of(tester.element(find.byType(ZoomableImageOverlay)))!;
 
-    tearDown(resetItemImageSaveSeams);
+    tearDown(() {
+      resetItemImageSaveSeams();
+      resetFileAccessSeams();
+    });
 
     /// 開 ... 選單並點選 [itemText]。
     /// itemImageEncoder seam 已換成同步回傳，故 pumpAndSettle 即可讓所有 future 完成。
@@ -530,7 +539,7 @@ void main() {
     ) async {
       var copyCalled = false;
       itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
-      itemImageClipboardWriter = (bytes) async {
+      pngClipboardWriter = (bytes) async {
         copyCalled = true;
         return true;
       };
@@ -545,28 +554,86 @@ void main() {
       'save calls picker with suggestedFileName and shows saved toast',
       (tester) async {
         String? capturedName;
-        String? writtenPath;
         final tmp = '${tempDir.path}/saved.png';
         itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
-        itemImageSaveLocationPicker = (name) async {
+        fileSaveDialog = (bytes, name, extension, mimeType, title) async {
           capturedName = name;
-          return FileSaveLocation(tmp);
-        };
-        itemImageFileWriter = (path, png) async {
-          writtenPath = path;
+          return tmp;
         };
         await openOverlay(tester, suggestedFileName: 'Char_Splash.png');
         final l = loc(tester);
         await pickMenu(tester, l.actionSaveImage);
         expect(capturedName, 'Char_Splash.png');
-        expect(writtenPath, tmp);
         expect(find.text(l.itemImageSavedTo(tmp)), findsOneWidget);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
+
+    testWidgets('save on Android shows the file name instead of a path', (
+      tester,
+    ) async {
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSaveDialog = (bytes, name, extension, mimeType, title) async =>
+          '/document/primary:Download/Char_Splash.png';
+      await openOverlay(
+        tester,
+        suggestedFileName: 'Char_Splash.png',
+        android: true,
+      );
+      final l = loc(tester);
+      await pickMenu(tester, l.actionSaveImage);
+      expect(find.text(l.itemImageSavedTo('Char_Splash.png')), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('item image menu offers share only on Android', (tester) async {
+      await openOverlay(tester, android: true);
+      final l = loc(tester);
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      expect(find.text(l.actionShare), findsOneWidget);
+    });
+
+    testWidgets('item image menu hides share on desktop', (tester) async {
+      await openOverlay(tester);
+      final l = loc(tester);
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      expect(find.text(l.actionShare), findsNothing);
+    });
+
+    testWidgets('sharing an item image sends a png named after the item', (
+      tester,
+    ) async {
+      String? name;
+      String? mime;
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSharer = (bytes, fileName, mimeType) async {
+        name = fileName;
+        mime = mimeType;
+      };
+      await openOverlay(
+        tester,
+        suggestedFileName: 'Char_Splash.png',
+        android: true,
+      );
+      final l = loc(tester);
+      await pickMenu(tester, l.actionShare);
+      expect(name, 'Char_Splash.png');
+      expect(mime, 'image/png');
+    });
+
+    testWidgets('item image share failure shows shareFailed', (tester) async {
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSharer = (_, _, _) async => throw Exception('boom');
+      await openOverlay(tester, android: true);
+      final l = loc(tester);
+      await pickMenu(tester, l.actionShare);
+      expect(find.text(l.shareFailed), findsOneWidget);
+    });
 
     testWidgets('save cancelled shows no toast', (tester) async {
       itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
-      itemImageSaveLocationPicker = (name) async => null;
+      fileSaveDialog = (bytes, name, extension, mimeType, title) async => null;
       await openOverlay(tester);
       final l = loc(tester);
       await pickMenu(tester, l.actionSaveImage);
@@ -578,7 +645,7 @@ void main() {
     ) async {
       String? capturedName;
       itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
-      itemImageSaveLocationPicker = (name) async {
+      fileSaveDialog = (bytes, name, extension, mimeType, title) async {
         capturedName = name;
         return null;
       };

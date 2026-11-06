@@ -11,11 +11,11 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
@@ -25,6 +25,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/dialog_toast.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gallery_chip_bar.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/item_image_actions.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
 
 /// module-level logger，供 dialog 與其 tap target 共用。
@@ -242,26 +243,9 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     }
   }
 
-  /// 圖片選單項目（複製圖片 / 儲存圖片 / --- / 重抓圖片）；右上角按鈕與右鍵選單共用。
+  /// 圖片選單項目（共用的複製／儲存／分享 + --- + 重抓圖片）；右上角按鈕與右鍵選單共用。
   List<PopupMenuEntry<String>> _imageMenuItems(AppLocalizations l) => [
-    PopupMenuItem(
-      value: 'copy',
-      child: ListTile(
-        dense: true,
-        contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.copy, size: 20),
-        title: Text(l.actionCopyImage),
-      ),
-    ),
-    PopupMenuItem(
-      value: 'save',
-      child: ListTile(
-        dense: true,
-        contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.save_alt, size: 20),
-        title: Text(l.actionSaveImage),
-      ),
-    ),
+    ...itemImageMenuItems(l, share: ref.read(isAndroidProvider)),
     const PopupMenuDivider(),
     PopupMenuItem(
       value: 'refetch',
@@ -274,19 +258,27 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     ),
   ];
 
-  /// 分派圖片選單選擇（按鈕與右鍵選單共用）：複製 / 儲存 / 重抓。
+  /// 分派圖片選單選擇（按鈕與右鍵選單共用）：重抓自己處理，其餘交給共用動作。
   void _onImageMenuSelected(String value, _ImageChipEntry current) {
-    switch (value) {
-      case 'copy':
-        unawaited(_copyImage(current));
-      case 'save':
-        unawaited(_saveImage(current));
-      case 'refetch':
-        _refetchEntry(current);
+    if (value == 'refetch') {
+      _refetchEntry(current);
+      return;
     }
+    unawaited(
+      runItemImageAction(
+        value,
+        file: current.file,
+        suggestedName: _suggestedFileName(current),
+        android: ref.read(isAndroidProvider),
+        l: AppLocalizations.of(context)!,
+        toast: (message) {
+          if (mounted) _showSnack(message);
+        },
+      ),
+    );
   }
 
-  /// 圖片區右上角的溢出選單按鈕：複製圖片 / 儲存圖片 / --- / 重抓圖片。
+  /// 圖片區右上角的溢出選單按鈕：共用圖片動作 / --- / 重抓圖片。
   /// 沿用 lightbox X 鈕的半透明黑底圓鈕視覺；僅在圖片 ready 時疊在圖上顯示。
   Widget _buildImageMenu(BuildContext context, _ImageChipEntry current) {
     final l = AppLocalizations.of(context)!;
@@ -328,43 +320,6 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     // Windows 檔名非法字元（< > : " / \ | ? *）一律換 _，避免存檔對話框拒絕。
     final safe = raw.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
     return '$safe.png';
-  }
-
-  /// 複製目前圖片到剪貼簿：解碼成 PNG → 寫剪貼簿，結果以 toast 回報。
-  Future<void> _copyImage(_ImageChipEntry e) async {
-    final l = AppLocalizations.of(context)!;
-    final png = await encodeImageFileToPng(e.file);
-    if (!mounted) return;
-    if (png == null) {
-      _showSnack(l.itemImageCopyFailed);
-      return;
-    }
-    final ok = await copyImagePngToClipboard(png);
-    if (!mounted) return;
-    _showSnack(ok ? l.itemImageCopied : l.itemImageCopyFailed);
-  }
-
-  /// 儲存目前圖片：解碼成 PNG → 系統存檔對話框，結果以 toast 回報。
-  /// 使用者取消不提示；寫檔失敗提示失敗。
-  Future<void> _saveImage(_ImageChipEntry e) async {
-    final l = AppLocalizations.of(context)!;
-    final png = await encodeImageFileToPng(e.file);
-    if (!mounted) return;
-    if (png == null) {
-      _showSnack(l.itemImageSaveFailed);
-      return;
-    }
-    try {
-      final savedPath = await saveImagePng(
-        png,
-        suggestedName: _suggestedFileName(e),
-      );
-      if (!mounted || savedPath == null) return;
-      _showSnack(l.itemImageSavedTo(savedPath));
-    } catch (_) {
-      if (!mounted) return;
-      _showSnack(l.itemImageSaveFailed);
-    }
   }
 
   /// 以共用 [showDialogToast] 在 dialog 之上顯示一則 toast（overlay entry，

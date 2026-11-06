@@ -3,13 +3,15 @@ import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/dialog_toast.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/item_image_actions.dart';
 
 /// 會觸發長按選單的指標種類（觸控與觸控筆）；滑鼠長按不算，維持桌面的單擊行為。
 const Set<PointerDeviceKind> kTouchLikeDevices = {
@@ -45,7 +47,7 @@ Future<void> showZoomableImageOverlay(
 }
 
 /// 全螢幕 lightbox 圖片檢視器；獨立可重用，不耦合 caller。
-class ZoomableImageOverlay extends StatefulWidget {
+class ZoomableImageOverlay extends ConsumerStatefulWidget {
   /// 建立 [ZoomableImageOverlay]。
   const ZoomableImageOverlay({
     super.key,
@@ -60,11 +62,12 @@ class ZoomableImageOverlay extends StatefulWidget {
   final String? suggestedFileName;
 
   @override
-  State<ZoomableImageOverlay> createState() => _ZoomableImageOverlayState();
+  ConsumerState<ZoomableImageOverlay> createState() =>
+      _ZoomableImageOverlayState();
 }
 
 /// [ZoomableImageOverlay] 的 state — 管理 [_ctrl] 縮放矩陣與 close 路徑。
-class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
+class _ZoomableImageOverlayState extends ConsumerState<ZoomableImageOverlay> {
   /// 縮放最小值（= fit，整圖可見）。
   static const double _minScale = 1.0;
 
@@ -268,36 +271,24 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
     _zoomAt(localFocal: focal, scaleDelta: _zoomedScale / current);
   }
 
-  /// 影像選單項目（複製圖片 / 儲存圖片）；右鍵與右上 `...` 鈕共用。
-  List<PopupMenuEntry<String>> _imageMenuItems(AppLocalizations l) => [
-    PopupMenuItem(
-      value: 'copy',
-      child: ListTile(
-        dense: true,
-        contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.copy, size: 20),
-        title: Text(l.actionCopyImage),
-      ),
-    ),
-    PopupMenuItem(
-      value: 'save',
-      child: ListTile(
-        dense: true,
-        contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.save_alt, size: 20),
-        title: Text(l.actionSaveImage),
-      ),
-    ),
-  ];
+  /// 影像選單項目（複製／儲存／Android 分享）；右鍵與右上 `...` 鈕共用。
+  List<PopupMenuEntry<String>> _imageMenuItems(AppLocalizations l) =>
+      itemImageMenuItems(l, share: ref.read(isAndroidProvider));
 
-  /// 分派影像選單選擇：複製 / 儲存。
+  /// 分派影像選單選擇：交給共用的物品圖動作。
   void _onImageMenuSelected(String value) {
-    switch (value) {
-      case 'copy':
-        unawaited(_copyImage());
-      case 'save':
-        unawaited(_saveImage());
-    }
+    unawaited(
+      runItemImageAction(
+        value,
+        file: widget.imageFile,
+        suggestedName: _suggestedName(),
+        android: ref.read(isAndroidProvider),
+        l: AppLocalizations.of(context)!,
+        toast: (message) {
+          if (mounted) _showSnack(message);
+        },
+      ),
+    );
   }
 
   /// 右鍵或長按在圖片上叫出影像選單，位置跟著游標／手指；[source] 寫進 log。
@@ -323,48 +314,6 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   /// 存檔建議檔名；caller 未帶 [ZoomableImageOverlay.suggestedFileName] 則用檔案 basename。
   String _suggestedName() =>
       widget.suggestedFileName ?? widget.imageFile.uri.pathSegments.last;
-
-  /// 複製目前圖片到剪貼簿：解碼 PNG → 寫剪貼簿，結果以 toast 回報。
-  Future<void> _copyImage() async {
-    final l = AppLocalizations.of(context)!;
-    final png = await encodeImageFileToPng(widget.imageFile);
-    if (!mounted) return;
-    if (png == null) {
-      Logger('gacha.itemimage.zoom').warning('copy encode failed');
-      _showSnack(l.itemImageCopyFailed);
-      return;
-    }
-    final ok = await copyImagePngToClipboard(png);
-    if (!mounted) return;
-    Logger('gacha.itemimage.zoom').info('copy done ok=$ok');
-    _showSnack(ok ? l.itemImageCopied : l.itemImageCopyFailed);
-  }
-
-  /// 儲存目前圖片：解碼 PNG → 系統存檔對話框，結果以 toast 回報。
-  /// 使用者取消不提示；寫檔失敗提示失敗。
-  Future<void> _saveImage() async {
-    final l = AppLocalizations.of(context)!;
-    final png = await encodeImageFileToPng(widget.imageFile);
-    if (!mounted) return;
-    if (png == null) {
-      Logger('gacha.itemimage.zoom').warning('save encode failed');
-      _showSnack(l.itemImageSaveFailed);
-      return;
-    }
-    try {
-      final savedPath = await saveImagePng(
-        png,
-        suggestedName: _suggestedName(),
-      );
-      if (!mounted || savedPath == null) return;
-      Logger('gacha.itemimage.zoom').info('save done');
-      _showSnack(l.itemImageSavedTo(savedPath));
-    } catch (_) {
-      if (!mounted) return;
-      Logger('gacha.itemimage.zoom').warning('save failed');
-      _showSnack(l.itemImageSaveFailed);
-    }
-  }
 
   /// 以共用 [showDialogToast] 在 lightbox 之上彈 toast（overlay entry，疊在
   /// 全螢幕 overlay 之上、不被蓋住）。

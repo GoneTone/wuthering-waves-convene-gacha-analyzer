@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
@@ -19,6 +20,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.d
 import 'package:wuthering_waves_convene_gacha_analyzer/services/luckdraw_capture_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
@@ -96,9 +98,11 @@ void main() {
   void rebuildContainer({
     ItemImageFetcher? fetcher,
     LuckdrawCaptureService? luckdraw,
+    bool android = false,
   }) {
     container = ProviderContainer(
       overrides: [
+        isAndroidProvider.overrideWithValue(android),
         itemImageIndexStorageProvider.overrideWithValue(
           ItemImageIndexStorage(tempDir),
         ),
@@ -1131,6 +1135,7 @@ void main() {
     Future<File> seedCharacterWithSkin(
       WidgetTester tester, {
       ItemImageFetcher? fetcher,
+      bool android = false,
     }) async {
       const iconUrl = 'https://cdn.example.com/m_icon.png';
       const illustUrl = 'https://cdn.example.com/m_illust.png';
@@ -1173,7 +1178,7 @@ void main() {
         );
         await _touchFile(tempDir, illustFile.uri.pathSegments.last);
       });
-      rebuildContainer(fetcher: fetcher);
+      rebuildContainer(fetcher: fetcher, android: android);
       await tester.runAsync(loadIndex);
       return illustFile;
     }
@@ -1321,8 +1326,9 @@ void main() {
 
     testWidgets('點複製圖片 → 在 dialog 之上彈出 toast（不被 dialog 蓋住）', (tester) async {
       addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
       itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
-      itemImageClipboardWriter = (_) async => true;
+      pngClipboardWriter = (_) async => true;
       await seedCharacterWithSkin(tester);
       await pumpDialog(
         tester,
@@ -1342,6 +1348,85 @@ void main() {
       expect(find.byKey(const ValueKey('dialogToast')), findsOneWidget);
       expect(find.text('已複製圖片到剪貼簿'), findsOneWidget);
       // flush 停留計時器與淡出動畫，避免測試結束時殘留 pending timer。
+      await tester.pump(const Duration(milliseconds: 2200));
+      await tester.pumpAndSettle();
+    });
+
+    /// 開啟 ready 圖的溢出選單。
+    Future<void> openImageMenu(WidgetTester tester) async {
+      await tester.tap(
+        find.descendant(
+          of: find.byType(GachaItemDetailDialog),
+          matching: find.byIcon(Icons.more_vert),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('item image menu offers share only on Android', (tester) async {
+      await seedCharacterWithSkin(tester, android: true);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await openImageMenu(tester);
+      expect(find.text('分享'), findsOneWidget);
+    });
+
+    testWidgets('item image menu hides share on desktop', (tester) async {
+      await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await openImageMenu(tester);
+      expect(find.text('分享'), findsNothing);
+    });
+
+    testWidgets('sharing an item image sends a png named after the item', (
+      tester,
+    ) async {
+      addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      String? name;
+      String? mime;
+      fileSharer = (bytes, fileName, mimeType) async {
+        name = fileName;
+        mime = mimeType;
+      };
+      await seedCharacterWithSkin(tester, android: true);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await openImageMenu(tester);
+      await tester.tap(find.text('分享'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(name, 'Char_造型A.png');
+      expect(mime, 'image/png');
+    });
+
+    testWidgets('item image share failure shows shareFailed', (tester) async {
+      addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSharer = (_, _, _) async => throw Exception('boom');
+      await seedCharacterWithSkin(tester, android: true);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await openImageMenu(tester);
+      await tester.tap(find.text('分享'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      final l = AppLocalizations.of(
+        tester.element(find.byType(GachaItemDetailDialog)),
+      )!;
+      expect(find.text(l.shareFailed), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 2200));
       await tester.pumpAndSettle();
     });
