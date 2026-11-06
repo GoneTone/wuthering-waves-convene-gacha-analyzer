@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 短邊 < 600dp 時切成手機排版（抽屜導覽、精簡標題列與狀態列、記錄卡片列、12dp 對話框），並讓看圖等元件適合觸控；寬螢幕行為完全不變。
+**Goal:** 手機（短邊 < 600dp）與窄電腦視窗（寬 < 600dp）切成手機排版（抽屜導覽、精簡標題列與狀態列、記錄卡片列、12dp 對話框），並讓看圖等元件適合觸控；寬螢幕行為完全不變。
 
-**Architecture:** 新增一個集中判斷 `isCompactLayout(context)`（短邊 < 600），各元件在原地依它或依自身 `LayoutBuilder` 寬度切換排版；不另寫手機頁面、不新增依賴。觸控手勢（雙指縮放、觸控點兩下、長按選單、往下滑關閉）不看排版一律開啟，滑鼠路徑不變。
+**Architecture:** 新增一個集中判斷 `isCompactLayout(context)`（手機作業系統看短邊、電腦作業系統看寬度，門檻 600），各元件在原地依它或依自身 `LayoutBuilder` 寬度切換排版；不另寫手機頁面、不新增依賴。觸控手勢（雙指縮放、觸控點兩下、長按選單、往下滑關閉）不看排版一律開啟，滑鼠路徑不變。
 
 **Tech Stack:** Flutter（FVM 釘版）、Riverpod 3、go_router、flutter_test。
 
@@ -12,13 +12,13 @@
 
 ## Global Constraints
 
-- 手機排版判斷：`MediaQuery.sizeOf(context).shortestSide < 600`，不分平台；所有元件都呼叫 Task 1 的 `isCompactLayout`，不在別處重寫判斷。
+- 手機排版判斷：`defaultTargetPlatform` 為 Android／iOS 時 `shortestSide < 600`，其餘平台 `width < 600`；所有元件都呼叫 Task 1 的 `isCompactLayout`，不在別處重寫判斷。
 - 內容排版依可用寬度；記錄區 `< 600` 用卡片列，其餘沿用各元件既有分界（800、1024、1180）。
 - 48dp 觸控目標只在手機排版套用；寬螢幕維持現有尺寸與外觀（反目標：寬螢幕行為改變）。
 - 內容、入口、欄位、排序與篩選規則和桌面版相同；排序一律走既有 `RecordFilterNotifier.cycleSort`（降冪 → 升冪 → 不排序）。
 - 對話框一律 `AppDialog`；新宣告都寫一行 `///` dartdoc；log 訊息英文、沿用 `gacha.itemimage.zoom` 等既有 Logger 名稱。
 - 新字串只加核心四 ARB（`app_en.arb`、`app_zh.arb`、`app_zh_Hans.arb`、`app_ja.arb`），`app_en.arb` 附 `@` 描述；中文全形標點，省略號用 ASCII `...`；改 ARB 後跑 `fvm flutter gen-l10n`。
-- 不新增依賴；不動 `rust_builder/`；Windows 最小視窗維持 800×450。
+- 不新增依賴；不動 `rust_builder/`；Windows 拖拉下限改 360×450，預設／保底視窗尺寸維持 800×450。
 - 測試尺寸：手機直向 360×800、手機橫向 800×360、桌面 1280×800（`tester.view.physicalSize` ＋ `devicePixelRatio = 1`，`addTearDown(tester.view.reset)`）；overflow 以 `tester.takeException()` 為 null 判定。
 - 每個 commit 前：`fvm dart format lib/ test/`、`fvm flutter analyze`（`No issues found!`）、`fvm flutter test`（`All tests passed!`）。commit 訊息英文 conventional commits，結尾附專案規定的兩行 attribution。不要 push。
 
@@ -32,26 +32,33 @@
 
 ---
 
-### Task 1: 手機排版判斷
+### Task 1: 手機排版判斷與 Windows 拖拉下限
 
 **Files:**
 - Create: `lib/theme/layout.dart`
-- Test: `test/theme/layout_test.dart`
+- Modify: `lib/services/window_state_keeper.dart`
+- Test: `test/theme/layout_test.dart`、`test/services/window_state_keeper_test.dart`
 
 **Interfaces:**
-- Produces: `const double kCompactShortestSide = 600;`、`bool isCompactLayout(BuildContext context)`。後續所有 Task 都用它。
+- Produces: `const double kCompactBreakpoint = 600;`、`bool isCompactLayout(BuildContext context)`。後續所有 Task 都用它。
+- 測試一律用 `debugDefaultTargetPlatformOverride` 指定平台（`addTearDown(() => debugDefaultTargetPlatformOverride = null)`）；後續 Task 的手機尺寸測試設 `TargetPlatform.android`，桌面尺寸測試設 `TargetPlatform.windows`。
 
 - [ ] **Step 1: 寫失敗的測試** `test/theme/layout_test.dart`：用 `MediaQuery(data: MediaQueryData(size: ...))` 包一個 `Builder` 讀 `isCompactLayout`。
 
 ```dart
-for (final (size, want) in [
-  (const Size(360, 800), true),   // 手機直向
-  (const Size(800, 360), true),   // 手機橫向
-  (const Size(800, 450), true),   // Windows 最小視窗（高度 < 600）
-  (const Size(1280, 800), false), // 桌面
-  (const Size(600, 1000), false), // 短邊剛好 600 不算手機
+for (final (platform, size, want) in [
+  (TargetPlatform.android, const Size(360, 800), true),   // 手機直向
+  (TargetPlatform.android, const Size(800, 360), true),   // 手機橫向
+  (TargetPlatform.android, const Size(1280, 800), false), // Android 平板
+  (TargetPlatform.android, const Size(600, 1000), false), // 短邊剛好 600
+  (TargetPlatform.windows, const Size(1093, 560), false), // 寬而矮的筆電視窗
+  (TargetPlatform.windows, const Size(500, 900), true),   // 拉窄的視窗
+  (TargetPlatform.windows, const Size(600, 450), false),  // 寬剛好 600
+  (TargetPlatform.windows, const Size(1280, 800), false), // 桌面
 ]) {
-  testWidgets('isCompactLayout ${size.width}x${size.height}', (tester) async {
+  testWidgets('isCompactLayout $platform ${size.width}x${size.height}', (tester) async {
+    debugDefaultTargetPlatformOverride = platform;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
     late bool got;
     await tester.pumpWidget(MediaQuery(
       data: MediaQueryData(size: size),
@@ -62,10 +69,14 @@ for (final (size, want) in [
 }
 ```
 
-- [ ] **Step 2: 跑測試確認失敗** `fvm flutter test test/theme/layout_test.dart` → 編譯失敗（找不到 `isCompactLayout`）。
-- [ ] **Step 3: 實作** `lib/theme/layout.dart`：`MediaQuery.sizeOf(context).shortestSide < kCompactShortestSide`。
+`window_state_keeper_test.dart` 加 `minimum drag size allows a phone-width window`：`kMinWindowSize == const Size(360, 450)`；既有「fallback 800×450」與「clamp 到 800×450」測試維持不變。
+
+- [ ] **Step 2: 跑測試確認失敗** `fvm flutter test test/theme/layout_test.dart test/services/window_state_keeper_test.dart`。
+- [ ] **Step 3: 實作**
+  - `lib/theme/layout.dart`：`defaultTargetPlatform` 為 `android`／`iOS` 時看 `shortestSide`，否則看 `width`，都和 `kCompactBreakpoint` 比較（小於才算）。
+  - `window_state_keeper.dart`：把 `_kMinWindowSize` 拆成 `@visibleForTesting const Size kMinWindowSize = Size(360, 450)`（只給 `setMinimumSize`）與 `const Size _kFallbackWindowSize = Size(800, 450)`（`computeDefaultWindowSize` 的極小螢幕 fallback 與 clamp）。
 - [ ] **Step 4: 跑測試確認通過**。
-- [ ] **Step 5: Commit** `feat(layout): add a shared compact layout check`。
+- [ ] **Step 5: Commit** `feat(layout): add a shared compact layout check and allow narrow windows`。
 
 ---
 
@@ -281,5 +292,5 @@ for (final (size, want) in [
 - Modify: `docs/Android移植筆記.md`（新增「七、手機版面（子專案 3）」：判斷規則、各元件做法、實測發現）
 
 - [ ] **Step 1: 實機**（ASUS ROG Phone 1080×2400，`fvm flutter build apk --debug` 後 `adb install -r`）：直向、橫向逐頁檢查總覽、12 個卡池（含空池）、記錄卡片列與排序選單、物品詳情（直向、橫向兩欄）、看圖（雙指縮放、點兩下、長按、往下滑、轉向）、設定、貢獻者、讀取設定頁、更新進度對話框；抽屜開著時轉向；鍵盤開著時搜尋。發現的問題回到對應 Task 以 TDD 修正。
-- [ ] **Step 2: Windows**：視窗高度縮到 600 以下 → 抽屜、精簡標題列；拉回後恢復 rail；滑鼠單擊看圖仍立即縮放。
+- [ ] **Step 2: Windows**：視窗寬度拉到 600 以下 → 抽屜、精簡標題列、記錄卡片列；拉回後恢復 rail；寬而矮（高度 < 600）的視窗維持 rail；滑鼠單擊看圖仍立即縮放。
 - [ ] **Step 3: 寫筆記**，commit `docs(android): record the phone layout rules and device findings`。
