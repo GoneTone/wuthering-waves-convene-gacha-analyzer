@@ -12,6 +12,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/overview_section
 import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/stat_format.dart';
@@ -75,7 +76,9 @@ class OverviewPage extends ConsumerWidget {
     ];
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.l),
+      padding: EdgeInsets.all(
+        isCompactLayout(context) ? AppSpacing.m : AppSpacing.l,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

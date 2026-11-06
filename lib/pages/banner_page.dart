@@ -14,6 +14,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/five_star_collec
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/record_filter.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
@@ -75,7 +76,9 @@ class BannerPage extends ConsumerWidget {
 
     if (records.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(AppSpacing.l),
+        padding: EdgeInsets.all(
+          isCompactLayout(context) ? AppSpacing.m : AppSpacing.l,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -123,7 +126,9 @@ class BannerPage extends ConsumerWidget {
     final fiveStarItems = buildFiveStarCollection(records);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.l),
+      padding: EdgeInsets.all(
+        isCompactLayout(context) ? AppSpacing.m : AppSpacing.l,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
