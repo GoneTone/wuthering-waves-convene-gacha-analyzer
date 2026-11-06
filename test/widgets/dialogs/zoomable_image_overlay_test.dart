@@ -184,19 +184,18 @@ void main() {
   });
 
   group('ZoomableImageOverlay InteractiveViewer wiring', () {
-    testWidgets(
-      'uses InteractiveViewer with scaleEnabled=false, panEnabled=true',
-      (tester) async {
-        await openOverlay(tester);
-        final iv = tester.widget<InteractiveViewer>(
-          find.byType(InteractiveViewer),
-        );
-        expect(iv.scaleEnabled, isFalse);
-        expect(iv.panEnabled, isTrue);
-        expect(iv.minScale, 1.0);
-        expect(iv.maxScale, 5.0);
-      },
-    );
+    testWidgets('uses InteractiveViewer with pinch zoom and pan enabled', (
+      tester,
+    ) async {
+      await openOverlay(tester);
+      final iv = tester.widget<InteractiveViewer>(
+        find.byType(InteractiveViewer),
+      );
+      expect(iv.scaleEnabled, isTrue);
+      expect(iv.panEnabled, isTrue);
+      expect(iv.minScale, 1.0);
+      expect(iv.maxScale, 5.0);
+    });
 
     testWidgets('initial transform is identity (scale = 1)', (tester) async {
       await openOverlay(tester);
@@ -228,6 +227,14 @@ void main() {
       final center = tester.getCenter(find.byType(InteractiveViewer));
       await sendWheel(tester, center, -100);
       expect(currentScale(tester), greaterThan(1.0));
+    });
+
+    testWidgets('one wheel step zooms exactly 1.1x', (tester) async {
+      // 開了雙指縮放後 InteractiveViewer 也會自己處理滾輪；不能和這裡的縮放疊加。
+      await openOverlay(tester);
+      final center = tester.getCenter(find.byType(InteractiveViewer));
+      await sendWheel(tester, center, -100);
+      expect(currentScale(tester), closeTo(1.1, 1e-6));
     });
 
     testWidgets('wheel down at fit stays at minScale', (tester) async {
@@ -288,7 +295,10 @@ void main() {
     testWidgets('from fit (scale=1), single tap goes to 2x', (tester) async {
       await openOverlay(tester);
       expect(currentScale(tester), 1.0);
-      await tester.tapAt(tester.getCenter(find.byType(InteractiveViewer)));
+      await tester.tapAt(
+        tester.getCenter(find.byType(InteractiveViewer)),
+        kind: PointerDeviceKind.mouse,
+      );
       await tester.pump(const Duration(milliseconds: 100));
       expect(currentScale(tester), closeTo(2.0, 1e-6));
     });
@@ -308,7 +318,7 @@ void main() {
         await tester.pump();
       }
       expect(currentScale(tester), greaterThan(2.5));
-      await tester.tapAt(center);
+      await tester.tapAt(center, kind: PointerDeviceKind.mouse);
       await tester.pump(const Duration(milliseconds: 100));
       expect(currentScale(tester), closeTo(1.0, 1e-6));
     });
@@ -323,12 +333,12 @@ void main() {
           ivRect.left + ivRect.width * 0.25,
           ivRect.top + ivRect.height * 0.25,
         );
-        await tester.tapAt(offCenter);
+        await tester.tapAt(offCenter, kind: PointerDeviceKind.mouse);
         await tester.pump(const Duration(milliseconds: 100));
         expect(currentScale(tester), closeTo(2.0, 1e-6));
 
         // 再單擊回 fit — matrix 必須是 identity（scale=1 AND translation=0）。
-        await tester.tapAt(offCenter);
+        await tester.tapAt(offCenter, kind: PointerDeviceKind.mouse);
         await tester.pump(const Duration(milliseconds: 100));
         expect(currentScale(tester), closeTo(1.0, 1e-6));
         final iv = tester.widget<InteractiveViewer>(
@@ -644,5 +654,118 @@ void main() {
         expect(outerGd.onDoubleTapDown, isNull);
       },
     );
+  });
+
+  group('ZoomableImageOverlay touch', () {
+    AppLocalizations loc(WidgetTester tester) =>
+        AppLocalizations.of(tester.element(find.byType(ZoomableImageOverlay)))!;
+
+    Offset center(WidgetTester tester) =>
+        tester.getCenter(find.byType(InteractiveViewer));
+
+    testWidgets('pinch zooms in', (tester) async {
+      await openOverlay(tester);
+      final c = center(tester);
+      final g1 = await tester.startGesture(c - const Offset(20, 0), pointer: 1);
+      final g2 = await tester.startGesture(c + const Offset(20, 0), pointer: 2);
+      for (var i = 0; i < 5; i++) {
+        await g1.moveBy(const Offset(-20, 0));
+        await g2.moveBy(const Offset(20, 0));
+        await tester.pump();
+      }
+      await g1.up();
+      await g2.up();
+      await tester.pump();
+      expect(currentScale(tester), greaterThan(1.0));
+    });
+
+    testWidgets('single touch tap does nothing', (tester) async {
+      await openOverlay(tester);
+      await tester.tapAt(center(tester));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(currentScale(tester), 1.0);
+      expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+    });
+
+    testWidgets('double touch tap toggles zoom', (tester) async {
+      await openOverlay(tester);
+      final c = center(tester);
+      await tester.tapAt(c);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tapAt(c);
+      await tester.pump();
+      expect(currentScale(tester), closeTo(2.0, 1e-6));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tapAt(c);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tapAt(c);
+      await tester.pump();
+      expect(currentScale(tester), closeTo(1.0, 1e-6));
+    });
+
+    testWidgets('mouse click zooms immediately', (tester) async {
+      await openOverlay(tester);
+      await tester.tapAt(center(tester), kind: PointerDeviceKind.mouse);
+      await tester.pump();
+      expect(currentScale(tester), closeTo(2.0, 1e-6));
+    });
+
+    testWidgets('long press opens the image menu', (tester) async {
+      await openOverlay(tester);
+      final l = loc(tester);
+      await tester.longPressAt(center(tester));
+      await tester.pumpAndSettle();
+      expect(find.text(l.actionCopyImage), findsOneWidget);
+      expect(find.text(l.actionSaveImage), findsOneWidget);
+    });
+
+    testWidgets('swipe down closes when not zoomed', (tester) async {
+      await openOverlay(tester);
+      await tester.dragFrom(center(tester), const Offset(0, 200));
+      await tester.pumpAndSettle();
+      expect(find.byType(ZoomableImageOverlay), findsNothing);
+    });
+
+    testWidgets('swipe down pans when zoomed', (tester) async {
+      await openOverlay(tester);
+      await tester.tapAt(center(tester), kind: PointerDeviceKind.mouse);
+      await tester.pump();
+      await tester.dragFrom(center(tester), const Offset(0, 200));
+      await tester.pumpAndSettle();
+      expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+    });
+
+    testWidgets('mouse drag down does not close', (tester) async {
+      await openOverlay(tester);
+      await tester.dragFrom(
+        center(tester),
+        const Offset(0, 200),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+    });
+
+    testWidgets('rotating resets the zoom', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await openOverlay(tester);
+      await tester.tapAt(center(tester), kind: PointerDeviceKind.mouse);
+      await tester.pump();
+      expect(currentScale(tester), closeTo(2.0, 1e-6));
+      tester.view.physicalSize = const Size(800, 360);
+      await tester.pump();
+      await tester.pump();
+      expect(currentScale(tester), 1.0);
+    });
+
+    testWidgets('phone padding is 8', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await openOverlay(tester);
+      expect(tester.getRect(find.byType(InteractiveViewer)).left, 8);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
   });
 }

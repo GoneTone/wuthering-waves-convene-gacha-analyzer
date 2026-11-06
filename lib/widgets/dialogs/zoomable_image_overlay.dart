@@ -8,9 +8,11 @@ import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/dialog_toast.dart';
 
-/// 開啟全螢幕 lightbox 顯示 [imageFile]，可拖曳平移、滾輪 / 單擊縮放、ESC / 點背景 / X 關閉。
+/// 開啟全螢幕 lightbox 顯示 [imageFile]：滑鼠可滾輪／單擊縮放，觸控可雙指縮放／點兩下縮放／往下滑關閉；
+/// 都可拖曳平移、右鍵或長按叫出選單、ESC／點背景／X 關閉。
 Future<void> showZoomableImageOverlay(
   BuildContext context, {
   required File imageFile,
@@ -68,6 +70,24 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
   /// 放大後的目標 scale；單擊／縮放鈕在 fit ↔ 2x 之間切換。
   static const double _zoomedScale = 2.0;
 
+  /// 觸控往下拖超過這個距離（且以垂直為主）就關閉。
+  static const double _swipeCloseDistance = 120;
+
+  /// 量觸控連點間隔用的時鐘（不加 DoubleTapGestureRecognizer，避免拖慢滑鼠單擊）。
+  final Stopwatch _tapClock = Stopwatch()..start();
+
+  /// 上一次觸控點擊的時間與位置；用來判斷「點兩下」。
+  ({Duration time, Offset position})? _lastTouchTap;
+
+  /// 觸控往下滑關閉：按下時的位置；多指、滑鼠或已放大時為 null。
+  Offset? _swipeStart;
+
+  /// 目前按著的指標數（雙指縮放時不判斷往下滑）。
+  int _pointers = 0;
+
+  /// 上次排版時的 viewport 大小；改變（轉向）時重設縮放。
+  Size? _lastViewport;
+
   /// 控制 InteractiveViewer 的 Matrix4；wheel / 單擊會手動設置 scale，
   /// InteractiveViewer 自動處理 pan。
   final TransformationController _ctrl = TransformationController();
@@ -116,7 +136,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
     super.dispose();
   }
 
-  /// 關 overlay 並 log 來源。[reason] 走 `backdrop | outside-image | button` 三選一；ESC 由 Navigator barrierDismissible 處理，不經此路徑。
+  /// 關 overlay 並 log 來源。[reason] 走 `backdrop | outside-image | button | swipe-down`；ESC 由 Navigator barrierDismissible 處理，不經此路徑。
   void _close(String reason) {
     Logger('gacha.itemimage.zoom').info('overlay close reason=$reason');
     Navigator.of(context).pop();
@@ -160,19 +180,73 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
     _zoomAt(localFocal: event.localPosition, scaleDelta: delta);
   }
 
-  /// 單擊圖片：在 fit 時放大到 [_zoomedScale]（焦點 = 落點），否則回 fit。
-  /// 回 fit 直接寫 `Matrix4.identity()`（非走 `_zoomAt`），確保 translation 同步歸零。
-  /// 取代雙擊——無 DoubleTapGR 後 tap 立即觸發，不受 kDoubleTapTimeout 影響。
+  /// 點擊圖片：滑鼠單擊立即縮放；觸控單擊不做事，連點兩下才縮放。
+  /// 無 DoubleTapGR，滑鼠單擊不受 kDoubleTapTimeout 影響。
   void _onTapZoom(TapUpDetails details) {
+    if (details.kind != PointerDeviceKind.touch) {
+      _toggleZoomAt(details.localPosition);
+      return;
+    }
+    final now = _tapClock.elapsed;
+    final last = _lastTouchTap;
+    if (last != null &&
+        now - last.time <= kDoubleTapTimeout &&
+        (details.localPosition - last.position).distance <= kDoubleTapSlop) {
+      _lastTouchTap = null;
+      _toggleZoomAt(details.localPosition);
+      return;
+    }
+    _lastTouchTap = (time: now, position: details.localPosition);
+  }
+
+  /// 在 fit 時以 [localFocal] 為焦點放大到 [_zoomedScale]，否則回 fit。
+  /// 回 fit 直接寫 `Matrix4.identity()`（非走 `_zoomAt`），確保 translation 同步歸零。
+  void _toggleZoomAt(Offset localFocal) {
     if (_isZoomed(_ctrl.value)) {
       _ctrl.value = Matrix4.identity();
       return;
     }
     final current = _ctrl.value.getMaxScaleOnAxis();
-    _zoomAt(
-      localFocal: details.localPosition,
-      scaleDelta: _zoomedScale / current,
-    );
+    _zoomAt(localFocal: localFocal, scaleDelta: _zoomedScale / current);
+  }
+
+  /// 觸控按下：單指且未放大時記下起點，準備判斷往下滑關閉。
+  void _onPointerDown(PointerDownEvent event) {
+    _pointers++;
+    _swipeStart =
+        _pointers == 1 &&
+            event.kind == PointerDeviceKind.touch &&
+            !_isZoomed(_ctrl.value)
+        ? event.position
+        : null;
+  }
+
+  /// 觸控放開：往下拖得夠遠且以垂直為主就關閉（放大時拖曳是平移，不會走到這裡）。
+  void _onPointerUp(PointerUpEvent event) {
+    _pointers = (_pointers - 1).clamp(0, 99);
+    final start = _swipeStart;
+    _swipeStart = null;
+    if (start == null) return;
+    final delta = event.position - start;
+    if (delta.dy > _swipeCloseDistance && delta.dy.abs() > 2 * delta.dx.abs()) {
+      _close('swipe-down');
+    }
+  }
+
+  /// 指標被取消（例如手勢被系統攔走）時重設狀態。
+  void _onPointerCancel(PointerCancelEvent event) {
+    _pointers = (_pointers - 1).clamp(0, 99);
+    _swipeStart = null;
+  }
+
+  /// viewport 大小改變（轉向、視窗縮放）時把縮放重設回 fit，圖片不會卡在畫面外。
+  void _resetOnViewportChange(Size viewport) {
+    final last = _lastViewport;
+    _lastViewport = viewport;
+    if (last == null || last == viewport) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _ctrl.value = Matrix4.identity();
+    });
   }
 
   /// 右上縮放鈕：fit 時放大到 [_zoomedScale]（焦點 = viewport 中心），否則回 fit。
@@ -219,10 +293,13 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
     }
   }
 
-  /// 右鍵在圖片上叫出影像選單，位置跟著游標。
-  Future<void> _showImageContextMenu(Offset globalPosition) async {
+  /// 右鍵或長按在圖片上叫出影像選單，位置跟著游標／手指；[source] 寫進 log。
+  Future<void> _showImageContextMenu(
+    Offset globalPosition, {
+    String source = 'rightclick',
+  }) async {
     final l = AppLocalizations.of(context)!;
-    Logger('gacha.itemimage.zoom').info('menu open source=rightclick');
+    Logger('gacha.itemimage.zoom').info('menu open source=$source');
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final selected = await showMenu<String>(
       context: context,
@@ -300,11 +377,14 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
             onTap: () => _close('backdrop'),
           ),
         ),
-        // 中央圖片區 — 留 48px padding 給 backdrop tap 區。
+        // 中央圖片區 — 四周留給 backdrop tap 區（手機排版只留 8，讓圖片盡量大）。
         Padding(
-          padding: const EdgeInsets.all(48),
+          padding: EdgeInsets.all(isCompactLayout(context) ? 8 : 48),
           child: Listener(
             onPointerSignal: _onPointerSignal,
+            onPointerDown: _onPointerDown,
+            onPointerUp: _onPointerUp,
+            onPointerCancel: _onPointerCancel,
             child: GestureDetector(
               // image 像素外的暗區（BoxFit.contain 留白）也視為背景，點擊立即關閉。
               // 只掛 onTap（不掛 onDoubleTap），避免日後若有人加 DoubleTapGR 進同一
@@ -314,8 +394,11 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
                 key: _ivKey,
                 transformationController: _ctrl,
                 panEnabled: true,
-                // wheel / 單擊自管 scale，避免兩套 scale source 打架。
-                scaleEnabled: false,
+                // 雙指縮放交給 InteractiveViewer；滾輪／點擊縮放自己寫矩陣。
+                scaleEnabled: true,
+                // InteractiveViewer 開了縮放也會吃滾輪；係數設成無限大讓它每格縮放 1 倍，
+                // 滾輪只走上面 Listener 的 1.1 倍，避免兩邊疊加。
+                scaleFactor: double.infinity,
                 minScale: _minScale,
                 maxScale: _maxScale,
                 child: Center(
@@ -327,6 +410,7 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
                   // 第一幀就完成，使用者察覺不到。
                   child: LayoutBuilder(
                     builder: (_, constraints) {
+                      _resetOnViewportChange(constraints.biggest);
                       final imgSize = _imageSize;
                       double w = constraints.maxWidth;
                       double h = constraints.maxHeight;
@@ -353,6 +437,12 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
                             onTapUp: _onTapZoom,
                             onSecondaryTapDown: (d) => unawaited(
                               _showImageContextMenu(d.globalPosition),
+                            ),
+                            onLongPressStart: (d) => unawaited(
+                              _showImageContextMenu(
+                                d.globalPosition,
+                                source: 'longpress',
+                              ),
                             ),
                             child: Image(
                               image: _imageProvider,
