@@ -1,0 +1,248 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/data/team_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/pages/app_shell.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.dart';
+
+/// 已有一個帳號、記錄 update 呼叫次數的 repository 替身。
+class _Repo extends GachaRepository {
+  /// update 被呼叫的次數。
+  int updates = 0;
+
+  @override
+  GachaState build() => GachaState(
+    activeUid: '701000000',
+    byUid: {
+      '701000000': BannerStorage(
+        playerId: '701000000',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.now().toUtc(),
+        banners: const {},
+      ),
+    },
+    isBootstrapping: false,
+  );
+
+  @override
+  Future<void> update({bool afterPairing = false}) async => updates++;
+}
+
+/// 不發請求的版本檢查替身。
+class _Release extends AppReleaseNotifier {
+  @override
+  Future<void> check({required bool manual}) async {}
+}
+
+/// 不啟動同步的雲端同步替身。
+class _Sync extends CloudSyncNotifier {
+  @override
+  Future<void> start() async {}
+}
+
+void main() {
+  late _Repo repo;
+  late ProviderContainer container;
+
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  /// 以 [size] 開啟外殼；路由頁面只顯示 `page:<path>`。
+  Future<AppLocalizations> pump(
+    WidgetTester tester,
+    Size size, {
+    Locale locale = const Locale('zh'),
+    double textScale = 1,
+    String? alias,
+  }) async {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    tester.platformDispatcher.textScaleFactorTestValue = textScale;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    repo = _Repo();
+    container = ProviderContainer(
+      overrides: [
+        appVersionProvider.overrideWithValue('1.8.1'),
+        gachaRepositoryProvider.overrideWith(() => repo),
+        appReleaseProvider.overrideWith(_Release.new),
+        cloudSyncProvider.overrideWith(_Sync.new),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(settingsProvider.notifier).waitForLoad();
+    if (alias != null) {
+      await container
+          .read(settingsProvider.notifier)
+          .setUidAlias('701000000', alias);
+    }
+    Widget page(GoRouterState s) => Text('page:${s.uri.path}');
+    final router = GoRouter(
+      routes: [
+        ShellRoute(
+          builder: (_, _, child) => AppShell(child: child),
+          routes: [
+            GoRoute(path: '/', builder: (_, s) => page(s)),
+            GoRoute(path: '/banner/:type', builder: (_, s) => page(s)),
+            GoRoute(path: '/contributors', builder: (_, s) => page(s)),
+            GoRoute(path: '/settings', builder: (_, s) => page(s)),
+          ],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          routerConfig: router,
+          theme: buildDarkTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: locale,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return AppLocalizations.of(tester.element(find.byType(AppShell)))!;
+  }
+
+  /// 抽屜按鈕（Scaffold 自動加在 AppBar 左上）。
+  Finder drawerButton(WidgetTester tester) => find.byTooltip(
+    MaterialLocalizations.of(
+      tester.element(find.byType(AppShell)),
+    ).openAppDrawerTooltip,
+  );
+
+  testWidgets('phone portrait uses a drawer instead of the rail', (
+    tester,
+  ) async {
+    final l = await pump(tester, const Size(360, 800));
+    expect(drawerButton(tester), findsOneWidget);
+    expect(find.text(l.navOverview), findsNothing);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('drawer lists the same destinations as the rail', (tester) async {
+    final l = await pump(tester, const Size(360, 800));
+    await tester.tap(drawerButton(tester));
+    await tester.pumpAndSettle();
+    for (final label in [
+      l.navOverview,
+      l.gachaTypeCharacterShort,
+      l.gachaTypeReverbWeaponShort,
+      l.navContributors,
+      l.navSettings,
+    ]) {
+      final f = find.text(label);
+      await tester.scrollUntilVisible(
+        f,
+        50,
+        scrollable: find
+            .descendant(
+              of: find.byType(Drawer),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      expect(f, findsOneWidget, reason: label);
+      expect(
+        tester
+            .getSize(find.ancestor(of: f, matching: find.byType(InkWell)).first)
+            .height,
+        greaterThanOrEqualTo(48),
+        reason: label,
+      );
+    }
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('tapping a drawer item navigates and closes the drawer', (
+    tester,
+  ) async {
+    final l = await pump(tester, const Size(360, 800));
+    await tester.tap(drawerButton(tester));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l.gachaTypeWeaponShort));
+    await tester.pumpAndSettle();
+    expect(find.text('page:/banner/${gachaTypes[1].key}'), findsOneWidget);
+    expect(find.byType(Drawer), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('phone landscape also uses the drawer', (tester) async {
+    await pump(tester, const Size(800, 360));
+    expect(drawerButton(tester), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('desktop keeps the rail and the version', (tester) async {
+    final l = await pump(tester, const Size(1280, 800));
+    expect(drawerButton(tester), findsNothing);
+    expect(find.text(l.navOverview), findsOneWidget);
+    expect(find.textContaining('v1.8.1'), findsOneWidget);
+    expect(find.text(TeamInfo.name), findsOneWidget);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+  for (final (name, locale, scale) in [
+    ('zh', const Locale('zh'), 1.0),
+    ('en', const Locale('en'), 1.0),
+    ('large text', const Locale('zh'), 1.3),
+  ]) {
+    testWidgets('phone title hides the version and never overflows ($name)', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const Size(360, 800),
+        locale: locale,
+        textScale: scale,
+        alias: 'AVeryLongAccountAliasName',
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('v1.8.1'), findsNothing);
+      expect(find.textContaining('701000000'), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
+
+  testWidgets('phone update button is an icon with a tooltip', (tester) async {
+    final l = await pump(tester, const Size(360, 800));
+    final button = find.byTooltip(l.actionUpdate);
+    expect(
+      find.ancestor(of: button, matching: find.byType(IconButton)),
+      findsOneWidget,
+    );
+    await tester.tap(button);
+    await tester.pump();
+    expect(repo.updates, 1);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('phone footer keeps last updated and only the icon links', (
+    tester,
+  ) async {
+    await pump(tester, const Size(360, 800));
+    expect(
+      tester.widget<TeamLinksBar>(find.byType(TeamLinksBar)).compact,
+      isTrue,
+    );
+    expect(find.text(TeamInfo.name), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('rotating with the drawer open does not throw', (tester) async {
+    await pump(tester, const Size(360, 800));
+    await tester.tap(drawerButton(tester));
+    await tester.pumpAndSettle();
+    tester.view.physicalSize = const Size(800, 360);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+}

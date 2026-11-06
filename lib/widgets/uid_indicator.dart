@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
@@ -153,20 +155,41 @@ class AccountTriggerLabel extends StatelessWidget {
     }
     final hasAlias = alias != null && alias!.isNotEmpty;
     final shown = displayUid(uid, mask: maskUid);
-    return _row([
-      const Icon(Icons.person_outline, size: 18),
-      const SizedBox(width: AppSpacing.xs),
-      if (hasAlias) ...[
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 160),
-          child: Text(alias!, maxLines: 1, overflow: TextOverflow.ellipsis),
-        ),
-        Text(' ($shown)'),
-      ] else
-        Text(shown),
-      const Icon(Icons.arrow_drop_down, size: 18),
-    ]);
+    // 寬度受限時（手機標題列）別名先縮；UID 只有在連別名都縮光仍放不下時才截斷。
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final uidMax = math.max(0.0, constraints.maxWidth - _iconsWidth);
+        return _row([
+          const Icon(Icons.person_outline, size: 18),
+          const SizedBox(width: AppSpacing.xs),
+          if (hasAlias)
+            Flexible(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 160),
+                child: Text(
+                  alias!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: uidMax),
+            child: Text(
+              hasAlias ? ' ($shown)' : shown,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const Icon(Icons.arrow_drop_down, size: 18),
+        ]);
+      },
+    );
   }
+
+  /// 兩個圖示加間距的寬度（person 18 + 間距 4 + 下拉箭頭 18）。
+  static const double _iconsWidth = 18 + AppSpacing.xs + 18;
 
   /// 以 [MainAxisSize.min] Row 包裝 [children]。
   Widget _row(List<Widget> children) =>

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
@@ -9,6 +10,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/new_version_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_type_icons.dart';
@@ -17,7 +19,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.da
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/uid_indicator.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/update_progress_dialog.dart';
 
-/// 頂層 shell，包含 AppBar、側欄 rail、底部狀態列。
+/// 頂層 shell，包含 AppBar、側欄 rail（手機排版改為抽屜）、底部狀態列。
 ///
 /// 負責監聽 [gachaRepositoryProvider] 進度與 [appReleaseProvider] 狀態，
 /// 並在適當時機彈出對應 dialog。
@@ -88,6 +90,7 @@ class _AppShellState extends ConsumerState<AppShell> {
       gachaRepositoryProvider.select((s) => s.activeData),
     );
     final width = MediaQuery.of(context).size.width;
+    final compact = isCompactLayout(context);
     final extendedRail = width >= 1180;
     final version = ref.watch(appVersionProvider);
 
@@ -101,7 +104,28 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     final collapsedNoLabel = !extendedRail && width < 800;
 
+    Future<void> update() =>
+        ref.read(gachaRepositoryProvider.notifier).update();
+
     return Scaffold(
+      drawer: compact
+          ? Drawer(
+              child: SafeArea(
+                child: Builder(
+                  builder: (drawerContext) => _Rail(
+                    selection: selection,
+                    isSettingsActive: isSettingsActive,
+                    isContributorsActive: isContributorsActive,
+                    extended: true,
+                    collapsedNoLabel: false,
+                    width: double.infinity,
+                    onNavigate: Scaffold.of(drawerContext).closeDrawer,
+                    l: l,
+                  ),
+                ),
+              ),
+            )
+          : null,
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -116,25 +140,53 @@ class _AppShellState extends ConsumerState<AppShell> {
               filterQuality: FilterQuality.high,
             ),
             const SizedBox(width: AppSpacing.s),
-            Text('${l.appName} v$version'),
+            // 手機排版不顯示版本號；空間不夠時名稱先讓位（可縮到看不見）。
+            if (compact)
+              Flexible(
+                child: Text(
+                  l.appName,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              )
+            else
+              Text('${l.appName} v$version'),
           ],
         ),
-        actions: [
-          const UidIndicator(),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.m,
-              vertical: AppSpacing.s,
-            ),
-            child: FilledButton.icon(
-              icon: const Icon(Icons.refresh),
-              label: Text(l.actionUpdate),
-              onPressed: () async {
-                await ref.read(gachaRepositoryProvider.notifier).update();
-              },
-            ),
-          ),
-        ],
+        actions: compact
+            ? [
+                ConstrainedBox(
+                  // 扣掉 ☰（56）、標題兩側間距（32）、App 圖示含間距（48）、更新按鈕含外距（64），
+                  // 帳號標示不會把 App 圖示擠出畫面；App 名稱則可以縮到看不見。
+                  constraints: BoxConstraints(
+                    maxWidth: math.max(0, width - 56 - 32 - 48 - 64),
+                  ),
+                  child: const UidIndicator(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s),
+                  child: IconButton.filled(
+                    icon: const Icon(Icons.refresh),
+                    tooltip: l.actionUpdate,
+                    onPressed: update,
+                  ),
+                ),
+              ]
+            : [
+                const UidIndicator(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.m,
+                    vertical: AppSpacing.s,
+                  ),
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.refresh),
+                    label: Text(l.actionUpdate),
+                    onPressed: update,
+                  ),
+                ),
+              ],
       ),
       body: Column(
         children: [
@@ -142,15 +194,17 @@ class _AppShellState extends ConsumerState<AppShell> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _Rail(
-                  selection: selection,
-                  isSettingsActive: isSettingsActive,
-                  isContributorsActive: isContributorsActive,
-                  extended: extendedRail,
-                  collapsedNoLabel: collapsedNoLabel,
-                  l: l,
-                ),
-                const VerticalDivider(thickness: 1, width: 1),
+                if (!compact) ...[
+                  _Rail(
+                    selection: selection,
+                    isSettingsActive: isSettingsActive,
+                    isContributorsActive: isContributorsActive,
+                    extended: extendedRail,
+                    collapsedNoLabel: collapsedNoLabel,
+                    l: l,
+                  ),
+                  const VerticalDivider(thickness: 1, width: 1),
+                ],
                 Expanded(child: widget.child),
               ],
             ),
@@ -179,7 +233,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                         ),
                 ),
                 const SizedBox(width: AppSpacing.s),
-                const TeamLinksBar(),
+                TeamLinksBar(compact: compact),
               ],
             ),
           ),
@@ -223,8 +277,9 @@ class _RailSelection {
   static const none = _RailSelection();
 }
 
-/// 左側導覽 rail，包含所有喚取卡池及底部設定、貢獻者入口。
+/// 左側導覽 rail，包含所有喚取卡池及底部設定、貢獻者入口；手機排版時放在抽屜裡。
 class _Rail extends StatelessWidget {
+  /// 建立 rail；[width] 為 null 時依 [extended] 用 256／72，[onNavigate] 在切換頁面前呼叫（抽屜用來關閉自己）。
   const _Rail({
     required this.selection,
     required this.isSettingsActive,
@@ -232,7 +287,15 @@ class _Rail extends StatelessWidget {
     required this.extended,
     required this.collapsedNoLabel,
     required this.l,
+    this.width,
+    this.onNavigate,
   });
+
+  /// 固定寬度；null 時依 [extended] 決定。
+  final double? width;
+
+  /// 切換頁面前呼叫。
+  final VoidCallback? onNavigate;
 
   /// 當前選中的 rail 項目。
   final _RailSelection selection;
@@ -255,7 +318,15 @@ class _Rail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 對齊 NavigationRail 預設寬度：collapsed 72dp，extended 256dp。
-    final railWidth = extended ? 256.0 : 72.0;
+    final railWidth = width ?? (extended ? 256.0 : 72.0);
+
+    void go(String path) {
+      onNavigate?.call();
+      context.go(path);
+    }
+
+    // 抽屜（手機排版）的項目觸控區至少 48dp；桌面 rail 維持原本的高度。
+    final minTileHeight = onNavigate == null ? 0.0 : 48.0;
 
     return SizedBox(
       width: railWidth,
@@ -269,11 +340,12 @@ class _Rail extends StatelessWidget {
                 children: [
                   const SizedBox(height: AppSpacing.s),
                   _RailDestinationTile(
+                    minHeight: minTileHeight,
                     iconInactive: Icons.dashboard_outlined,
                     iconActive: Icons.dashboard,
                     label: l.navOverview,
                     selected: selection.topIndex == 0,
-                    onTap: () => context.go('/'),
+                    onTap: () => go('/'),
                     extended: extended,
                     hideLabel: collapsedNoLabel,
                   ),
@@ -284,11 +356,12 @@ class _Rail extends StatelessWidget {
                   ),
                   for (var i = 0; i < gachaTypes.length; i++)
                     _RailDestinationTile(
+                      minHeight: minTileHeight,
                       iconInactive: _railIconInactive(gachaTypes[i].nameKey),
                       iconActive: _railIconActive(gachaTypes[i].nameKey),
                       label: _railLabel(gachaTypes[i].nameKey, l),
                       selected: selection.gachaIndex == i,
-                      onTap: () => context.go('/banner/${gachaTypes[i].key}'),
+                      onTap: () => go('/banner/${gachaTypes[i].key}'),
                       extended: extended,
                       hideLabel: collapsedNoLabel,
                     ),
@@ -304,7 +377,7 @@ class _Rail extends StatelessWidget {
             label: l.navContributors,
             iconActive: Icons.volunteer_activism,
             iconInactive: Icons.volunteer_activism_outlined,
-            onPressed: () => context.go('/contributors'),
+            onPressed: () => go('/contributors'),
           ),
           _BottomRailButton(
             active: isSettingsActive,
@@ -313,7 +386,7 @@ class _Rail extends StatelessWidget {
             label: l.navSettings,
             iconActive: Icons.settings,
             iconInactive: Icons.settings_outlined,
-            onPressed: () => context.go('/settings'),
+            onPressed: () => go('/settings'),
           ),
         ],
       ),
@@ -336,7 +409,11 @@ class _RailDestinationTile extends StatelessWidget {
     required this.onTap,
     required this.extended,
     required this.hideLabel,
+    this.minHeight = 0,
   });
+
+  /// 可點範圍的最小高度（抽屜用 48dp）。
+  final double minHeight;
 
   /// 未選中狀態圖示。
   final IconData iconInactive;
@@ -385,6 +462,7 @@ class _RailDestinationTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.md),
             onTap: onTap,
             child: Container(
+              constraints: BoxConstraints(minHeight: minHeight),
               decoration: indicator,
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.m,
