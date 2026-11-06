@@ -282,5 +282,17 @@ void main() {
       expect(await unpair(), isFalse);
       expect(keys.has, isFalse);
     });
+
+    test(
+      'unreachable turns wireless debugging back off if it was off',
+      () async {
+        platform
+          ..wss = true
+          ..adbWifiOn = false;
+        ops.reachable = false;
+        expect(await unpair(), isFalse);
+        expect(platform.adbWifiOn, isFalse);
+      },
+    );
   });
 }

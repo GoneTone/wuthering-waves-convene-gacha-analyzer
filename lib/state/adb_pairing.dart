@@ -239,6 +239,8 @@ Future<bool> unpairWirelessDebugging({
     log.warning('unpair revoke failed: ${e.message}');
   } finally {
     await client.close();
+    // 沒收回權限時 App 還能自己關；連不上也不能把剛打開的無線偵錯留著。
+    if (!wasOn && !revoked) await platform.setAdbWifiEnabled(false);
   }
   await keyStore.delete();
   log.info('unpaired revoked=$revoked');
