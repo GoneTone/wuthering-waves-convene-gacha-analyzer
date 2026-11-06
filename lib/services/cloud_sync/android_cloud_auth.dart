@@ -1,4 +1,3 @@
-import 'package:googleapis/oauth2/v2.dart' show DetailedApiRequestError;
 import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
@@ -42,7 +41,7 @@ class AndroidCloudAuth implements CloudAuth {
   /// 取得並驗證通行證（以 userinfo 確認未被撤銷）；回傳 client 與 email。
   ///
   /// 通行證被 API 拒絕（401）時清掉系統快取並以同一種方式重取一次；
-  /// 第二次仍 401：[interactive] 為 true 拋出錯誤，否則回 null。靜默拿不到時回 null。
+  /// 第二次仍被拒（同樣清掉快取）：[interactive] 為 true 拋出錯誤，否則回 null。靜默拿不到時回 null。
   Future<({http.Client client, String email})?> _verifiedToken({
     required bool interactive,
   }) async {
@@ -56,13 +55,13 @@ class AndroidCloudAuth implements CloudAuth {
         return (client: client, email: await fetchCloudEmail(client));
       } catch (e) {
         client.close();
-        if (e is! DetailedApiRequestError || e.status != 401) rethrow;
+        if (!isInvalidToken(e)) rethrow;
+        _log.info('android token rejected (401), clearing cache and retrying');
+        await gateway.clearToken(token);
         if (attempt >= 1) {
           if (interactive) rethrow;
           return null;
         }
-        _log.info('android token rejected (401), clearing cache and retrying');
-        await gateway.clearToken(token);
       }
     }
   }

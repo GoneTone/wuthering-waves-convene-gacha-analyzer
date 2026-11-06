@@ -56,7 +56,14 @@ void main() {
       baseClientFactory: () => MockClient((request) async {
         requests.add(request.url);
         final token = request.headers['authorization']?.split(' ').last ?? '';
-        if (token == 'stale') return http.Response('{}', 401);
+        if (token == 'stale') {
+          return http.Response(
+            '{}',
+            401,
+            headers: {'www-authenticate': 'Bearer error="invalid_token"'},
+          );
+        }
+        if (token == 'stale-plain') return http.Response('{}', 401);
         final email = token == 'other' ? 'x@example.com' : 'u@example.com';
         return http.Response(
           jsonEncode({'email': email}),
@@ -88,6 +95,29 @@ void main() {
       expect(gateway.cleared, ['stale']);
     },
   );
+
+  test('link: header-less 401 is also treated as stale', () async {
+    gateway.interactive.addAll(['stale-plain', 'good-2']);
+
+    final result = await auth.link(openUrl: (_) {});
+
+    expect(result.email, 'u@example.com');
+    expect(gateway.cleared, ['stale-plain']);
+  });
+
+  test('link: still stale after one retry → throws', () async {
+    gateway.interactive.addAll(['stale', 'stale']);
+
+    await expectLater(auth.link(openUrl: (_) {}), throwsA(anything));
+    expect(gateway.cleared, ['stale', 'stale']);
+  });
+
+  test('restore: stale twice → null after clearing both', () async {
+    gateway.silent.addAll(['stale', 'stale']);
+
+    expect(await auth.restoreClient(expectedEmail: 'u@example.com'), isNull);
+    expect(gateway.cleared, ['stale', 'stale']);
+  });
 
   test('link: user cancels → CloudLinkCancelledException propagates', () async {
     gateway.cancelInteractive = true;

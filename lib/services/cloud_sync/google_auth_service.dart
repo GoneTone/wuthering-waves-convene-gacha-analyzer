@@ -1,3 +1,4 @@
+import 'package:googleapis/oauth2/v2.dart' show DetailedApiRequestError;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
@@ -39,6 +40,14 @@ bool isInsufficientScope(Object e) {
       s.contains('insufficient authentication scopes') ||
       s.contains('ACCESS_TOKEN_SCOPE_INSUFFICIENT');
 }
+
+/// 判斷例外是否為 API 拒絕 access token（已撤銷／失效）。
+///
+/// 兩種表面：googleapis 的 `DetailedApiRequestError` 401；或 `AuthenticatedClient`
+/// 遇 `www-authenticate: ... error="invalid_token"` 直接拋的 `AccessDeniedException`。
+bool isInvalidToken(Object e) =>
+    (e is DetailedApiRequestError && e.status == 401) ||
+    (e is AccessDeniedException && e.message.contains('invalid_token'));
 
 /// 檢查實際授予的 [granted] scopes 是否含雲端同步必要的 `drive.appdata`。
 ///
