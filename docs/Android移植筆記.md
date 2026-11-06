@@ -343,10 +343,11 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 撤銷授權後重新授權，Play 服務把**舊的、已撤銷的通行證**交回來，API 回 401（`Request had invalid authentication credentials`）。必須 `clearAuthorizationToken(accessToken:)` 清掉快取再要一次才會拿到新的。
 - 處理：Android 拿到通行證後先用 userinfo 驗證，遇到 401 就清快取、重取一次；靜默還原重取不到就進「需要重新連結」。
 - 通行證約 1 小時過期、App 無法自己續期，所以 Android 每輪同步都重新靜默取得通行證，不沿用上一輪的 client。
+- **使用者取消不是 `canceled`**（2026-11-06 實測）：在帳號選擇畫面按返回，`google_sign_in_android` 7.2.18 不看 Activity 的 resultCode，回報的是 `GoogleSignInException(unknownError, "SDK reported an exception: 16: [16] Cancelled by user.")`（Play 服務狀態碼 16 = `CANCELED`）。所以判斷取消要同時認 `canceled` 與「`unknownError` 且狀態碼 16」，否則畫面會顯示「授權失敗」。log 會記下完整的 code 與 description，方便分辨是取消還是設定錯誤。
 - 「只忘記本機」（清快取＋`signOut()`）之後，靜默授權拿不到通行證；再授權時會跳出帳號選擇，可以換帳號。App 完全關掉再開，靜默授權直接拿得到通行證，不必重新連結。
 
 ### 32. 簽章指紋要逐把登記（通用）
 
 - Android 用戶端以「套件名稱＋SHA-1」辨識 App，同一個 App 可能有三把金鑰，每把都要在 Android 用戶端登記一筆：
   - 開發用 debug 金鑰：`F8:09:DC:34:0C:1C:D5:92:C5:0A:44:8E:0B:DB:1C:96:8D:30:08:1B`（`~/.android/debug.keystore`，已登記）。
-  - **上傳金鑰、Play 應用程式簽署金鑰：子專案 7 必須回來補登記**（Play 簽署金鑰的 SHA-1 在 Play Console 查）。只登記 debug 金鑰時實機測試一切正常，但從 Play 下載的版本會出現設定錯誤（常見 `DEVELOPER_ERROR`），或被 Credential Manager 回報成「已取消」。
+  - **上傳金鑰、Play 應用程式簽署金鑰：子專案 7 必須回來補登記**（Play 簽署金鑰的 SHA-1 在 Play Console 查）。只登記 debug 金鑰時實機測試一切正常，但從 Play 下載的版本授權會失敗。依套件原始碼推論（未實測），會回報成 `GoogleSignInException(unknownError, "SDK reported an exception: 10: ...")`（Play 服務狀態碼 10 = `DEVELOPER_ERROR`），畫面顯示「授權失敗」。
