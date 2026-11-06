@@ -1498,9 +1498,7 @@ void main() {
         find.text(l.itemImageSavedTo(r'C:\out\Char_造型A.png')),
         findsOneWidget,
       );
-      expect(messages, [
-        'item image action=save name=Char_造型A.png outcome=ok',
-      ]);
+      expect(messages, ['item image action=save name=Char_造型A.png outcome=ok']);
       await flushToast(tester);
     }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 

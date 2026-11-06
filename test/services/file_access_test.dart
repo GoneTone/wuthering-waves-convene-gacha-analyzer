@@ -198,8 +198,11 @@ void main() {
 
     test('writes the bytes under share_out with the given name', () async {
       final file = await prepareShareFile(temp, bytes, 'a.png');
-      expect(file.path, '${temp.path}${Platform.pathSeparator}share_out'
-          '${Platform.pathSeparator}a.png');
+      expect(
+        file.path,
+        '${temp.path}${Platform.pathSeparator}share_out'
+        '${Platform.pathSeparator}a.png',
+      );
       expect(file.readAsBytesSync(), bytes);
     });
 

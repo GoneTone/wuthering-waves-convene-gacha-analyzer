@@ -15,6 +15,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/data/app_repo.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_export.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/file_reveal.dart';
@@ -768,9 +769,10 @@ class _DataManagement extends ConsumerWidget {
       return;
     }
     if (saved == null) return;
-    Logger(
-      'accounts.io',
-    ).info('export: uids=${pickedSet.length} records=$records');
+    Logger('accounts.io').info(
+      'export: uids=${pickedSet.length} records=$records '
+      '${_savedLocation(saved)}',
+    );
     if (!ctx.mounted) return;
     await showExportResultDialog(
       ctx,
@@ -1315,6 +1317,11 @@ class _UsageRows extends StatelessWidget {
   }
 }
 
+/// 存檔位置的 log 片段：桌面為脫敏後的 `path=...`，Android 沒有路徑只有 `name=...`。
+String _savedLocation(SavedFile saved) => saved.path != null
+    ? 'path=${sanitizeFsPath(saved.path!)}'
+    : 'name=${saved.displayName}';
+
 /// 以系統分享面板分享 [bytes]；失敗時跳出「無法分享」結果視窗，成功不提示。
 Future<void> _shareOrReport(
   BuildContext ctx, {
@@ -1443,7 +1450,21 @@ class _LogsSection extends ConsumerWidget {
   /// 匯出應用程式日誌至使用者指定位置。
   Future<void> _export(BuildContext ctx, WidgetRef ref) async {
     final l = AppLocalizations.of(ctx)!;
-    final (:bytes, :fileName) = await _buildBundle(ref);
+    // FilePicker.saveFile 要求 bytes 一開始就備妥，所以先組 bundle 再開存檔對話框。
+    final ({Uint8List bytes, String fileName}) bundle;
+    try {
+      bundle = await _buildBundle(ref);
+    } catch (e, st) {
+      Logger('accounts.io').severe('logs export failed: build bundle', e, st);
+      if (!ctx.mounted) return;
+      await showExportResultDialog(
+        ctx,
+        success: false,
+        message: l.settingsLogsExportFailed(e.toString()),
+      );
+      return;
+    }
+    final (:bytes, :fileName) = bundle;
     final SavedFile? saved;
     try {
       saved = await saveBytes(
@@ -1466,7 +1487,7 @@ class _LogsSection extends ConsumerWidget {
     if (saved == null) return;
     Logger(
       'accounts.io',
-    ).info('logs exported: ${saved.displayName} (${bytes.length} bytes)');
+    ).info('logs exported: ${_savedLocation(saved)} bytes=${bytes.length}');
     if (!ctx.mounted) return;
     await showExportResultDialog(
       ctx,
@@ -1478,7 +1499,20 @@ class _LogsSection extends ConsumerWidget {
 
   /// 以系統分享面板分享應用程式日誌（Android）。
   Future<void> _share(BuildContext ctx, WidgetRef ref) async {
-    final (:bytes, :fileName) = await _buildBundle(ref);
+    final ({Uint8List bytes, String fileName}) bundle;
+    try {
+      bundle = await _buildBundle(ref);
+    } catch (e, st) {
+      Logger('accounts.io').severe('logs share failed: build bundle', e, st);
+      if (!ctx.mounted) return;
+      await showExportResultDialog(
+        ctx,
+        success: false,
+        message: AppLocalizations.of(ctx)!.shareFailed,
+      );
+      return;
+    }
+    final (:bytes, :fileName) = bundle;
     Logger(
       'accounts.io',
     ).info('logs share: name=$fileName bytes=${bytes.length}');

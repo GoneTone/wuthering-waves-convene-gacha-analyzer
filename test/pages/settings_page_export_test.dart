@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
@@ -26,6 +27,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/log_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import '../helpers/no_game_dir.dart';
 
 /// 空 [GachaCapture] 替身。
@@ -37,13 +39,19 @@ class _NullCapture implements GachaCapture {
 
 /// 不碰檔案系統的 [LogService] 替身，只回傳固定的日誌內容。
 class _FakeLogService implements LogService {
+  /// 非 null 時 [buildExportBundle] 改丟這個例外。
+  Object? bundleError;
+
   @override
   Future<String> buildExportBundle({
     required String appVersion,
     required String osDescription,
     required String localeTag,
     required String themeMode,
-  }) async => 'fake log bundle';
+  }) async {
+    if (bundleError != null) throw bundleError!;
+    return 'fake log bundle';
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -61,6 +69,7 @@ void main() {
   late List<_Shared> shares;
   String? saveResult;
   Object? shareError;
+  late _FakeLogService logService;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -68,6 +77,7 @@ void main() {
     shares = [];
     saveResult = '/document/primary:Download/out.json';
     shareError = null;
+    logService = _FakeLogService();
     fileSaveDialog = (bytes, name, ext, mime, title) async {
       saves.add((bytes: bytes, name: name, ext: ext, mime: mime));
       return saveResult;
@@ -119,7 +129,7 @@ void main() {
         overrides: [
           noGameDirOverride,
           isAndroidProvider.overrideWithValue(android),
-          logServiceProvider.overrideWithValue(_FakeLogService()),
+          logServiceProvider.overrideWithValue(logService),
           gachaStorageProvider.overrideWithValue(storage),
           gachaCaptureProvider.overrideWithValue(_NullCapture()),
           cancellableHttpClientFactoryProvider.overrideWithValue(
@@ -283,4 +293,117 @@ void main() {
     expect(saves.single.mime, 'text/plain');
     expect(find.textContaining('logs.log'), findsOneWidget);
   }, variant: android);
+
+  testWidgets('cancelling the backup save shows no dialog', (tester) async {
+    saveResult = null;
+    final l = await pump(tester, android: false);
+    await openBackupPicker(tester, l);
+    await tester.tap(find.widgetWithText(FilledButton, l.confirmExport));
+    await tester.pumpAndSettle();
+    expect(saves, hasLength(1));
+    expect(find.byType(Dialog), findsNothing);
+  }, variant: windows);
+
+  testWidgets('a failing backup save shows the write failed dialog', (
+    tester,
+  ) async {
+    fileSaveDialog = (_, _, _, _, _) async => throw StateError('boom');
+    final l = await pump(tester, android: false);
+    await openBackupPicker(tester, l);
+    await tester.tap(find.widgetWithText(FilledButton, l.confirmExport));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(l.settingsExportFailed(l.exportReasonWriteFailed)),
+      findsOneWidget,
+    );
+  }, variant: windows);
+
+  testWidgets('a failing logs save shows the logs export failed dialog', (
+    tester,
+  ) async {
+    final error = StateError('boom');
+    fileSaveDialog = (_, _, _, _, _) async => throw error;
+    final l = await pump(tester, android: true);
+    await tester.tap(find.text(l.settingsLogsExport));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(l.settingsLogsExportFailed(error.toString())),
+      findsOneWidget,
+    );
+  }, variant: android);
+
+  testWidgets('a failing log bundle shows the logs export failed dialog', (
+    tester,
+  ) async {
+    final error = StateError('no logs');
+    logService.bundleError = error;
+    final l = await pump(tester, android: true);
+    await tester.tap(find.text(l.settingsLogsExport));
+    await tester.pumpAndSettle();
+    expect(saves, isEmpty);
+    expect(
+      find.text(l.settingsLogsExportFailed(error.toString())),
+      findsOneWidget,
+    );
+  }, variant: android);
+
+  testWidgets('a failing log bundle shows shareFailed when sharing', (
+    tester,
+  ) async {
+    logService.bundleError = StateError('no logs');
+    final l = await pump(tester, android: true);
+    await tester.tap(find.text(l.settingsLogsShare));
+    await tester.pumpAndSettle();
+    expect(shares, isEmpty);
+    expect(find.text(l.shareFailed), findsOneWidget);
+  }, variant: android);
+
+  group('export logs carry the saved location', () {
+    late List<String> messages;
+
+    setUp(() {
+      messages = [];
+      final sub = Logger.root.onRecord
+          .where((r) => r.loggerName == 'accounts.io')
+          .listen((r) => messages.add(r.message));
+      addTearDown(sub.cancel);
+    });
+
+    testWidgets('Windows backup log includes the sanitized path', (
+      tester,
+    ) async {
+      saveResult = r'C:\tmp\wuwa_backup.json';
+      final l = await pump(tester, android: false);
+      await openBackupPicker(tester, l);
+      await tester.tap(find.widgetWithText(FilledButton, l.confirmExport));
+      await tester.pumpAndSettle();
+      expect(
+        messages,
+        contains(contains('path=${sanitizeFsPath(saveResult!)}')),
+      );
+    }, variant: windows);
+
+    testWidgets('Windows logs export log includes the sanitized path', (
+      tester,
+    ) async {
+      saveResult = r'C:\tmp\app.log';
+      final l = await pump(tester, android: false);
+      await tester.tap(find.text(l.settingsLogsExport));
+      await tester.pumpAndSettle();
+      expect(
+        messages,
+        contains(contains('path=${sanitizeFsPath(saveResult!)}')),
+      );
+    }, variant: windows);
+
+    testWidgets('Android logs export log includes the display name', (
+      tester,
+    ) async {
+      saveResult = '/document/primary:Download/out.log';
+      final l = await pump(tester, android: true);
+      await tester.tap(find.text(l.settingsLogsExport));
+      await tester.pumpAndSettle();
+      expect(messages, contains(contains('name=out.log')));
+    }, variant: android);
+  });
 }
