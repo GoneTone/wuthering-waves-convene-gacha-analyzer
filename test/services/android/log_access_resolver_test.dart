@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/adb_shell_client.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/flutter_adb_session.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_method.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/root_shell.dart';
