@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_method.dart';
+
 /// 應用程式的外觀主題設定。
 enum AppThemeMode {
   /// 跟隨系統明暗模式。
@@ -82,6 +84,7 @@ class AppSettings {
     this.skippedReleaseTag,
     this.maskUidInUi = false,
     this.gameDir,
+    this.logAccessMethod,
     this.dataLanguage,
     this.dataLanguageSeeded = false,
     this.cloudAccountEmail,
@@ -113,6 +116,9 @@ class AppSettings {
 
   /// 遊戲安裝資料夾（含 `Client\Saved\Logs\Client.log` 的根目錄）；null 代表尚未設定。僅存本機，不參與雲端同步。
   final String? gameDir;
+
+  /// Android 上次成功讀取遊戲記錄的方式；null 代表尚未設定。僅存本機，不參與雲端同步。
+  final LogAccessMethod? logAccessMethod;
 
   /// 資料語言代碼（如 `ja`）；null 代表未設定（停用轉換）。獨立於 App UI 語言。
   final String? dataLanguage;
@@ -153,6 +159,8 @@ class AppSettings {
     bool? maskUidInUi,
     String? gameDir,
     bool clearGameDir = false,
+    LogAccessMethod? logAccessMethod,
+    bool clearLogAccessMethod = false,
     String? dataLanguage,
     bool clearDataLanguage = false,
     bool? dataLanguageSeeded,
@@ -175,6 +183,9 @@ class AppSettings {
         : (skippedReleaseTag ?? this.skippedReleaseTag),
     maskUidInUi: maskUidInUi ?? this.maskUidInUi,
     gameDir: clearGameDir ? null : (gameDir ?? this.gameDir),
+    logAccessMethod: clearLogAccessMethod
+        ? null
+        : (logAccessMethod ?? this.logAccessMethod),
     dataLanguage: clearDataLanguage
         ? null
         : (dataLanguage ?? this.dataLanguage),
@@ -219,6 +230,9 @@ abstract final class SettingsStorage {
   /// SharedPreferences key：遊戲安裝資料夾。
   static const _kGameDir = 'pref.gameDir';
 
+  /// SharedPreferences key：Android 讀取遊戲記錄的方式（[LogAccessMethod.name]）。
+  static const _kLogAccessMethod = 'pref.logAccessMethod';
+
   /// SharedPreferences key：資料語言（語言碼／`"none"`／不存在三態）。
   static const _kDataLanguage = 'pref.dataLanguage';
 
@@ -247,6 +261,9 @@ abstract final class SettingsStorage {
       skippedReleaseTag: prefs.getString(_kSkippedReleaseTag),
       maskUidInUi: prefs.getBool(_kMaskUidInUi) ?? false,
       gameDir: prefs.getString(_kGameDir),
+      logAccessMethod: LogAccessMethod.fromName(
+        prefs.getString(_kLogAccessMethod),
+      ),
       dataLanguage: dataLangRaw == null || dataLangRaw == 'none'
           ? null
           : dataLangRaw,
@@ -283,6 +300,11 @@ abstract final class SettingsStorage {
       await prefs.remove(_kGameDir);
     } else {
       await prefs.setString(_kGameDir, s.gameDir!);
+    }
+    if (s.logAccessMethod == null) {
+      await prefs.remove(_kLogAccessMethod);
+    } else {
+      await prefs.setString(_kLogAccessMethod, s.logAccessMethod!.name);
     }
     if (!s.dataLanguageSeeded) {
       await prefs.remove(_kDataLanguage);
