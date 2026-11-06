@@ -72,12 +72,14 @@ class _Ops extends AdbPairingOps {
   bool pairOk = true;
   bool grantWorks = true;
   bool reachable = true;
+  bool pairThrows = false;
   final commands = <String>[];
   final pairs = <(int, String)>[];
 
   @override
   Future<bool> pair(int port, String code) async {
     pairs.add((port, code));
+    if (pairThrows) throw StateError('key storage failed');
     return pairOk;
   }
 
@@ -208,6 +210,16 @@ void main() {
     final r = await platform.handler!(1, '987654');
     expect(r.ok, isFalse);
     expect(r.message, isNot(contains('987654')));
+    expect(phase(), PairingPhase.waitingCode);
+  });
+
+  test('pairing that throws goes back to waiting for a code', () async {
+    ops.pairThrows = true;
+    await ctl().startSetup();
+    await ctl().openWirelessDebugging();
+    final r = await platform.handler!(1, '222222');
+    expect(r.ok, isFalse);
+    expect(r.message, isNot(contains('222222')));
     expect(phase(), PairingPhase.waitingCode);
   });
 

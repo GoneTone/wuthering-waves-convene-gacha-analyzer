@@ -154,7 +154,14 @@ class AdbPairingController extends Notifier<AdbPairingState> {
     String code,
   ) async {
     _go(PairingPhase.pairing);
-    final ok = await _ops.pair(port, code);
+    bool ok;
+    try {
+      ok = await _ops.pair(port, code);
+    } catch (e) {
+      // 例如讀寫配對金鑰失敗；不回到等待配對碼，畫面會一直停在「配對中」。
+      _log.warning('pairing threw error=${e.runtimeType}');
+      ok = false;
+    }
     _log.info('pairing ok=$ok');
     if (!ok) {
       _go(PairingPhase.waitingCode);
