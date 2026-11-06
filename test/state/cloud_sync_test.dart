@@ -528,26 +528,18 @@ void main() {
   );
 
   test(
-    'non-persistent auth → startup client is replaced on a later manual sync',
+    'persistent auth → start keeps the client a completed link established',
     () async {
-      final auth = _NonPersistentAuth();
-      final container = makeNonPersistentContainer(auth);
+      final container = makeContainer();
       await container.read(settingsProvider.notifier).waitForLoad();
       await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
-      await container
-          .read(settingsProvider.notifier)
-          .setCloudAccount('u@example.com');
-      await container
-          .read(settingsProvider.notifier)
-          .setCloudAutoSyncEnabled(false);
-
       final notifier = container.read(cloudSyncProvider.notifier);
-      await notifier.start();
-      expect(auth.restoredEmails, hasLength(1));
-      await notifier.syncNow(manual: true);
+      await notifier.link();
+      expect(authService.restoreCalls, 0);
 
-      expect(auth.restoredEmails, hasLength(2));
-      expect(auth.clients.first.closed, isTrue);
+      await notifier.start();
+
+      expect(authService.restoreCalls, 0);
     },
   );
 

@@ -61,21 +61,12 @@ class AndroidCloudAuth implements CloudAuth {
               ? 'android token still rejected after retry, clearing cache'
               : 'android token rejected (401), clearing cache and retrying',
         );
-        await _clearStaleToken(token);
+        await _bestEffort('stale token clear', () => gateway.clearToken(token));
         if (finalAttempt) {
           if (interactive) rethrow;
           return null;
         }
       }
-    }
-  }
-
-  /// 清掉被拒的系統快取通行證；舊版 Play services 不支援清除，失敗只記 log 並照常重試。
-  Future<void> _clearStaleToken(String token) async {
-    try {
-      await gateway.clearToken(token);
-    } catch (e) {
-      _log.warning('android clear stale token failed (ignored): $e');
     }
   }
 
@@ -115,22 +106,20 @@ class AndroidCloudAuth implements CloudAuth {
 
   @override
   Future<void> unlink() async {
-    await _bestEffort(() async {
+    await _bestEffort('unlink: play services cleanup', () async {
       final token = await gateway.silentToken();
       if (token != null) await gateway.clearToken(token);
     });
-    await _bestEffort(gateway.signOut);
+    await _bestEffort('unlink: play services cleanup', gateway.signOut);
     _log.info('android unlink done (local only)');
   }
 
-  /// 執行 Play services 清理步驟；失敗只記 log，不阻擋「忘記此裝置」。
-  Future<void> _bestEffort(Future<void> Function() step) async {
+  /// 執行 Play services 清理步驟 [label]；失敗只記 log 並放行（不阻擋忘記此裝置或重試取新通行證）。
+  Future<void> _bestEffort(String label, Future<void> Function() step) async {
     try {
       await step();
     } catch (e) {
-      _log.warning(
-        'android unlink: play services cleanup failed (ignored): $e',
-      );
+      _log.warning('android $label failed (ignored): $e');
     }
   }
 }

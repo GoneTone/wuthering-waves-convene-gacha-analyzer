@@ -177,12 +177,10 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
       }
     }
     try {
-      final restored = await _restoreClient(auth);
       if (auth.keepsClientAcrossRounds) {
-        _client?.close();
-        _client = restored;
+        await _ensureClient();
       } else {
-        restored.close();
+        (await _restoreClient(auth)).close();
       }
     } on CloudReauthRequiredException {
       state = const CloudSyncState(phase: CloudSyncPhase.reauthRequired);
