@@ -89,6 +89,9 @@ class _FakeWatch implements ClientLogWatch {
   final sources = <ClientLogSource>[];
   final cancelled = <int>[];
 
+  /// 設定後 cancel 會等它完成才返回，模擬還在讀取的輪詢。
+  Completer<void>? cancelGate;
+
   @override
   Future<CaptureSession> start(ClientLogSource source) async {
     final i = hits.length;
@@ -99,6 +102,7 @@ class _FakeWatch implements ClientLogWatch {
       result: c.future,
       cancel: () async {
         cancelled.add(i);
+        await cancelGate?.future;
         if (!c.isCompleted) c.complete(null);
       },
     );
@@ -297,6 +301,26 @@ void main() {
     await r.submitManualCredential(_cred());
     await done;
     expect(progress(), isA<UpdateCompleted>());
+  });
+
+  test('cancel releases only after the in-flight poll stops', () async {
+    // 輪詢還在讀取時就 release，讀取失敗會觸發重連、把無線偵錯又打開。
+    final ready = _Ready();
+    resolver.results.add(ready.outcome);
+    watch.cancelGate = Completer<void>();
+    final r = await repo();
+
+    final done = r.update();
+    await _until(() => watch.hits.isNotEmpty);
+    unawaited(r.cancelCapture());
+    await _until(() => watch.cancelled.isNotEmpty);
+    for (var i = 0; i < 20; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(ready.released, 0);
+    watch.cancelGate!.complete();
+    await done;
+    expect(ready.released, 1);
   });
 
   test('blocked: cancel clears progress', () async {

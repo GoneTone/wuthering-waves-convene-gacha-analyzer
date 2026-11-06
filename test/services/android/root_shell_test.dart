@@ -174,6 +174,24 @@ void main() {
     await expectLater(shell.exec('x'), throwsA(isA<RootShellException>()));
   });
 
+  test('exec after close fails instead of starting another su', () async {
+    // release 之後還在跑的輪詢不能再開 su（會再跳一次 root 授權）。
+    var starts = 0;
+    final shell = RootShell(
+      suPaths: [fakeSuPath()],
+      start: (exe, args) async {
+        starts++;
+        return _FakeSu((_) => utf8.encode('uid=0'));
+      },
+    );
+    await shell.verify();
+    await shell.close();
+    await expectLater(shell.exec('x'), throwsA(isA<RootShellException>()));
+    expect(starts, 1);
+    expect(await shell.verify(), isTrue, reason: 'next update starts again');
+    expect(starts, 2);
+  });
+
   test('close kills the su process', () async {
     late _FakeSu su;
     final shell = RootShell(

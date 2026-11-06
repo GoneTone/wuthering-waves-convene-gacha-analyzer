@@ -162,6 +162,24 @@ void main() {
     },
   );
 
+  test('exec after close fails without reconnecting', () async {
+    // 重連會順便重開無線偵錯；release 之後還在跑的指令不能這樣做。
+    var rediscovered = 0;
+    final client = AdbShellClient(
+      connect: (port) async => _FakeSession(port),
+      rediscover: () async {
+        rediscovered++;
+        return [2];
+      },
+      retryDelay: Duration.zero,
+    );
+    await client.connectAny([1]);
+    await client.close();
+    await expectLater(client.exec('x'), throwsA(isA<AdbShellException>()));
+    expect(await client.connectAny([1]), isFalse);
+    expect(rediscovered, 0);
+  });
+
   test('keeps a minimum gap between shell streams', () async {
     final starts = <int>[];
     final ends = <int>[];

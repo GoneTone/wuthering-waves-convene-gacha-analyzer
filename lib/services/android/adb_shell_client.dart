@@ -74,6 +74,9 @@ class AdbShellClient {
   /// 上一次回報的健康狀態。
   bool _healthy = true;
 
+  /// 是否已 [close]；關閉後不再連線，避免重連時又把無線偵錯打開。
+  bool _closed = false;
+
   /// 本用戶端的 logger。
   static final _log = Logger('capture.adb');
 
@@ -85,6 +88,7 @@ class AdbShellClient {
 
   /// 依序嘗試 [ports]，連上且確認是 shell 使用者就停；全部失敗回 false。
   Future<bool> connectAny(List<int> ports) async {
+    if (_closed) return false;
     for (final port in ports) {
       AdbSession? session;
       try {
@@ -97,6 +101,7 @@ class AdbShellClient {
           await _shell(session, 'id'),
           allowMalformed: true,
         );
+        if (_closed) break;
         if (id.contains('uid=2000')) {
           await _session?.close();
           _session = session;
@@ -126,6 +131,7 @@ class AdbShellClient {
 
   /// [exec] 的實際流程（已在鎖內）。
   Future<Uint8List> _run(String command) async {
+    if (_closed) throw AdbShellException('client closed');
     final session = _session;
     if (session != null) {
       try {
@@ -141,7 +147,9 @@ class AdbShellClient {
       }
     }
     final rediscover = _rediscover;
-    if (rediscover == null) throw AdbShellException('shell unavailable');
+    if (rediscover == null || _closed) {
+      throw AdbShellException('shell unavailable');
+    }
     await _session?.close();
     _session = null;
     final ports = await rediscover();
@@ -179,6 +187,7 @@ class AdbShellClient {
 
   /// 中斷連線並關閉健康狀態 stream。
   Future<void> close() async {
+    _closed = true;
     await _session?.close();
     _session = null;
     await _health.close();

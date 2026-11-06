@@ -515,6 +515,7 @@ class GachaRepository extends Notifier<GachaState> {
     _waitCancelled = cancelled;
     _captureCancelRequested = false;
     LogAccessReady? ready;
+    CaptureSession? watch;
     StreamSubscription<bool>? healthSub;
     try {
       while (true) {
@@ -566,11 +567,14 @@ class GachaRepository extends Notifier<GachaState> {
           ),
         );
       });
-      final watch = await ref.read(clientLogWatchProvider).start(ready.source);
-      _logSession = watch;
+      final session = await ref
+          .read(clientLogWatchProvider)
+          .start(ready.source);
+      watch = session;
+      _logSession = session;
       if (_captureCancelRequested || !ref.mounted) return null;
       unawaited(
-        watch.result.then((c) {
+        session.result.then((c) {
           if (c != null && !logHit.isCompleted) logHit.complete(c);
         }),
       );
@@ -602,6 +606,15 @@ class GachaRepository extends Notifier<GachaState> {
       _logAccessRetry = null;
       await healthSub?.cancel();
       await _stopClientLogWatch();
+      // 取消時 [cancelCapture] 已先拿走 session；仍要等進行中的輪詢停下再 release，
+      // 否則讀取失敗會觸發重連、把剛關掉的無線偵錯又打開。
+      try {
+        await watch?.cancel();
+      } catch (e) {
+        _clientLog.warning(
+          'client log watch stop failed error=${e.runtimeType}',
+        );
+      }
       if (ready != null) {
         if (await ready.release()) _wirelessLeftOn = true;
         // 連上時可能順便補回授權，設定頁的配對狀態要重讀。

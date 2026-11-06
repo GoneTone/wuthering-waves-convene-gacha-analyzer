@@ -86,7 +86,7 @@ class RootShell {
   Future<bool> verify() async {
     try {
       final out = utf8.decode(
-        await _execInternal('id', _grantTimeout),
+        await _execInternal('id', _grantTimeout, spawn: true),
         allowMalformed: true,
       );
       final ok = out.contains('uid=0');
@@ -104,25 +104,34 @@ class RootShell {
   Future<Uint8List> exec(String command) =>
       _execInternal(command, _commandTimeout);
 
-  /// 送出 [command] 並等它的結束標記。
-  Future<Uint8List> _execInternal(String command, Duration timeout) =>
-      _lock.synchronized(() async {
-        final process = _process ?? await _spawn();
-        final pending = Completer<Uint8List>();
-        _pending = pending;
-        process.stdin
-          ..writeln(command)
-          ..writeln("printf '\\n%s %d\\n' $_marker \$?");
-        await process.stdin.flush();
-        try {
-          return await pending.future.timeout(timeout);
-        } on TimeoutException {
-          await close();
-          throw RootShellException('su command timed out');
-        } finally {
-          _pending = null;
-        }
-      });
+  /// 送出 [command] 並等它的結束標記；[spawn] 為 true 時（只有 [verify]）才可以開新的 `su`。
+  ///
+  /// 一般指令不自己重開：session 被 [close] 後還在跑的輪詢若重開 `su`，會再跳一次 root 授權。
+  Future<Uint8List> _execInternal(
+    String command,
+    Duration timeout, {
+    bool spawn = false,
+  }) => _lock.synchronized(() async {
+    final current = _process;
+    if (current == null && !spawn) {
+      throw RootShellException('su session closed');
+    }
+    final process = current ?? await _spawn();
+    final pending = Completer<Uint8List>();
+    _pending = pending;
+    process.stdin
+      ..writeln(command)
+      ..writeln("printf '\\n%s %d\\n' $_marker \$?");
+    await process.stdin.flush();
+    try {
+      return await pending.future.timeout(timeout);
+    } on TimeoutException {
+      await close();
+      throw RootShellException('su command timed out');
+    } finally {
+      _pending = null;
+    }
+  });
 
   /// 啟動常駐 `su`，接上 stdout 解析與結束偵測。
   Future<Process> _spawn() async {
