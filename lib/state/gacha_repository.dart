@@ -12,6 +12,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.da
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_source.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/concurrent_pool.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
@@ -508,9 +509,18 @@ class GachaRepository extends Notifier<GachaState> {
         _syncLogOnlyNotice();
         return;
       }
-      final watch = ref
+      final watch = await ref
           .read(clientLogWatchProvider)
-          .start(GameDirLocator.clientLogPath(location.path));
+          .start(
+            LocalFileLogSource(GameDirLocator.clientLogPath(location.path)),
+          );
+      // 取 baseline 期間可能已被取消、重啟或命中：這個 session 已過期就直接收掉。
+      if (!ref.mounted ||
+          generation != _logWatchGeneration ||
+          hit.isCompleted) {
+        unawaited(watch.cancel());
+        return;
+      }
       _logSession = watch;
       unawaited(
         watch.result.then((c) {

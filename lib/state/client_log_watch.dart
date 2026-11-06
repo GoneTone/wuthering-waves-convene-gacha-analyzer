@@ -1,29 +1,37 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_credential.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_source.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 
 /// 監看遊戲 Client.log，等待新附加的喚取記錄 URL 並轉成憑證。
 abstract class ClientLogWatch {
-  /// 開始監看 [clientLogPath]；只處理啟動後新增的內容，`result` 永不 completeError。
-  CaptureSession start(String clientLogPath);
+  /// 以 [source] 目前長度為起點開始監看；只處理之後新增的內容，`result` 永不 completeError。
+  Future<CaptureSession> start(ClientLogSource source);
 }
 
 /// 以固定間隔輪詢檔案增量的 [ClientLogWatch]。
 class PollingClientLogWatch implements ClientLogWatch {
-  /// 建立 [PollingClientLogWatch]，[interval] 為輪詢間隔。
-  PollingClientLogWatch({this.interval = const Duration(seconds: 1)});
+  /// 建立 [PollingClientLogWatch]，[interval] 為輪詢間隔，[maxReadBytes] 為單輪讀取上限。
+  PollingClientLogWatch({
+    this.interval = const Duration(seconds: 1),
+    this.maxReadBytes = 2 * 1024 * 1024,
+  });
 
   /// 輪詢間隔。
   final Duration interval;
+
+  /// 單輪最多讀取的位元組數；積壓更多時分到後續輪次讀，避免一次拉太多（shell 來源尤其明顯）。
+  final int maxReadBytes;
 
   /// 本監看器的 logger。
   static final _log = Logger('gacha.clientLog');
@@ -37,22 +45,21 @@ class PollingClientLogWatch implements ClientLogWatch {
       : 'error=${e.runtimeType}';
 
   @override
-  CaptureSession start(String clientLogPath) {
-    final file = File(clientLogPath);
+  Future<CaptureSession> start(ClientLogSource source) async {
     final completer = Completer<GachaCredential?>();
     var offset = 0;
     try {
-      if (file.existsSync()) offset = file.lengthSync();
+      offset = await source.length();
     } on Object catch (e) {
       _log.warning(
-        'client log baseline failed path=${sanitizeFsPath(clientLogPath)} '
+        'client log baseline failed source=${source.logLabel} '
         '${_describe(e)}; using offset=0',
       );
     }
     var carry = Uint8List(0);
     var polling = false;
     _log.info(
-      'client log watch started path=${sanitizeFsPath(clientLogPath)} offset=$offset',
+      'client log watch started source=${source.logLabel} offset=$offset',
     );
 
     /// 單輪輪詢：偵測輪替、讀取增量、解碼並嘗試取得憑證。
@@ -60,22 +67,18 @@ class PollingClientLogWatch implements ClientLogWatch {
       if (polling || completer.isCompleted) return;
       polling = true;
       try {
-        // 檔案尚未建立是支援情境，視為長度 0 且不記 warning。
-        final length = await file.exists() ? await file.length() : 0;
+        final length = await source.length();
         if (length < offset) {
           offset = 0;
           carry = Uint8List(0);
           _log.info('client log rotated length=$length');
         }
         if (length == offset) return;
-        final raf = await file.open();
-        final Uint8List chunk;
-        try {
-          await raf.setPosition(offset);
-          chunk = await raf.read(length - offset);
-        } finally {
-          await raf.close();
-        }
+        final chunk = await source.read(
+          offset,
+          math.min(length - offset, maxReadBytes),
+        );
+        if (chunk.isEmpty) return;
         offset += chunk.length;
         final buf = Uint8List.fromList([
           ...carry,
@@ -106,8 +109,7 @@ class PollingClientLogWatch implements ClientLogWatch {
         }
       } on Object catch (e) {
         _log.warning(
-          'client log read failed path=${sanitizeFsPath(clientLogPath)} '
-          '${_describe(e)}',
+          'client log read failed source=${source.logLabel} ${_describe(e)}',
         );
       } finally {
         polling = false;

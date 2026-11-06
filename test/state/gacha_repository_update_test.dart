@@ -10,6 +10,7 @@ import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_source.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/game_dir_locator.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
@@ -63,11 +64,11 @@ class _FakeWatch implements ClientLogWatch {
   final cancelled = <int>[];
 
   @override
-  CaptureSession start(String clientLogPath) {
+  Future<CaptureSession> start(ClientLogSource source) async {
     final i = hits.length;
     final c = Completer<GachaCredential?>();
     hits.add(c);
-    paths.add(clientLogPath);
+    paths.add((source as LocalFileLogSource).path);
     return CaptureSession(
       result: c.future,
       cancel: () async {
