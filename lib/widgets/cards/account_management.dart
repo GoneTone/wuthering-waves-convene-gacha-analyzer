@@ -8,6 +8,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/uid_display.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
@@ -236,10 +237,14 @@ class _RowState extends State<_Row> {
               message: l.accountDragHandleTooltip,
               child: MouseRegion(
                 cursor: SystemMouseCursors.resizeUpDown,
-                child: Icon(
-                  Icons.drag_handle,
-                  color: tokens.textMuted,
-                  size: 20,
+                // 手機排版時把手的觸控區放大到 48dp，圖示大小不變。
+                child: SizedBox.square(
+                  dimension: isCompactLayout(context) ? 48 : null,
+                  child: Icon(
+                    Icons.drag_handle,
+                    color: tokens.textMuted,
+                    size: 20,
+                  ),
                 ),
               ),
             ),

@@ -125,4 +125,29 @@ void main() {
     await tester.pump();
     expect(picked, 2);
   });
+
+  testWidgets('gallery chips scroll with a finger drag', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        GalleryChipBar(
+          labels: [for (var i = 0; i < 12; i++) 'Label number $i'],
+          selectedIndex: 0,
+          onSelected: (_) {},
+        ),
+      ),
+    );
+    final scrollable = find
+        .descendant(
+          of: find.byType(GalleryChipBar),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    await tester.drag(scrollable, const Offset(-200, 0));
+    await tester.pumpAndSettle();
+    expect(
+      tester.state<ScrollableState>(scrollable).position.pixels,
+      greaterThan(0),
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

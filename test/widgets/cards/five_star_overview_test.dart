@@ -95,4 +95,15 @@ void main() {
     await tester.pump();
     expect(find.byType(GachaItemTapTarget), findsOneWidget);
   });
+
+  testWidgets('five-star item tooltip appears on long press', (tester) async {
+    final c = await _container(tester);
+    final items = buildFiveStarCollection([_r(10, 'A', DateTime(2025, 1, 1))]);
+    await tester.pumpWidget(_wrap(c, FiveStarOverview(items: items)));
+    await tester.pump();
+    await tester.longPress(find.byType(GachaItemIcon));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('A'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
