@@ -1093,5 +1093,57 @@
   "manualCredentialSubmit": "OK",
   "@manualCredentialSubmit": {
     "description": "Confirm button of the manual convene record input dialog"
+  },
+  "progressWaitingLog": "喚取記録を待っています...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
+  "progressLogUnavailableTitle": "喚取記録を自動で読み取れません",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
+  "logUnavailableNotPaired": "ゲーム記録の読み取り方法がまだ設定されていません。一度設定すれば、以降の更新では自動で読み取ります。",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
+  "logUnavailableNoWifi": "ワイヤレスデバッグは Wi‑Fi 接続時のみ使えます。Wi‑Fi に接続してからもう一度更新するか、手動で入力してください。",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
+  "logUnavailableAdbFailed": "ワイヤレスデバッグに接続できません。ペア設定が無効になった可能性があります。もう一度ペア設定してください。",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
+  "logUnavailableWirelessOff": "このデバイスでは、アプリがワイヤレスデバッグを自動でオンにできません。ワイヤレスデバッグの画面でオンにしてからアプリに戻ると、自動で続行します。",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
+  "logUnavailableStorage": "ゲーム記録を読み取るにはストレージの権限が必要です。",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
+  "logUnavailableUnsupported": "このデバイスではゲーム記録を自動で読み取れません。手動で入力してください。",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
+  "actionOpenGame": "鳴潮を開く",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
+  "actionOpenWirelessDebugging": "ワイヤレスデバッグを開く",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
+  "actionRegrantStorage": "権限を許可",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
+  "progressLogConnectionLost": "ワイヤレスデバッグとの接続が切れました。再接続しています...復旧しない場合は Wi‑Fi の接続を確認するか、手動で入力してください。",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
+  "progressWirelessLeftOnHint": "ワイヤレスデバッグはオンのままです。システム設定でオフにできます。",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
   }
 }

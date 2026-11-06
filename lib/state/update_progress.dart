@@ -1,3 +1,4 @@
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/update_error.dart';
 
 export 'package:wuthering_waves_convene_gacha_analyzer/state/update_error.dart';
@@ -20,6 +21,8 @@ class WaitingForCapture extends UpdateProgress {
     this.isFallback = false,
     this.captureUnavailable = false,
     this.gameDirMissing = false,
+    this.logAccessUnavailable,
+    this.logConnectionLost = false,
   });
 
   /// true 表示 recordId 全池失效後的二次捕獲（UI 顯示重新攔取提示）。
@@ -30,6 +33,12 @@ class WaitingForCapture extends UpdateProgress {
 
   /// [captureUnavailable] 時是否也找不到遊戲資料夾（沒有 log 可讀，需請使用者選資料夾）。
   final bool gameDirMissing;
+
+  /// Android 沒有自動讀取遊戲記錄的方式時的原因（畫面改為只提供手動輸入）；可以自動讀取時為 null。
+  final LogAccessUnavailable? logAccessUnavailable;
+
+  /// Android 等待中與無線偵錯的連線中斷、正在重試（不中斷等待，只顯示提示）。
+  final bool logConnectionLost;
 }
 
 /// 正在拉取指定卡池的完整歷史。
@@ -89,6 +98,7 @@ class UpdateCompleted extends UpdateProgress {
     this.importSummary,
     this.itemDetailsRefreshed,
     this.staleItemsPruned = 0,
+    this.wirelessDebuggingLeftOn = false,
   });
 
   /// 本次更新新增的總紀錄數（update 流程用；import 流程為 0）。
@@ -113,6 +123,9 @@ class UpdateCompleted extends UpdateProgress {
 
   /// 「更新物品資料」流程本次清理殘留語言的物品數；其他入口為 0。
   final int staleItemsPruned;
+
+  /// Android 手動開關模式：照規則該關掉無線偵錯但沒有權限關，完成畫面提示玩家自行關閉。
+  final bool wirelessDebuggingLeftOn;
 }
 
 /// 更新失敗。

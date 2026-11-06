@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/android_log_wait_body.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/game_dir_help_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/manual_credential_dialog.dart';
@@ -35,13 +37,19 @@ class UpdateProgressDialog extends ConsumerWidget {
     final notifier = ref.read(gachaRepositoryProvider.notifier);
     final l = AppLocalizations.of(context)!;
     final tokens = Theme.of(context).gacha;
+    final android = ref.watch(isAndroidProvider);
 
     return PopScope(
       canPop: false,
       child: AppDialog(
         // size 預設 sm，符合短訊息 + LinearProgressIndicator 語意。
-        title: _Title(progress: progress, l: l, tokens: tokens),
-        content: _Body(progress: progress, l: l),
+        title: _Title(
+          progress: progress,
+          l: l,
+          tokens: tokens,
+          android: android,
+        ),
+        content: _Body(progress: progress, l: l, android: android),
         actions: _actions(context, progress, notifier, l),
       ),
     );
@@ -88,7 +96,15 @@ class UpdateProgressDialog extends ConsumerWidget {
 /// Dialog 標題列：依 [progress] 狀態切換圖示、顏色與文字。
 class _Title extends StatelessWidget {
   /// 建立 [_Title]。
-  const _Title({required this.progress, required this.l, required this.tokens});
+  const _Title({
+    required this.progress,
+    required this.l,
+    required this.tokens,
+    required this.android,
+  });
+
+  /// 是否為 Android（等待時標題改為「等待喚取記錄」）。
+  final bool android;
 
   /// 當前更新進度狀態。
   final UpdateProgress? progress;
@@ -107,10 +123,14 @@ class _Title extends StatelessWidget {
         tokens.textPrimary,
         l.progressPreparing,
       ),
-      WaitingForCapture() => (
-        Icons.hourglass_top,
+      WaitingForCapture(:final logAccessUnavailable) => (
+        logAccessUnavailable == null ? Icons.hourglass_top : Icons.info_outline,
         tokens.textPrimary,
-        l.progressWaiting,
+        !android
+            ? l.progressWaiting
+            : logAccessUnavailable == null
+            ? l.progressWaitingLog
+            : l.progressLogUnavailableTitle,
       ),
       FetchingBanner() => (
         Icons.cloud_download_outlined,
@@ -143,7 +163,10 @@ class _Title extends StatelessWidget {
 /// Dialog 內容區：依 [progress] 狀態切換進度列、說明文字或結果摘要。
 class _Body extends StatelessWidget {
   /// 建立 [_Body]。
-  const _Body({required this.progress, required this.l});
+  const _Body({required this.progress, required this.l, required this.android});
+
+  /// 是否為 Android（等待畫面改用 [AndroidLogWaitBody]）。
+  final bool android;
 
   /// 當前更新進度狀態。
   final UpdateProgress? progress;
@@ -172,6 +195,7 @@ class _Body extends StatelessWidget {
           Text(l.progressPreparingHint),
         ],
       ),
+      final WaitingForCapture p when android => AndroidLogWaitBody(progress: p),
       WaitingForCapture(
         :final isFallback,
         :final captureUnavailable,
@@ -266,6 +290,7 @@ class _Body extends StatelessWidget {
         :final importSummary,
         :final itemDetailsRefreshed,
         :final staleItemsPruned,
+        :final wirelessDebuggingLeftOn,
       ) =>
         Column(
           mainAxisSize: MainAxisSize.min,
@@ -302,6 +327,13 @@ class _Body extends StatelessWidget {
                   failedBanners.map(resolveBannerName).join('、'),
                 ),
                 style: TextStyle(color: tokens.stateDanger),
+              ),
+            ],
+            if (wirelessDebuggingLeftOn) ...[
+              const SizedBox(height: AppSpacing.s),
+              Text(
+                l.progressWirelessLeftOnHint,
+                style: TextStyle(color: tokens.stateWarning),
               ),
             ],
             if (importSummary != null &&

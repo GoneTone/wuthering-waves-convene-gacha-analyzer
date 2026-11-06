@@ -11,6 +11,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_source.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/concurrent_pool.dart';
@@ -27,6 +28,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart'
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
 
@@ -149,6 +151,9 @@ class GachaRepository extends Notifier<GachaState> {
   /// Client.log 憑證來源 logger（與監看器、locator 同一棵樹）。
   static final _clientLog = Logger('gacha.clientLog');
 
+  /// Android 讀取遊戲記錄流程的 logger。
+  static final _androidLog = Logger('capture.android');
+
   /// build() 內 `_bootstrapLoad()` 完成的 future，供測試 await。
   Completer<void>? _bootstrapCompleter;
 
@@ -233,9 +238,11 @@ class GachaRepository extends Notifier<GachaState> {
     state = state.copyWith(clearProgress: true);
   }
 
-  /// 啟動喚取資料更新，優先使用快取 URL，無快取則觸發 MITM 捕獲。
-  Future<void> update() async {
-    await _runUpdate(forceRecapture: false);
+  /// 啟動喚取資料更新，優先使用快取 URL，無快取則等待取得憑證（電腦版攔截＋Client.log，Android 讀遊戲記錄）。
+  ///
+  /// [afterPairing] 為 true 表示剛完成無線偵錯配對：這次用完一律關閉無線偵錯（玩家照引導打開的也算 App 開的）。
+  Future<void> update({bool afterPairing = false}) async {
+    await _runUpdate(forceRecapture: false, afterPairing: afterPairing);
   }
 
   /// 使用者手動輸入的喚取記錄憑證（貼上網址或選 Client.log 檔案）。
@@ -261,10 +268,13 @@ class GachaRepository extends Notifier<GachaState> {
   Future<void> _runUpdate({
     required bool forceRecapture,
     GachaCredential? manual,
+    bool afterPairing = false,
   }) async {
     if (_isUpdating) return; // 防止重入
     _isUpdating = true;
     _cancelTriggered = false;
+    _afterPairing = afterPairing;
+    _wirelessLeftOn = false;
     _log.info('update start, forceRecapture=$forceRecapture');
 
     final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
@@ -298,7 +308,7 @@ class GachaRepository extends Notifier<GachaState> {
         }
       }
 
-      cred ??= await _runMitm(isFallback: false);
+      cred ??= await _acquireCredential(isFallback: false);
       if (!ref.mounted) return;
       if (cred == null) {
         _log.info('update aborted (user cancelled capture)');
@@ -320,7 +330,7 @@ class GachaRepository extends Notifier<GachaState> {
         _log.warning(
           'first pool failed (code=${e.apiError.code}), falling back to recapture',
         );
-        final newCred = await _runMitm(isFallback: true);
+        final newCred = await _acquireCredential(isFallback: true);
         if (!ref.mounted) return;
         if (newCred == null) {
           _log.info('recapture cancelled by user');
@@ -475,6 +485,107 @@ class GachaRepository extends Notifier<GachaState> {
       return null;
     }
     return cred;
+  }
+
+  /// 依平台取得憑證：Android 讀遊戲記錄，其他平台走攔截與 Client.log 競速。null 代表使用者取消。
+  Future<GachaCredential?> _acquireCredential({required bool isFallback}) =>
+      ref.read(isAndroidProvider)
+      ? _runAndroidWait(isFallback: isFallback)
+      : _runMitm(isFallback: isFallback);
+
+  /// Android 沒有自動讀取方式而等待時重新判斷（玩家打開了無線偵錯、授權了權限、切回 App 時呼叫）；其他時候為 no-op。
+  Future<void> retryLogAccess() async {
+    final retry = _logAccessRetry;
+    if (retry == null || retry.isCompleted) return;
+    _androidLog.info('log access retry requested');
+    retry.complete();
+  }
+
+  /// Android 的等待流程：決定讀取方式、監看 Client.log，等命中、手動輸入或取消。null 代表使用者取消。
+  ///
+  /// 沒有自動讀取方式時改顯示原因並只等手動輸入，[retryLogAccess] 可以重新判斷。
+  /// 結束時一律停監看並 release（中斷連線、依規則關閉無線偵錯）。
+  Future<GachaCredential?> _runAndroidWait({required bool isFallback}) async {
+    state = state.copyWith(progress: WaitingForCapture(isFallback: isFallback));
+    final logHit = Completer<GachaCredential>();
+    _logHit = logHit;
+    final cancelled = Completer<void>();
+    _waitCancelled = cancelled;
+    _captureCancelRequested = false;
+    LogAccessReady? ready;
+    StreamSubscription<bool>? healthSub;
+    try {
+      while (true) {
+        final outcome = await ref
+            .read(logAccessResolverProvider)
+            .resolve(
+              preferred: ref.read(settingsProvider).logAccessMethod,
+              forceDisableAfterUse: _afterPairing,
+            );
+        if (outcome is LogAccessReady) {
+          ready = outcome;
+          if (_captureCancelRequested || !ref.mounted) return null;
+          break;
+        }
+        if (_captureCancelRequested || !ref.mounted) return null;
+        if (logHit.isCompleted) return await logHit.future;
+        final reason = (outcome as LogAccessBlocked).reason;
+        state = state.copyWith(
+          progress: WaitingForCapture(
+            isFallback: isFallback,
+            logAccessUnavailable: reason,
+          ),
+        );
+        final retry = Completer<void>();
+        _logAccessRetry = retry;
+        final next = await Future.any<Object?>([
+          logHit.future,
+          cancelled.future.then((_) => null),
+          retry.future.then((_) => retry),
+        ]);
+        _logAccessRetry = null;
+        if (next is GachaCredential) return next;
+        if (next == null || !ref.mounted) return null;
+        state = state.copyWith(
+          progress: WaitingForCapture(isFallback: isFallback),
+        );
+      }
+      await ref
+          .read(settingsProvider.notifier)
+          .setLogAccessMethod(ready.method);
+      healthSub = ready.healthChanges.listen((healthy) {
+        final p = state.progress;
+        if (p is! WaitingForCapture || p.logConnectionLost == !healthy) return;
+        _androidLog.info('log connection healthy=$healthy');
+        state = state.copyWith(
+          progress: WaitingForCapture(
+            isFallback: p.isFallback,
+            logConnectionLost: !healthy,
+          ),
+        );
+      });
+      final watch = await ref.read(clientLogWatchProvider).start(ready.source);
+      _logSession = watch;
+      if (_captureCancelRequested || !ref.mounted) return null;
+      unawaited(
+        watch.result.then((c) {
+          if (c != null && !logHit.isCompleted) logHit.complete(c);
+        }),
+      );
+      final cred = await Future.any<GachaCredential?>([
+        logHit.future,
+        cancelled.future.then((_) => null),
+      ]);
+      if (cred != null) _clientLog.info('credential source=log or manual');
+      return _captureCancelRequested ? null : cred;
+    } finally {
+      _logHit = null;
+      _waitCancelled = null;
+      _logAccessRetry = null;
+      await healthSub?.cancel();
+      await _stopClientLogWatch();
+      if (ready != null && await ready.release()) _wirelessLeftOn = true;
+    }
   }
 
   /// 等 [logStart]（監看啟動流程）跑完後，判斷攔截失效時能否改為只等 Client.log。
@@ -741,9 +852,19 @@ class GachaRepository extends Notifier<GachaState> {
         failedBanners: failed,
         updatedAt: updatedAt,
         itemImagesDownloaded: itemImagesDownloaded,
+        wirelessDebuggingLeftOn: _wirelessLeftOn,
       ),
     );
   }
+
+  /// 本次更新是否剛完成配對（用完一律關閉無線偵錯）。
+  bool _afterPairing = false;
+
+  /// 本次更新讀完後無線偵錯是否因沒有權限而留著開（完成畫面要提示）。
+  bool _wirelessLeftOn = false;
+
+  /// Android 沒有自動讀取方式而等待時，[retryLogAccess] 會完成它以重新判斷。
+  Completer<void>? _logAccessRetry;
 
   /// 防 re-entrancy 旗標，update 進行中為 true。
   bool _isUpdating = false;

@@ -862,5 +862,57 @@
   "manualCredentialSubmit": "確定",
   "@manualCredentialSubmit": {
     "description": "Confirm button of the manual convene record input dialog"
+  },
+  "progressWaitingLog": "等待喚取記錄...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
+  "progressLogUnavailableTitle": "無法自動讀取喚取記錄",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
+  "logUnavailableNotPaired": "尚未設定讀取遊戲記錄的方式。設定一次之後，每次更新都會自動讀取。",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
+  "logUnavailableNoWifi": "無線偵錯只能在連上 Wi‑Fi 時使用。請連上 Wi‑Fi 後再按一次更新，或改用手動輸入。",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
+  "logUnavailableAdbFailed": "連不上無線偵錯。可能是配對已失效，請重新配對。",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
+  "logUnavailableWirelessOff": "你的裝置不允許本 App 自動開啟無線偵錯。請在無線偵錯頁打開開關，再回到本 App，就會自動繼續。",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
+  "logUnavailableStorage": "需要儲存空間權限才能讀取遊戲記錄。",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
+  "logUnavailableUnsupported": "這台裝置無法自動讀取遊戲記錄，請改用手動輸入。",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
+  "actionOpenGame": "開啟鳴潮",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
+  "actionOpenWirelessDebugging": "前往無線偵錯",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
+  "actionRegrantStorage": "重新授權",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
+  "progressLogConnectionLost": "與無線偵錯的連線中斷，正在重新連線...如果一直無法恢復，請確認 Wi‑Fi 是否連線，或改用手動輸入。",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
+  "progressWirelessLeftOnHint": "無線偵錯仍是開啟的，可以到系統設定自行關閉。",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
   }
 }
