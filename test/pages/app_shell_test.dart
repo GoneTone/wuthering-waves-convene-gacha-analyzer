@@ -354,4 +354,79 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(Drawer), findsNothing);
   }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+  testWidgets('phone app bar leaves the app name to the drawer header', (
+    tester,
+  ) async {
+    final l = await pump(tester, const Size(360, 800));
+    final appBar = find.byType(AppBar);
+    expect(
+      find.descendant(of: appBar, matching: find.text(l.appName)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: appBar, matching: find.byType(Image)),
+      findsNothing,
+    );
+    await tester.tap(drawerButton(tester));
+    await tester.pumpAndSettle();
+    final drawer = find.byType(Drawer);
+    expect(
+      find.descendant(of: drawer, matching: find.text(l.appName)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: drawer, matching: find.textContaining('v1.8.1')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: drawer, matching: find.byType(Image)),
+      findsOneWidget,
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('phone account button gets the space the title used', (
+    tester,
+  ) async {
+    // 舊版保留給 App 圖示的 48dp 讓給帳號按鈕；360 寬時上限從 160 變成 232。
+    await pump(
+      tester,
+      const Size(360, 800),
+      alias: 'AVeryLongAccountAliasName',
+    );
+    final indicator = tester.getRect(find.byType(UidIndicator));
+    expect(indicator.width, greaterThan(160));
+    expect(
+      indicator.left,
+      greaterThanOrEqualTo(tester.getRect(drawerButton(tester)).right),
+    );
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  for (final (name, size, pinned) in [
+    ('portrait pins them', const Size(360, 800), true),
+    ('landscape scrolls them with the list', const Size(800, 360), false),
+  ]) {
+    testWidgets('drawer contributors and settings: $name', (tester) async {
+      // 橫向高度只剩約 360dp，固定在底部會占掉三分之一，改成跟著清單一起捲。
+      final l = await pump(tester, size);
+      await tester.tap(drawerButton(tester));
+      await tester.pumpAndSettle();
+      final list = find
+          .descendant(
+            of: find.byType(Drawer),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      for (final label in [l.navContributors, l.navSettings, l.appName]) {
+        final inList = find
+            .descendant(of: list, matching: find.text(label))
+            .evaluate()
+            .isNotEmpty;
+        // 頂部的 App 資訊一律跟著清單捲；貢獻者／設定只有高度夠時才固定。
+        expect(inList, label == l.appName || !pinned, reason: label);
+      }
+      expect(tester.takeException(), isNull);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
 }

@@ -143,6 +143,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                       collapsedNoLabel: false,
                       width: double.infinity,
                       onNavigate: Scaffold.of(drawerContext).closeDrawer,
+                      header: _DrawerHeader(version: version, l: l),
                       l: l,
                     ),
                   ),
@@ -150,40 +151,23 @@ class _AppShellState extends ConsumerState<AppShell> {
               )
             : null,
         appBar: AppBar(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/icons/app_icon.png',
-                // 40dp = AppBar 預設高度 56dp 上下各留 8dp padding；
-                // multi-resolution 1x/2x/3x = 64/128/256，任何 DPR 下都
-                // 大於 display 物理像素，避免 upscale 模糊。
-                width: 40,
-                height: 40,
-                filterQuality: FilterQuality.high,
-              ),
-              const SizedBox(width: AppSpacing.s),
-              // 手機排版不顯示版本號；空間不夠時名稱先讓位（可縮到看不見）。
-              if (compact)
-                Flexible(
-                  child: Text(
-                    l.appName,
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )
-              else
-                Text('${l.appName} v$version'),
-            ],
-          ),
+          // 手機排版的 App 圖示、名稱和版本號放在抽屜頂部，標題列只留操作。
+          title: compact
+              ? null
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const _AppIcon(),
+                    const SizedBox(width: AppSpacing.s),
+                    Text('${l.appName} v$version'),
+                  ],
+                ),
           actions: compact
               ? [
                   ConstrainedBox(
-                    // 扣掉 ☰（56）、標題兩側間距（32）、App 圖示含間距（48）、更新按鈕含外距（64），
-                    // 帳號標示不會把 App 圖示擠出畫面；App 名稱則可以縮到看不見。
+                    // 扣掉 ☰（56）、與 ☰ 的間距（8）、更新按鈕含外距（64），帳號標示不會蓋到 ☰。
                     constraints: BoxConstraints(
-                      maxWidth: math.max(0, width - 56 - 32 - 48 - 64),
+                      maxWidth: math.max(0, width - 56 - AppSpacing.s - 64),
                     ),
                     child: const UidIndicator(),
                   ),
@@ -318,7 +302,11 @@ class _Rail extends StatelessWidget {
     required this.l,
     this.width,
     this.onNavigate,
+    this.header,
   });
+
+  /// 抽屜頂部（App 資訊）；跟著清單一起捲動。桌面 rail 沒有。
+  final Widget? header;
 
   /// 固定寬度；null 時依 [extended] 決定。
   final double? width;
@@ -357,68 +345,151 @@ class _Rail extends StatelessWidget {
     // 抽屜（手機排版）的項目觸控區至少 48dp；桌面 rail 維持原本的高度。
     final minTileHeight = onNavigate == null ? 0.0 : 48.0;
 
+    final bottomButtons = [
+      _BottomRailButton(
+        active: isContributorsActive,
+        extended: extended,
+        hideLabel: collapsedNoLabel,
+        label: l.navContributors,
+        iconActive: Icons.volunteer_activism,
+        iconInactive: Icons.volunteer_activism_outlined,
+        onPressed: () => go('/contributors'),
+      ),
+      _BottomRailButton(
+        active: isSettingsActive,
+        extended: extended,
+        hideLabel: collapsedNoLabel,
+        label: l.navSettings,
+        iconActive: Icons.settings,
+        iconInactive: Icons.settings_outlined,
+        onPressed: () => go('/settings'),
+      ),
+    ];
+
     return SizedBox(
       width: railWidth,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: AppSpacing.s),
-                  _RailDestinationTile(
-                    minHeight: minTileHeight,
-                    iconInactive: Icons.dashboard_outlined,
-                    iconActive: Icons.dashboard,
-                    label: l.navOverview,
-                    selected: selection.topIndex == 0,
-                    onTap: () => go('/'),
-                    extended: extended,
-                    hideLabel: collapsedNoLabel,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // 抽屜太矮（手機橫向、分割畫面）時，固定在底部會壓縮清單，改成跟著一起捲。
+          final pinBottom =
+              onNavigate == null ||
+              constraints.maxHeight >= _kDrawerPinBottomMinHeight;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ?header,
+                      const SizedBox(height: AppSpacing.s),
+                      _RailDestinationTile(
+                        minHeight: minTileHeight,
+                        iconInactive: Icons.dashboard_outlined,
+                        iconActive: Icons.dashboard,
+                        label: l.navOverview,
+                        selected: selection.topIndex == 0,
+                        onTap: () => go('/'),
+                        extended: extended,
+                        hideLabel: collapsedNoLabel,
+                      ),
+                      _SectionLabel(
+                        label: l.navSectionGacha,
+                        extended: extended,
+                        hideLabel: collapsedNoLabel,
+                      ),
+                      for (var i = 0; i < gachaTypes.length; i++)
+                        _RailDestinationTile(
+                          minHeight: minTileHeight,
+                          iconInactive: _railIconInactive(
+                            gachaTypes[i].nameKey,
+                          ),
+                          iconActive: _railIconActive(gachaTypes[i].nameKey),
+                          label: _railLabel(gachaTypes[i].nameKey, l),
+                          selected: selection.gachaIndex == i,
+                          onTap: () => go('/banner/${gachaTypes[i].key}'),
+                          extended: extended,
+                          hideLabel: collapsedNoLabel,
+                        ),
+                      const SizedBox(height: AppSpacing.s),
+                      if (!pinBottom) ...bottomButtons,
+                    ],
                   ),
-                  _SectionLabel(
-                    label: l.navSectionGacha,
-                    extended: extended,
-                    hideLabel: collapsedNoLabel,
-                  ),
-                  for (var i = 0; i < gachaTypes.length; i++)
-                    _RailDestinationTile(
-                      minHeight: minTileHeight,
-                      iconInactive: _railIconInactive(gachaTypes[i].nameKey),
-                      iconActive: _railIconActive(gachaTypes[i].nameKey),
-                      label: _railLabel(gachaTypes[i].nameKey, l),
-                      selected: selection.gachaIndex == i,
-                      onTap: () => go('/banner/${gachaTypes[i].key}'),
-                      extended: extended,
-                      hideLabel: collapsedNoLabel,
-                    ),
-                  const SizedBox(height: AppSpacing.s),
-                ],
+                ),
               ),
-            ),
-          ),
-          _BottomRailButton(
-            active: isContributorsActive,
-            extended: extended,
-            hideLabel: collapsedNoLabel,
-            label: l.navContributors,
-            iconActive: Icons.volunteer_activism,
-            iconInactive: Icons.volunteer_activism_outlined,
-            onPressed: () => go('/contributors'),
-          ),
-          _BottomRailButton(
-            active: isSettingsActive,
-            extended: extended,
-            hideLabel: collapsedNoLabel,
-            label: l.navSettings,
-            iconActive: Icons.settings,
-            iconInactive: Icons.settings_outlined,
-            onPressed: () => go('/settings'),
-          ),
-        ],
+              if (pinBottom) ...bottomButtons,
+            ],
+          );
+        },
       ),
+    );
+  }
+}
+
+/// 抽屜低於這個高度（dp）時，「貢獻者／設定」不固定在底部，跟著清單捲動。
+const double _kDrawerPinBottomMinHeight = 600;
+
+/// App 圖示（標題列與抽屜頂部共用）。
+class _AppIcon extends StatelessWidget {
+  /// 建立 [_AppIcon]。
+  const _AppIcon();
+
+  @override
+  Widget build(BuildContext context) => Image.asset(
+    'assets/icons/app_icon.png',
+    // 40dp = AppBar 預設高度 56dp 上下各留 8dp padding；
+    // multi-resolution 1x/2x/3x = 64/128/256，任何 DPR 下都
+    // 大於 display 物理像素，避免 upscale 模糊。
+    width: 40,
+    height: 40,
+    filterQuality: FilterQuality.high,
+  );
+}
+
+/// 抽屜頂部：App 圖示、名稱與版本號（手機排版標題列不放這些）。
+class _DrawerHeader extends StatelessWidget {
+  /// 建立 [_DrawerHeader]。
+  const _DrawerHeader({required this.version, required this.l});
+
+  /// App 版本號。
+  final String version;
+
+  /// 當前 i18n 字串實例。
+  final AppLocalizations l;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).gacha;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.m),
+          child: Row(
+            children: [
+              const _AppIcon(),
+              const SizedBox(width: AppSpacing.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.appName,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Text(
+                      'v$version',
+                      style: TextStyle(color: tokens.textMuted, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Divider(height: 1, color: tokens.borderSubtle),
+      ],
     );
   }
 }
