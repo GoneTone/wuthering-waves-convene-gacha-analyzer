@@ -290,3 +290,30 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 字級用 `tester.platformDispatcher.textScaleFactorTestValue`，鍵盤用 `tester.view.viewInsets = FakeViewPadding(bottom: ...)` 模擬。
 - `tester.takeException()` 只回傳溢出的摘要，看不出是哪個元件；要找來源時先拿掉 `takeException`，讓測試印出完整的 render tree。
 - 實機轉向：`adb shell cmd window user-rotation lock 1`（橫向），測完用 `cmd window user-rotation free`，並把 `settings` 的 `accelerometer_rotation` 改回 1。只改 `settings put system user_rotation` 有時不會立刻轉。
+
+---
+
+## 八、檔案存取與分享（子專案 4）
+
+設計：`docs/superpowers/specs/2026-11-06-file-access-and-sharing-design.md`。桌面版行為不變；手機在「儲存」之外多一個「分享」（分享圖、物品圖、日誌、備份）。
+
+### 26. 換成 `file_picker`＋`share_plus`（通用）
+
+- **`file_selector` 在 Android 沒有實作「另存新檔」**（`getSaveLocation` 直接丟例外），匯出備份、匯出日誌、另存圖片在手機上全部不能用。改用 `file_picker` 統一處理開檔、選資料夾、存檔，兩個平台同一段程式；分享用 `share_plus`（可直接分享記憶體中的資料，不用先存檔）。
+- 所有存檔／分享／複製集中在 `lib/services/file_access.dart`，原本物品圖與分享圖兩份重複的存檔程式一併合併。
+- **讀檔自己用 `utf8.decode`**：不依賴套件的字串讀取（`#14` 的中文亂碼就是套件讀字串造成的），不合法的 UTF-8 走既有的「無法讀取」訊息。
+
+### 27. `file_picker` 在 AGP 9 編不過（通用）
+
+- `file_picker` 11.0.3 偵測到 AGP 9 就**假設 AGP 內建 Kotlin 會編它**，自己不套 Kotlin 外掛、也不設 `jvmTarget`。但 Flutter 範本的 `android.builtInKotlin=false`，結果沒人編它的 Kotlin，建置報 `FilePickerPlugin` 找不到。
+- **不能直接改 `builtInKotlin=true`**：實測還有 `device_info_plus`、`package_info_plus`、`share_plus`、`shared_preferences_android`、`url_launcher_android` 會自己套 Kotlin 外掛，改了就換它們壞（專案在 E 槽、pub cache 在 C 槽時報「different roots」）。
+- 處理：`android/file_picker_kotlin_shim.gradle` 只替 `file_picker` 補套 Kotlin 外掛並把 Kotlin `jvmTarget` 對齊 Java 17（不對齊會報「Inconsistent JVM Target Compatibility」）。上游修好後刪除。
+
+### 28. 實測發現（通用，2026-11-06）
+
+- **`file_picker` 存檔回傳的是字串**，不是 Uri。Android 回傳的是 `content:` Uri 的 path 部分（例如 `/document/primary:Download/a.json`，下載資料夾的 provider 則是 `/document/msf:1234`），**沒有 scheme**，所以要依平台判斷，不能看字串長相；檔名取最後一段、副檔名不符就顯示建議檔名。Android 存檔後沒有可開啟的路徑，成功訊息只顯示檔名、不放「開啟資料夾」。
+- **Windows 存檔對話框有兩處和 `file_selector` 不同**：標題預設是英文「File Picker」（已用 `dialogTitle` 改成在地化的「另存新檔」）；「存檔類型」的名稱寫死成「Files (*.json)」（原本是「JSON (*.json)」），使用者接受此差異。預設檔名、覆蓋確認、實際寫入都一樣。
+- **`super_clipboard` 在 Android 複製圖片要宣告 content provider**（`com.superlist.super_native_extensions.DataProvider`，authority 用 `${applicationId}.SuperClipboardDataProvider`）；補上後複製會出現系統剪貼簿預覽。
+- Android 開檔的副檔名篩選有效：系統選檔畫面中非 JSON 檔是灰色不可選。
+- 「分享」「儲存」是否出現看 `isAndroidProvider`，不看螢幕寬度：Windows 視窗拉窄時仍是桌面行為。
+
