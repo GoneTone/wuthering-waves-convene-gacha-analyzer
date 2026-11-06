@@ -174,8 +174,10 @@ class LogAccessChannel(private val activity: Activity, messenger: BinaryMessenge
      * 系統不認得直接開頁時，至少會在開發人員選項捲到「無線偵錯」。
      */
     private fun openWirelessDebugging() {
+        // 接這個 action 的 Activity 各版本名稱不同（Android 13 是 DevelopmentSettingsDashboardActivity、
+        // ASUS Android 16 是 DevelopmentSettingsActivity），跟系統介面一樣只指定套件讓系統解析。
         val direct = Intent("android.service.quicksettings.action.QS_TILE_PREFERENCES")
-            .setClassName("com.android.settings", "com.android.settings.Settings\$DevelopmentSettingsActivity")
+            .setPackage("com.android.settings")
             .putExtra(
                 Intent.EXTRA_COMPONENT_NAME,
                 ComponentName(

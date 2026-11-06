@@ -187,7 +187,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 ### 19. 無線偵錯配對與一鍵恢復的實測結果（通用，2026-11-06，ASUS Android 16）
 
 **直接跳到「無線偵錯」頁**
-- 系統設定沒有公開「無線偵錯」頁的 Activity。但快速設定磚長按的入口可以用：送 `android.service.quicksettings.action.QS_TILE_PREFERENCES` 給 `com.android.settings/.Settings$DevelopmentSettingsActivity`，並帶 `Intent.EXTRA_COMPONENT_NAME = com.android.settings/.development.qstile.DevelopmentTiles$WirelessDebugging`，就會直接開「無線偵錯」頁。這不是公開保證的介面，其他廠牌要另外驗證。
+- 系統設定沒有公開「無線偵錯」頁的 Activity。但快速設定磚長按的入口可以用：送 `android.service.quicksettings.action.QS_TILE_PREFERENCES`，**只指定套件 `com.android.settings`、不要寫死類別**（接這個 action 的 Activity 各版本名稱不同：Android 13 是 `Settings$DevelopmentSettingsDashboardActivity`，ASUS Android 16 是 `Settings$DevelopmentSettingsActivity`；系統介面處理磚長按時也是只指定套件），並帶 `Intent.EXTRA_COMPONENT_NAME = com.android.settings/.development.qstile.DevelopmentTiles$WirelessDebugging`，就會直接開「無線偵錯」頁。這不是公開保證的介面，其他廠牌要另外驗證。
 - **這個 intent 一定要加 `FLAG_ACTIVITY_NO_HISTORY`**：開發人員選項處理完磚的 intent 後會留在無線偵錯頁底下，每次回到它（例如橫向 App 跳過去、返回時被重建）都會再開一次無線偵錯頁，玩家按返回永遠回不到 App。加上 NO_HISTORY 讓它開完頁面就結束，返回一次就回到 App。退回開發人員選項的那條路沒有這個問題。
 - Shizuku 的做法是開 `Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS`，帶 `":settings:fragment_args_key" = "toggle_adb_wireless"`，系統會捲到「無線偵錯」那一項。把這個參數也加在上面的 intent 上，系統不認得直接開頁時，至少會捲到正確位置。
 - 用 `adb shell am start` 測試時，PowerShell 要注意 `$` 的跳脫：在雙引號字串裡用 `` `$ ``，不要用 `\$`，否則 `\` 會被原樣送到手機上，導致找不到 Activity。
@@ -241,3 +241,5 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **假的 `Client.log`**：鳴潮的混淆規則是明文位元組為偶數就 XOR `0xA5`、奇數就 XOR `0xEF`，用這個規則就能自己產生測試檔。推到 `/sdcard/Android/data/<遊戲套件>/files/UE4Game/Client/Client/Saved/Logs/Client.log`，再用 `cat hit.log >> Client.log` 模擬遊戲寫入新網址。
 - **`adb shell input text` 會受輸入法影響**：注音輸入法下數字會變成注音符號，要先切到數字鍵盤再點按鍵。`&` 在裝置 shell 的雙引號內不需要跳脫，加了 `\` 會被原樣輸入。
 - **ROG 手機閒置時可能自動進入「鎖定觸控模式」**，要雙指上滑才能解除，adb 做不到，需要人工操作。
+- **Android 13 模擬器要用 `-gpu host` 啟動**：用 `swiftshader_indirect`（即使加 `-feature -Vulkan`）時，一打開 Flutter App 模擬器就會 Segmentation fault；API 28／29 沒有這個問題。
+- **用 `settings put global development_settings_enabled 1` 開開發人員選項不完整**：設定 App 不會啟用開發人員選項相關的頁面，直接跳轉會找不到 Activity。測試時要用正規方式（連點版本號碼 7 次）。
