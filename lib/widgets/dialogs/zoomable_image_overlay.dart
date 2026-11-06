@@ -282,7 +282,6 @@ class _ZoomableImageOverlayState extends ConsumerState<ZoomableImageOverlay> {
         value,
         file: widget.imageFile,
         suggestedName: _suggestedName(),
-        android: ref.read(isAndroidProvider),
         l: AppLocalizations.of(context)!,
         toast: (message) {
           if (mounted) _showSnack(message);

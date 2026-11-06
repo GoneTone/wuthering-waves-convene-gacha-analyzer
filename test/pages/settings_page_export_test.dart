@@ -56,7 +56,7 @@ typedef _Saved = ({Uint8List bytes, String name, String ext, String mime});
 typedef _Shared = ({Uint8List bytes, String name, String mime});
 
 void main() {
-  late Directory tempDir;
+  Directory? tempDir;
   late List<_Saved> saves;
   late List<_Shared> shares;
   String? saveResult;
@@ -80,7 +80,9 @@ void main() {
 
   tearDown(() async {
     resetFileAccessSeams();
-    if (await tempDir.exists()) await tempDir.delete(recursive: true);
+    if (tempDir != null && await tempDir!.exists()) {
+      await tempDir!.delete(recursive: true);
+    }
   });
 
   Future<AppLocalizations> pump(
@@ -89,8 +91,10 @@ void main() {
   }) async {
     late ProviderContainer container;
     await tester.runAsync(() async {
-      tempDir = await Directory.systemTemp.createTemp('settings_export_');
-      final storage = GachaStorage(tempDir);
+      final dir = tempDir = await Directory.systemTemp.createTemp(
+        'settings_export_',
+      );
+      final storage = GachaStorage(dir);
       await storage.save(
         BannerStorage(
           playerId: '1001',
@@ -125,9 +129,9 @@ void main() {
             ),
           ),
           itemImageIndexStorageProvider.overrideWithValue(
-            ItemImageIndexStorage(tempDir),
+            ItemImageIndexStorage(dir),
           ),
-          itemImageCacheDirProvider.overrideWithValue(tempDir),
+          itemImageCacheDirProvider.overrideWithValue(dir),
           appVersionProvider.overrideWithValue('0.0.0-test'),
         ],
       );

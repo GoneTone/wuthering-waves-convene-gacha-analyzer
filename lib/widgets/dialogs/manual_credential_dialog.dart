@@ -86,7 +86,9 @@ class _ManualCredentialDialogState
     final l = AppLocalizations.of(context)!;
     final Uint8List? bytes;
     try {
-      bytes = await (widget.pickClientLog ?? pickFileBytes)();
+      bytes =
+          await (widget.pickClientLog ??
+              () => pickFileBytes(dialogTitle: l.dialogOpenTitle))();
     } catch (e) {
       _log.warning('manual input file read failed error=${e.runtimeType}');
       if (mounted) setState(() => _error = l.manualCredentialNotFoundInLog);

@@ -1159,6 +1159,8 @@
   "actionShare": "分享",
   "shareFailed": "無法分享",
   "dialogSaveAsTitle": "另存新檔",
+  "dialogOpenTitle": "開啟",
+  "dialogSelectFolderTitle": "選取資料夾",
   "actionSave": "儲存",
   "settingsLogsShare": "分享日誌"
 }

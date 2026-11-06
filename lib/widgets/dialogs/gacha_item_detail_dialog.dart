@@ -269,7 +269,6 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
         value,
         file: current.file,
         suggestedName: _suggestedFileName(current),
-        android: ref.read(isAndroidProvider),
         l: AppLocalizations.of(context)!,
         toast: (message) {
           if (mounted) _showSnack(message);

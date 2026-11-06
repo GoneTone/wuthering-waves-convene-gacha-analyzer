@@ -35,10 +35,11 @@ typedef FileSaveDialog =
     );
 
 /// 開啟系統選檔對話框並回傳檔案內容（取消為 null）。
-typedef FileOpenDialog = Future<Uint8List?> Function(List<String>? extensions);
+typedef FileOpenDialog =
+    Future<Uint8List?> Function(List<String>? extensions, String? dialogTitle);
 
 /// 開啟系統選資料夾對話框並回傳路徑（取消為 null）。
-typedef DirectoryDialog = Future<String?> Function();
+typedef DirectoryDialog = Future<String?> Function(String? dialogTitle);
 
 /// 以系統分享面板分享 bytes。
 typedef FileSharer =
@@ -58,24 +59,48 @@ Future<String?> _defaultSaveDialog(
   bytes: bytes,
   type: FileType.custom,
   allowedExtensions: [extension],
+  lockParentWindow: true,
 );
 
 /// 預設選檔對話框；拿不到 bytes 時退回讀 path。
-Future<Uint8List?> _defaultOpenDialog(List<String>? extensions) async {
+Future<Uint8List?> _defaultOpenDialog(
+  List<String>? extensions,
+  String? dialogTitle,
+) async {
   final result = await FilePicker.pickFiles(
+    dialogTitle: dialogTitle,
     type: extensions == null ? FileType.any : FileType.custom,
     allowedExtensions: extensions,
     withData: true,
+    lockParentWindow: true,
   );
   final file = result?.files.single;
   if (file == null) return null;
-  if (file.bytes != null) return file.bytes;
   final path = file.path;
-  return path == null ? null : File(path).readAsBytes();
+  final bytes =
+      file.bytes ?? (path == null ? null : await File(path).readAsBytes());
+  await _clearPickerCache();
+  return bytes;
+}
+
+/// 清掉 Android 上 file_picker 複製進 cache 的選檔殘留（即使 withData 也會複製）。
+///
+/// 只在 Android 呼叫：其他平台的 platform 預設實作會丟 UnimplementedError。失敗只記 warning。
+Future<void> _clearPickerCache() async {
+  if (defaultTargetPlatform != TargetPlatform.android) return;
+  try {
+    await FilePicker.clearTemporaryFiles();
+  } catch (e, st) {
+    _log.warning('clear picker cache failed', e, st);
+  }
 }
 
 /// 預設選資料夾對話框。
-Future<String?> _defaultDirectoryDialog() => FilePicker.getDirectoryPath();
+Future<String?> _defaultDirectoryDialog(String? dialogTitle) =>
+    FilePicker.getDirectoryPath(
+      dialogTitle: dialogTitle,
+      lockParentWindow: true,
+    );
 
 /// 預設分享：以記憶體檔案交給 share_plus。
 Future<void> _defaultSharer(
@@ -162,6 +187,7 @@ Future<SavedFile?> saveBytes(
     suggestedName: suggestedName,
     extension: extension,
   );
+  // 服務層沒有 Riverpod ref，無法讀 isAndroidProvider；兩者在正式環境一致。
   final isAndroid = defaultTargetPlatform == TargetPlatform.android;
   _log.info(
     'save ok name=$displayName ${isAndroid ? '' : 'path=${sanitizeFsPath(saved)} '}bytes=${bytes.length}',
@@ -211,8 +237,11 @@ Future<bool> copyPngToClipboard(Uint8List png) async {
 }
 
 /// 讓使用者選檔並回傳內容；取消回 null。
-Future<Uint8List?> pickFileBytes({List<String>? extensions}) async {
-  final bytes = await fileOpenDialog(extensions);
+Future<Uint8List?> pickFileBytes({
+  List<String>? extensions,
+  String? dialogTitle,
+}) async {
+  final bytes = await fileOpenDialog(extensions, dialogTitle);
   _log.info(
     bytes == null
         ? 'pick file cancelled'
@@ -222,8 +251,14 @@ Future<Uint8List?> pickFileBytes({List<String>? extensions}) async {
 }
 
 /// 讓使用者選文字檔並以 UTF-8 解碼；取消回 null，不合法 UTF-8 丟 [FormatException]。
-Future<String?> pickTextFile({required List<String> extensions}) async {
-  final bytes = await pickFileBytes(extensions: extensions);
+Future<String?> pickTextFile({
+  required List<String> extensions,
+  String? dialogTitle,
+}) async {
+  final bytes = await pickFileBytes(
+    extensions: extensions,
+    dialogTitle: dialogTitle,
+  );
   if (bytes == null) return null;
   try {
     return utf8.decode(bytes);
@@ -238,8 +273,8 @@ Future<String?> pickTextFile({required List<String> extensions}) async {
 }
 
 /// 讓使用者選資料夾；取消回 null。
-Future<String?> pickDirectory() async {
-  final path = await directoryDialog();
+Future<String?> pickDirectory({String? dialogTitle}) async {
+  final path = await directoryDialog(dialogTitle);
   _log.info(
     path == null
         ? 'pick directory cancelled'

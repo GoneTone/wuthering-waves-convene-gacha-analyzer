@@ -316,4 +316,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **`super_clipboard` 在 Android 複製圖片要宣告 content provider**（`com.superlist.super_native_extensions.DataProvider`，authority 用 `${applicationId}.SuperClipboardDataProvider`）；補上後複製會出現系統剪貼簿預覽。
 - Android 開檔的副檔名篩選有效：系統選檔畫面中非 JSON 檔是灰色不可選。
 - 「分享」「儲存」是否出現看 `isAndroidProvider`，不看螢幕寬度：Windows 視窗拉窄時仍是桌面行為。
+- **Windows 對話框要傳 `lockParentWindow: true`** 才會像 `file_selector` 一樣歸屬於應用程式視窗（強制在前、模態）；開檔與選資料夾對話框的標題同樣預設是英文「File Picker」，要另外傳在地化的 `dialogTitle`（`dialogOpenTitle`、`dialogSelectFolderTitle`）。
+- **`file_picker` 在 Windows 的 isolate 遇到檔名含 `<>:"/\|?*` 會丟例外，而且 `await` 永遠不會完成**（存檔看起來像卡死），所以建議檔名一定要先把這些字元換成 `_`。
+- **暫存檔殘留**：`share_plus` 的 `XFile.fromData` 會在暫存目錄留下 `<uuid>/<檔名>` 的副本，不會被刪除；`file_picker` 在 Android 即使 `withData: true` 也會把選到的檔案複製到 `cache/file_picker/...`，現在讀完 bytes 後會呼叫 `FilePicker.clearTemporaryFiles()` 清掉（只限 Android，Windows 的預設實作會丟 `UnimplementedError`）。
 

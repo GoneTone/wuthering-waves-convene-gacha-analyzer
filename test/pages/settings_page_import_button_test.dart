@@ -71,6 +71,9 @@ Widget _wrap(ProviderContainer container) => UncontrolledProviderScope(
   ),
 );
 
+/// 最近一次選檔對話框收到的標題。
+String? openTitle;
+
 void main() {
   late Directory tempDir;
 
@@ -203,7 +206,10 @@ void main() {
       );
     });
     addTearDown(container.dispose);
-    fileOpenDialog = (_) async => bytes;
+    fileOpenDialog = (_, title) async {
+      openTitle = title;
+      return bytes;
+    };
 
     await tester.pumpWidget(_wrap(container));
     await tester.pump();
@@ -213,6 +219,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
   }
+
+  testWidgets('import dialog gets the localized open title', (tester) async {
+    await tapImportWith(tester, Uint8List.fromList([0xff]), '匯入資料');
+    expect(openTitle, '開啟');
+  });
 
   testWidgets(
     'importing a backup with invalid UTF-8 shows the unreadable message',

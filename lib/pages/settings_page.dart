@@ -785,7 +785,10 @@ class _DataManagement extends ConsumerWidget {
     final l = AppLocalizations.of(ctx)!;
     final String? text;
     try {
-      text = await pickTextFile(extensions: const ['json']);
+      text = await pickTextFile(
+        extensions: const ['json'],
+        dialogTitle: l.dialogOpenTitle,
+      );
     } catch (e, st) {
       Logger(
         'accounts.io',
@@ -935,7 +938,10 @@ class _DataManagement extends ConsumerWidget {
 
     final String? text;
     try {
-      text = await pickTextFile(extensions: platform.fileExtensions);
+      text = await pickTextFile(
+        extensions: platform.fileExtensions,
+        dialogTitle: l.dialogOpenTitle,
+      );
     } catch (e, st) {
       Logger(
         'wish.import.platform',

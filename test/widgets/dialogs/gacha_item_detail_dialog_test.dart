@@ -1409,6 +1409,33 @@ void main() {
       expect(mime, 'image/png');
     });
 
+    testWidgets(
+      'saving and sharing replace illegal file name characters with underscores',
+      (tester) async {
+        addTearDown(resetItemImageSaveSeams);
+        addTearDown(resetFileAccessSeams);
+        itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+        final names = <String>[];
+        fileSaveDialog = (_, name, _, _, _) async {
+          names.add(name);
+          return null;
+        };
+        fileSharer = (_, name, _) async => names.add(name);
+        await seedCharacterWithSkin(tester, android: true);
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 111, name: 'Ch:ar/x', languageCode: 'zh-Hant'),
+        );
+        for (final label in ['儲存圖片', '分享']) {
+          await openImageMenu(tester);
+          await tester.tap(find.text(label));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+        }
+        expect(names, ['Ch_ar_x_造型A.png', 'Ch_ar_x_造型A.png']);
+      },
+    );
+
     testWidgets('item image share failure shows shareFailed', (tester) async {
       addTearDown(resetItemImageSaveSeams);
       addTearDown(resetFileAccessSeams);

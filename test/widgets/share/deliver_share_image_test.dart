@@ -38,25 +38,21 @@ void main() {
   tearDown(resetFileAccessSeams);
 
   testWidgets('Windows 存檔成功 → 顯示完整路徑與開啟資料夾', (t) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
     fileSaveDialog = (b, n, e, m, title) async => r'C:\out\card.png';
     final l = await _run(t, ShareImageAction.save);
-    debugDefaultTargetPlatformOverride = null;
 
     expect(find.text(l.shareImageSaved(r'C:\out\card.png')), findsOneWidget);
     expect(find.text(l.actionOpenFolder), findsOneWidget);
-  });
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
   testWidgets('Android 存檔成功 → 顯示檔名、無開啟資料夾', (t) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
     fileSaveDialog = (b, n, e, m, title) async =>
         '/document/primary:Download/card.png';
     final l = await _run(t, ShareImageAction.save);
-    debugDefaultTargetPlatformOverride = null;
 
     expect(find.text(l.shareImageSaved('card.png')), findsOneWidget);
     expect(find.text(l.actionOpenFolder), findsNothing);
-  });
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   testWidgets('取消存檔 → 不彈任何視窗', (t) async {
     fileSaveDialog = (b, n, e, m, title) async => null;

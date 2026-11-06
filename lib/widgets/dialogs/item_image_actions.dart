@@ -36,13 +36,11 @@ PopupMenuItem<String> _menuItem(String value, IconData icon, String title) =>
 /// 執行 [itemImageMenuItems] 的選項（`copy`／`save`／`share`，其他值不處理）：
 /// 把 [file] 轉成 PNG 後複製、存檔或分享，結果以 [toast] 回報。
 ///
-/// [android] 決定存檔訊息：桌面顯示完整路徑，Android 只有檔名。
 /// [toast] 會在非同步完成後才被呼叫，呼叫端需自行確認 widget 仍 mounted。
 Future<void> runItemImageAction(
   String value, {
   required File file,
   required String suggestedName,
-  required bool android,
   required AppLocalizations l,
   required void Function(String message) toast,
 }) async {
@@ -74,11 +72,7 @@ Future<void> runItemImageAction(
           dialogTitle: l.dialogSaveAsTitle,
         );
         if (saved == null) return;
-        toast(
-          l.itemImageSavedTo(
-            android ? saved.displayName : saved.path ?? saved.displayName,
-          ),
-        );
+        toast(l.itemImageSavedTo(saved.path ?? saved.displayName));
       } catch (_) {
         toast(l.itemImageSaveFailed);
       }

@@ -1390,7 +1390,7 @@
   },
   "actionShare": "Share",
   "@actionShare": {
-    "description": "Share button in the share-image dialog (Android): opens the system share sheet."
+    "description": "Share action label: share-image dialog, item image menus and the backup/log picker (Android): opens the system share sheet."
   },
   "shareFailed": "Couldn't share",
   "@shareFailed": {
@@ -1399,6 +1399,14 @@
   "dialogSaveAsTitle": "Save as",
   "@dialogSaveAsTitle": {
     "description": "Title of the system save-file dialog (desktop)."
+  },
+  "dialogOpenTitle": "Open",
+  "@dialogOpenTitle": {
+    "description": "Title of the system open-file dialog (desktop)."
+  },
+  "dialogSelectFolderTitle": "Select folder",
+  "@dialogSelectFolderTitle": {
+    "description": "Title of the system select-folder dialog (desktop)."
   },
   "actionSave": "Save",
   "@actionSave": {

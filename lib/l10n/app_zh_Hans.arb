@@ -1384,6 +1384,8 @@
   "actionShare": "分享",
   "shareFailed": "无法分享",
   "dialogSaveAsTitle": "另存为",
+  "dialogOpenTitle": "打开",
+  "dialogSelectFolderTitle": "选择文件夹",
   "actionSave": "保存",
   "settingsLogsShare": "分享日志"
 }
