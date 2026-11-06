@@ -344,27 +344,31 @@ class _RecordCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   // 單一段文字：放不下時整行以省略號結尾，不會因為字級放大而溢出。
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text:
-                              '${formatAbsoluteDateTime(record.time)}'
-                              ' (${relativeTime(record.time, l)})'
-                              ' · #${row.totalIndex}'
-                              ' · ${l.tableMainPity} ',
-                        ),
-                        TextSpan(
-                          text: '${row.mainPityIndex}',
-                          style: TextStyle(
-                            color: _pityColor(row, mainRank, tokens),
+                  // 卡片沒有表頭，保底說明掛在這一行（卡片點了會開詳情，所以用預設的長按觸發）。
+                  Tooltip(
+                    message: l.tableMainPityTooltip(l.rarityStar(mainRank)),
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text:
+                                '${formatAbsoluteDateTime(record.time)}'
+                                ' (${relativeTime(record.time, l)})'
+                                ' · #${row.totalIndex}'
+                                ' · ${l.tableMainPity} ',
                           ),
-                        ),
-                      ],
+                          TextSpan(
+                            text: '${row.mainPityIndex}',
+                            style: TextStyle(
+                              color: _pityColor(row, mainRank, tokens),
+                            ),
+                          ),
+                        ],
+                      ),
+                      style: meta,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    style: meta,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

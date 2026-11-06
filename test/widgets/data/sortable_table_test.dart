@@ -386,6 +386,17 @@ void main() {
       );
     });
 
+    testWidgets('long press on a card explains the pity count', (tester) async {
+      // 桌面表頭有保底說明，卡片沒有表頭，要在卡片上看得到。
+      final l = await pumpTable(tester, width: 360);
+      await tester.longPress(find.textContaining('#45', findRichText: true));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(
+        find.text(l.tableMainPityTooltip(l.rarityStar(5))),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('wide width keeps the table', (tester) async {
       final l = await pumpTable(tester, width: 900);
       expect(find.text(l.tableTotalIndex), findsOneWidget);
