@@ -225,6 +225,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 **root**
 - **root 時每條指令都 `su -c` 會讓 root 工具每秒跳一次授權提示**：改成整次更新只開一個常駐 `su`，指令從 stdin 送進去，以隨機結束標記切出每條指令的輸出。
 - **Google APIs 模擬器內建的 `su`（`4750 root:shell`）一般 App 用不了**：SELinux 連 `stat` 都擋，`File('/system/xbin/su').exists()` 回 false，所以會直接略過 root，不會白等授權逾時。要實測真正的 root 讀取，得用 Magisk root 過的裝置或模擬器（例如 rootAVD）。
+- **Magisk 實測（rootAVD 修補的 API 33 模擬器）**：整次更新只跳一次 Magisk 授權，監看沿用同一個 `su`，讀到命中後關閉 session，各卡池抓取正常。Magisk 授權提示約 10 秒倒數，逾時視同拒絕並記成 `policy=1`（拒絕），之後不會再問；要重測得先清掉授權（Magisk App 的「超級使用者」頁，或 `magisk --sqlite "DELETE FROM policies"`）。
 
 **配對與輸入**
 - **注音輸入法會把組字中的注音一起送進 RemoteInput**：配對碼只保留數字（`filter { it.isDigit() }`）。
