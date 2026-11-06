@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
@@ -23,13 +24,10 @@ void main() {
     mimeType: 'application/json',
   );
 
-  test(
-    'saveBytes returns null and writes nothing when the user cancels',
-    () async {
-      fileSaveDialog = (_, _, _, _, _) async => null;
-      expect(await save(), isNull);
-    },
-  );
+  test('saveBytes returns null when the user cancels', () async {
+    fileSaveDialog = (_, _, _, _, _) async => null;
+    expect(await save(), isNull);
+  });
 
   test('saveBytes on desktop returns the file path and its basename', () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.windows;
@@ -38,6 +36,17 @@ void main() {
     expect(saved!.path, r'C:\tmp\a.json');
     expect(saved.displayName, 'a.json');
   });
+
+  test(
+    'saveBytes on desktop keeps the basename even with another extension',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      fileSaveDialog = (_, _, _, _, _) async => r'C:\tmp\a.txt';
+      final saved = await save();
+      expect(saved!.path, r'C:\tmp\a.txt');
+      expect(saved.displayName, 'a.txt');
+    },
+  );
 
   test('saveBytes on Android returns no path', () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -91,7 +100,7 @@ void main() {
 
   test('saveBytes rethrows when the dialog fails', () async {
     fileSaveDialog = (_, _, _, _, _) async => throw StateError('boom');
-    expect(save(), throwsStateError);
+    await expectLater(save(), throwsStateError);
   });
 
   test('shareBytes passes the name and mime type and returns true', () async {
@@ -125,12 +134,81 @@ void main() {
 
   test('pickTextFile throws FormatException on invalid UTF-8', () async {
     fileOpenDialog = (_, _) async => Uint8List.fromList([0xff, 0xfe, 0x00]);
-    expect(pickTextFile(extensions: ['json']), throwsFormatException);
+    await expectLater(
+      pickTextFile(extensions: ['json']),
+      throwsFormatException,
+    );
   });
 
   test('pickTextFile returns null when cancelled', () async {
     fileOpenDialog = (_, _) async => null;
     expect(await pickTextFile(extensions: ['json']), isNull);
+  });
+
+  test('copyPngToClipboard returns what the writer returns', () async {
+    pngClipboardWriter = (_) async => true;
+    expect(await copyPngToClipboard(bytes), isTrue);
+    pngClipboardWriter = (_) async => false;
+    expect(await copyPngToClipboard(bytes), isFalse);
+  });
+
+  test('copyPngToClipboard returns false when the writer throws', () async {
+    pngClipboardWriter = (_) async => throw StateError('boom');
+    expect(await copyPngToClipboard(bytes), isFalse);
+  });
+
+  test('pickFileBytes returns null when cancelled', () async {
+    fileOpenDialog = (_, _) async => null;
+    expect(await pickFileBytes(), isNull);
+  });
+
+  test('pickFileBytes returns the bytes and forwards the arguments', () async {
+    List<String>? exts;
+    String? title;
+    fileOpenDialog = (e, t) async {
+      exts = e;
+      title = t;
+      return bytes;
+    };
+    expect(await pickFileBytes(extensions: ['json'], dialogTitle: '開啟'), bytes);
+    expect(exts, ['json']);
+    expect(title, '開啟');
+  });
+
+  test('pickDirectory returns null when cancelled', () async {
+    directoryDialog = (_) async => null;
+    expect(await pickDirectory(), isNull);
+  });
+
+  test('pickDirectory returns the path and forwards the title', () async {
+    String? title;
+    directoryDialog = (t) async {
+      title = t;
+      return r'C:\games';
+    };
+    expect(await pickDirectory(dialogTitle: '選取資料夾'), r'C:\games');
+    expect(title, '選取資料夾');
+  });
+
+  group('prepareShareFile', () {
+    late Directory temp;
+
+    setUp(() => temp = Directory.systemTemp.createTempSync('share_prep_'));
+    tearDown(() => temp.deleteSync(recursive: true));
+
+    test('writes the bytes under share_out with the given name', () async {
+      final file = await prepareShareFile(temp, bytes, 'a.png');
+      expect(file.path, '${temp.path}${Platform.pathSeparator}share_out'
+          '${Platform.pathSeparator}a.png');
+      expect(file.readAsBytesSync(), bytes);
+    });
+
+    test('removes the previously prepared file', () async {
+      final first = await prepareShareFile(temp, bytes, 'a.png');
+      final second = await prepareShareFile(temp, bytes, 'b.png');
+      expect(first.existsSync(), isFalse);
+      expect(second.existsSync(), isTrue);
+    });
   });
 
   group('default dialogs through file_picker', () {

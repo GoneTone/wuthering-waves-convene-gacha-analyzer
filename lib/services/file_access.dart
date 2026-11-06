@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
@@ -44,6 +45,9 @@ typedef DirectoryDialog = Future<String?> Function(String? dialogTitle);
 /// 以系統分享面板分享 bytes。
 typedef FileSharer =
     Future<void> Function(Uint8List bytes, String fileName, String mimeType);
+
+/// 把 PNG 寫入系統剪貼簿，回傳是否成功。
+typedef PngClipboardWriter = Future<bool> Function(Uint8List png);
 
 /// 預設存檔對話框：桌面回傳選擇路徑；Android 回傳 content Uri 去掉 scheme 的路徑
 /// （如 `/document/primary:Download/a.json`）。
@@ -102,15 +106,36 @@ Future<String?> _defaultDirectoryDialog(String? dialogTitle) =>
       lockParentWindow: true,
     );
 
-/// 預設分享：以記憶體檔案交給 share_plus。
+/// 把分享用檔案寫到 [tempRoot]`/share_out/`[fileName]，先刪掉上一次的目錄，
+/// 讓暫存目錄最多只殘留一個分享檔（`XFile.fromData` 的副本不會被清掉）。
+@visibleForTesting
+Future<File> prepareShareFile(
+  Directory tempRoot,
+  Uint8List bytes,
+  String fileName,
+) async {
+  final dir = Directory('${tempRoot.path}${Platform.pathSeparator}share_out');
+  if (await dir.exists()) await dir.delete(recursive: true);
+  await dir.create(recursive: true);
+  return File(
+    '${dir.path}${Platform.pathSeparator}$fileName',
+  ).writeAsBytes(bytes);
+}
+
+/// 預設分享：寫成暫存檔後交給 share_plus。
 Future<void> _defaultSharer(
   Uint8List bytes,
   String fileName,
   String mimeType,
 ) async {
+  final file = await prepareShareFile(
+    await getTemporaryDirectory(),
+    bytes,
+    fileName,
+  );
   await SharePlus.instance.share(
     ShareParams(
-      files: [XFile.fromData(bytes, name: fileName, mimeType: mimeType)],
+      files: [XFile(file.path, mimeType: mimeType)],
       fileNameOverrides: [fileName],
     ),
   );
@@ -144,8 +169,7 @@ FileSharer fileSharer = _defaultSharer;
 
 /// PNG 剪貼簿寫入 seam。
 @visibleForTesting
-Future<bool> Function(Uint8List png) pngClipboardWriter =
-    _defaultClipboardWriter;
+PngClipboardWriter pngClipboardWriter = _defaultClipboardWriter;
 
 /// 將所有 seam 重設為預設實作，供 tearDown 使用。
 @visibleForTesting
@@ -182,27 +206,33 @@ Future<SavedFile?> saveBytes(
     _log.info('save cancelled name=$suggestedName');
     return null;
   }
-  final displayName = displayNameForSavedPath(
-    saved,
-    suggestedName: suggestedName,
-    extension: extension,
-  );
   // 服務層沒有 Riverpod ref，無法讀 isAndroidProvider；兩者在正式環境一致。
   final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+  final displayName = isAndroid
+      ? displayNameForSavedPath(
+          saved,
+          suggestedName: suggestedName,
+          extension: extension,
+        )
+      : _baseName(saved);
   _log.info(
     'save ok name=$displayName ${isAndroid ? '' : 'path=${sanitizeFsPath(saved)} '}bytes=${bytes.length}',
   );
   return SavedFile(displayName: displayName, path: isAndroid ? null : saved);
 }
 
-/// 從存檔結果字串取出顯示檔名（最後一個分隔符之後）；副檔名不符
+/// 取路徑最後一個分隔符之後的檔名。
+String _baseName(String path) =>
+    path.substring(path.lastIndexOf(RegExp(r'[/\\]')) + 1);
+
+/// 從 Android 存檔結果字串取出顯示檔名（最後一個分隔符之後）；副檔名不符
 /// （如 Downloads provider 的 `/document/msf:1234`）時退回 [suggestedName]。
 String displayNameForSavedPath(
   String saved, {
   required String suggestedName,
   required String extension,
 }) {
-  final name = saved.substring(saved.lastIndexOf(RegExp(r'[/\\]')) + 1);
+  final name = _baseName(saved);
   return name.toLowerCase().endsWith('.${extension.toLowerCase()}')
       ? name
       : suggestedName;
