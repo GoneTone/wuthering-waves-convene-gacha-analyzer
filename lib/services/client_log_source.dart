@@ -81,8 +81,8 @@ class ShellLogSource implements ClientLogSource {
       await _exec(clientLogLengthCommand(path)),
       allowMalformed: true,
     );
-    // 檔案不存在時 stat 只輸出錯誤（stdout 為空），視為長度 0。
-    return int.tryParse(out.trim()) ?? 0;
+    // 檔案不存在時指令本身印 0；空的或看不懂的輸出是讀取出錯，若當成 0 會被誤判為 log 輪替而從頭重讀。
+    return int.parse(out.trim());
   }
 
   @override
@@ -93,7 +93,7 @@ class ShellLogSource implements ClientLogSource {
 /// 產生取得 [path] 長度的 shell 指令。
 String clientLogLengthCommand(String path) {
   _checkPath(path);
-  return "stat -c %s '$path'";
+  return "stat -c %s '$path' 2>/dev/null || echo 0";
 }
 
 /// 產生讀取 [path] 自 [offset] 起 [length] 位元組的 shell 指令。

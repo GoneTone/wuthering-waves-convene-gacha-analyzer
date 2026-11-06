@@ -29,7 +29,7 @@ void main() {
   test('length command quotes path', () {
     expect(
       clientLogLengthCommand('/a/Client.log'),
-      "stat -c %s '/a/Client.log'",
+      "stat -c %s '/a/Client.log' 2>/dev/null || echo 0",
     );
   });
 
@@ -40,17 +40,20 @@ void main() {
     expect(() => clientLogLengthCommand("/a/x'y"), throwsArgumentError);
   });
 
+  test('shell length parses trimmed stat output', () async {
+    for (final (out, want) in [('1234\n', 1234), ('0\n', 0)]) {
+      expect(await ShellLogSource(exec: _out(out)).length(), want, reason: out);
+    }
+  });
+
   test(
-    'shell length parses trimmed stat output, empty or garbage is 0',
+    'shell length throws on empty or garbled output instead of reporting 0',
     () async {
-      for (final (out, want) in [
-        ('1234\n', 1234),
-        ('', 0),
-        ('stat: No such file\n', 0),
-      ]) {
-        expect(
-          await ShellLogSource(exec: _out(out)).length(),
-          want,
+      // 回 0 會被監看當成 log 輪替而從頭重讀整個檔；丟例外則只是這一輪讀取失敗。
+      for (final out in ['', 'stat: weird\n']) {
+        await expectLater(
+          ShellLogSource(exec: _out(out)).length(),
+          throwsFormatException,
           reason: out,
         );
       }
