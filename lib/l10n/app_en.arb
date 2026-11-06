@@ -1387,5 +1387,17 @@
   "progressCredentialReady": "Got your convene history. Fetching starts when you return to this app.",
   "@progressCredentialReady": {
     "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
+  "actionShare": "Share",
+  "@actionShare": {
+    "description": "Share button in the share-image dialog (Android): opens the system share sheet."
+  },
+  "shareFailed": "Couldn't share",
+  "@shareFailed": {
+    "description": "Shown when opening the system share sheet failed."
+  },
+  "dialogSaveAsTitle": "Save as",
+  "@dialogSaveAsTitle": {
+    "description": "Title of the system save-file dialog (desktop)."
   }
 }

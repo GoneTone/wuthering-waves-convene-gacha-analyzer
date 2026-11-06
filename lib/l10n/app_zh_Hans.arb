@@ -1380,5 +1380,8 @@
   "progressCredentialReady": "已获取唤取记录，回到本 App 后就会开始抓取数据。",
   "@progressCredentialReady": {
     "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
-  }
+  },
+  "actionShare": "分享",
+  "shareFailed": "无法分享",
+  "dialogSaveAsTitle": "另存为"
 }
