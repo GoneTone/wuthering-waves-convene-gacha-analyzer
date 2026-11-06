@@ -167,8 +167,23 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     // 沒等本機 bootstrap 完成就同步，byUid 會是空的，雲端內容會把本機檔案當「全新」覆蓋掉。
     await ref.read(gachaRepositoryProvider.notifier).waitForBootstrap();
     if (!ref.mounted || !_linked) return;
+    final auth = ref.read(cloudAuthProvider);
+    // 短效授權的 client 用不到跨輪：同步輪自己會還原，這裡不重複還原。
+    if (!auth.keepsClientAcrossRounds) {
+      if (_syncing) return;
+      if (ref.read(settingsProvider).cloudAutoSyncEnabled) {
+        await syncNow(manual: false, trigger: 'startup');
+        return;
+      }
+    }
     try {
-      await _ensureClient();
+      final restored = await _restoreClient(auth);
+      if (auth.keepsClientAcrossRounds) {
+        _client?.close();
+        _client = restored;
+      } else {
+        restored.close();
+      }
     } on CloudReauthRequiredException {
       state = const CloudSyncState(phase: CloudSyncPhase.reauthRequired);
       return;
@@ -181,7 +196,8 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
       return;
     }
     if (!ref.mounted) return;
-    if (ref.read(settingsProvider).cloudAutoSyncEnabled) {
+    if (auth.keepsClientAcrossRounds &&
+        ref.read(settingsProvider).cloudAutoSyncEnabled) {
       await syncNow(manual: false, trigger: 'startup');
     }
   }
@@ -207,7 +223,12 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
         result.client.close();
         return;
       }
-      await result.commit();
+      try {
+        await result.commit();
+      } catch (_) {
+        result.client.close();
+        rethrow;
+      }
       _client?.close();
       _client = result.client;
       await ref.read(settingsProvider.notifier).setCloudAccount(result.email);
@@ -384,20 +405,24 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     }
   }
 
-  /// 還原授權 client；無 token 視同需要重新連結。
+  /// 為同步輪備妥 [_client]；無 token 視同需要重新連結。
   ///
-  /// 跨輪沿用的授權（Windows）已有 client 就直接用；否則每次重新還原並先關掉舊的，
-  /// 避免 [start] 在輪外還原的短效 client 過期後仍被手動同步沿用。
+  /// 跨輪沿用的授權（Windows）已有 client 就直接用；否則每次重新還原並先關掉舊的。
   Future<void> _ensureClient() async {
     final auth = ref.read(cloudAuthProvider);
     if (_client != null && auth.keepsClientAcrossRounds) return;
     _client?.close();
     _client = null;
+    _client = await _restoreClient(auth);
+  }
+
+  /// 以 [auth] 還原授權 client；無法靜默還原時拋 [CloudReauthRequiredException]。
+  Future<http.Client> _restoreClient(CloudAuth auth) async {
     final restored = await auth.restoreClient(
       expectedEmail: ref.read(settingsProvider).cloudAccountEmail!,
     );
     if (restored == null) throw const CloudReauthRequiredException();
-    _client = restored;
+    return restored;
   }
 
   /// 本機資料（byUid／別名）變動時排程 debounce 同步。

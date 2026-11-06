@@ -33,9 +33,13 @@ class FakeAuthClient extends http.BaseClient implements AuthClient {
 
 /// 可程式化行為的 fake 授權服務。
 class FakeAuthService extends GoogleAuthService {
-  /// 建立 [FakeAuthService]，以 [store] 作為底層 token store。
-  FakeAuthService(this.store)
-    : super(tokenStore: store, baseClientFactory: http.Client.new);
+  /// 建立 [FakeAuthService]，以 [store] 作為底層 token store；
+  /// [baseClientFactory] 供測試計數底層 HTTP client 的建立。
+  FakeAuthService(this.store, {http.Client Function()? baseClientFactory})
+    : super(
+        tokenStore: store,
+        baseClientFactory: baseClientFactory ?? http.Client.new,
+      );
 
   /// 供斷言的 token store。
   final InMemoryTokenStore store;

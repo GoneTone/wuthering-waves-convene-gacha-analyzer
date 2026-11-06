@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/android_cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_authorization_gateway.dart';
 
 /// 依佇列回放通行證的 fake gateway；佇列元素為 null 代表需要使用者操作。
@@ -31,6 +30,9 @@ class _FakeGateway implements GoogleAuthorizationGateway {
   /// signOut 是否拋錯。
   bool signOutThrows = false;
 
+  /// clearToken 是否拋錯（模擬舊版 Play services 缺 clearAuthorizationToken）。
+  bool clearThrows = false;
+
   @override
   Future<String?> silentToken() async {
     if (silentThrows) throw StateError('play services down');
@@ -46,7 +48,10 @@ class _FakeGateway implements GoogleAuthorizationGateway {
   }
 
   @override
-  Future<void> clearToken(String token) async => cleared.add(token);
+  Future<void> clearToken(String token) async {
+    cleared.add(token);
+    if (clearThrows) throw StateError('Missing Feature clear_token');
+  }
 
   @override
   Future<void> signOut() async {
@@ -58,31 +63,36 @@ class _FakeGateway implements GoogleAuthorizationGateway {
 void main() {
   late _FakeGateway gateway;
   late List<Uri> requests;
+  late int factoryCalls;
   late AndroidCloudAuth auth;
 
   setUp(() {
     gateway = _FakeGateway();
     requests = [];
+    factoryCalls = 0;
     auth = AndroidCloudAuth(
       gateway: gateway,
-      baseClientFactory: () => MockClient((request) async {
-        requests.add(request.url);
-        final token = request.headers['authorization']?.split(' ').last ?? '';
-        if (token == 'stale') {
+      baseClientFactory: () {
+        factoryCalls++;
+        return MockClient((request) async {
+          requests.add(request.url);
+          final token = request.headers['authorization']?.split(' ').last ?? '';
+          if (token == 'stale') {
+            return http.Response(
+              '{}',
+              401,
+              headers: {'www-authenticate': 'Bearer error="invalid_token"'},
+            );
+          }
+          if (token == 'stale-plain') return http.Response('{}', 401);
+          final email = token == 'other' ? 'x@example.com' : 'u@example.com';
           return http.Response(
-            '{}',
-            401,
-            headers: {'www-authenticate': 'Bearer error="invalid_token"'},
+            jsonEncode({'email': email}),
+            200,
+            headers: {'content-type': 'application/json'},
           );
-        }
-        if (token == 'stale-plain') return http.Response('{}', 401);
-        final email = token == 'other' ? 'x@example.com' : 'u@example.com';
-        return http.Response(
-          jsonEncode({'email': email}),
-          200,
-          headers: {'content-type': 'application/json'},
-        );
-      }),
+        });
+      },
     );
   });
 
@@ -180,7 +190,7 @@ void main() {
 
       expect(gateway.cleared, ['good-1']);
       expect(gateway.signOutCalls, 1);
-      expect(requests.where((u) => u.path.contains('revoke')), isEmpty);
+      expect(factoryCalls, 0);
     },
   );
 
@@ -200,6 +210,29 @@ void main() {
 
     expect(gateway.cleared, ['good-1']);
   });
+
+  test(
+    'restore: clearToken throws (old Play services) → still retries',
+    () async {
+      gateway.clearThrows = true;
+      gateway.silent.addAll(['stale', 'good-2']);
+
+      final client = await auth.restoreClient(expectedEmail: 'u@example.com');
+
+      expect(client, isNotNull);
+      client!.close();
+    },
+  );
+
+  test(
+    'restore: clearToken throws and token stays stale → null, not throw',
+    () async {
+      gateway.clearThrows = true;
+      gateway.silent.addAll(['stale', 'stale']);
+
+      expect(await auth.restoreClient(expectedEmail: 'u@example.com'), isNull);
+    },
+  );
 
   test('keepsClientAcrossRounds is false', () {
     expect(auth.keepsClientAcrossRounds, isFalse);

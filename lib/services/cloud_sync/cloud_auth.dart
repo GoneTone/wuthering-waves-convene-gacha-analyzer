@@ -1,4 +1,6 @@
 import 'package:googleapis/oauth2/v2.dart' as oauth2;
+import 'package:googleapis_auth/googleapis_auth.dart'
+    show AccessDeniedException;
 import 'package:http/http.dart' as http;
 
 /// 一次互動式連結的結果；呼叫端確認結果仍有效後才 [commit]。
@@ -59,3 +61,45 @@ Future<String> fetchCloudEmail(http.Client client) async {
   }
   return email;
 }
+
+/// refresh token 已失效（使用者於 Google 端撤銷授權），需要重新連結時拋出。
+class CloudReauthRequiredException implements Exception {
+  /// 建立 [CloudReauthRequiredException]。
+  const CloudReauthRequiredException();
+
+  @override
+  String toString() => 'CloudReauthRequiredException';
+}
+
+/// 授權結果未包含必要的 Drive scope（使用者在 Google 逐項授權頁漏勾）時拋出。
+class CloudScopeMissingException implements Exception {
+  /// 建立 [CloudScopeMissingException]。
+  const CloudScopeMissingException();
+
+  @override
+  String toString() => 'CloudScopeMissingException';
+}
+
+/// 判斷例外是否為 OAuth `invalid_grant`（refresh token 被撤銷／過期）。
+bool isInvalidGrant(Object e) => e.toString().contains('invalid_grant');
+
+/// 判斷例外是否為 API 回報的「token 缺必要權限」。
+///
+/// 覆蓋兩種真實錯誤表面：googleapis_auth 的 `AuthenticatedClient` 對帶
+/// `www-authenticate` header 的回應直接拋 `insufficient_scope`（生產環境
+/// 實測主要路徑）；無該 header 時 googleapis 走 `DetailedApiRequestError`，
+/// 訊息為 `insufficient authentication scopes` 或結構化 reason。
+bool isInsufficientScope(Object e) {
+  final s = e.toString();
+  return s.contains('insufficient_scope') ||
+      s.contains('insufficient authentication scopes') ||
+      s.contains('ACCESS_TOKEN_SCOPE_INSUFFICIENT');
+}
+
+/// 判斷例外是否為 API 拒絕 access token（已撤銷／失效）。
+///
+/// 兩種表面：googleapis 的 `DetailedApiRequestError` 401；或 `AuthenticatedClient`
+/// 遇 `www-authenticate: ... error="invalid_token"` 直接拋的 `AccessDeniedException`。
+bool isInvalidToken(Object e) =>
+    (e is oauth2.DetailedApiRequestError && e.status == 401) ||
+    (e is AccessDeniedException && e.message.contains('invalid_token'));

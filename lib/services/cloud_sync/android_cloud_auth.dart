@@ -4,7 +4,6 @@ import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_authorization_gateway.dart';
 
 /// Android 的 [CloudAuth]：以 Play services 授權 API 取短效通行證，不保存 refresh token。
@@ -56,13 +55,27 @@ class AndroidCloudAuth implements CloudAuth {
       } catch (e) {
         client.close();
         if (!isInvalidToken(e)) rethrow;
-        _log.info('android token rejected (401), clearing cache and retrying');
-        await gateway.clearToken(token);
-        if (attempt >= 1) {
+        final finalAttempt = attempt >= 1;
+        _log.info(
+          finalAttempt
+              ? 'android token still rejected after retry, clearing cache'
+              : 'android token rejected (401), clearing cache and retrying',
+        );
+        await _clearStaleToken(token);
+        if (finalAttempt) {
           if (interactive) rethrow;
           return null;
         }
       }
+    }
+  }
+
+  /// 清掉被拒的系統快取通行證；舊版 Play services 不支援清除，失敗只記 log 並照常重試。
+  Future<void> _clearStaleToken(String token) async {
+    try {
+      await gateway.clearToken(token);
+    } catch (e) {
+      _log.warning('android clear stale token failed (ignored): $e');
     }
   }
 
@@ -72,7 +85,10 @@ class AndroidCloudAuth implements CloudAuth {
     String? postAuthPage,
   }) async {
     _log.info('android link start');
-    final verified = (await _verifiedToken(interactive: true))!;
+    final verified = await _verifiedToken(interactive: true);
+    if (verified == null) {
+      throw StateError('interactive authorization returned no token');
+    }
     _log.info('android link ok');
     return CloudLinkResult(
       client: verified.client,
@@ -93,6 +109,7 @@ class AndroidCloudAuth implements CloudAuth {
       _log.warning('android restore: account mismatch, relink required');
       throw const CloudReauthRequiredException();
     }
+    _log.info('android restore ok');
     return verified.client;
   }
 
