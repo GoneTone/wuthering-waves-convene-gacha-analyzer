@@ -11,6 +11,13 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/dialog_toast.dart';
 
+/// 會觸發長按選單的指標種類（觸控與觸控筆）；滑鼠長按不算，維持桌面的單擊行為。
+const Set<PointerDeviceKind> kTouchLikeDevices = {
+  PointerDeviceKind.touch,
+  PointerDeviceKind.stylus,
+  PointerDeviceKind.invertedStylus,
+};
+
 /// 開啟全螢幕 lightbox 顯示 [imageFile]：滑鼠可滾輪／單擊縮放，觸控可雙指縮放／點兩下縮放／往下滑關閉；
 /// 都可拖曳平移、右鍵或長按叫出選單、ESC／點背景／X 關閉。
 Future<void> showZoomableImageOverlay(
@@ -438,24 +445,28 @@ class _ZoomableImageOverlayState extends State<ZoomableImageOverlay> {
                             onSecondaryTapDown: (d) => unawaited(
                               _showImageContextMenu(d.globalPosition),
                             ),
-                            onLongPressStart: (d) => unawaited(
-                              _showImageContextMenu(
-                                d.globalPosition,
-                                source: 'longpress',
+                            // 長按選單只給觸控：滑鼠按久一點放開仍要是單擊縮放（桌面行為不變）。
+                            child: GestureDetector(
+                              supportedDevices: kTouchLikeDevices,
+                              onLongPressStart: (d) => unawaited(
+                                _showImageContextMenu(
+                                  d.globalPosition,
+                                  source: 'longpress',
+                                ),
                               ),
-                            ),
-                            child: Image(
-                              image: _imageProvider,
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, e, st) {
-                                Logger('gacha.itemimage.zoom').warning(
-                                  'image errorBuilder '
-                                  'file=${sanitizeFsPath(widget.imageFile.path)}',
-                                  e,
-                                  st,
-                                );
-                                return const SizedBox.shrink();
-                              },
+                              child: Image(
+                                image: _imageProvider,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, e, st) {
+                                  Logger('gacha.itemimage.zoom').warning(
+                                    'image errorBuilder '
+                                    'file=${sanitizeFsPath(widget.imageFile.path)}',
+                                    e,
+                                    st,
+                                  );
+                                  return const SizedBox.shrink();
+                                },
+                              ),
                             ),
                           ),
                           builder: (_, matrix, child) => MouseRegion(

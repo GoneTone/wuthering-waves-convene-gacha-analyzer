@@ -601,14 +601,15 @@ void main() {
 
         // Image 外那層 GestureDetector 負責單擊縮放（onTapUp），並吸收 image
         // 像素上的點擊（不冒泡到外層的 close）。改成單擊後不再掛 onDoubleTap*。
-        final innerGd = tester.widget<GestureDetector>(
-          find
-              .ancestor(
+        // 最內層另有一個只處理觸控長按的 GestureDetector；這裡找負責單擊縮放的那一層。
+        final innerGd = tester
+            .widgetList<GestureDetector>(
+              find.ancestor(
                 of: find.byType(Image),
                 matching: find.byType(GestureDetector),
-              )
-              .first,
-        );
+              ),
+            )
+            .firstWhere((g) => g.onTapUp != null);
         expect(innerGd.behavior, HitTestBehavior.opaque);
         expect(innerGd.onTapUp, isNotNull);
         expect(innerGd.onDoubleTapDown, isNull);
@@ -717,6 +718,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(l.actionCopyImage), findsOneWidget);
       expect(find.text(l.actionSaveImage), findsOneWidget);
+    });
+
+    testWidgets('mouse long press still zooms instead of opening the menu', (
+      tester,
+    ) async {
+      // 桌面行為不變：滑鼠按久一點放開仍是單擊縮放，不會跳出選單。
+      await openOverlay(tester);
+      final l = loc(tester);
+      await tester.longPressAt(center(tester), kind: PointerDeviceKind.mouse);
+      await tester.pumpAndSettle();
+      expect(find.text(l.actionCopyImage), findsNothing);
+      expect(currentScale(tester), closeTo(2.0, 1e-6));
     });
 
     testWidgets('swipe down closes when not zoomed', (tester) async {

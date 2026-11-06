@@ -1231,6 +1231,23 @@ void main() {
       expect(find.text('重抓圖片'), findsOneWidget);
     });
 
+    testWidgets('mouse long press on the image does not open the menu', (
+      tester,
+    ) async {
+      final illustFile = await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await tester.longPressAt(
+        tester.getCenter(find.byKey(ValueKey(illustFile.path))),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('儲存圖片'), findsNothing);
+    });
+
     testWidgets('long press on the image opens the image menu', (tester) async {
       final illustFile = await seedCharacterWithSkin(tester);
       await pumpDialog(
@@ -1266,6 +1283,18 @@ void main() {
       final (name, image) = await pumpPhone(tester, const Size(800, 360));
       expect(name.right, lessThan(image.left));
       expect((name.top - image.top).abs(), lessThan(100));
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('phone landscape keeps the skin caption in the left column', (
+      tester,
+    ) async {
+      // 造型說明放在右欄會把立繪擠扁（實機上只剩約 120dp 高）。
+      final (_, image) = await pumpPhone(tester, const Size(800, 360));
+      final captions = find
+          .text('造型A')
+          .evaluate()
+          .map((e) => tester.getRect(find.byWidget(e.widget)));
+      expect(captions.any((r) => r.right < image.left), isTrue);
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
     testWidgets('phone portrait stacks details above the image', (

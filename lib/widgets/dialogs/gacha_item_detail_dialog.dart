@@ -404,21 +404,24 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                       current,
                     ),
                   ),
-                  // 觸控沒有右鍵，長按叫出同一個選單。
-                  onLongPressStart: (details) => unawaited(
-                    _showImageContextMenu(
-                      context,
-                      details.globalPosition,
-                      current,
+                  // 觸控沒有右鍵，長按叫出同一個選單；滑鼠長按不算，放開仍是開啟看圖。
+                  child: GestureDetector(
+                    supportedDevices: kTouchLikeDevices,
+                    onLongPressStart: (details) => unawaited(
+                      _showImageContextMenu(
+                        context,
+                        details.globalPosition,
+                        current,
+                      ),
                     ),
-                  ),
-                  child: Image.file(
-                    file,
-                    key: ValueKey(file.path),
-                    fit: BoxFit.contain,
-                    alignment: Alignment.center,
-                    gaplessPlayback: true,
-                    errorBuilder: (_, e, st) => const SizedBox.shrink(),
+                    child: Image.file(
+                      file,
+                      key: ValueKey(file.path),
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                      gaplessPlayback: true,
+                      errorBuilder: (_, e, st) => const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
@@ -765,6 +768,12 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
         ),
       ],
     );
+    final caption = current?.skin == null
+        ? null
+        : _buildSkinCaption(context, current!.skin!);
+    // 兩欄（手機橫向）時造型說明放左欄，否則會把右欄的立繪擠扁。
+    final size = MediaQuery.sizeOf(context);
+    final twoColumn = isCompactLayout(context) && size.width > size.height;
     final gallery = Column(
       mainAxisSize: current != null ? MainAxisSize.max : MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -779,7 +788,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
         ],
         if (current != null)
           Expanded(child: _buildCurrentImageArea(context, current)),
-        if (current?.skin != null) _buildSkinCaption(context, current!.skin!),
+        if (caption != null && !twoColumn) caption,
       ],
     );
     final actions = <Widget>[
@@ -808,8 +817,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     ];
 
     // 手機橫向時高度不夠，改成左右兩欄，避免立繪被標題區擠扁。
-    final size = MediaQuery.sizeOf(context);
-    if (isCompactLayout(context) && size.width > size.height) {
+    if (twoColumn) {
       return AppDialog(
         size: AppDialogSize.lg,
         maxHeight: 880,
@@ -821,7 +829,14 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(child: SingleChildScrollView(child: header)),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [header, ?caption],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.s),
                   Wrap(
                     alignment: WrapAlignment.end,
