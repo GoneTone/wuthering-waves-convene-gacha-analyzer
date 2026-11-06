@@ -227,6 +227,34 @@ void main() {
     expect(repo.retries, 1);
   });
 
+  for (final (label, progress) in [
+    ('waiting', const WaitingForCapture()),
+    ('connection lost', const WaitingForCapture(logConnectionLost: true)),
+    (
+      'not paired',
+      const WaitingForCapture(
+        logAccessUnavailable: LogAccessUnavailable.notPaired,
+      ),
+    ),
+    (
+      'wireless off',
+      const WaitingForCapture(
+        logAccessUnavailable: LogAccessUnavailable.wirelessDebuggingOff,
+      ),
+    ),
+  ]) {
+    testWidgets('$label fits a landscape phone without overflow', (
+      tester,
+    ) async {
+      // 實機橫向 2400×1080、dpr 2.75 → 約 873×393 邏輯像素。
+      tester.view.physicalSize = const Size(873, 393);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pump(tester, progress);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('completed shows wireless left on hint', (tester) async {
     final l = await pump(
       tester,
