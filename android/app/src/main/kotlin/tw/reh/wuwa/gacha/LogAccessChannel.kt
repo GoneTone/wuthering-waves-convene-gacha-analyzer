@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.Uri
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.os.Build
@@ -127,7 +128,17 @@ class LogAccessChannel(private val activity: Activity, messenger: BinaryMessenge
     /** 由 MainActivity 轉送權限請求結果。 */
     fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray): Boolean {
         val pending = pendingPermissions.remove(requestCode) ?: return false
-        pending.success(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+        val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+        // 玩家勾過「不要再詢問」後系統不再跳視窗，只能請他到 App 設定頁自己開。
+        if (!granted && requestCode == REQ_STORAGE &&
+            !activity.shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)
+        ) {
+            Log.i(TAG, "storage permission permanently denied, opening app settings")
+            startOrLog(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", activity.packageName, null))
+            )
+        }
+        pending.success(granted)
         return true
     }
 
