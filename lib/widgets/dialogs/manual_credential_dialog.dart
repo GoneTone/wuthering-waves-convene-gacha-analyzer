@@ -173,6 +173,7 @@ class _ManualCredentialDialogState
             tilePadding: EdgeInsets.zero,
             title: Text(l.manualCredentialHowTo),
             childrenPadding: const EdgeInsets.only(bottom: AppSpacing.s),
+            expandedAlignment: AlignmentDirectional.centerStart,
             expandedCrossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SelectableText(

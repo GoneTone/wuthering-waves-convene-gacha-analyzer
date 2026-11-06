@@ -71,6 +71,19 @@ void main() {
     return AppLocalizations.of(tester.element(find.byType(TextField)))!;
   }
 
+  testWidgets('help text starts at the same edge as its title', (tester) async {
+    final l = await open(tester);
+    await tester.tap(find.text(l.manualCredentialHowTo));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.byType(SelectableText)).dx,
+      moreOrLessEquals(
+        tester.getTopLeft(find.text(l.manualCredentialHowTo)).dx,
+        epsilon: 1,
+      ),
+    );
+  });
+
   testWidgets('field does not let the keyboard rewrite the url', (
     tester,
   ) async {
