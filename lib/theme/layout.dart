@@ -16,3 +16,16 @@ bool isCompactLayout(BuildContext context) {
   };
   return (mobileOs ? size.shortestSide : size.width) < kCompactBreakpoint;
 }
+
+/// 給 `MaterialApp.actions` 的全 App 動作表（預設動作加上本專案的覆寫）。
+final Map<Type, Action<Intent>> appActions = {
+  ...WidgetsApp.defaultActions,
+  // Flutter 在手機上點文字欄位外部不收焦點：按返回收起鍵盤後欄位仍有焦點，
+  // 關掉對話框時焦點回到欄位、鍵盤又跳出；別名這類「失焦才提交」的欄位也存不進去。
+  EditableTextTapOutsideIntent: CallbackAction<EditableTextTapOutsideIntent>(
+    onInvoke: (intent) {
+      intent.focusNode.unfocus();
+      return null;
+    },
+  ),
+};

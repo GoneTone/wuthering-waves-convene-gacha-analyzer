@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
@@ -34,4 +34,33 @@ void main() {
       variant: TargetPlatformVariant.only(platform),
     );
   }
+
+  testWidgets('touching outside a text field drops its focus on phones', (
+    tester,
+  ) async {
+    // 手機上 Flutter 預設點外部不收焦點：按返回收起鍵盤後欄位仍有焦點，
+    // 之後關掉任何對話框焦點回到欄位，鍵盤又跳出來；別名欄位也因不失焦而不提交。
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        actions: appActions,
+        home: Scaffold(
+          body: Column(
+            children: [
+              TextField(focusNode: focus),
+              const SizedBox(height: 300, child: Text('outside')),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(focus.hasFocus, isTrue);
+
+    await tester.tap(find.text('outside'));
+    await tester.pump();
+    expect(focus.hasFocus, isFalse);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 }

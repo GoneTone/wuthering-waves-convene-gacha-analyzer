@@ -10,6 +10,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/routing/app_router.dart';
@@ -183,6 +184,7 @@ class _MainAppState extends ConsumerState<MainApp> {
       supportedLocales: ref.watch(releasedLocalesProvider),
       localeListResolutionCallback: localeListResolution,
       routerConfig: _router,
+      actions: appActions,
     );
   }
 }
