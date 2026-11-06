@@ -142,3 +142,28 @@ class AdbKeyStore {
 
 /// 提供 [AdbKeyStore]，測試可 override。
 final adbKeyStoreProvider = Provider<AdbKeyStore>((ref) => AdbKeyStore());
+
+/// 配對流程用的 ADB 操作（自動讀出或產生金鑰）；測試以替身取代。
+class AdbPairingOps {
+  /// 建立操作；[keyStore] 提供配對金鑰。
+  AdbPairingOps(this.keyStore);
+
+  /// 配對金鑰保存。
+  final AdbKeyStore keyStore;
+
+  /// 用配對碼與本機 [port] 的配對服務配對。
+  Future<bool> pair(int port, String code) async => pairWithCode(
+    crypto: await keyStore.loadOrCreate(),
+    port: port,
+    code: code,
+  );
+
+  /// 連到本機 [port] 的無線偵錯。
+  Future<AdbSession?> connect(int port) async =>
+      connectFlutterAdb(await keyStore.loadOrCreate(), port);
+}
+
+/// 提供 [AdbPairingOps]，測試可 override。
+final adbPairingOpsProvider = Provider<AdbPairingOps>(
+  (ref) => AdbPairingOps(ref.watch(adbKeyStoreProvider)),
+);

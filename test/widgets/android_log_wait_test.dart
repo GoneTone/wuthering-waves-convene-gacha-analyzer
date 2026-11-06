@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/pages/log_access_setup_page.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
@@ -27,7 +28,13 @@ class _Repo extends GachaRepository {
   Future<void> retryLogAccess() async => retries++;
 
   @override
-  Future<void> cancelCapture() async {}
+  Future<void> cancelCapture() async {
+    cancels++;
+    state = const GachaState(isBootstrapping: false);
+  }
+
+  /// cancelCapture 被呼叫的次數。
+  int cancels = 0;
 }
 
 /// 記錄呼叫的平台替身。
@@ -151,6 +158,26 @@ void main() {
         expect(find.text(l.progressManualInputLink), findsOneWidget);
       },
     );
+  }
+
+  for (final (reason, label) in [
+    (LogAccessUnavailable.notPaired, 'setup'),
+    (LogAccessUnavailable.adbConnectFailed, 'repair'),
+  ]) {
+    testWidgets('${reason.name} ends the update and opens the setup page', (
+      tester,
+    ) async {
+      final l = await pump(
+        tester,
+        WaitingForCapture(logAccessUnavailable: reason),
+      );
+      await tester.tap(
+        find.text(label == 'setup' ? l.actionSetupLogAccess : l.actionRepair),
+      );
+      await tester.pumpAndSettle();
+      expect(repo.cancels, 1);
+      expect(find.byType(LogAccessSetupPage), findsOneWidget);
+    });
   }
 
   testWidgets('wireless debugging off offers to open it', (tester) async {

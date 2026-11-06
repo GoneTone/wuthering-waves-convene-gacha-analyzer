@@ -11,6 +11,12 @@ class MainActivity : FlutterActivity() {
         logAccess = LogAccessChannel(this, flutterEngine.dartExecutor.binaryMessenger)
     }
 
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        logAccess?.detach()
+        logAccess = null
+        super.cleanUpFlutterEngine(flutterEngine)
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,

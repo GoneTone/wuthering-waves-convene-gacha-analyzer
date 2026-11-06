@@ -183,8 +183,8 @@ class LogAccessResolver {
     );
   }
 
-  /// 收集連接埠；剛打開無線偵錯時 NSD 還找不到，所以重試幾次。
-  Future<List<int>> _discover() async {
+  /// 收集本機無線偵錯的連接埠；剛打開無線偵錯時 NSD 還找不到，所以重試幾次。
+  Future<List<int>> discoverConnectPorts() async {
     for (var i = 0; i < discoverAttempts; i++) {
       final ports = await platform.discoverAdbConnectPorts();
       if (ports.isNotEmpty) return ports;
@@ -212,10 +212,10 @@ class LogAccessResolver {
         if (!await platform.isAdbWifiEnabled()) {
           await platform.setAdbWifiEnabled(true);
         }
-        return _discover();
+        return discoverConnectPorts();
       },
     );
-    if (!await client.connectAny(await _discover())) {
+    if (!await client.connectAny(await discoverConnectPorts())) {
       await client.close();
       if (!wasOn) await platform.setAdbWifiEnabled(false);
       return const LogAccessBlocked(LogAccessUnavailable.adbConnectFailed);
