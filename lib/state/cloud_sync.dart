@@ -9,13 +9,16 @@ import 'package:window_manager/window_manager.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_export.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/android_cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_remote.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_authorization_gateway.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/token_store.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 /// 雲端同步的即時狀態。
@@ -61,9 +64,19 @@ final googleAuthServiceProvider = Provider<GoogleAuthService>(
   ),
 );
 
+/// [GoogleAuthorizationGateway] provider（Android 授權 API，測試可替換）。
+final googleAuthorizationGatewayProvider = Provider<GoogleAuthorizationGateway>(
+  (ref) => PluginGoogleAuthorizationGateway(),
+);
+
 /// 目前平台的 [CloudAuth] provider。
 final cloudAuthProvider = Provider<CloudAuth>(
-  (ref) => ref.watch(googleAuthServiceProvider),
+  (ref) => ref.watch(isAndroidProvider)
+      ? AndroidCloudAuth(
+          gateway: ref.watch(googleAuthorizationGatewayProvider),
+          baseClientFactory: http.Client.new,
+        )
+      : ref.watch(googleAuthServiceProvider),
 );
 
 /// 以授權 client 建立 [CloudSyncRemote] 的工廠 provider。
@@ -153,7 +166,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     if (!ref.mounted || !_linked) return;
     // 沒等本機 bootstrap 完成就同步，byUid 會是空的，雲端內容會把本機檔案當「全新」覆蓋掉。
     await ref.read(gachaRepositoryProvider.notifier).waitForBootstrap();
-    if (!ref.mounted) return;
+    if (!ref.mounted || !_linked) return;
     try {
       await _ensureClient();
     } on CloudReauthRequiredException {
@@ -371,14 +384,18 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     }
   }
 
-  /// 還原授權 client（已有就直接用）；無 token 視同需要重新連結。
+  /// 還原授權 client；無 token 視同需要重新連結。
+  ///
+  /// 跨輪沿用的授權（Windows）已有 client 就直接用；否則每次重新還原並先關掉舊的，
+  /// 避免 [start] 在輪外還原的短效 client 過期後仍被手動同步沿用。
   Future<void> _ensureClient() async {
-    if (_client != null) return;
-    final restored = await ref
-        .read(cloudAuthProvider)
-        .restoreClient(
-          expectedEmail: ref.read(settingsProvider).cloudAccountEmail!,
-        );
+    final auth = ref.read(cloudAuthProvider);
+    if (_client != null && auth.keepsClientAcrossRounds) return;
+    _client?.close();
+    _client = null;
+    final restored = await auth.restoreClient(
+      expectedEmail: ref.read(settingsProvider).cloudAccountEmail!,
+    );
     if (restored == null) throw const CloudReauthRequiredException();
     _client = restored;
   }

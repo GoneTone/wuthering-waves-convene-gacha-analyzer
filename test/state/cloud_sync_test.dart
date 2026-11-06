@@ -41,10 +41,22 @@ class _DelayedSignInAuthService extends FakeAuthService {
   }
 }
 
+/// 記錄是否已 close 的 fake client。
+class _ClosableClient extends FakeAuthClient {
+  /// 是否已被 close。
+  bool closed = false;
+
+  @override
+  void close() => closed = true;
+}
+
 /// 不跨輪沿用 client 的 fake 授權，記錄 restoreClient 收到的 email。
 class _NonPersistentAuth implements CloudAuth {
   /// restoreClient 每次收到的 expectedEmail。
   final restoredEmails = <String>[];
+
+  /// restoreClient 回傳過的 client。
+  final clients = <_ClosableClient>[];
 
   @override
   bool get keepsClientAcrossRounds => false;
@@ -58,7 +70,9 @@ class _NonPersistentAuth implements CloudAuth {
   @override
   Future<http.Client?> restoreClient({required String expectedEmail}) async {
     restoredEmails.add(expectedEmail);
-    return FakeAuthClient();
+    final client = _ClosableClient();
+    clients.add(client);
+    return client;
   }
 
   @override
@@ -176,6 +190,29 @@ void main() {
         }),
         tokenStoreProvider.overrideWithValue(tokenStore),
         googleAuthServiceProvider.overrideWithValue(authService),
+        cloudSyncRemoteFactoryProvider.overrideWithValue((_) => remote),
+        cloudSyncUrlOpenerProvider.overrideWithValue((_) {}),
+      ],
+    );
+    addTearDown(container.dispose);
+    return container;
+  }
+
+  ProviderContainer makeNonPersistentContainer(CloudAuth auth) {
+    final container = ProviderContainer(
+      overrides: [
+        appVersionProvider.overrideWithValue('1.5.0'),
+        noGameDirOverride,
+        gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
+        gachaCaptureProvider.overrideWithValue(FakeCapture()),
+        cancellableHttpClientFactoryProvider.overrideWithValue(
+          () => CancellableHttpClient(
+            client: MockClient((_) async => http.Response('', 500)),
+            cancel: () {},
+          ),
+        ),
+        tokenStoreProvider.overrideWithValue(tokenStore),
+        cloudAuthProvider.overrideWithValue(auth),
         cloudSyncRemoteFactoryProvider.overrideWithValue((_) => remote),
         cloudSyncUrlOpenerProvider.overrideWithValue((_) {}),
       ],
@@ -436,6 +473,30 @@ void main() {
       await notifier.syncNow(manual: true);
 
       expect(auth.restoredEmails, ['u@example.com', 'u@example.com']);
+    },
+  );
+
+  test(
+    'non-persistent auth → startup client is replaced on a later manual sync',
+    () async {
+      final auth = _NonPersistentAuth();
+      final container = makeNonPersistentContainer(auth);
+      await container.read(settingsProvider.notifier).waitForLoad();
+      await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+      await container
+          .read(settingsProvider.notifier)
+          .setCloudAccount('u@example.com');
+      await container
+          .read(settingsProvider.notifier)
+          .setCloudAutoSyncEnabled(false);
+
+      final notifier = container.read(cloudSyncProvider.notifier);
+      await notifier.start();
+      expect(auth.restoredEmails, hasLength(1));
+      await notifier.syncNow(manual: true);
+
+      expect(auth.restoredEmails, hasLength(2));
+      expect(auth.clients.first.closed, isTrue);
     },
   );
 
