@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -36,12 +37,14 @@ void main() {
   late Directory tempDir;
   late int unpairs;
   late bool unpairReachable;
+  Completer<void>? unpairGate;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     tempDir = await Directory.systemTemp.createTemp('settings_log_access_');
     unpairs = 0;
     unpairReachable = true;
+    unpairGate = null;
   });
 
   tearDown(() async {
@@ -66,6 +69,7 @@ void main() {
           ),
           unpairWirelessDebuggingProvider.overrideWithValue(() async {
             unpairs++;
+            await unpairGate?.future;
             await container
                 .read(settingsProvider.notifier)
                 .setLogAccessMethod(null);
@@ -224,5 +228,34 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, l.settingsUnpair));
     await tester.pumpAndSettle();
     expect(find.text(l.settingsUnpairUnreachable), findsOneWidget);
+  });
+  testWidgets('unpair shows progress and cannot be started twice', (
+    tester,
+  ) async {
+    unpairGate = Completer<void>();
+    final (_, l) = await pump(
+      tester,
+      method: LogAccessMethod.wirelessDebugging,
+    );
+    await tester.tap(find.text(l.settingsUnpair));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, l.settingsUnpair));
+    await tester.pump();
+    await tester.pump();
+    final section = find.byType(LogAccessSection);
+    expect(
+      find.descendant(
+        of: section,
+        matching: find.byType(CircularProgressIndicator),
+      ),
+      findsOneWidget,
+    );
+    final button = tester.widget<OutlinedButton>(
+      find.widgetWithText(OutlinedButton, l.settingsUnpair),
+    );
+    expect(button.onPressed, isNull);
+    unpairGate!.complete();
+    await tester.pumpAndSettle();
+    expect(unpairs, 1);
   });
 }

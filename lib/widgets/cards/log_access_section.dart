@@ -10,12 +10,21 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 
 /// 設定頁「讀取遊戲記錄」區塊（只在 Android 顯示）：讀取方式、配對狀態、重試授權與解除配對。
-class LogAccessSection extends ConsumerWidget {
+class LogAccessSection extends ConsumerStatefulWidget {
   /// 建立 [LogAccessSection]。
   const LogAccessSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LogAccessSection> createState() => _LogAccessSectionState();
+}
+
+/// [LogAccessSection] 的狀態：解除配對進行中時停用按鈕。
+class _LogAccessSectionState extends ConsumerState<LogAccessSection> {
+  /// 是否正在解除配對（要連上無線偵錯收回權限，可能要好幾秒）。
+  bool _unpairing = false;
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final tokens = Theme.of(context).gacha;
     final method = ref.watch(settingsProvider.select((s) => s.logAccessMethod));
@@ -57,16 +66,27 @@ class LogAccessSection extends ConsumerWidget {
             children: [
               if (!status.canToggle)
                 OutlinedButton(
-                  onPressed: () => _openSetup(context, ref, retryGrant: true),
+                  onPressed: _unpairing
+                      ? null
+                      : () => _openSetup(context, retryGrant: true),
                   child: Text(l.settingsRetryGrant),
                 ),
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: tokens.stateDanger,
                 ),
-                onPressed: () => _unpair(context, ref),
+                onPressed: _unpairing ? null : () => _unpair(context),
                 child: Text(l.settingsUnpair),
               ),
+              if (_unpairing)
+                const Padding(
+                  padding: EdgeInsets.all(AppSpacing.s),
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
             ],
           ),
         ] else if (effective == null) ...[
@@ -74,7 +94,7 @@ class LogAccessSection extends ConsumerWidget {
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: OutlinedButton(
-              onPressed: () => _openSetup(context, ref),
+              onPressed: () => _openSetup(context),
               child: Text(l.settingsSetupLogAccess),
             ),
           ),
@@ -85,16 +105,15 @@ class LogAccessSection extends ConsumerWidget {
 
   /// 開啟設定頁，回來後重新讀取配對狀態。
   Future<void> _openSetup(
-    BuildContext context,
-    WidgetRef ref, {
+    BuildContext context, {
     bool retryGrant = false,
   }) async {
     await openLogAccessSetup(context, retryGrant: retryGrant);
-    ref.invalidate(wirelessPairingStatusProvider);
+    if (mounted) ref.invalidate(wirelessPairingStatusProvider);
   }
 
   /// 確認後解除配對，依是否收回權限顯示不同提示。
-  Future<void> _unpair(BuildContext context, WidgetRef ref) async {
+  Future<void> _unpair(BuildContext context) async {
     final l = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.maybeOf(context);
     final confirmed = await showDialog<bool>(
@@ -114,8 +133,15 @@ class LogAccessSection extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed != true) return;
-    final revoked = await ref.read(unpairWirelessDebuggingProvider)();
+    if (confirmed != true || !mounted) return;
+    setState(() => _unpairing = true);
+    final bool revoked;
+    try {
+      revoked = await ref.read(unpairWirelessDebuggingProvider)();
+    } finally {
+      if (mounted) setState(() => _unpairing = false);
+    }
+    if (!mounted) return;
     ref.invalidate(wirelessPairingStatusProvider);
     messenger?.showSnackBar(
       SnackBar(
