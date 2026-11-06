@@ -126,6 +126,16 @@ void main() {
     expect(find.text(l.actionOpenGame), findsNothing);
   });
 
+  testWidgets('credential ready asks to return to the app', (tester) async {
+    final l = await pump(
+      tester,
+      const WaitingForCapture(credentialReady: true),
+    );
+    expect(find.text(l.progressCredentialReady), findsOneWidget);
+    expect(find.text(l.progressOpenGameHint), findsNothing);
+    expect(find.text(l.actionOpenGame), findsNothing);
+  });
+
   testWidgets('connection lost shows the warning', (tester) async {
     final l = await pump(
       tester,

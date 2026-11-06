@@ -1126,5 +1126,9 @@
   "settingsUnpairUnreachable": "已刪除本機金鑰。無法連上無線偵錯收回權限，可以到系統的「無線偵錯 → 已配對的裝置」移除本 App。",
   "@settingsUnpairUnreachable": {
     "description": "Snackbar when the key was deleted but the app could not connect to revoke the permission"
+  },
+  "progressCredentialReady": "已取得喚取記錄，回到本 App 後就會開始抓取資料。",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
   }
 }

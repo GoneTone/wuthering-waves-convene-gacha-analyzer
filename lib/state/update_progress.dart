@@ -23,6 +23,7 @@ class WaitingForCapture extends UpdateProgress {
     this.gameDirMissing = false,
     this.logAccessUnavailable,
     this.logConnectionLost = false,
+    this.credentialReady = false,
   });
 
   /// true 表示 recordId 全池失效後的二次捕獲（UI 顯示重新攔取提示）。
@@ -39,6 +40,9 @@ class WaitingForCapture extends UpdateProgress {
 
   /// Android 等待中與無線偵錯的連線中斷、正在重試（不中斷等待，只顯示提示）。
   final bool logConnectionLost;
+
+  /// Android 已取得喚取記錄網址，等玩家切回本 App 才開始抓資料（背景時網路會被系統擋）。
+  final bool credentialReady;
 }
 
 /// 正在拉取指定卡池的完整歷史。

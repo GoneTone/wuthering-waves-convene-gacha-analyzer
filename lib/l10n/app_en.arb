@@ -1358,5 +1358,9 @@
   "settingsUnpairUnreachable": "Deleted the key on this device. Couldn't connect to wireless debugging to remove the permission; you can remove this app under Wireless debugging → Paired devices.",
   "@settingsUnpairUnreachable": {
     "description": "Snackbar when the key was deleted but the app could not connect to revoke the permission"
+  },
+  "progressCredentialReady": "Got your convene history. Fetching starts when you return to this app.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
   }
 }

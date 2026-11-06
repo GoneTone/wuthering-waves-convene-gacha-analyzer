@@ -28,6 +28,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart'
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/app_foreground.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
@@ -576,8 +577,24 @@ class GachaRepository extends Notifier<GachaState> {
         logHit.future,
         cancelled.future.then((_) => null),
       ]);
-      if (cred != null) _clientLog.info('credential source=log or manual');
-      return _captureCancelRequested ? null : cred;
+      if (cred == null || _captureCancelRequested) return null;
+      _clientLog.info('credential source=log or manual');
+      final foreground = ref.read(appForegroundProvider);
+      if (!foreground.isForeground) {
+        _androidLog.info('credential ready, waiting for the app to return');
+        state = state.copyWith(
+          progress: WaitingForCapture(
+            isFallback: isFallback,
+            credentialReady: true,
+          ),
+        );
+        final resumed = await Future.any([
+          foreground.untilForeground().then((_) => true),
+          cancelled.future.then((_) => false),
+        ]);
+        if (!resumed || _captureCancelRequested || !ref.mounted) return null;
+      }
+      return cred;
     } finally {
       _logHit = null;
       _waitCancelled = null;

@@ -132,6 +132,17 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
       );
     }
 
+    if (p.credentialReady) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const LinearProgressIndicator(),
+          const SizedBox(height: AppSpacing.l),
+          Text(l.progressCredentialReady, textAlign: TextAlign.center),
+        ],
+      );
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

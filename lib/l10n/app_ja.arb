@@ -1357,5 +1357,9 @@
   "settingsUnpairUnreachable": "この端末のキーを削除しました。ワイヤレスデバッグに接続できず権限を取り消せませんでした。システムの「ワイヤレスデバッグ → ペア設定済みのデバイス」からこのアプリを削除できます。",
   "@settingsUnpairUnreachable": {
     "description": "Snackbar when the key was deleted but the app could not connect to revoke the permission"
+  },
+  "progressCredentialReady": "喚取記録を取得しました。アプリに戻るとデータの取得を開始します。",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
   }
 }

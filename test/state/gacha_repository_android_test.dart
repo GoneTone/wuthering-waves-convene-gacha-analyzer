@@ -21,6 +21,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/client_log_watch.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/app_foreground.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import '../helpers/no_game_dir.dart';
@@ -102,6 +103,17 @@ class _FakeWatch implements ClientLogWatch {
   }
 }
 
+/// 前景狀態可控制的替身。
+class _Foreground extends AppForeground {
+  bool foreground = true;
+  Completer<void> resumed = Completer<void>();
+
+  @override
+  bool get isForeground => foreground;
+  @override
+  Future<void> untilForeground() => resumed.future;
+}
+
 /// 啟動就失敗的攔截（Android 不該被呼叫）。
 class _NoCapture implements GachaCapture {
   int starts = 0;
@@ -140,6 +152,7 @@ void main() {
   late List<int> fetches;
   late ProviderContainer container;
   late bool failFirstPool;
+  late _Foreground foreground;
   late ProviderContainer Function({bool android}) makeContainer;
 
   setUp(() async {
@@ -150,6 +163,7 @@ void main() {
     capture = _NoCapture();
     fetches = [];
     failFirstPool = false;
+    foreground = _Foreground();
     final mock = MockClient((req) async {
       final type =
           (jsonDecode(req.body) as Map<String, dynamic>)['cardPoolType'] as int;
@@ -180,6 +194,7 @@ void main() {
       overrides: [
         noGameDirOverride,
         isAndroidProvider.overrideWithValue(android),
+        appForegroundProvider.overrideWithValue(foreground),
         logAccessResolverProvider.overrideWithValue(resolver),
         clientLogWatchProvider.overrideWithValue(watch),
         gachaCaptureProvider.overrideWithValue(capture),
@@ -375,6 +390,40 @@ void main() {
     watch.hits[0].complete(_cred());
     await done;
     expect(progress(), isA<UpdateCompleted>());
+  });
+
+  test('hit while in background waits for the app before fetching', () async {
+    final ready = _Ready();
+    resolver.results.add(ready.outcome);
+    final r = await repo();
+    final done = r.update();
+    await _until(() => watch.hits.isNotEmpty);
+    foreground.foreground = false;
+    watch.hits[0].complete(_cred());
+    await _until(
+      () => (progress() as WaitingForCapture?)?.credentialReady ?? false,
+    );
+    expect(fetches, isEmpty, reason: 'background network is blocked');
+    foreground.resumed.complete();
+    await done;
+    expect(fetches, isNotEmpty);
+    expect(progress(), isA<UpdateCompleted>());
+  });
+
+  test('cancel while waiting for the app clears progress', () async {
+    resolver.results.add(_Ready().outcome);
+    final r = await repo();
+    final done = r.update();
+    await _until(() => watch.hits.isNotEmpty);
+    foreground.foreground = false;
+    watch.hits[0].complete(_cred());
+    await _until(
+      () => (progress() as WaitingForCapture?)?.credentialReady ?? false,
+    );
+    await r.cancelCapture();
+    await done;
+    expect(fetches, isEmpty);
+    expect(progress(), isNull);
   });
 
   test('windows path still uses capture', () async {
