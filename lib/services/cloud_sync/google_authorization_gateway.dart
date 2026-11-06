@@ -3,6 +3,16 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
 
+/// [e] 是否為使用者主動取消授權。
+///
+/// google_sign_in_android 7.2.18 不看 resultCode，Activity 被取消（按返回）時
+/// 會以 ApiException 狀態碼 16（CANCELED）浮出為 [GoogleSignInExceptionCode.unknownError]，
+/// 因此除了 canceled 之外還要比對描述中的狀態碼形式（不依賴英文字樣）。
+bool isUserCancellation(GoogleSignInException e) =>
+    e.code == GoogleSignInExceptionCode.canceled ||
+    (e.code == GoogleSignInExceptionCode.unknownError &&
+        (e.description?.contains('SDK reported an exception: 16:') ?? false));
+
 /// google_sign_in 授權 API 的最小介面（測試替換用）。
 abstract class GoogleAuthorizationGateway {
   /// 不跳任何畫面取得通行證；需要使用者操作時回 null。
@@ -48,8 +58,9 @@ class PluginGoogleAuthorizationGateway implements GoogleAuthorizationGateway {
     try {
       return (await client.authorizeScopes(cloudSyncScopes)).accessToken;
     } on GoogleSignInException catch (e) {
-      if (e.code == GoogleSignInExceptionCode.canceled) {
-        throw CloudLinkCancelledException(e.code.name);
+      if (isUserCancellation(e)) {
+        // 設定錯誤也可能表現為取消，原因留給 log 辨別。
+        throw CloudLinkCancelledException('${e.code.name}: ${e.description}');
       }
       rethrow;
     }

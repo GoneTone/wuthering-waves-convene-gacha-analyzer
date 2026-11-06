@@ -12,9 +12,11 @@ import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/android_cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_authorization_gateway.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
@@ -151,6 +153,21 @@ String _cloudBundleJsonWithRecord(String uid) => jsonEncode({
     },
   ],
 });
+
+/// 所有步驟都拋錯的 gateway，模擬 Play services 清理失敗。
+class _ThrowingGateway implements GoogleAuthorizationGateway {
+  @override
+  Future<String?> silentToken() async => throw StateError('down');
+
+  @override
+  Future<String> interactiveToken() async => throw StateError('down');
+
+  @override
+  Future<void> clearToken(String token) async => throw StateError('down');
+
+  @override
+  Future<void> signOut() async => throw StateError('down');
+}
 
 void main() {
   late Directory tempDir;
@@ -300,6 +317,26 @@ void main() {
     expect(container.read(settingsProvider).cloudAccountEmail, isNull);
     expect(tokenStore.token, isNull);
     expect(remote.content, isNotNull);
+  });
+
+  test('Android unlink → Play services 清理失敗仍清掉 email 並回 idle', () async {
+    final container = makeNonPersistentContainer(
+      AndroidCloudAuth(
+        gateway: _ThrowingGateway(),
+        baseClientFactory: () =>
+            MockClient((_) async => http.Response('', 500)),
+      ),
+    );
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    await container
+        .read(settingsProvider.notifier)
+        .setCloudAccount('u@example.com');
+
+    await container.read(cloudSyncProvider.notifier).unlink();
+
+    expect(container.read(settingsProvider).cloudAccountEmail, isNull);
+    expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
   });
 
   test('queueCloudRemoval → 上傳內容剔除該 UID、清 pendingRemovals', () async {

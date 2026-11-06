@@ -25,8 +25,17 @@ class _FakeGateway implements GoogleAuthorizationGateway {
   /// signOut 呼叫次數。
   int signOutCalls = 0;
 
+  /// silentToken 是否拋錯。
+  bool silentThrows = false;
+
+  /// signOut 是否拋錯。
+  bool signOutThrows = false;
+
   @override
-  Future<String?> silentToken() async => silent.removeAt(0);
+  Future<String?> silentToken() async {
+    if (silentThrows) throw StateError('play services down');
+    return silent.removeAt(0);
+  }
 
   @override
   Future<String> interactiveToken() async {
@@ -40,7 +49,10 @@ class _FakeGateway implements GoogleAuthorizationGateway {
   Future<void> clearToken(String token) async => cleared.add(token);
 
   @override
-  Future<void> signOut() async => signOutCalls++;
+  Future<void> signOut() async {
+    signOutCalls++;
+    if (signOutThrows) throw StateError('sign out failed');
+  }
 }
 
 void main() {
@@ -171,6 +183,23 @@ void main() {
       expect(requests.where((u) => u.path.contains('revoke')), isEmpty);
     },
   );
+
+  test('unlink: silentToken throws → still completes and signs out', () async {
+    gateway.silentThrows = true;
+
+    await auth.unlink();
+
+    expect(gateway.signOutCalls, 1);
+  });
+
+  test('unlink: signOut throws → still completes', () async {
+    gateway.silent.add('good-1');
+    gateway.signOutThrows = true;
+
+    await auth.unlink();
+
+    expect(gateway.cleared, ['good-1']);
+  });
 
   test('keepsClientAcrossRounds is false', () {
     expect(auth.keepsClientAcrossRounds, isFalse);

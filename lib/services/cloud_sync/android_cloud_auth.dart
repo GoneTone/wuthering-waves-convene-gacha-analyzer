@@ -98,9 +98,22 @@ class AndroidCloudAuth implements CloudAuth {
 
   @override
   Future<void> unlink() async {
-    final token = await gateway.silentToken();
-    if (token != null) await gateway.clearToken(token);
-    await gateway.signOut();
+    await _bestEffort(() async {
+      final token = await gateway.silentToken();
+      if (token != null) await gateway.clearToken(token);
+    });
+    await _bestEffort(gateway.signOut);
     _log.info('android unlink done (local only)');
+  }
+
+  /// 執行 Play services 清理步驟；失敗只記 log，不阻擋「忘記此裝置」。
+  Future<void> _bestEffort(Future<void> Function() step) async {
+    try {
+      await step();
+    } catch (e) {
+      _log.warning(
+        'android unlink: play services cleanup failed (ignored): $e',
+      );
+    }
   }
 }
