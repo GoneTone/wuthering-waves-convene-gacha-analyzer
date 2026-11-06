@@ -9,6 +9,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/uid_display.dart';
 
@@ -67,7 +68,13 @@ class UidIndicator extends ConsumerWidget {
           children: [
             const Icon(Icons.person_add_alt, size: 16),
             const SizedBox(width: AppSpacing.s),
-            Text(l.accountAdd),
+            Flexible(
+              child: Text(
+                l.accountAdd,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
       ),
@@ -100,7 +107,14 @@ class UidIndicator extends ConsumerWidget {
           context: context,
           position: position,
           items: menuItems,
-          constraints: BoxConstraints.tightFor(width: button.size.width),
+          // 至少和按鈕一樣寬；手機上按鈕被標題列壓窄時，選單仍放寬到能完整顯示別名與 UID。
+          constraints: BoxConstraints(
+            minWidth: button.size.width,
+            maxWidth: math.max(
+              button.size.width,
+              math.min(_menuMaxWidth, overlay.size.width - 16),
+            ),
+          ),
         );
         if (key == null) return;
 
@@ -120,6 +134,9 @@ class UidIndicator extends ConsumerWidget {
     );
   }
 }
+
+/// 帳號選單的最大寬度（[AccountMenuLabel] 上限 280 ＋勾選圖示與內距）。
+const double _menuMaxWidth = 336;
 
 /// AppBar 觸發鈕的單行顯示:alias (uid),alias 過長 ellipsis;
 /// 無 alias 顯示 UID;activeUid==null 顯示「未同步」。
@@ -227,6 +244,10 @@ class AccountTriggerButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
+          // 手機標題列很擠，內距從預設 24 縮成 12，UID 才放得下。
+          padding: isCompactLayout(context)
+              ? const EdgeInsets.symmetric(horizontal: 12)
+              : null,
           shape: const StadiumBorder(),
           side: BorderSide(color: tokens.borderEmphasis),
           foregroundColor: tokens.textPrimary,

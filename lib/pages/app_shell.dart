@@ -42,6 +42,12 @@ class _AppShellState extends ConsumerState<AppShell> {
   /// 新版本通知 dialog 是否已開啟。
   bool _releaseDialogOpen = false;
 
+  /// 用來在返回鍵時關閉抽屜。
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  /// 抽屜是否開著（手機排版）。
+  bool _drawerOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -107,137 +113,151 @@ class _AppShellState extends ConsumerState<AppShell> {
     Future<void> update() =>
         ref.read(gachaRepositoryProvider.notifier).update();
 
-    return Scaffold(
-      drawer: compact
-          ? Drawer(
-              child: SafeArea(
-                child: Builder(
-                  builder: (drawerContext) => _Rail(
-                    selection: selection,
-                    isSettingsActive: isSettingsActive,
-                    isContributorsActive: isContributorsActive,
-                    extended: true,
-                    collapsedNoLabel: false,
-                    width: double.infinity,
-                    onNavigate: Scaffold.of(drawerContext).closeDrawer,
-                    l: l,
+    // 抽屜不是一個頁面：不先宣告由 App 處理返回，Android 的預測返回會直接關掉 App。
+    return PopScope(
+      canPop: !(compact && _drawerOpen),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _scaffoldKey.currentState?.closeDrawer();
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        onDrawerChanged: (open) => setState(() => _drawerOpen = open),
+        drawer: compact
+            ? Drawer(
+                child: SafeArea(
+                  child: Builder(
+                    builder: (drawerContext) => _Rail(
+                      selection: selection,
+                      isSettingsActive: isSettingsActive,
+                      isContributorsActive: isContributorsActive,
+                      extended: true,
+                      collapsedNoLabel: false,
+                      width: double.infinity,
+                      onNavigate: Scaffold.of(drawerContext).closeDrawer,
+                      l: l,
+                    ),
                   ),
-                ),
-              ),
-            )
-          : null,
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/icons/app_icon.png',
-              // 40dp = AppBar 預設高度 56dp 上下各留 8dp padding；
-              // multi-resolution 1x/2x/3x = 64/128/256，任何 DPR 下都
-              // 大於 display 物理像素，避免 upscale 模糊。
-              width: 40,
-              height: 40,
-              filterQuality: FilterQuality.high,
-            ),
-            const SizedBox(width: AppSpacing.s),
-            // 手機排版不顯示版本號；空間不夠時名稱先讓位（可縮到看不見）。
-            if (compact)
-              Flexible(
-                child: Text(
-                  l.appName,
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.ellipsis,
                 ),
               )
-            else
-              Text('${l.appName} v$version'),
+            : null,
+        appBar: AppBar(
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/icons/app_icon.png',
+                // 40dp = AppBar 預設高度 56dp 上下各留 8dp padding；
+                // multi-resolution 1x/2x/3x = 64/128/256，任何 DPR 下都
+                // 大於 display 物理像素，避免 upscale 模糊。
+                width: 40,
+                height: 40,
+                filterQuality: FilterQuality.high,
+              ),
+              const SizedBox(width: AppSpacing.s),
+              // 手機排版不顯示版本號；空間不夠時名稱先讓位（可縮到看不見）。
+              if (compact)
+                Flexible(
+                  child: Text(
+                    l.appName,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              else
+                Text('${l.appName} v$version'),
+            ],
+          ),
+          actions: compact
+              ? [
+                  ConstrainedBox(
+                    // 扣掉 ☰（56）、標題兩側間距（32）、App 圖示含間距（48）、更新按鈕含外距（64），
+                    // 帳號標示不會把 App 圖示擠出畫面；App 名稱則可以縮到看不見。
+                    constraints: BoxConstraints(
+                      maxWidth: math.max(0, width - 56 - 32 - 48 - 64),
+                    ),
+                    child: const UidIndicator(),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.s,
+                    ),
+                    child: IconButton.filled(
+                      icon: const Icon(Icons.refresh),
+                      tooltip: l.actionUpdate,
+                      onPressed: update,
+                    ),
+                  ),
+                ]
+              : [
+                  const UidIndicator(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.m,
+                      vertical: AppSpacing.s,
+                    ),
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.refresh),
+                      label: Text(l.actionUpdate),
+                      onPressed: update,
+                    ),
+                  ),
+                ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (!compact) ...[
+                    _Rail(
+                      selection: selection,
+                      isSettingsActive: isSettingsActive,
+                      isContributorsActive: isContributorsActive,
+                      extended: extendedRail,
+                      collapsedNoLabel: collapsedNoLabel,
+                      l: l,
+                    ),
+                    const VerticalDivider(thickness: 1, width: 1),
+                  ],
+                  Expanded(child: widget.child),
+                ],
+              ),
+            ),
+            // 手機開著鍵盤時高度很少（橫向約 50dp），先收起狀態列讓內容有空間。
+            if (!(compact && MediaQuery.viewInsetsOf(context).bottom > 0))
+              Container(
+                width: double.infinity,
+                // 手機排版的連結圖示已有 48dp 觸控區，不再加上下內距，狀態列維持 48dp。
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.l,
+                  vertical: compact ? 0 : AppSpacing.xs * 1.5,
+                ),
+                color: tokens.surfaceCardHigh,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: activeData == null
+                          ? Text(
+                              l.footerNotSynced,
+                              style: Theme.of(context).textTheme.bodySmall,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          : RelativeTimeText(
+                              time: activeData.lastUpdated,
+                              templateBuilder: l.footerLastUpdated,
+                              style: Theme.of(context).textTheme.bodySmall,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                    ),
+                    const SizedBox(width: AppSpacing.s),
+                    TeamLinksBar(compact: compact),
+                  ],
+                ),
+              ),
           ],
         ),
-        actions: compact
-            ? [
-                ConstrainedBox(
-                  // 扣掉 ☰（56）、標題兩側間距（32）、App 圖示含間距（48）、更新按鈕含外距（64），
-                  // 帳號標示不會把 App 圖示擠出畫面；App 名稱則可以縮到看不見。
-                  constraints: BoxConstraints(
-                    maxWidth: math.max(0, width - 56 - 32 - 48 - 64),
-                  ),
-                  child: const UidIndicator(),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s),
-                  child: IconButton.filled(
-                    icon: const Icon(Icons.refresh),
-                    tooltip: l.actionUpdate,
-                    onPressed: update,
-                  ),
-                ),
-              ]
-            : [
-                const UidIndicator(),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.m,
-                    vertical: AppSpacing.s,
-                  ),
-                  child: FilledButton.icon(
-                    icon: const Icon(Icons.refresh),
-                    label: Text(l.actionUpdate),
-                    onPressed: update,
-                  ),
-                ),
-              ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (!compact) ...[
-                  _Rail(
-                    selection: selection,
-                    isSettingsActive: isSettingsActive,
-                    isContributorsActive: isContributorsActive,
-                    extended: extendedRail,
-                    collapsedNoLabel: collapsedNoLabel,
-                    l: l,
-                  ),
-                  const VerticalDivider(thickness: 1, width: 1),
-                ],
-                Expanded(child: widget.child),
-              ],
-            ),
-          ),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.l,
-              vertical: AppSpacing.xs * 1.5,
-            ),
-            color: tokens.surfaceCardHigh,
-            child: Row(
-              children: [
-                Expanded(
-                  child: activeData == null
-                      ? Text(
-                          l.footerNotSynced,
-                          style: Theme.of(context).textTheme.bodySmall,
-                          overflow: TextOverflow.ellipsis,
-                        )
-                      : RelativeTimeText(
-                          time: activeData.lastUpdated,
-                          templateBuilder: l.footerLastUpdated,
-                          style: Theme.of(context).textTheme.bodySmall,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                ),
-                const SizedBox(width: AppSpacing.s),
-                TeamLinksBar(compact: compact),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

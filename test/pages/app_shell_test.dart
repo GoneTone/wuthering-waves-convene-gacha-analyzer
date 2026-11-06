@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +18,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/uid_indicator.dart';
 
 /// 已有一個帳號、記錄 update 呼叫次數的 repository 替身。
 class _Repo extends GachaRepository {
@@ -65,9 +68,11 @@ void main() {
     Locale locale = const Locale('zh'),
     double textScale = 1,
     String? alias,
+    double keyboard = 0,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
     addTearDown(tester.view.reset);
     tester.platformDispatcher.textScaleFactorTestValue = textScale;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
@@ -226,6 +231,62 @@ void main() {
     expect(repo.updates, 1);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
+  for (final (name, locale) in [('ja', Locale('ja')), ('en', Locale('en'))]) {
+    testWidgets('account menu fits a phone and shows the full alias ($name)', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const Size(360, 800),
+        locale: locale,
+        textScale: 1.3,
+        alias: 'MainAcct',
+      );
+      await tester.tap(find.byType(AccountTriggerButton));
+      await tester.pumpAndSettle();
+      final e = tester.takeException();
+      expect(e, isNull, reason: e is FlutterError ? e.toStringDeep() : '$e');
+      final menuAlias = tester.renderObject<RenderParagraph>(
+        find.text('MainAcct').last,
+      );
+      expect(menuAlias.didExceedMaxLines, isFalse);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
+
+  testWidgets('phone account button uses 12dp side padding', (tester) async {
+    // 按鈕內距從 24 縮到 12，360dp 手機上 UID 才放得下。
+    await pump(tester, const Size(360, 800));
+    final button = tester.widget<OutlinedButton>(
+      find.descendant(
+        of: find.byType(AccountTriggerButton),
+        matching: find.byType(OutlinedButton),
+      ),
+    );
+    final padding = button.style!.padding!.resolve({});
+    expect(padding, const EdgeInsets.symmetric(horizontal: 12));
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('phone landscape with the keyboard open hides the footer', (
+    tester,
+  ) async {
+    // 橫向手機開鍵盤後只剩約 50dp，固定的底部狀態列會把畫面擠到溢出。
+    await pump(tester, const Size(800, 360), keyboard: 250);
+    final e = tester.takeException();
+    expect(e, isNull, reason: e is FlutterError ? e.toStringDeep() : '$e');
+    expect(find.byType(TeamLinksBar), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('phone footer is 48dp tall', (tester) async {
+    await pump(tester, const Size(360, 800));
+    final footer = find
+        .ancestor(
+          of: find.byType(TeamLinksBar),
+          matching: find.byType(Container),
+        )
+        .first;
+    expect(tester.getSize(footer).height, 48);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
   testWidgets('phone footer keeps last updated and only the icon links', (
     tester,
   ) async {
@@ -235,6 +296,41 @@ void main() {
       isTrue,
     );
     expect(find.text(TeamInfo.name), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('system back closes the open drawer instead of leaving the app', (
+    tester,
+  ) async {
+    // Android 16 的預測返回：App 沒先宣告「自己處理返回」時，系統會直接關掉 App。
+    final handlesBack = <bool>[];
+    var systemPops = 0;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'SystemNavigator.setFrameworkHandlesBack') {
+          handlesBack.add(call.arguments as bool);
+        }
+        if (call.method == 'SystemNavigator.pop') systemPops++;
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await pump(tester, const Size(360, 800));
+    await tester.tap(drawerButton(tester));
+    await tester.pumpAndSettle();
+    expect(handlesBack, isNotEmpty);
+    expect(handlesBack.last, isTrue);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(Drawer), findsNothing);
+    expect(systemPops, 0);
+    expect(find.byType(AppShell), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   testWidgets('rotating with the drawer open does not throw', (tester) async {
