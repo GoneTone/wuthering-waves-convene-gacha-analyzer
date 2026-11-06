@@ -238,8 +238,30 @@ class GachaRepository extends Notifier<GachaState> {
     await _runUpdate(forceRecapture: false);
   }
 
-  /// 實際執行更新流程；[forceRecapture] 為 true 時強制重新 MITM 捕獲。
-  Future<void> _runUpdate({required bool forceRecapture}) async {
+  /// 使用者手動輸入的喚取記錄憑證（貼上網址或選 Client.log 檔案）。
+  ///
+  /// 正在等待取得憑證時直接完成這次等待（與 Client.log 命中同一條路，電腦版會照常收尾攔截）；
+  /// 沒有進行中的更新時用它跑一次更新；正在抓資料時忽略，避免重入。
+  Future<void> submitManualCredential(GachaCredential cred) async {
+    final hit = _logHit;
+    if (hit != null && !hit.isCompleted) {
+      _clientLog.info('credential source=manual (completing wait)');
+      hit.complete(cred);
+      return;
+    }
+    if (_isUpdating) {
+      _clientLog.info('manual credential ignored: update in progress');
+      return;
+    }
+    _clientLog.info('credential source=manual (new update)');
+    await _runUpdate(forceRecapture: false, manual: cred);
+  }
+
+  /// 實際執行更新流程；[forceRecapture] 為 true 時強制重新 MITM 捕獲，[manual] 非 null 時直接用它。
+  Future<void> _runUpdate({
+    required bool forceRecapture,
+    GachaCredential? manual,
+  }) async {
     if (_isUpdating) return; // 防止重入
     _isUpdating = true;
     _cancelTriggered = false;
@@ -256,9 +278,9 @@ class GachaRepository extends Notifier<GachaState> {
       final storage = ref.read(gachaStorageProvider);
       final fetcher = ref.read(gachaFetcherProvider);
 
-      GachaCredential? cred;
+      GachaCredential? cred = manual;
 
-      if (!forceRecapture && initialActiveUid != null) {
+      if (cred == null && !forceRecapture && initialActiveUid != null) {
         final cachedJson = await storage.loadCapturedCredential(
           initialActiveUid,
         );

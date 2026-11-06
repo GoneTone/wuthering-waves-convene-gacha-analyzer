@@ -42,14 +42,20 @@ class _ControlledCapture implements GachaCapture {
   /// `cancel()` 被呼叫的次數。
   int cancelCalls = 0;
 
+  /// `start()` 被呼叫的次數。
+  int starts = 0;
+
   @override
-  CaptureSession start() => CaptureSession(
-    result: result.future,
-    cancel: () async {
-      cancelCalls++;
-      if (completeOnCancel && !result.isCompleted) result.complete(null);
-    },
-  );
+  CaptureSession start() {
+    starts++;
+    return CaptureSession(
+      result: result.future,
+      cancel: () async {
+        cancelCalls++;
+        if (completeOnCancel && !result.isCompleted) result.complete(null);
+      },
+    );
+  }
 }
 
 /// 記錄每次 `start` 的 log 監看 fake；命中與取消都由測試控制。
@@ -1290,6 +1296,69 @@ void main() {
         t.container.read(gachaRepositoryProvider).progress,
         isA<UpdateCompleted>(),
       );
+    });
+
+    group('manual credential', () {
+      test('completes the pending wait and fetches', () async {
+        final capture = _ControlledCapture(completeOnCancel: true);
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: _FakeLocator(loc),
+        );
+        final repo = await bootstrap(t.container);
+
+        final done = repo.update();
+        await _until(() => watch.hits.isNotEmpty);
+        await repo.submitManualCredential(_cred());
+        await done;
+
+        expect(capture.cancelCalls, 1, reason: 'capture torn down');
+        expect(t.hits, hasLength(12));
+        expect(
+          t.container.read(gachaRepositoryProvider).progress,
+          isA<UpdateCompleted>(),
+        );
+      });
+
+      test('when idle starts an update without capturing', () async {
+        final capture = _ControlledCapture();
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: _FakeLocator(loc),
+        );
+        final repo = await bootstrap(t.container);
+
+        await repo.submitManualCredential(_cred());
+
+        expect(capture.starts, 0);
+        expect(watch.hits, isEmpty);
+        expect(t.hits, hasLength(12));
+        expect(
+          t.container.read(gachaRepositoryProvider).progress,
+          isA<UpdateCompleted>(),
+        );
+      });
+
+      test('while fetching is ignored', () async {
+        final capture = _ControlledCapture();
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: _FakeLocator(loc),
+        );
+        final repo = await bootstrap(t.container);
+
+        final first = repo.submitManualCredential(_cred());
+        await repo.submitManualCredential(_cred());
+        await first;
+
+        expect(t.hits, hasLength(12), reason: 'no second update');
+      });
     });
   });
 }

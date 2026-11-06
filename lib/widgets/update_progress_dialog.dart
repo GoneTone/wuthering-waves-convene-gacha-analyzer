@@ -7,6 +7,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.da
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/game_dir_help_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/manual_credential_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/game_dir_picker.dart';
 
 /// 顯示喚取資料更新進度的 dialog，包含 [LinearProgressIndicator] 與各狀態文字。
@@ -210,6 +211,13 @@ class _Body extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
               ),
+            TextButton(
+              onPressed: () => showManualCredentialDialog(context),
+              child: Text(
+                l.progressManualInputLink,
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
         ),
       FetchingBanner(

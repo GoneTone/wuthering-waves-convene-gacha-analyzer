@@ -1041,5 +1041,57 @@
   "actionViewOnEncore": "encore.moe で見る",
   "@actionViewOnEncore": {
     "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
+  "progressManualInputLink": "喚取記録を手動で入力",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
+  "manualCredentialTitle": "喚取記録を手動で入力",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
+  "manualCredentialHint": "喚取記録の URL、または URL を含むテキストを貼り付けてください。",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
+  "manualCredentialFieldHint": "URL を貼り付け...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
+  "manualCredentialPaste": "クリップボードから貼り付け",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
+  "manualCredentialPickLog": "Client.log ファイルを選択",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
+  "manualCredentialHowTo": "URL の取得方法",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
+  "manualCredentialNotFound": "喚取記録の URL が見つかりません",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
+  "manualCredentialNotFoundInLog": "このファイルに喚取記録の URL が見つかりません。ゲームで喚取記録を開いてから、もう一度選択してください。",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
+  "manualCredentialHelpAndroid": "方法 1：機内モード\n1. ゲームで「喚取」画面を開く\n2. 機内モードをオンにしてから「喚取記録」をタップ\n3. 読み込み失敗のページが表示されたら、長押し → すべて選択 → コピー\n4. 機内モードをオフにして、テキストをそのまま貼り付け\n\n方法 2：Client.log ファイルがある場合\n「Client.log ファイルを選択」をタップすると、URL を自動で見つけます。",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
+  "manualCredentialHelpWindows": "Client.log ファイルを選択\n1. ゲームで「喚取記録」を開く\n2. 「Client.log ファイルを選択」をクリック。場所：\nゲームフォルダ\\Client\\Saved\\Logs\\Client.log\n\n他のツールで取得した URL\nWuWa Tracker などで取得した URL もそのまま貼り付けられます。",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
+  "manualCredentialWarning": "URL にはアカウントの認証情報が含まれます。公開しないでください。URL はしばらくすると無効になります。",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
+  "manualCredentialSubmit": "OK",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
   }
 }

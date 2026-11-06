@@ -1042,5 +1042,57 @@
   "actionViewOnEncore": "View on encore.moe",
   "@actionViewOnEncore": {
     "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
+  "progressManualInputLink": "Enter convene history manually",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
+  "manualCredentialTitle": "Enter Convene History Manually",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
+  "manualCredentialHint": "Paste the convene history URL, or any text that contains it.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
+  "manualCredentialFieldHint": "Paste URL...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
+  "manualCredentialPaste": "Paste from clipboard",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
+  "manualCredentialPickLog": "Choose Client.log file",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
+  "manualCredentialHowTo": "How do I get the URL?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
+  "manualCredentialNotFound": "No convene history URL found",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
+  "manualCredentialNotFoundInLog": "No convene history URL in this file. Open Convene History in the game first, then choose it again.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
+  "manualCredentialHelpAndroid": "Option 1: Airplane mode\n1. In the game, go to the Convene screen\n2. Turn on airplane mode, then tap Convene History\n3. The page fails to load: long-press → Select all → Copy\n4. Turn off airplane mode and paste the whole text here\n\nOption 2: You already have a Client.log file\nTap \"Choose Client.log file\" and the app finds the URL for you.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
+  "manualCredentialHelpWindows": "Choose the Client.log file\n1. Open Convene History in the game\n2. Tap \"Choose Client.log file\". It is located at:\nGame folder\\Client\\Saved\\Logs\\Client.log\n\nURL from another tool\nA URL obtained with tools such as WuWa Tracker can be pasted directly.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
+  "manualCredentialWarning": "The URL contains your account credentials. Don't share it publicly. It expires after a while.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
+  "manualCredentialSubmit": "OK",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
   }
 }
