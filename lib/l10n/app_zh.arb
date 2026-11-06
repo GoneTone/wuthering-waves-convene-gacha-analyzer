@@ -1158,5 +1158,7 @@
   },
   "actionShare": "分享",
   "shareFailed": "無法分享",
-  "dialogSaveAsTitle": "另存新檔"
+  "dialogSaveAsTitle": "另存新檔",
+  "actionSave": "儲存",
+  "settingsLogsShare": "分享日誌"
 }

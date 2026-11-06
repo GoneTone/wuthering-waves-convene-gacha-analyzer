@@ -1399,5 +1399,13 @@
   "dialogSaveAsTitle": "Save as",
   "@dialogSaveAsTitle": {
     "description": "Title of the system save-file dialog (desktop)."
+  },
+  "actionSave": "Save",
+  "@actionSave": {
+    "description": "Save button in the backup account picker (Android) and similar save actions."
+  },
+  "settingsLogsShare": "Share logs",
+  "@settingsLogsShare": {
+    "description": "Button that shares the exported log bundle through the system share sheet (Android)."
   }
 }

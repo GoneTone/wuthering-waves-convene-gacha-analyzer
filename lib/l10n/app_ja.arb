@@ -1389,5 +1389,7 @@
   },
   "actionShare": "共有",
   "shareFailed": "共有できませんでした",
-  "dialogSaveAsTitle": "名前を付けて保存"
+  "dialogSaveAsTitle": "名前を付けて保存",
+  "actionSave": "保存",
+  "settingsLogsShare": "ログを共有"
 }

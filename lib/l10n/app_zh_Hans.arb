@@ -1383,5 +1383,7 @@
   },
   "actionShare": "分享",
   "shareFailed": "无法分享",
-  "dialogSaveAsTitle": "另存为"
+  "dialogSaveAsTitle": "另存为",
+  "actionSave": "保存",
+  "settingsLogsShare": "分享日志"
 }

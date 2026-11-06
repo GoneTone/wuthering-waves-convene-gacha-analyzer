@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
@@ -16,9 +17,9 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_export.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/file_reveal.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/game_dir_locator.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/platform_import.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
@@ -689,27 +690,21 @@ class _DataManagement extends ConsumerWidget {
           recordCount: gacha.byUid[uid]!.allRecords.length,
         ),
     ];
+    final android = ref.read(isAndroidProvider);
     final picked = await showAccountsPickerDialog(
       context: ctx,
       title: l.settingsExportSelectTitle,
-      confirmLabel: l.confirmExport,
+      confirmLabel: android ? l.actionSave : l.confirmExport,
+      secondaryConfirmLabel: android ? l.actionShare : null,
       entries: entries,
     );
-    if (picked == null || picked.isEmpty) return;
+    if (picked == null || picked.uids.isEmpty) return;
     if (!ctx.mounted) return;
 
     final now = DateTime.now();
-    final stamp = fileTimestamp(now);
+    final fileName = 'wuwa_convene_backup_${fileTimestamp(now)}.json';
 
-    final loc = await getSaveLocation(
-      suggestedName: 'wuwa_convene_backup_$stamp.json',
-      acceptedTypeGroups: const [
-        XTypeGroup(label: 'JSON', extensions: ['json']),
-      ],
-    );
-    if (loc == null) return;
-
-    final pickedSet = picked.toSet();
+    final pickedSet = picked.uids.toSet();
     final filteredByUid = {
       for (final e in gacha.byUid.entries)
         if (pickedSet.contains(e.key)) e.key: e.value,
@@ -725,20 +720,46 @@ class _DataManagement extends ConsumerWidget {
         ? settings.lastActiveUid
         : null;
 
-    final text = exportAccounts(
-      byUid: filteredByUid,
-      uidOrder: filteredOrder,
-      uidAliases: filteredAliases,
-      lastActiveUid: lastActive,
-      appVersion: appVersion,
-      now: now,
+    final bytes = utf8.encode(
+      exportAccounts(
+        byUid: filteredByUid,
+        uidOrder: filteredOrder,
+        uidAliases: filteredAliases,
+        lastActiveUid: lastActive,
+        appVersion: appVersion,
+        now: now,
+      ),
     );
+    final records = filteredByUid.values.fold<int>(
+      0,
+      (a, b) => a + b.allRecords.length,
+    );
+
+    if (picked.secondary) {
+      Logger('accounts.io').info(
+        'export share: uids=${pickedSet.length} records=$records '
+        'bytes=${bytes.length}',
+      );
+      await _shareOrReport(
+        ctx,
+        bytes: bytes,
+        fileName: fileName,
+        mimeType: 'application/json',
+      );
+      return;
+    }
+
+    final SavedFile? saved;
     try {
-      await File(loc.path).writeAsString(text);
+      saved = await saveBytes(
+        bytes,
+        suggestedName: fileName,
+        extension: 'json',
+        mimeType: 'application/json',
+        dialogTitle: l.dialogSaveAsTitle,
+      );
     } catch (e, st) {
-      Logger(
-        'accounts.io',
-      ).severe('export failed ${sanitizeFsPath(loc.path)}', e, st);
+      Logger('accounts.io').severe('export failed name=$fileName', e, st);
       if (!ctx.mounted) return;
       await showExportResultDialog(
         ctx,
@@ -747,16 +768,16 @@ class _DataManagement extends ConsumerWidget {
       );
       return;
     }
-    Logger('accounts.io').info(
-      'export: uids=${pickedSet.length} '
-      'records=${filteredByUid.values.fold<int>(0, (a, b) => a + b.allRecords.length)}',
-    );
+    if (saved == null) return;
+    Logger(
+      'accounts.io',
+    ).info('export: uids=${pickedSet.length} records=$records');
     if (!ctx.mounted) return;
     await showExportResultDialog(
       ctx,
       success: true,
-      message: l.settingsExportSuccess(loc.path),
-      revealPath: loc.path,
+      message: l.settingsExportSuccess(saved.path ?? saved.displayName),
+      revealPath: saved.path,
     );
   }
 
@@ -836,10 +857,10 @@ class _DataManagement extends ConsumerWidget {
       confirmLabel: l.confirmContinue,
       entries: entries,
     );
-    if (picked == null || picked.isEmpty) return;
+    if (picked == null || picked.uids.isEmpty) return;
     if (!ctx.mounted) return;
 
-    final pickedSet = picked.toSet();
+    final pickedSet = picked.uids.toSet();
     final filteredBundle = AccountsBundle(
       exportedAt: bundle.exportedAt,
       appVersion: bundle.appVersion,
@@ -1301,6 +1322,19 @@ class _UsageRows extends StatelessWidget {
   }
 }
 
+/// 以系統分享面板分享 [bytes]；失敗時跳出「無法分享」結果視窗，成功不提示。
+Future<void> _shareOrReport(
+  BuildContext ctx, {
+  required Uint8List bytes,
+  required String fileName,
+  required String mimeType,
+}) async {
+  final l = AppLocalizations.of(ctx)!;
+  final ok = await shareBytes(bytes, fileName: fileName, mimeType: mimeType);
+  if (ok || !ctx.mounted) return;
+  await showExportResultDialog(ctx, success: false, message: l.shareFailed);
+}
+
 /// 隱私設定區塊：目前僅含「遮蔽介面 UID」開關。
 class _PrivacySection extends ConsumerWidget {
   /// 建立 [_PrivacySection]。
@@ -1341,6 +1375,7 @@ class _LogsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final android = ref.watch(isAndroidProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1366,11 +1401,18 @@ class _LogsSection extends ConsumerWidget {
               icon: const Icon(Icons.download_outlined, size: 18),
               label: Text(l.settingsLogsExport),
             ),
-            OutlinedButton.icon(
-              onPressed: () => _openFolder(context, ref),
-              icon: const Icon(Icons.folder_open_outlined, size: 18),
-              label: Text(l.settingsLogsOpenFolder),
-            ),
+            if (android)
+              OutlinedButton.icon(
+                onPressed: () => _share(context, ref),
+                icon: const Icon(Icons.share_outlined, size: 18),
+                label: Text(l.settingsLogsShare),
+              )
+            else
+              OutlinedButton.icon(
+                onPressed: () => _openFolder(context, ref),
+                icon: const Icon(Icons.folder_open_outlined, size: 18),
+                label: Text(l.settingsLogsOpenFolder),
+              ),
             FilledButton.icon(
               style: FilledButton.styleFrom(
                 backgroundColor: theme.gacha.stateDanger,
@@ -1386,37 +1428,40 @@ class _LogsSection extends ConsumerWidget {
     );
   }
 
-  /// 匯出應用程式日誌至使用者指定路徑。
+  /// 組出日誌匯出內容（UTF-8）與建議檔名。
+  Future<({Uint8List bytes, String fileName})> _buildBundle(
+    WidgetRef ref,
+  ) async {
+    final bundle = await ref
+        .read(logServiceProvider)
+        .buildExportBundle(
+          appVersion: ref.read(appVersionProvider),
+          osDescription:
+              '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+          localeTag: Platform.localeName,
+          themeMode: ref.read(settingsProvider).themeMode.name,
+        );
+    return (
+      bytes: utf8.encode(bundle),
+      fileName: 'wwcga_logs_${fileTimestamp(DateTime.now())}.log',
+    );
+  }
+
+  /// 匯出應用程式日誌至使用者指定位置。
   Future<void> _export(BuildContext ctx, WidgetRef ref) async {
     final l = AppLocalizations.of(ctx)!;
-    final log = ref.read(logServiceProvider);
-    final appVersion = ref.read(appVersionProvider);
-    final settings = ref.read(settingsProvider);
-
-    final now = DateTime.now();
-    final stamp = fileTimestamp(now);
-
-    final loc = await getSaveLocation(
-      suggestedName: 'wwcga_logs_$stamp.log',
-      acceptedTypeGroups: const [
-        XTypeGroup(label: 'Log', extensions: ['log']),
-      ],
-    );
-    if (loc == null) return;
-
-    final bundle = await log.buildExportBundle(
-      appVersion: appVersion,
-      osDescription:
-          '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
-      localeTag: Platform.localeName,
-      themeMode: settings.themeMode.name,
-    );
+    final (:bytes, :fileName) = await _buildBundle(ref);
+    final SavedFile? saved;
     try {
-      await File(loc.path).writeAsString(bundle);
+      saved = await saveBytes(
+        bytes,
+        suggestedName: fileName,
+        extension: 'log',
+        mimeType: 'text/plain',
+        dialogTitle: l.dialogSaveAsTitle,
+      );
     } catch (e, st) {
-      Logger(
-        'accounts.io',
-      ).severe('logs export failed ${sanitizeFsPath(loc.path)}', e, st);
+      Logger('accounts.io').severe('logs export failed name=$fileName', e, st);
       if (!ctx.mounted) return;
       await showExportResultDialog(
         ctx,
@@ -1425,15 +1470,31 @@ class _LogsSection extends ConsumerWidget {
       );
       return;
     }
+    if (saved == null) return;
     Logger(
       'accounts.io',
-    ).info('logs exported: ${loc.path} (${bundle.length} bytes)');
+    ).info('logs exported: ${saved.displayName} (${bytes.length} bytes)');
     if (!ctx.mounted) return;
     await showExportResultDialog(
       ctx,
       success: true,
-      message: l.settingsLogsExportSuccess(loc.path),
-      revealPath: loc.path,
+      message: l.settingsLogsExportSuccess(saved.path ?? saved.displayName),
+      revealPath: saved.path,
+    );
+  }
+
+  /// 以系統分享面板分享應用程式日誌（Android）。
+  Future<void> _share(BuildContext ctx, WidgetRef ref) async {
+    final (:bytes, :fileName) = await _buildBundle(ref);
+    Logger(
+      'accounts.io',
+    ).info('logs share: name=$fileName bytes=${bytes.length}');
+    if (!ctx.mounted) return;
+    await _shareOrReport(
+      ctx,
+      bytes: bytes,
+      fileName: fileName,
+      mimeType: 'text/plain',
     );
   }
 
