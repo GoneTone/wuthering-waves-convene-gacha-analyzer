@@ -23,10 +23,10 @@ Android 11 起，一般 App 不能讀其他 App 的 `Android/data`；Android 13 
 | root | 有 root 的手機 | `Process.run('su', ['-c', 'cat <路徑>'])`，不用 Wi-Fi、不用配對 |
 | 無線偵錯自我配對 | Android 11 以上、有 Wi-Fi | `flutter_adb`（純 Dart、BSD-3）配對 `127.0.0.1` 後取得 `uid=2000(shell)` |
 | 直接讀 | Android 10 以下（尚未驗證） | 取得儲存權限，加上 `requestLegacyExternalStorage` |
-| 手動貼網址 | 都不行的時候 | 兩個平台共用的輸入框 |
+| 手動輸入 | 都不行的時候 | 兩個平台共用：貼上網址（可整段貼上，例如飛行模式複製的錯誤訊息）或選擇 `Client.log` 檔案（見第 19 節） |
 
 **無線偵錯的實測重點（ASUS、Android 16）：**
-- 配對碼的視窗一離開設定頁就會關閉。第一次配對要用分割畫面，或做一個類似 Shizuku 的「在通知欄輸入配對碼」。
+- 配對碼的視窗一離開設定頁就會關閉。第一次配對要用分割畫面，或做一個類似 Shizuku 的「在通知欄輸入配對碼」。**通知欄輸入已實測可行**，做法見第 19 節。
 - Wi-Fi 一斷，無線偵錯會在 2 秒內被系統關掉；連回同一個 Wi-Fi 也**不會**自動恢復，而且連線埠會換。
 - 金鑰會保留，**不需要重新配對**，只要找到新的連線埠重新連線。
 - **一鍵恢復**：第一次拿到 shell 時，執行 `pm grant <自己的套件名> android.permission.WRITE_SECURE_SETTINGS`（manifest 要宣告這個權限，並加上 `tools:ignore="ProtectedPermissions"`）。之後 App 自己寫 `Settings.Global` 的 `adb_wifi_enabled=1` 打開無線偵錯，再用 `NsdManager` 找 `_adb-tls-connect._tcp` 的連線埠。實測從 Wi-Fi 斷線、App 冷啟動到拿到 shell 只要 1.2 秒。
@@ -177,4 +177,38 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
      - **只執行一次**：完成後在快取目錄留下 `.non_image_purged_v1` 標記檔。
      - 用**自己的 try/catch** 包住，失敗也不能擋住索引載入。否則 state 會停在空索引，之後的寫入會把磁碟上的索引覆寫掉。
 - 原神版如果也用第三方資源站，**一律要用檔頭檢查下載內容**，不要只信 HTTP 狀態碼或副檔名。
+
+---
+
+## 六、取得紀錄的實作細節（子專案 2）
+
+設計：`docs/superpowers/specs/2026-11-06-android-credential-capture-design.md`。
+
+### 19. 無線偵錯配對與一鍵恢復的實測結果（通用，2026-11-06，ASUS Android 16）
+
+**直接跳到「無線偵錯」頁**
+- 系統設定沒有公開「無線偵錯」頁的 Activity。但快速設定磚長按的入口可以用：送 `android.service.quicksettings.action.QS_TILE_PREFERENCES` 給 `com.android.settings/.Settings$DevelopmentSettingsActivity`，並帶 `Intent.EXTRA_COMPONENT_NAME = com.android.settings/.development.qstile.DevelopmentTiles$WirelessDebugging`，就會直接開「無線偵錯」頁。這不是公開保證的介面，其他廠牌要另外驗證。
+- Shizuku 的做法是開 `Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS`，帶 `":settings:fragment_args_key" = "toggle_adb_wireless"`，系統會捲到「無線偵錯」那一項。把這個參數也加在上面的 intent 上，系統不認得直接開頁時，至少會捲到正確位置。
+- 用 `adb shell am start` 測試時，PowerShell 要注意 `$` 的跳脫：在雙引號字串裡用 `` `$ ``，不要用 `\$`，否則 `\` 會被原樣送到手機上，導致找不到 Activity。
+
+**配對期間的前景服務**
+- 玩家在系統設定頁配對時，App 在背景。Android 14 以後背景 App 很快會被凍結，所以配對期間要開前景服務（Shizuku 也是這樣做）。
+- 服務類型用 `shortService`（Android 14 起）：不需要額外的類型權限，上限約 3 分鐘。比 `connectedDevice` 單純，後者在 Android 14 還要另外宣告前置權限。
+- 通知的 RemoteInput 回覆要用 `PendingIntent.getForegroundService`（`FLAG_MUTABLE`）送回服務；服務每次收到指令都要再呼叫一次 `startForeground`。
+- 服務用 NsdManager 找 `_adb-tls-pairing._tcp` 取得配對連接埠，玩家只要輸入 6 位數。配對碼經 MethodChannel 交給 Dart，由 `flutter_adb` 的 `AdbPairing.pair` 完成。實測找到連接埠後約 2 秒配對成功。
+- **Shizuku 沒有處理 3 分鐘逾時**（沒覆寫 `onTimeout`，「重試」按鈕的程式碼被註解掉了）。我們的做法：確認開發人員選項已開啟後才啟動服務；逾時就停止服務並發通知讓玩家重新開始。
+
+**一鍵恢復與重開機**
+- 首次連上 shell 後執行 `pm grant <套件> android.permission.WRITE_SECURE_SETTINGS`。**重開機後授權仍在**；無線偵錯會被系統關掉，但 App 可以自己再打開，約 2.2 秒拿到 shell。
+- **NSD 會回傳已關閉的舊連接埠**：無線偵錯重新開啟後連接埠會換，NSD 結果裡舊的記錄還在，而且常排在前面，連過去會 `Connection refused`。要收集約 2 秒內的所有結果，逐一嘗試連線。
+- **緊接著開下一個 shell 串流會失敗**：前一個串流剛結束就立刻開下一個，`flutter_adb` 偶爾回 `Stream open failed or refused by remote peer`，稍等再開就正常。指令要排隊執行，失敗時延遲重試一次。
+- 鳴潮的 `Client.log` 實測將近 10 MB，透過 shell 讀時要只讀新增的部分（`stat -c %s` 取長度，`tail -c +N | head -c M` 取範圍）。
+
+**飛行模式取得網址（鳴潮限定，原神要另外驗證）**
+- 這是 WuWa Tracker 教學提供的 Android 手動方式。開飛行模式後進「喚取記錄」，頁面只顯示載入失敗，但長按可以全選複製出看不見的文字，內容是整段錯誤訊息（「網頁無法使用...無法載入位於 <網址> 的網頁...」），裡面有完整網址。
+- 所以手動輸入欄位要能從整段文字裡找出網址，不能要求玩家只貼網址。
+
+**WuWa Tracker 的其他方式（參考）**
+- Android：上傳 `Client.log`（由網站解碼）、使用 Ascent App（原理同我們的無線偵錯）。
+- Windows：執行從 GitHub 下載腳本的 PowerShell 指令，或上傳 `Client.log`。我們的 App 能直接讀檔，不需要叫使用者執行外部腳本。
 
