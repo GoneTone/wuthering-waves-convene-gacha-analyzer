@@ -320,3 +320,33 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **`file_picker` 在 Windows 的 isolate 遇到檔名含 `<>:"/\|?*` 會丟例外，而且 `await` 永遠不會完成**（存檔看起來像卡死），所以建議檔名一定要先把這些字元換成 `_`。
 - **暫存檔殘留**：`share_plus` 的 `XFile.fromData` 會在暫存目錄留下 `<uuid>/<檔名>` 的副本，不會被刪除，所以改成自己把 bytes 寫到 `getTemporaryDirectory()/share_out/<檔名>`（寫前先刪掉上一次的 `share_out`），再用 `XFile(path)` 分享，暫存目錄最多只殘留一個分享檔；`file_picker` 在 Android 即使 `withData: true` 也會把選到的檔案複製到 `cache/file_picker/...`，現在讀完 bytes 後會呼叫 `FilePicker.clearTemporaryFiles()` 清掉（只限 Android，Windows 的預設實作會丟 `UnimplementedError`）。
 
+
+## 九、雲端同步登入（子專案 5）
+
+設計：`docs/superpowers/specs/2026-11-06-android-cloud-sync-login-design.md`。手機和 PC 讀寫同一份雲端硬碟同步檔，只有登入那段依平台分流；同步本體共用。
+
+### 29. 只走「授權」，不走「登入」（通用，2026-11-06 實機驗證）
+
+- `google_sign_in` 7.x 在 Android 有兩套介面：「登入」（`authenticate()`，用 Credential Manager 拿身分證明）與「授權」（`authorizationClient`，拿存取 Google 資料的通行證）。**我們只用授權**：`GoogleSignIn.instance.initialize()` 不帶參數，直接 `authorizationClient.authorizeScopes([drive.appdata, email])`，email 再用通行證呼叫 userinfo 取得（PC 版本來就是這樣取 email）。
+- **走「登入」必須另建「網頁應用程式」類型用戶端**，把它的 ID 當 `serverClientId`（Credential Manager 預設 App 背後有伺服器）。實測拿桌面用戶端 ID 去填會得到 `GoogleSignInException unknownError: [28444] Developer console is not set up correctly.`。我們沒有伺服器，用不到身分證明，所以不走登入、也不建網頁用戶端。
+- **Android 用戶端的 ID 不放進程式**：Google Play 服務以「套件名稱＋簽章 SHA-1」到專案裡找對應的 Android 用戶端。查證方法：用 `https://oauth2.googleapis.com/tokeninfo?access_token=...` 看通行證的 `azp`／`aud`；前段專案編號與桌面用戶端相同、後段不同，就是 Android 用戶端發的。
+- 啟用條件沿用 `CLOUD_SYNC_CLIENT_ID`：沒帶 `secrets/cloud_sync_defines.json` 的建置，手機和 PC 一樣停用雲端同步（程式用不到這個 ID，只當「正式建置」的開關）。
+
+### 30. 授權是整個 Cloud 專案共用一份（通用）
+
+- 同一個 Google 帳號對同一個 Cloud 專案只有**一份授權**，PC（桌面用戶端）和手機（Android 用戶端）共用。實測：手機第一次授權時連授權畫面都沒跳，直接沿用 PC 給過的授權；手機向 Google 撤銷後，**PC 也變成「需要重新連結」**。
+- 所以兩個平台的「中斷連結」都改成**只忘記本機**（使用者 2026-11-06 決定）：Windows 只刪本機 refresh token；Android 清掉快取的通行證並 `signOut()`。Windows 原本「取消後遲到的授權」與「授權缺 Drive 權限」兩處的撤銷也一併拿掉，避免波及其他裝置。想徹底取消授權的玩家可到 Google 帳戶設定移除。
+- appDataFolder 也是以 Cloud 專案區分：Android 用戶端必須建在桌面用戶端**同一個專案**，否則手機和 PC 會各自看到不同的同步檔。
+
+### 31. Play 服務會快取已失效的通行證（通用）
+
+- 撤銷授權後重新授權，Play 服務把**舊的、已撤銷的通行證**交回來，API 回 401（`Request had invalid authentication credentials`）。必須 `clearAuthorizationToken(accessToken:)` 清掉快取再要一次才會拿到新的。
+- 處理：Android 拿到通行證後先用 userinfo 驗證，遇到 401 就清快取、重取一次；靜默還原重取不到就進「需要重新連結」。
+- 通行證約 1 小時過期、App 無法自己續期，所以 Android 每輪同步都重新靜默取得通行證，不沿用上一輪的 client。
+- 「只忘記本機」（清快取＋`signOut()`）之後，靜默授權拿不到通行證；再授權時會跳出帳號選擇，可以換帳號。App 完全關掉再開，靜默授權直接拿得到通行證，不必重新連結。
+
+### 32. 簽章指紋要逐把登記（通用）
+
+- Android 用戶端以「套件名稱＋SHA-1」辨識 App，同一個 App 可能有三把金鑰，每把都要在 Android 用戶端登記一筆：
+  - 開發用 debug 金鑰：`F8:09:DC:34:0C:1C:D5:92:C5:0A:44:8E:0B:DB:1C:96:8D:30:08:1B`（`~/.android/debug.keystore`，已登記）。
+  - **上傳金鑰、Play 應用程式簽署金鑰：子專案 7 必須回來補登記**（Play 簽署金鑰的 SHA-1 在 Play Console 查）。只登記 debug 金鑰時實機測試一切正常，但從 Play 下載的版本會出現設定錯誤（常見 `DEVELOPER_ERROR`），或被 Credential Manager 回報成「已取消」。
