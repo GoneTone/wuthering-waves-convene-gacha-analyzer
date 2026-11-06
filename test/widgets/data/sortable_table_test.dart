@@ -12,7 +12,9 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.d
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/pager.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 
 GachaRecord _r({required int seq, required int rank, required String name}) =>
@@ -65,6 +67,30 @@ ProviderContainer _makeContainer(Directory tempDir) => ProviderContainer(
     ),
     itemImageCacheDirProvider.overrideWithValue(tempDir),
   ],
+);
+
+/// 以指定寬度包住 [child]（測試卡片列與表格的切換）；[textScale] 模擬系統字級。
+Widget _wrapWidth(
+  Widget child, {
+  required double width,
+  required ProviderContainer container,
+  Locale locale = const Locale('zh'),
+}) => UncontrolledProviderScope(
+  container: container,
+  child: MaterialApp(
+    theme: buildDarkTheme(),
+    locale: locale,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(
+      body: SingleChildScrollView(
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(width: width, child: child),
+        ),
+      ),
+    ),
+  ),
 );
 
 void main() {
@@ -286,5 +312,147 @@ void main() {
 
     // 三筆 record → 三個 GachaItemIcon
     expect(find.byType(GachaItemIcon), findsNWidgets(3));
+  });
+
+  group('narrow layout', () {
+    /// 45 筆紀錄（第 5、20 筆為 5★）。
+    List<RecordRow> rows45() {
+      final records = [
+        for (var i = 45; i >= 1; i--)
+          _r(seq: i, rank: i == 5 || i == 20 ? 5 : 3, name: 'N$i'),
+      ];
+      return buildRecordRows(records, _idxFor(records));
+    }
+
+    Future<AppLocalizations> pumpTable(
+      WidgetTester tester, {
+      required double width,
+      TableSort? sort,
+      ValueChanged<SortColumn>? onTap,
+      Locale locale = const Locale('zh'),
+      List<RecordRow>? rows,
+    }) async {
+      tester.view.physicalSize = const Size(1200, 4000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _wrapWidth(
+          SortableTable(
+            rows: rows ?? rows45(),
+            sort: sort,
+            mainRank: 5,
+            onSortColumnTapped: onTap ?? (_) {},
+          ),
+          width: width,
+          container: container,
+          locale: locale,
+        ),
+      );
+      await tester.pumpAndSettle();
+      return AppLocalizations.of(tester.element(find.byType(SortableTable)))!;
+    }
+
+    testWidgets('narrow width shows record cards instead of the table', (
+      tester,
+    ) async {
+      final l = await pumpTable(tester, width: 360);
+      expect(find.text(l.tableTotalIndex), findsNothing);
+      expect(find.text('N45'), findsOneWidget);
+      expect(find.text('#45'), findsOneWidget);
+      for (final card in tester.widgetList(find.byType(GachaItemTapTarget))) {
+        expect(
+          tester.getSize(find.byWidget(card)).height,
+          greaterThanOrEqualTo(48),
+        );
+      }
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('wide width keeps the table', (tester) async {
+      final l = await pumpTable(tester, width: 900);
+      expect(find.text(l.tableTotalIndex), findsOneWidget);
+    });
+
+    testWidgets('sort sheet calls cycleSort with the tapped column', (
+      tester,
+    ) async {
+      SortColumn? tapped;
+      final l = await pumpTable(tester, width: 360, onTap: (c) => tapped = c);
+      await tester.tap(find.text(l.tableSortDefault));
+      await tester.pumpAndSettle();
+      expect(find.text(l.tableSortSheetTitle), findsOneWidget);
+      for (final label in [
+        l.tableTime,
+        l.tableName,
+        l.tableKind,
+        l.tableRarity,
+        l.tableTotalIndex,
+        l.tableMainPity,
+      ]) {
+        expect(find.text(label), findsOneWidget, reason: label);
+      }
+      await tester.tap(find.text(l.tableName));
+      await tester.pumpAndSettle();
+      expect(tapped, SortColumn.name);
+      expect(find.text(l.tableSortSheetTitle), findsNothing);
+    });
+
+    testWidgets('sort button shows the current column and direction', (
+      tester,
+    ) async {
+      final l = await pumpTable(
+        tester,
+        width: 360,
+        sort: const TableSort(
+          column: SortColumn.time,
+          direction: SortDirection.desc,
+        ),
+      );
+      expect(find.text(l.tableSortButton('${l.tableTime} ↓')), findsOneWidget);
+    });
+
+    testWidgets('tapping a card opens item detail', (tester) async {
+      await pumpTable(tester, width: 360);
+      expect(
+        find.ancestor(
+          of: find.text('N45'),
+          matching: find.byType(GachaItemTapTarget),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('switching between cards and table keeps the page', (
+      tester,
+    ) async {
+      final rows = rows45();
+      await pumpTable(tester, width: 360, rows: rows);
+      await tester.tap(find.byIcon(Icons.chevron_right).first);
+      await tester.pumpAndSettle();
+      expect(tester.widget<Pager>(find.byType(Pager)).page, 1);
+      await tester.pumpWidget(
+        _wrapWidth(
+          SortableTable(
+            rows: rows,
+            sort: null,
+            mainRank: 5,
+            onSortColumnTapped: (_) {},
+          ),
+          width: 900,
+          container: container,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.widget<Pager>(find.byType(Pager)).page, 1);
+    });
+
+    testWidgets('cards do not overflow with english and large text', (
+      tester,
+    ) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await pumpTable(tester, width: 360, locale: const Locale('en'));
+      expect(tester.takeException(), isNull);
+    });
   });
 }
