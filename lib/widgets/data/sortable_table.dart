@@ -233,6 +233,8 @@ class _SortButton extends StatelessWidget {
   Future<void> _showSheet(BuildContext context, AppLocalizations l) async {
     final picked = await showModalBottomSheet<SortColumn>(
       context: context,
+      // 頁面在外殼的內層導覽器裡；開在最上層才會蓋過標題列與底部狀態列。
+      useRootNavigator: true,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: ListView(
@@ -330,6 +332,10 @@ class _RecordCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.s),
+                      if (row.itemTypeKey.isNotEmpty) ...[
+                        Text(itemTypeKeyLabel(row.itemTypeKey, l), style: meta),
+                        const SizedBox(width: AppSpacing.s),
+                      ],
                       if (accent != null)
                         _Pill(rank: record.qualityLevel, color: accent, l: l)
                       else
@@ -337,29 +343,28 @@ class _RecordCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  DefaultTextStyle.merge(
-                    style: meta,
-                    maxLines: 1,
-                    child: Row(
+                  // 單一段文字：放不下時整行以省略號結尾，不會因為字級放大而溢出。
+                  Text.rich(
+                    TextSpan(
                       children: [
-                        Flexible(
-                          child: Text(
-                            '${formatAbsoluteDateTime(record.time)}'
-                            ' (${relativeTime(record.time, l)})',
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        TextSpan(
+                          text:
+                              '${formatAbsoluteDateTime(record.time)}'
+                              ' (${relativeTime(record.time, l)})'
+                              ' · #${row.totalIndex}'
+                              ' · ${l.tableMainPity} ',
                         ),
-                        const Text(' · '),
-                        Text('#${row.totalIndex}'),
-                        Text(' · ${l.tableMainPity} '),
-                        Text(
-                          '${row.mainPityIndex}',
+                        TextSpan(
+                          text: '${row.mainPityIndex}',
                           style: TextStyle(
                             color: _pityColor(row, mainRank, tokens),
                           ),
                         ),
                       ],
                     ),
+                    style: meta,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

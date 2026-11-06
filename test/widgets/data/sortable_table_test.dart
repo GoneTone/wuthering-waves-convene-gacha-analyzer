@@ -358,7 +358,7 @@ void main() {
       final l = await pumpTable(tester, width: 360);
       expect(find.text(l.tableTotalIndex), findsNothing);
       expect(find.text('N45'), findsOneWidget);
-      expect(find.text('#45'), findsOneWidget);
+      expect(find.textContaining('#45', findRichText: true), findsOneWidget);
       for (final card in tester.widgetList(find.byType(GachaItemTapTarget))) {
         expect(
           tester.getSize(find.byWidget(card)).height,
@@ -366,6 +366,24 @@ void main() {
         );
       }
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('record cards show the item type like the table', (
+      tester,
+    ) async {
+      // 排序選單可以依類型排序，卡片上就要看得到類型（和桌面表格一致）。
+      final l = await pumpTable(tester, width: 360);
+      final card = find.ancestor(
+        of: find.text('N45'),
+        matching: find.byType(GachaItemTapTarget),
+      );
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.text(itemTypeKeyLabel(kItemKindCharacter, l)),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('wide width keeps the table', (tester) async {
@@ -395,6 +413,57 @@ void main() {
       await tester.pumpAndSettle();
       expect(tapped, SortColumn.name);
       expect(find.text(l.tableSortSheetTitle), findsNothing);
+    });
+
+    testWidgets('sort sheet opens above the whole app, not the page', (
+      tester,
+    ) async {
+      // 頁面在外殼的內層導覽器裡；開在內層會被外殼的底部狀態列蓋住。
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final inner = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: buildDarkTheme(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: Navigator(
+                key: inner,
+                onGenerateRoute: (_) => MaterialPageRoute<void>(
+                  builder: (_) => Scaffold(
+                    body: SingleChildScrollView(
+                      child: SortableTable(
+                        rows: rows45(),
+                        sort: null,
+                        mainRank: 5,
+                        onSortColumnTapped: (_) {},
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final l = AppLocalizations.of(
+        tester.element(find.byType(SortableTable)),
+      )!;
+      await tester.tap(find.text(l.tableSortDefault));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(inner),
+          matching: find.byType(BottomSheet),
+        ),
+        findsNothing,
+      );
     });
 
     testWidgets('sort button shows the current column and direction', (
@@ -444,6 +513,15 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.widget<Pager>(find.byType(Pager)).page, 1);
+    });
+
+    testWidgets('cards do not overflow with japanese and large text', (
+      tester,
+    ) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await pumpTable(tester, width: 360, locale: const Locale('ja'));
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('cards do not overflow with english and large text', (
