@@ -17,6 +17,12 @@ bool isCompactLayout(BuildContext context) {
   return (mobileOs ? size.shortestSide : size.width) < kCompactBreakpoint;
 }
 
+/// 提示框的觸發方式：手機排版點一下就顯示，其他沿用預設（滑鼠停留、觸控長按）。
+///
+/// 只給「點了沒有其他動作」的元素用；外層本身可點時會搶走那個點擊。
+TooltipTriggerMode? tapTooltipTrigger(BuildContext context) =>
+    isCompactLayout(context) ? TooltipTriggerMode.tap : null;
+
 /// 給 `MaterialApp.actions` 的全 App 動作表（預設動作加上本專案的覆寫）。
 final Map<Type, Action<Intent>> appActions = {
   ...WidgetsApp.defaultActions,
