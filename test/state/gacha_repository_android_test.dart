@@ -44,12 +44,17 @@ class _FakeResolver extends LogAccessResolver {
   /// 每次 resolve 收到的參數。
   final calls = <({LogAccessMethod? preferred, bool force, bool request})>[];
 
+  /// 每次 resolve 收到的 abort。
+  final aborts = <Future<void>?>[];
+
   @override
   Future<LogAccessOutcome> resolve({
     LogAccessMethod? preferred,
     bool forceDisableAfterUse = false,
     bool requestPermissions = true,
+    Future<void>? abort,
   }) async {
+    aborts.add(abort);
     calls.add((
       preferred: preferred,
       force: forceDisableAfterUse,
@@ -290,6 +295,23 @@ void main() {
     sub.close();
   });
 
+  test('blocked: root denial is shown in the waiting state', () async {
+    resolver.results.add(
+      () => const LogAccessBlocked(
+        LogAccessUnavailable.notPaired,
+        rootDenied: true,
+      ),
+    );
+    final r = await repo();
+    final done = r.update();
+    await _until(
+      () => (progress() as WaitingForCapture?)?.logAccessUnavailable != null,
+    );
+    expect((progress()! as WaitingForCapture).rootDenied, isTrue);
+    await r.cancelCapture();
+    await done;
+  });
+
   test('blocked: waits for manual input without watching', () async {
     resolver.results.add(
       () => const LogAccessBlocked(LogAccessUnavailable.notPaired),
@@ -326,6 +348,40 @@ void main() {
     watch.cancelGate!.complete();
     await done;
     expect(ready.released, 1);
+  });
+
+  test(
+    'cancel while resolving returns at once and releases a late ready',
+    () async {
+      // root 授權視窗最多等 60 秒；這段期間按取消要立刻有反應。
+      final ready = _Ready();
+      final gate = Completer<LogAccessOutcome>();
+      resolver.results.add(() => gate.future);
+      final r = await repo();
+      final done = r.update();
+      await _until(() => resolver.calls.isNotEmpty);
+      await r.cancelCapture();
+      await done;
+      expect(progress(), isNull);
+      var aborted = false;
+      unawaited(resolver.aborts.single!.then((_) => aborted = true));
+      await _until(() => aborted);
+      gate.complete(ready.outcome());
+      await _until(() => ready.released == 1);
+      expect(watch.hits, isEmpty);
+    },
+  );
+
+  test('manual input while resolving is used at once', () async {
+    final gate = Completer<LogAccessOutcome>();
+    resolver.results.add(() => gate.future);
+    final r = await repo();
+    final done = r.update();
+    await _until(() => resolver.calls.isNotEmpty);
+    await r.submitManualCredential(_cred());
+    await done;
+    expect(progress(), isA<UpdateCompleted>());
+    gate.complete(const LogAccessBlocked(LogAccessUnavailable.notPaired));
   });
 
   test('blocked: cancel clears progress', () async {

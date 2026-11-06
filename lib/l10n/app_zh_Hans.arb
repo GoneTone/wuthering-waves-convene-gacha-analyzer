@@ -1100,9 +1100,13 @@
   "@logUnavailableNotPaired": {
     "description": "Reason shown when wireless debugging has not been paired yet"
   },
-  "logUnavailableNoWifi": "无线调试只能在连上 Wi‑Fi 时使用。请连上 Wi‑Fi 后再点一次更新，或改用手动输入。",
+  "logUnavailableNoWifi": "无线调试只能在连上 Wi‑Fi 时使用。连上 Wi‑Fi 后回到本 App 就会自动继续，也可以改用手动输入。",
   "@logUnavailableNoWifi": {
     "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
+  "logRootDeniedHint": "检测到 root，但本 App 没有获得 root 授权。如果要用 root 读取，请到 root 工具（例如 Magisk 的“超级用户”）允许本 App，回到本 App 就会自动重试。",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
   },
   "logUnavailableAdbFailed": "连不上无线调试。可能是配对已失效，请重新配对。",
   "@logUnavailableAdbFailed": {

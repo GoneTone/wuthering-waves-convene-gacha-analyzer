@@ -139,6 +139,27 @@ void main() {
     expect(find.text(l.actionOpenGame), findsNothing);
   });
 
+  testWidgets('root denial explains how to allow it', (tester) async {
+    final l = await pump(
+      tester,
+      const WaitingForCapture(
+        logAccessUnavailable: LogAccessUnavailable.notPaired,
+        rootDenied: true,
+      ),
+    );
+    expect(find.text(l.logRootDeniedHint), findsOneWidget);
+  });
+
+  testWidgets('no root denial hint otherwise', (tester) async {
+    final l = await pump(
+      tester,
+      const WaitingForCapture(
+        logAccessUnavailable: LogAccessUnavailable.notPaired,
+      ),
+    );
+    expect(find.text(l.logRootDeniedHint), findsNothing);
+  });
+
   testWidgets('connection lost shows the warning', (tester) async {
     final l = await pump(
       tester,

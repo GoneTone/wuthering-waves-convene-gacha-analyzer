@@ -520,15 +520,36 @@ class GachaRepository extends Notifier<GachaState> {
     try {
       // 只有第一次判斷可以跳權限詢問；回到前景的自動重試只檢查，否則永久拒絕時會一直跳去設定頁。
       var requestPermissions = true;
+      // 判斷途中玩家取消或手動送出就不等了（root 授權視窗最多等 60 秒）。
+      final stop = Future.any<Object?>([
+        logHit.future,
+        cancelled.future.then((_) => null),
+      ]);
       while (true) {
-        final outcome = await ref
+        final resolving = ref
             .read(logAccessResolverProvider)
             .resolve(
               preferred: ref.read(settingsProvider).logAccessMethod,
               forceDisableAfterUse: _afterPairing,
               requestPermissions: requestPermissions,
+              abort: stop,
             );
         requestPermissions = false;
+        final first = await Future.any<Object?>([resolving, stop]);
+        if (first is! LogAccessOutcome) {
+          _androidLog.info('log access resolve abandoned');
+          // 晚到的結果也要 release，否則連線或打開的無線偵錯會留著。
+          unawaited(
+            resolving.then((late) async {
+              if (late is LogAccessReady) await late.release();
+            }),
+          );
+          if (first is GachaCredential && !_captureCancelRequested) {
+            return first;
+          }
+          return null;
+        }
+        final outcome = first;
         if (outcome is LogAccessReady) {
           ready = outcome;
           if (_captureCancelRequested || !ref.mounted) return null;
@@ -536,11 +557,12 @@ class GachaRepository extends Notifier<GachaState> {
         }
         if (_captureCancelRequested || !ref.mounted) return null;
         if (logHit.isCompleted) return await logHit.future;
-        final reason = (outcome as LogAccessBlocked).reason;
+        final blocked = outcome as LogAccessBlocked;
         state = state.copyWith(
           progress: WaitingForCapture(
             isFallback: isFallback,
-            logAccessUnavailable: reason,
+            logAccessUnavailable: blocked.reason,
+            rootDenied: blocked.rootDenied,
           ),
         );
         final retry = Completer<void>();

@@ -67,10 +67,13 @@ final class LogAccessReady extends LogAccessOutcome {
 /// 沒有自動讀取方式。
 final class LogAccessBlocked extends LogAccessOutcome {
   /// 建立結果。
-  const LogAccessBlocked(this.reason);
+  const LogAccessBlocked(this.reason, {this.rootDenied = false});
 
   /// 原因。
   final LogAccessUnavailable reason;
+
+  /// 裝置有 `su` 但沒拿到 root 授權（被拒或沒按允許）；root 工具可能已記成永久拒絕而不再詢問。
+  final bool rootDenied;
 }
 
 /// 本 App 的套件名稱（授權 `WRITE_SECURE_SETTINGS` 用）。
@@ -123,12 +126,46 @@ class LogAccessResolver {
   /// 決定讀取方式；[preferred] 先試，[forceDisableAfterUse] 為 true 時用完一律關閉無線偵錯（剛配對完時）。
   ///
   /// [requestPermissions] 為 false 時（自動重試）只檢查權限、不跳系統詢問。
+  /// [abort] 完成時（玩家取消或手動送出）結束 root 授權等待，之後的方式都不再嘗試。
   Future<LogAccessOutcome> resolve({
     LogAccessMethod? preferred,
     bool forceDisableAfterUse = false,
     bool requestPermissions = true,
+    Future<void>? abort,
   }) async {
     final sw = Stopwatch()..start();
+    var finished = false;
+    var aborted = false;
+    unawaited(
+      abort?.then((_) async {
+        if (finished) return;
+        aborted = true;
+        _log.info('log access resolve aborted ms=${sw.elapsedMilliseconds}');
+        // 關掉 su 會讓還在等授權的 verify 立刻失敗，root 工具的詢問視窗也跟著結束。
+        await root.close();
+      }),
+    );
+    try {
+      return await _resolve(
+        preferred: preferred,
+        forceDisableAfterUse: forceDisableAfterUse,
+        requestPermissions: requestPermissions,
+        isAborted: () => aborted,
+        sw: sw,
+      );
+    } finally {
+      finished = true;
+    }
+  }
+
+  /// [resolve] 的實際流程；[isAborted] 為 true 後不再嘗試下一種方式。
+  Future<LogAccessOutcome> _resolve({
+    required LogAccessMethod? preferred,
+    required bool forceDisableAfterUse,
+    required bool requestPermissions,
+    required bool Function() isAborted,
+    required Stopwatch sw,
+  }) async {
     final order = {
       ?preferred,
       LogAccessMethod.root,
@@ -136,9 +173,13 @@ class LogAccessResolver {
       LogAccessMethod.wirelessDebugging,
     };
     LogAccessBlocked? blocked;
+    var rootDenied = false;
     for (final method in order) {
+      if (isAborted()) break;
       final outcome = switch (method) {
-        LogAccessMethod.root => await _tryRoot(),
+        LogAccessMethod.root => await _tryRoot(
+          onDenied: () => rootDenied = true,
+        ),
         LogAccessMethod.legacyDirect => await _tryLegacy(requestPermissions),
         LogAccessMethod.wirelessDebugging => await _tryWireless(
           forceDisableAfterUse,
@@ -152,17 +193,26 @@ class LogAccessResolver {
       }
       if (outcome is LogAccessBlocked) blocked ??= outcome;
     }
-    final result =
-        blocked ?? const LogAccessBlocked(LogAccessUnavailable.unsupported);
+    final result = LogAccessBlocked(
+      blocked?.reason ?? LogAccessUnavailable.unsupported,
+      rootDenied: rootDenied,
+    );
     _log.info(
-      'log access blocked reason=${result.reason.name} ms=${sw.elapsedMilliseconds}',
+      'log access blocked reason=${result.reason.name} rootDenied=$rootDenied '
+      'ms=${sw.elapsedMilliseconds}',
     );
     return result;
   }
 
-  /// root：有 `su` 且授權成功才可用；否則回 null 讓下一種方式接手。
-  Future<LogAccessOutcome?> _tryRoot() async {
-    if (!await root.isSuPresent() || !await root.verify()) return null;
+  /// root：有 `su` 且授權成功才可用；否則回 null 讓下一種方式接手。有 `su` 卻沒拿到授權時呼叫 [onDenied]。
+  Future<LogAccessOutcome?> _tryRoot({
+    required void Function() onDenied,
+  }) async {
+    if (!await root.isSuPresent()) return null;
+    if (!await root.verify()) {
+      onDenied();
+      return null;
+    }
     return LogAccessReady(
       source: ShellLogSource(exec: root.exec, label: 'root'),
       method: LogAccessMethod.root,
@@ -259,8 +309,9 @@ final logAccessResolverProvider = Provider<LogAccessResolver>((ref) {
     root: RootShell(),
     keyStore: keyStore,
     makeConnector: () async {
-      final crypto = await keyStore.loadOrCreate();
-      return (port) => connectFlutterAdb(crypto, port);
+      final crypto = await keyStore.load();
+      return (port) async =>
+          crypto == null ? null : connectFlutterAdb(crypto, port);
     },
   );
 });

@@ -21,11 +21,14 @@ const _commandTimeout = Duration(seconds: 20);
 
 /// 以 `flutter_adb` 實作的 [AdbSession]。
 class FlutterAdbSession implements AdbSession {
-  /// 包住已連上的 [_connection]。
-  FlutterAdbSession(this._connection);
+  /// 包住已連上的 [_connection]；[timeout] 為單一指令的等待上限。
+  FlutterAdbSession(this._connection, {this.timeout = _commandTimeout});
 
   /// 底層連線。
   final AdbConnection _connection;
+
+  /// 單一指令的等待上限。
+  final Duration timeout;
 
   @override
   Future<Uint8List> shell(String command) async {
@@ -39,7 +42,13 @@ class FlutterAdbSession implements AdbSession {
       },
     );
     try {
-      await done.future.timeout(_commandTimeout);
+      await done.future.timeout(timeout);
+    } on TimeoutException {
+      // 沒關掉的話裝置端串流一直開著，flutter_adb 下一個串流可能拿到重複的 localId。
+      try {
+        await stream.sendClose();
+      } catch (_) {}
+      rethrow;
     } finally {
       await sub.cancel();
     }
@@ -112,20 +121,26 @@ class AdbKeyStore {
   /// 是否已有配對用的金鑰。
   Future<bool> hasKey() async => await _read() != null;
 
-  /// 讀出金鑰；沒有就產生一組新的並保存（RSA 2048 在背景 isolate 產生）。
-  Future<AdbCrypto> loadOrCreate() async {
+  /// 讀出已保存的金鑰；沒有、讀不到或內容損壞時回 null（不會產生新的）。
+  Future<AdbCrypto?> load() async {
     final stored = await _read();
-    if (stored != null) {
-      try {
-        final map = jsonDecode(stored) as Map<String, dynamic>;
-        return AdbCrypto(
-          keyPair: AdbCrypto.keyPairFromStorageMap(map),
-          adbKeyName: _keyName,
-        );
-      } catch (e) {
-        _log.warning('adb key corrupt, regenerating error=${e.runtimeType}');
-      }
+    if (stored == null) return null;
+    try {
+      final map = jsonDecode(stored) as Map<String, dynamic>;
+      return AdbCrypto(
+        keyPair: AdbCrypto.keyPairFromStorageMap(map),
+        adbKeyName: _keyName,
+      );
+    } catch (e) {
+      _log.warning('adb key corrupt error=${e.runtimeType}');
+      return null;
     }
+  }
+
+  /// 讀出金鑰；沒有就產生一組新的並保存（RSA 2048 在背景 isolate 產生）。只在配對時用。
+  Future<AdbCrypto> loadOrCreate() async {
+    final existing = await load();
+    if (existing != null) return existing;
     final keyPair = await Isolate.run(AdbCrypto.generateAdbKeyPair);
     final crypto = AdbCrypto(keyPair: keyPair, adbKeyName: _keyName);
     await _storage.write(
@@ -158,9 +173,11 @@ class AdbPairingOps {
     code: code,
   );
 
-  /// 連到本機 [port] 的無線偵錯。
-  Future<AdbSession?> connect(int port) async =>
-      connectFlutterAdb(await keyStore.loadOrCreate(), port);
+  /// 連到本機 [port] 的無線偵錯；讀不到金鑰時視為連不上（新金鑰沒配對過，連了也沒用）。
+  Future<AdbSession?> connect(int port) async {
+    final crypto = await keyStore.load();
+    return crypto == null ? null : connectFlutterAdb(crypto, port);
+  }
 }
 
 /// 提供 [AdbPairingOps]，測試可 override。

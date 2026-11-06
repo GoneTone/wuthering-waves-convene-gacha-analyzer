@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/flutter_adb_session.dart';
 
-/// 讀取一律丟例外的 secure storage（模擬 keystore 損壞）。
+/// 讀取一律丟例外的 secure storage（模擬 keystore 損壞），並記錄寫入次數。
 class _ThrowingStorage extends FlutterSecureStorage {
-  /// 建立替身。
-  const _ThrowingStorage();
+  /// 寫入次數。
+  int writes = 0;
 
   @override
   Future<String?> read({
@@ -18,16 +18,34 @@ class _ThrowingStorage extends FlutterSecureStorage {
     AppleOptions? mOptions,
     WindowsOptions? wOptions,
   }) => throw Exception('keystore broken');
+
+  @override
+  Future<void> write({
+    required String key,
+    required String? value,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async => writes++;
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('key store read failure is treated as not paired', () async {
-    expect(
-      await AdbKeyStore(storage: const _ThrowingStorage()).hasKey(),
-      isFalse,
-    );
+    expect(await AdbKeyStore(storage: _ThrowingStorage()).hasKey(), isFalse);
+  });
+
+  test('connect never creates or overwrites a key it cannot read', () async {
+    // 暫時讀不到時若產生新金鑰覆蓋，原本已配對的金鑰就沒了，玩家得重新配對。
+    final storage = _ThrowingStorage();
+    final store = AdbKeyStore(storage: storage);
+    expect(await store.load(), isNull);
+    expect(await AdbPairingOps(store).connect(5555), isNull);
+    expect(storage.writes, 0);
   });
 
   test('loadOrCreate persists the key and reloads the same one', () async {

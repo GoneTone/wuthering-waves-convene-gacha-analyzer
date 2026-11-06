@@ -1107,9 +1107,13 @@
   "@logUnavailableNotPaired": {
     "description": "Reason shown when wireless debugging has not been paired yet"
   },
-  "logUnavailableNoWifi": "Wireless debugging only works on Wi‑Fi. Connect to Wi‑Fi and update again, or enter the history manually.",
+  "logUnavailableNoWifi": "Wireless debugging only works on Wi‑Fi. Connect to Wi‑Fi and come back; the app continues automatically. You can also enter the history manually.",
   "@logUnavailableNoWifi": {
     "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
+  "logRootDeniedHint": "Root was found, but this app wasn't granted root access. To read with root, allow this app in your root manager (for example Magisk's Superuser list), then come back; the app retries automatically.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
   },
   "logUnavailableAdbFailed": "Couldn't connect to wireless debugging. The pairing may have expired; please pair again.",
   "@logUnavailableAdbFailed": {

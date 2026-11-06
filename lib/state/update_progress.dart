@@ -24,6 +24,7 @@ class WaitingForCapture extends UpdateProgress {
     this.logAccessUnavailable,
     this.logConnectionLost = false,
     this.credentialReady = false,
+    this.rootDenied = false,
   });
 
   /// true 表示 recordId 全池失效後的二次捕獲（UI 顯示重新攔取提示）。
@@ -43,6 +44,9 @@ class WaitingForCapture extends UpdateProgress {
 
   /// Android 已取得喚取記錄網址，等玩家切回本 App 才開始抓資料（背景時網路會被系統擋）。
   final bool credentialReady;
+
+  /// Android 沒有自動讀取方式時，裝置有 root 但本 App 沒拿到授權（提示到 root 工具允許）。
+  final bool rootDenied;
 }
 
 /// 正在拉取指定卡池的完整歷史。

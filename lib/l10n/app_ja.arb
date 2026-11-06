@@ -1106,9 +1106,13 @@
   "@logUnavailableNotPaired": {
     "description": "Reason shown when wireless debugging has not been paired yet"
   },
-  "logUnavailableNoWifi": "ワイヤレスデバッグは Wi‑Fi 接続時のみ使えます。Wi‑Fi に接続してからもう一度更新するか、手動で入力してください。",
+  "logUnavailableNoWifi": "ワイヤレスデバッグは Wi‑Fi 接続時のみ使えます。Wi‑Fi に接続してアプリに戻ると、自動で続行します。手動で入力することもできます。",
   "@logUnavailableNoWifi": {
     "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
+  "logRootDeniedHint": "root を検出しましたが、このアプリには root 権限が許可されていません。root で読み取るには、root 管理アプリ（Magisk の「スーパーユーザー」など）でこのアプリを許可してから戻ってください。自動で再試行します。",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
   },
   "logUnavailableAdbFailed": "ワイヤレスデバッグに接続できません。ペア設定が無効になった可能性があります。もう一度ペア設定してください。",
   "@logUnavailableAdbFailed": {

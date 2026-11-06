@@ -109,6 +109,14 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(_reasonText(reason, l), textAlign: TextAlign.center),
+          if (p.rootDenied) ...[
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              l.logRootDeniedHint,
+              textAlign: TextAlign.center,
+              style: warning,
+            ),
+          ],
           const SizedBox(height: AppSpacing.s),
           ?switch (reason) {
             LogAccessUnavailable.wirelessDebuggingOff => FilledButton(

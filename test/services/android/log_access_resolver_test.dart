@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -60,12 +61,15 @@ class _FakeRoot extends RootShell {
   bool granted = false;
   int verifies = 0;
 
+  /// 設定後 verify 等它完成（模擬 root 工具的授權視窗還在等玩家按）。
+  Completer<bool>? verifyGate;
+
   @override
   Future<bool> isSuPresent() async => present;
   @override
   Future<bool> verify() async {
     verifies++;
-    return granted;
+    return verifyGate?.future ?? granted;
   }
 
   @override
@@ -125,6 +129,38 @@ void main() {
     discoverRetryDelay: Duration.zero,
   );
 
+  test(
+    'abort while root verify waits closes su and tries nothing else',
+    () async {
+      // 玩家按取消或手動送出後，不能再跳儲存權限詢問或打開無線偵錯。
+      root
+        ..present = true
+        ..verifyGate = Completer<bool>();
+      platform.sdk = 29;
+      final abort = Completer<void>();
+      final result = resolver().resolve(abort: abort.future);
+      await Future<void>.delayed(Duration.zero);
+      abort.complete();
+      await Future<void>.delayed(Duration.zero);
+      expect(root.closes, 1, reason: 'closing su dismisses the grant prompt');
+      root.verifyGate!.complete(false);
+      expect(await result, isA<LogAccessBlocked>());
+      expect(platform.storageRequests, 0);
+      expect(platform.adbWifiWrites, isEmpty);
+    },
+  );
+
+  test('abort after resolve finished does not close the session', () async {
+    root
+      ..present = true
+      ..granted = true;
+    final abort = Completer<void>();
+    await resolver().resolve(abort: abort.future);
+    abort.complete();
+    await Future<void>.delayed(Duration.zero);
+    expect(root.closes, 0);
+  });
+
   test('root wins when su present and verified', () async {
     root
       ..present = true
@@ -133,6 +169,24 @@ void main() {
     expect(r.method, LogAccessMethod.root);
     expect(r.source, isA<ShellLogSource>());
     expect(platform.adbWifiWrites, isEmpty);
+  });
+
+  test(
+    'su present but not granted is reported with the blocked reason',
+    () async {
+      // Magisk 倒數結束沒按允許會記成永久拒絕，之後不再詢問；要讓畫面說得出原因。
+      root.present = true;
+      keys.paired = false;
+      final r = await resolver().resolve() as LogAccessBlocked;
+      expect(r.reason, LogAccessUnavailable.notPaired);
+      expect(r.rootDenied, isTrue);
+    },
+  );
+
+  test('no su means root was not denied', () async {
+    keys.paired = false;
+    final r = await resolver().resolve() as LogAccessBlocked;
+    expect(r.rootDenied, isFalse);
   });
 
   test('root release closes the su session', () async {
