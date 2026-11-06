@@ -74,6 +74,7 @@ void main() {
     UpdateProgress progress, {
     bool android = true,
     bool installed = true,
+    Locale locale = const Locale('zh'),
   }) async {
     repo = _Repo(progress);
     platform = _Platform(installed: installed);
@@ -89,7 +90,7 @@ void main() {
           theme: buildDarkTheme(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('zh'),
+          locale: locale,
           home: const Scaffold(body: Center(child: UpdateProgressDialog())),
         ),
       ),
@@ -254,6 +255,21 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('long english title wraps on a narrow phone', (tester) async {
+    // 實機直向 1080 寬、dpr 2.625 → 約 411 邏輯像素。
+    tester.view.physicalSize = const Size(411, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pump(
+      tester,
+      const WaitingForCapture(
+        logAccessUnavailable: LogAccessUnavailable.notPaired,
+      ),
+      locale: const Locale('en'),
+    );
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('completed shows wireless left on hint', (tester) async {
     final l = await pump(

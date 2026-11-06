@@ -156,7 +156,7 @@ class _Title extends StatelessWidget {
       children: [
         Icon(icon, color: color),
         const SizedBox(width: AppSpacing.s),
-        Text(text),
+        Flexible(child: Text(text)),
       ],
     );
   }
