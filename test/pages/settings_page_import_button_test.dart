@@ -191,12 +191,14 @@ void main() {
     );
   });
 
-  /// 以 [bytes] 當選檔內容，點擊 [buttonText] 並等流程跑完。
+  /// 以 [bytes]（null 代表取消）當選檔內容，點擊 [buttonText] 並等流程跑完；
+  /// [pickPlatform] 為 true 時再點平台選擇視窗的第一個平台。
   Future<void> tapImportWith(
     WidgetTester tester,
-    Uint8List bytes,
-    String buttonText,
-  ) async {
+    Uint8List? bytes,
+    String buttonText, {
+    bool pickPlatform = false,
+  }) async {
     SharedPreferences.setMockInitialValues({});
     late ProviderContainer container;
     await tester.runAsync(() async {
@@ -216,8 +218,18 @@ void main() {
     final btn = find.widgetWithText(OutlinedButton, buttonText);
     await tester.ensureVisible(btn);
     await tester.tap(btn);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    if (pickPlatform) {
+      await tester.tap(
+        find
+            .descendant(
+              of: find.byType(Dialog),
+              matching: find.byType(ListTile),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+    }
   }
 
   testWidgets('import dialog gets the localized open title', (tester) async {
@@ -266,4 +278,27 @@ void main() {
       expect(find.textContaining('我的帳號'), findsOneWidget);
     },
   );
+
+  testWidgets('platform import of invalid UTF-8 shows the unreadable message', (
+    tester,
+  ) async {
+    await tapImportWith(
+      tester,
+      Uint8List.fromList([0xff, 0xfe, 0xfd]),
+      '從其他平台匯入',
+      pickPlatform: true,
+    );
+
+    expect(find.textContaining('無法讀取'), findsOneWidget);
+  });
+
+  testWidgets('cancelling the platform import file picker shows nothing', (
+    tester,
+  ) async {
+    await tapImportWith(tester, null, '從其他平台匯入', pickPlatform: true);
+
+    expect(openTitle, '開啟');
+    expect(find.byType(SnackBar), findsNothing);
+    expect(find.byType(Dialog), findsNothing);
+  });
 }
