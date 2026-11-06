@@ -341,4 +341,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('crossing the breakpoint twice does not reopen the drawer', (
+    tester,
+  ) async {
+    await pump(tester, const Size(500, 800));
+    await tester.tap(drawerButton(tester));
+    await tester.pumpAndSettle();
+    tester.view.physicalSize = const Size(1000, 800);
+    await tester.pumpAndSettle();
+    tester.view.physicalSize = const Size(500, 800);
+    await tester.pumpAndSettle();
+    expect(find.byType(Drawer), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 }

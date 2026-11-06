@@ -110,6 +110,15 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     final collapsedNoLabel = !extendedRail && width < 800;
 
+    // 抽屜開著時視窗被拉寬：Scaffold 會記住「開著」，下次變窄時抽屜會直接開著出現。
+    // 所以抽屜先留著、這一幀之後關掉，關好（onDrawerChanged）才真的拿掉。
+    final keepDrawer = compact || _drawerOpen;
+    if (!compact && _drawerOpen) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _scaffoldKey.currentState?.closeDrawer(),
+      );
+    }
+
     Future<void> update() =>
         ref.read(gachaRepositoryProvider.notifier).update();
 
@@ -122,7 +131,7 @@ class _AppShellState extends ConsumerState<AppShell> {
       child: Scaffold(
         key: _scaffoldKey,
         onDrawerChanged: (open) => setState(() => _drawerOpen = open),
-        drawer: compact
+        drawer: keepDrawer
             ? Drawer(
                 child: SafeArea(
                   child: Builder(
