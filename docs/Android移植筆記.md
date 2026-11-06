@@ -358,3 +358,5 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **模擬器（Android 13，Google API 映像）**：在帳號選擇畫面按返回會回到「連結 Google 帳號」按鈕，不顯示「授權失敗」。全新裝置連結後，PC 的 3 個帳號都同步下來，並自動補抓 114 張物品圖片。**同一個 App 程序開 63 分鐘後按「立即同步」仍成功**，通行證過期後由 Play 服務自動換發。
 - **Windows**：加入 `google_sign_in` 後仍可建置（套件沒有 Windows 實作，只是不被呼叫）。中斷連結 log 為 `signOut done (local only)`，模擬器照常同步；重新連結（瀏覽器授權）正常。
 - 未實測：在 Google 帳戶設定撤銷 App 存取權後的反應。因為授權是整個專案共用，撤銷會讓所有裝置都需要重新連結，所以只用單元測試涵蓋（快取的失效通行證：清掉重取，重取不到就進入「需要重新連結」）。
+- **舊版 Play 服務不支援清除快取憑證**：模擬器（Play 服務 23.18）呼叫 `clearAuthorizationToken` 會丟 `PlatformException(clearAuthorizationToken failed, Missing Feature{name=auth_api_credentials_clear_token ...})`，而且要好幾分鐘才回來。所以中斷連結與「失效憑證清掉重取」都把清除當成盡力而為：失敗只記警告，流程照常進行。實機的 Play 服務會自動更新，不受影響。
+- **測完記得中斷模擬器的連結**：模擬器登入真實 Google 帳號並連結後，之後在模擬器做清除資料、移除帳號這類測試，刪除會同步到雲端，PC 和手機也會跟著少掉紀錄。2026-11-06 測完已在模擬器 App 中斷連結（只清本機）。另外，模擬器關機會存快照，重開後是從原狀態繼續跑，不是全新啟動。
