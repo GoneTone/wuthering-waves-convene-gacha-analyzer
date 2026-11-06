@@ -18,6 +18,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_text.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/uid_indicator.dart';
 
 /// 已有一個帳號、記錄 update 呼叫次數的 repository 替身。
@@ -429,4 +430,38 @@ void main() {
       expect(tester.takeException(), isNull);
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
   }
+
+  testWidgets('phone landscape keeps the page clear of the camera cutout', (
+    tester,
+  ) async {
+    // 橫向時開孔鏡頭在左邊；標題列由 AppBar 自己避開，內容區和狀態列也要避開。
+    await pump(tester, const Size(800, 360));
+    tester.view.padding = const FakeViewPadding(left: 44);
+    tester.view.viewPadding = const FakeViewPadding(left: 44);
+    await tester.pumpAndSettle();
+    expect(tester.getRect(find.text('page:/')).left, greaterThanOrEqualTo(44));
+    expect(
+      tester.getRect(find.byType(RelativeTimeText)).left,
+      greaterThanOrEqualTo(44),
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('phone footer sits above the gesture bar', (tester) async {
+    // 背景延伸到螢幕底，但文字和連結要在手勢列上方。
+    await pump(tester, const Size(360, 800));
+    tester.view.padding = const FakeViewPadding(bottom: 24);
+    tester.view.viewPadding = const FakeViewPadding(bottom: 24);
+    await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.byType(TeamLinksBar)).bottom,
+      lessThanOrEqualTo(800 - 24),
+    );
+    final footer = find
+        .ancestor(
+          of: find.byType(TeamLinksBar),
+          matching: find.byType(Container),
+        )
+        .first;
+    expect(tester.getRect(footer).bottom, 800);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 }

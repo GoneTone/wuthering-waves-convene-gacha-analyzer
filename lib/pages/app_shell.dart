@@ -199,54 +199,66 @@ class _AppShellState extends ConsumerState<AppShell> {
         ),
         body: Column(
           children: [
+            // 標題列由 AppBar 自己避開安全區；內容區要自己避開橫向的開孔鏡頭，
+            // 底部交給狀態列處理。背景色仍延伸到螢幕邊緣。
             Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (!compact) ...[
-                    _Rail(
-                      selection: selection,
-                      isSettingsActive: isSettingsActive,
-                      isContributorsActive: isContributorsActive,
-                      extended: extendedRail,
-                      collapsedNoLabel: collapsedNoLabel,
-                      l: l,
-                    ),
-                    const VerticalDivider(thickness: 1, width: 1),
+              child: SafeArea(
+                top: false,
+                bottom: false,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (!compact) ...[
+                      _Rail(
+                        selection: selection,
+                        isSettingsActive: isSettingsActive,
+                        isContributorsActive: isContributorsActive,
+                        extended: extendedRail,
+                        collapsedNoLabel: collapsedNoLabel,
+                        l: l,
+                      ),
+                      const VerticalDivider(thickness: 1, width: 1),
+                    ],
+                    Expanded(child: widget.child),
                   ],
-                  Expanded(child: widget.child),
-                ],
+                ),
               ),
             ),
             // 手機開著鍵盤時高度很少（橫向約 50dp），先收起狀態列讓內容有空間。
             if (!(compact && MediaQuery.viewInsetsOf(context).bottom > 0))
               Container(
                 width: double.infinity,
-                // 手機排版的連結圖示已有 48dp 觸控區，不再加上下內距，狀態列維持 48dp。
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppSpacing.l,
-                  vertical: compact ? 0 : AppSpacing.xs * 1.5,
-                ),
                 color: tokens.surfaceCardHigh,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: activeData == null
-                          ? Text(
-                              l.footerNotSynced,
-                              style: Theme.of(context).textTheme.bodySmall,
-                              overflow: TextOverflow.ellipsis,
-                            )
-                          : RelativeTimeText(
-                              time: activeData.lastUpdated,
-                              templateBuilder: l.footerLastUpdated,
-                              style: Theme.of(context).textTheme.bodySmall,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                // 背景延伸到螢幕底與兩側，文字和連結避開手勢列與開孔鏡頭。
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    // 手機排版的連結圖示已有 48dp 觸控區，不再加上下內距，狀態列維持 48dp。
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.l,
+                      vertical: compact ? 0 : AppSpacing.xs * 1.5,
                     ),
-                    const SizedBox(width: AppSpacing.s),
-                    TeamLinksBar(compact: compact),
-                  ],
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: activeData == null
+                              ? Text(
+                                  l.footerNotSynced,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  overflow: TextOverflow.ellipsis,
+                                )
+                              : RelativeTimeText(
+                                  time: activeData.lastUpdated,
+                                  templateBuilder: l.footerLastUpdated,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                        ),
+                        const SizedBox(width: AppSpacing.s),
+                        TeamLinksBar(compact: compact),
+                      ],
+                    ),
+                  ),
                 ),
               ),
           ],
