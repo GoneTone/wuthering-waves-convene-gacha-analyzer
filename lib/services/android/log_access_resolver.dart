@@ -26,6 +26,9 @@ enum LogAccessUnavailable {
   /// 無線偵錯是關的，App 也沒有權限打開（手動開關模式）。
   wirelessDebuggingOff,
 
+  /// 目前的 Wi‑Fi 還沒允許無線偵錯：系統擋下開啟並跳出詢問視窗，要等玩家按「允許」。
+  networkNotAllowed,
+
   /// Android 10 以下沒有儲存空間權限。
   storagePermissionDenied,
 
@@ -67,13 +70,21 @@ final class LogAccessReady extends LogAccessOutcome {
 /// 沒有自動讀取方式。
 final class LogAccessBlocked extends LogAccessOutcome {
   /// 建立結果。
-  const LogAccessBlocked(this.reason, {this.rootDenied = false});
+  const LogAccessBlocked(
+    this.reason, {
+    this.rootDenied = false,
+    this.enabledWireless = false,
+  });
 
   /// 原因。
   final LogAccessUnavailable reason;
 
   /// 裝置有 `su` 但沒拿到 root 授權（被拒或沒按允許）；root 工具可能已記成永久拒絕而不再詢問。
   final bool rootDenied;
+
+  /// 這次判斷曾由 App 打開無線偵錯（原本是關的）。之後若由系統打開（例如玩家在詢問視窗按允許），
+  /// 重試時不能當成玩家原本就開著而在用完後留著。
+  final bool enabledWireless;
 }
 
 /// 本 App 的套件名稱（授權 `WRITE_SECURE_SETTINGS` 用）。
@@ -100,6 +111,7 @@ class LogAccessResolver {
     required this.makeConnector,
     this.discoverAttempts = 5,
     this.discoverRetryDelay = const Duration(seconds: 1),
+    this.enableSettleDelay = const Duration(milliseconds: 500),
   });
 
   /// 系統功能。
@@ -119,6 +131,9 @@ class LogAccessResolver {
 
   /// NSD 重試間隔。
   final Duration discoverRetryDelay;
+
+  /// 打開無線偵錯後等多久再讀回開關（系統擋下時會立刻改回關閉）。
+  final Duration enableSettleDelay;
 
   /// 本 resolver 的 logger。
   static final _log = Logger('capture.android');
@@ -196,6 +211,7 @@ class LogAccessResolver {
     final result = LogAccessBlocked(
       blocked?.reason ?? LogAccessUnavailable.unsupported,
       rootDenied: rootDenied,
+      enabledWireless: blocked?.enabledWireless ?? false,
     );
     _log.info(
       'log access blocked reason=${result.reason.name} rootDenied=$rootDenied '
@@ -262,6 +278,16 @@ class LogAccessResolver {
     if (!wasOn && !await platform.setAdbWifiEnabled(true)) {
       return const LogAccessBlocked(LogAccessUnavailable.wirelessDebuggingOff);
     }
+    if (!wasOn) {
+      await Future<void>.delayed(enableSettleDelay);
+      if (!await platform.isAdbWifiEnabled()) {
+        _log.info('wireless debugging not allowed on this network yet');
+        return const LogAccessBlocked(
+          LogAccessUnavailable.networkNotAllowed,
+          enabledWireless: true,
+        );
+      }
+    }
     final client = AdbShellClient(
       connect: await makeConnector(),
       rediscover: () async {
@@ -274,7 +300,10 @@ class LogAccessResolver {
     if (!await client.connectAny(await discoverConnectPorts())) {
       await client.close();
       if (!wasOn) await platform.setAdbWifiEnabled(false);
-      return const LogAccessBlocked(LogAccessUnavailable.adbConnectFailed);
+      return LogAccessBlocked(
+        LogAccessUnavailable.adbConnectFailed,
+        enabledWireless: !wasOn,
+      );
     }
     if (!await platform.hasWriteSecureSettings()) {
       try {

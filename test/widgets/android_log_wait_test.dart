@@ -47,6 +47,12 @@ class _Platform extends LogAccessPlatform {
   /// 被呼叫過的方法。
   final calls = <String>[];
 
+  /// 無線偵錯開關目前的狀態。
+  bool adbWifiOn = false;
+
+  @override
+  Future<bool> isAdbWifiEnabled() async => adbWifiOn;
+
   @override
   Future<bool> isGameInstalled() async => installed;
   @override
@@ -187,6 +193,8 @@ void main() {
           LogAccessUnavailable.storagePermissionDenied =>
             l.logUnavailableStorage,
           LogAccessUnavailable.unsupported => l.logUnavailableUnsupported,
+          LogAccessUnavailable.networkNotAllowed =>
+            l.logUnavailableNetworkNotAllowed,
         };
         expect(find.text(text), findsOneWidget);
         expect(find.text(l.progressManualInputLink), findsOneWidget);
@@ -237,6 +245,32 @@ void main() {
     // 玩家主動按的才可以在永久拒絕時改開系統設定頁。
     expect(platform.calls, ['requestStoragePermission settings=true']);
     expect(repo.retries, 1);
+  });
+
+  testWidgets('network not allowed: resume retries only once allowed', (
+    tester,
+  ) async {
+    // 玩家在系統視窗按「取消」也會回到本 App；這時重試會再跳一次詢問，變成關不掉的迴圈。
+    final l = await pump(
+      tester,
+      const WaitingForCapture(
+        logAccessUnavailable: LogAccessUnavailable.networkNotAllowed,
+      ),
+    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump(const Duration(seconds: 3));
+    expect(repo.retries, 0);
+
+    platform.adbWifiOn = true;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump(const Duration(seconds: 3));
+    expect(repo.retries, 1);
+
+    await tester.tap(find.text(l.actionRetry));
+    await tester.pump();
+    expect(repo.retries, 2, reason: 'the button asks again');
   });
 
   testWidgets('resuming the app retries when unavailable', (tester) async {

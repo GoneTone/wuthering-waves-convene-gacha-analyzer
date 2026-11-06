@@ -1123,6 +1123,10 @@
   "@logUnavailableWirelessOff": {
     "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
   },
+  "logUnavailableNetworkNotAllowed": "This Wi‑Fi network isn't allowed for wireless debugging yet. Tap Allow in the system prompt (tick \"Always allow on this network\" so it won't ask again) and the app continues automatically. If you closed the prompt, tap Retry.",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "Storage permission is needed to read the game log.",
   "@logUnavailableStorage": {
     "description": "Reason shown on Android 10 or older when storage permission was denied"

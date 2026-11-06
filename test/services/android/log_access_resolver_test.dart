@@ -17,6 +17,9 @@ class _FakePlatform extends LogAccessPlatform {
   bool wifi = true;
   bool adbWifiOn = false;
   bool canWriteSettings = true;
+
+  /// false 時模擬還沒允許無線偵錯的 Wi‑Fi：系統立刻把開關改回關閉並跳詢問。
+  bool networkTrusted = true;
   bool wss = true;
   bool storage = false;
   bool grantStorage = false;
@@ -33,7 +36,7 @@ class _FakePlatform extends LogAccessPlatform {
   Future<bool> setAdbWifiEnabled(bool enabled) async {
     if (!canWriteSettings) return false;
     adbWifiWrites.add(enabled);
-    adbWifiOn = enabled;
+    adbWifiOn = enabled && networkTrusted;
     return true;
   }
 
@@ -127,6 +130,7 @@ void main() {
     makeConnector: () async =>
         (port) async => connectable ? session : null,
     discoverRetryDelay: Duration.zero,
+    enableSettleDelay: Duration.zero,
   );
 
   test(
@@ -159,6 +163,31 @@ void main() {
     abort.complete();
     await Future<void>.delayed(Duration.zero);
     expect(root.closes, 0);
+  });
+
+  test(
+    'wi-fi not yet allowed for wireless debugging has its own reason',
+    () async {
+      // 換到沒允許過的網路時，系統會把開關改回關閉並跳詢問；這不是配對失效。
+      platform.networkTrusted = false;
+      final r = await resolver().resolve() as LogAccessBlocked;
+      expect(r.reason, LogAccessUnavailable.networkNotAllowed);
+      expect(r.enabledWireless, isTrue);
+    },
+  );
+
+  test('connect failure after turning wireless on is flagged', () async {
+    connectable = false;
+    final r = await resolver().resolve() as LogAccessBlocked;
+    expect(r.reason, LogAccessUnavailable.adbConnectFailed);
+    expect(r.enabledWireless, isTrue);
+  });
+
+  test('connect failure with wireless already on is not flagged', () async {
+    connectable = false;
+    platform.adbWifiOn = true;
+    final r = await resolver().resolve() as LogAccessBlocked;
+    expect(r.enabledWireless, isFalse);
   });
 
   test('root wins when su present and verified', () async {

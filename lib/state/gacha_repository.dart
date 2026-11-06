@@ -520,6 +520,7 @@ class GachaRepository extends Notifier<GachaState> {
     try {
       // 只有第一次判斷可以跳權限詢問；回到前景的自動重試只檢查，否則永久拒絕時會一直跳去設定頁。
       var requestPermissions = true;
+      var forceDisableAfterUse = _afterPairing;
       // 判斷途中玩家取消或手動送出就不等了（root 授權視窗最多等 60 秒）。
       final stop = Future.any<Object?>([
         logHit.future,
@@ -530,7 +531,7 @@ class GachaRepository extends Notifier<GachaState> {
             .read(logAccessResolverProvider)
             .resolve(
               preferred: ref.read(settingsProvider).logAccessMethod,
-              forceDisableAfterUse: _afterPairing,
+              forceDisableAfterUse: forceDisableAfterUse,
               requestPermissions: requestPermissions,
               abort: stop,
             );
@@ -558,6 +559,8 @@ class GachaRepository extends Notifier<GachaState> {
         if (_captureCancelRequested || !ref.mounted) return null;
         if (logHit.isCompleted) return await logHit.future;
         final blocked = outcome as LogAccessBlocked;
+        // 這次是 App 打開過無線偵錯；之後重試看到它開著，多半是系統（玩家按了允許）開的，用完要關回去。
+        if (blocked.enabledWireless) forceDisableAfterUse = true;
         state = state.copyWith(
           progress: WaitingForCapture(
             isFallback: isFallback,

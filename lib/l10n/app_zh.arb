@@ -891,6 +891,10 @@
   "@logUnavailableWirelessOff": {
     "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
   },
+  "logUnavailableNetworkNotAllowed": "這個 Wi‑Fi 還沒允許無線偵錯。請在系統視窗按「允許」（勾選「一律允許透過這個網路執行」之後就不會再問），就會自動繼續。如果已經關掉視窗，請按「重試」。",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "需要儲存空間權限才能讀取遊戲記錄。",
   "@logUnavailableStorage": {
     "description": "Reason shown on Android 10 or older when storage permission was denied"

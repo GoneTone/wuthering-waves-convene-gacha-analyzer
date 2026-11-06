@@ -36,7 +36,9 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
   void initState() {
     super.initState();
     _installed = ref.read(logAccessPlatformProvider).isGameInstalled();
-    _lifecycle = AppLifecycleListener(onResume: _retryIfBlocked);
+    _lifecycle = AppLifecycleListener(
+      onResume: () => unawaited(_retryIfBlocked()),
+    );
   }
 
   @override
@@ -46,9 +48,28 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
   }
 
   /// 沒有自動讀取方式時請 repository 重新判斷。
-  void _retryIfBlocked() {
-    if (widget.progress.logAccessUnavailable == null) return;
-    unawaited(ref.read(gachaRepositoryProvider.notifier).retryLogAccess());
+  ///
+  /// Wi‑Fi 還沒允許無線偵錯時，玩家在系統視窗按「取消」也會回到本 App；這時重試會再跳一次詢問，
+  /// 變成關不掉的迴圈，所以只有系統已經打開無線偵錯（玩家按了允許）才重試。
+  Future<void> _retryIfBlocked() async {
+    final reason = widget.progress.logAccessUnavailable;
+    if (reason == null) return;
+    if (reason == LogAccessUnavailable.networkNotAllowed &&
+        !await _wirelessTurnedOn()) {
+      return;
+    }
+    if (!mounted) return;
+    await ref.read(gachaRepositoryProvider.notifier).retryLogAccess();
+  }
+
+  /// 等系統打開無線偵錯（按「允許」後開關會晚一點才變），最多約 2 秒。
+  Future<bool> _wirelessTurnedOn() async {
+    final platform = ref.read(logAccessPlatformProvider);
+    for (var i = 0; i < 5; i++) {
+      if (await platform.isAdbWifiEnabled()) return true;
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+    }
+    return false;
   }
 
   /// 結束這次更新（等待對話框關閉）後開啟「讀取遊戲記錄」設定頁；配對完成後設定頁會重新開始更新。
@@ -135,6 +156,12 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
               onPressed: _openSetup,
               child: Text(l.actionRepair),
             ),
+            LogAccessUnavailable.networkNotAllowed => FilledButton(
+              onPressed: ref
+                  .read(gachaRepositoryProvider.notifier)
+                  .retryLogAccess,
+              child: Text(l.actionRetry),
+            ),
             _ => null,
           },
           manualLink,
@@ -191,14 +218,16 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
   }
 
   /// 各原因對應的說明文字。
-  static String _reasonText(LogAccessUnavailable reason, AppLocalizations l) =>
-      switch (reason) {
-        LogAccessUnavailable.notPaired => l.logUnavailableNotPaired,
-        LogAccessUnavailable.noWifi => l.logUnavailableNoWifi,
-        LogAccessUnavailable.adbConnectFailed => l.logUnavailableAdbFailed,
-        LogAccessUnavailable.wirelessDebuggingOff =>
-          l.logUnavailableWirelessOff,
-        LogAccessUnavailable.storagePermissionDenied => l.logUnavailableStorage,
-        LogAccessUnavailable.unsupported => l.logUnavailableUnsupported,
-      };
+  static String _reasonText(
+    LogAccessUnavailable reason,
+    AppLocalizations l,
+  ) => switch (reason) {
+    LogAccessUnavailable.notPaired => l.logUnavailableNotPaired,
+    LogAccessUnavailable.noWifi => l.logUnavailableNoWifi,
+    LogAccessUnavailable.adbConnectFailed => l.logUnavailableAdbFailed,
+    LogAccessUnavailable.wirelessDebuggingOff => l.logUnavailableWirelessOff,
+    LogAccessUnavailable.storagePermissionDenied => l.logUnavailableStorage,
+    LogAccessUnavailable.unsupported => l.logUnavailableUnsupported,
+    LogAccessUnavailable.networkNotAllowed => l.logUnavailableNetworkNotAllowed,
+  };
 }

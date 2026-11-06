@@ -312,6 +312,33 @@ void main() {
     await done;
   });
 
+  test(
+    'retry after the app had turned wireless on turns it off after use',
+    () async {
+      // 玩家在系統視窗按「允許」後是系統把無線偵錯打開的；重試時不能當成玩家原本就開著而留著。
+      final ready = _Ready();
+      resolver.results
+        ..add(
+          () => const LogAccessBlocked(
+            LogAccessUnavailable.networkNotAllowed,
+            enabledWireless: true,
+          ),
+        )
+        ..add(ready.outcome);
+      final r = await repo();
+      final done = r.update();
+      await _until(
+        () => (progress() as WaitingForCapture?)?.logAccessUnavailable != null,
+      );
+      await r.retryLogAccess();
+      await _until(() => watch.hits.isNotEmpty);
+      expect(resolver.calls[0].force, isFalse);
+      expect(resolver.calls[1].force, isTrue);
+      await r.cancelCapture();
+      await done;
+    },
+  );
+
   test('blocked: waits for manual input without watching', () async {
     resolver.results.add(
       () => const LogAccessBlocked(LogAccessUnavailable.notPaired),
