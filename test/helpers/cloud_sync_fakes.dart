@@ -1,5 +1,6 @@
 import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_remote.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/token_store.dart';
@@ -48,8 +49,8 @@ class FakeAuthService extends GoogleAuthService {
   /// restore() 被呼叫的次數，供斷言「reauthRequired 後不再重試」用。
   int restoreCalls = 0;
 
-  /// revokeToken() 最後一次收到的 token，供斷言用；未呼叫則為 null。
-  String? lastRevokedToken;
+  /// signIn 是否要模擬使用者取消而拋 [CloudLinkCancelledException]。
+  bool signInThrowsCancelled = false;
 
   /// signIn() 最後一次收到的自訂完成頁 HTML，供斷言用；未傳則為 null。
   String? lastPostAuthPage;
@@ -61,6 +62,9 @@ class FakeAuthService extends GoogleAuthService {
   }) async {
     lastPostAuthPage = postAuthPage;
     openUrl('https://accounts.google.com/consent');
+    if (signInThrowsCancelled) {
+      throw const CloudLinkCancelledException('canceled');
+    }
     if (signInThrowsScopeMissing) throw const CloudScopeMissingException();
     return CloudAuthSession(
       client: FakeAuthClient(),
@@ -79,11 +83,6 @@ class FakeAuthService extends GoogleAuthService {
 
   @override
   Future<void> signOut() async => store.deleteRefreshToken();
-
-  @override
-  Future<void> revokeToken(String refreshToken) async {
-    lastRevokedToken = refreshToken;
-  }
 }
 
 /// 記錄呼叫的 fake 遠端。

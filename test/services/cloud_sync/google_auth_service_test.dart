@@ -1,8 +1,30 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
 
+import '../../helpers/cloud_sync_fakes.dart';
+
 void main() {
+  test(
+    'signOut deletes the stored token without any network request',
+    () async {
+      var requests = 0;
+      final store = InMemoryTokenStore()..token = 'refresh-1';
+      final svc = GoogleAuthService(
+        tokenStore: store,
+        baseClientFactory: () => MockClient((_) async {
+          requests++;
+          return http.Response('', 200);
+        }),
+      );
+      await svc.unlink();
+      expect(store.token, isNull);
+      expect(requests, 0);
+    },
+  );
+
   group('isInvalidGrant', () {
     test('訊息含 invalid_grant → true', () {
       expect(

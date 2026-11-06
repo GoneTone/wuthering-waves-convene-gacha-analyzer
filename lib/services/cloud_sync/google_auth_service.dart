@@ -1,8 +1,8 @@
-import 'package:googleapis/oauth2/v2.dart' as oauth2;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/token_store.dart';
 
@@ -107,8 +107,10 @@ class _OwningAuthClient extends http.BaseClient implements AuthClient {
   }
 }
 
-/// Google OAuth 授權服務：登入（系統瀏覽器 loopback）、以 refresh token 還原、登出。
-class GoogleAuthService {
+/// Google OAuth 授權服務（Windows）：登入（系統瀏覽器 loopback）、以 refresh token 還原、登出。
+///
+/// 登出只刪本機 token，不向 Google 撤銷授權（撤銷會讓同一 Cloud 專案下所有裝置失效）。
+class GoogleAuthService implements CloudAuth {
   /// 建立 [GoogleAuthService]。
   GoogleAuthService({
     required this.tokenStore,
@@ -150,17 +152,16 @@ class GoogleAuthService {
         throw StateError('OAuth flow returned no refresh token');
       }
       // Google 逐項授權（granular consent）允許使用者漏勾 Drive 權限並照樣發
-      // token；此時當場 revoke 並拋出，讓使用者立刻得知要重新授權，
+      // token；此時直接拋出（不撤銷），讓使用者立刻得知要重新授權，
       // 而不是等第一輪同步 403 才發現。
       final granted = client.credentials.scopes;
       if (!hasRequiredCloudScopes(granted)) {
         _log.warning(
           'signIn: drive.appdata not granted (granted=${granted.join(' ')})',
         );
-        await revokeToken(refresh);
         throw const CloudScopeMissingException();
       }
-      final email = await _fetchEmail(client);
+      final email = await fetchCloudEmail(client);
       _log.info('signIn ok');
       return CloudAuthSession(
         client: client,
@@ -204,44 +205,32 @@ class GoogleAuthService {
     }
   }
 
-  /// 登出：向 Google revoke（盡力而為，失敗不阻擋）並刪除本機 refresh token。
+  /// 登出：只刪除本機 refresh token，不向 Google 撤銷。
   Future<void> signOut() async {
-    final refresh = await tokenStore.readRefreshToken();
-    if (refresh != null) {
-      await revokeToken(refresh);
-    }
     await tokenStore.deleteRefreshToken();
-    _log.info('signOut done');
+    _log.info('signOut done (local only)');
   }
 
-  /// 向 Google revoke 指定的 refresh token（盡力而為，失敗僅記警告不拋出；
-  /// 絕不把 token 內容寫進 log）。
-  Future<void> revokeToken(String refreshToken) async {
-    final base = baseClientFactory();
-    try {
-      final res = await base.post(
-        Uri.parse('https://oauth2.googleapis.com/revoke'),
-        body: {'token': refreshToken},
-      );
-      if (res.statusCode == 200) {
-        _log.info('revoke ok');
-      } else {
-        _log.warning('revoke failed (ignored): HTTP ${res.statusCode}');
-      }
-    } catch (e) {
-      _log.warning('revoke failed (ignored): $e');
-    } finally {
-      base.close();
-    }
+  @override
+  bool get keepsClientAcrossRounds => true;
+
+  @override
+  Future<CloudLinkResult> link({
+    required void Function(String url) openUrl,
+    String? postAuthPage,
+  }) async {
+    final session = await signIn(openUrl, postAuthPage: postAuthPage);
+    return CloudLinkResult(
+      client: session.client,
+      email: session.email,
+      commit: () => tokenStore.writeRefreshToken(session.refreshToken),
+    );
   }
 
-  /// 以 userinfo API 取得已授權帳號的 email。
-  Future<String> _fetchEmail(http.Client client) async {
-    final info = await oauth2.Oauth2Api(client).userinfo.get();
-    final email = info.email;
-    if (email == null || email.isEmpty) {
-      throw StateError('userinfo returned no email');
-    }
-    return email;
-  }
+  @override
+  Future<http.Client?> restoreClient({required String expectedEmail}) =>
+      restore();
+
+  @override
+  Future<void> unlink() => signOut();
 }

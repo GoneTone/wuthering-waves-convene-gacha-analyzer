@@ -12,6 +12,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
@@ -38,6 +39,30 @@ class _DelayedSignInAuthService extends FakeAuthService {
     openUrl('https://accounts.google.com/consent');
     return _completer.future;
   }
+}
+
+/// 不跨輪沿用 client 的 fake 授權，記錄 restoreClient 收到的 email。
+class _NonPersistentAuth implements CloudAuth {
+  /// restoreClient 每次收到的 expectedEmail。
+  final restoredEmails = <String>[];
+
+  @override
+  bool get keepsClientAcrossRounds => false;
+
+  @override
+  Future<CloudLinkResult> link({
+    required void Function(String url) openUrl,
+    String? postAuthPage,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<http.Client?> restoreClient({required String expectedEmail}) async {
+    restoredEmails.add(expectedEmail);
+    return FakeAuthClient();
+  }
+
+  @override
+  Future<void> unlink() async {}
 }
 
 /// 產生雲端側 bundle JSON。
@@ -315,7 +340,7 @@ void main() {
     expect(authService.restoreCalls, restoreCallsAfterStart);
   });
 
-  test('cancelLink 後遲到的授權結果不寫入 token store、原地 revoke (I1)', () async {
+  test('cancelLink 後遲到的授權結果不寫入 token store、不撤銷 (I1)', () async {
     final completer = Completer<CloudAuthSession>();
     final delayedAuth = _DelayedSignInAuthService(tokenStore, completer);
     final container = ProviderContainer(
@@ -358,10 +383,61 @@ void main() {
     await linkFuture;
 
     expect(tokenStore.token, isNull);
-    expect(delayedAuth.lastRevokedToken, 'refresh-1');
     expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
     expect(container.read(settingsProvider).cloudAccountEmail, isNull);
   });
+
+  test('link cancelled by the user → idle without error', () async {
+    authService.signInThrowsCancelled = true;
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+    await container.read(cloudSyncProvider.notifier).link();
+
+    final state = container.read(cloudSyncProvider);
+    expect(state.phase, CloudSyncPhase.idle);
+    expect(state.errorToken, isNull);
+    expect(container.read(settingsProvider).cloudAccountEmail, isNull);
+    expect(tokenStore.token, isNull);
+  });
+
+  test(
+    'non-persistent auth → client restored again on the next round',
+    () async {
+      final auth = _NonPersistentAuth();
+      final container = ProviderContainer(
+        overrides: [
+          appVersionProvider.overrideWithValue('1.5.0'),
+          noGameDirOverride,
+          gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
+          gachaCaptureProvider.overrideWithValue(FakeCapture()),
+          cancellableHttpClientFactoryProvider.overrideWithValue(
+            () => CancellableHttpClient(
+              client: MockClient((_) async => http.Response('', 500)),
+              cancel: () {},
+            ),
+          ),
+          tokenStoreProvider.overrideWithValue(tokenStore),
+          cloudAuthProvider.overrideWithValue(auth),
+          cloudSyncRemoteFactoryProvider.overrideWithValue((_) => remote),
+          cloudSyncUrlOpenerProvider.overrideWithValue((_) {}),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(settingsProvider.notifier).waitForLoad();
+      await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+      await container
+          .read(settingsProvider.notifier)
+          .setCloudAccount('u@example.com');
+
+      final notifier = container.read(cloudSyncProvider.notifier);
+      await notifier.syncNow(manual: true);
+      await notifier.syncNow(manual: true);
+
+      expect(auth.restoredEmails, ['u@example.com', 'u@example.com']);
+    },
+  );
 
   test('同步合併出新紀錄 → 觸發補圖並以進度／完成摘要呈現', () async {
     remote.content = _cloudBundleJsonWithRecord('100000001');
