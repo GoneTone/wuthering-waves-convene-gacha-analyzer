@@ -173,6 +173,9 @@ class LogAccessChannel(private val activity: Activity, messenger: BinaryMessenge
                 ),
             )
             .putExtra(":settings:fragment_args_key", "toggle_adb_wireless")
+            // 開發人員選項處理完磚的 Intent 後留在底下，回到它時會再開一次無線偵錯頁，
+            // 返回鍵永遠回不到本 App；不留歷史讓它開完頁面就結束。
+            .addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
         if (startOrLog(direct)) return
         startOrLog(
             Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
