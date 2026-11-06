@@ -32,6 +32,17 @@ String _url(String id) =>
     'https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record'
     '?svr_id=s&player_id=1&lang=en&gacha_id=1&resources_id=r&record_id=$id';
 
+/// 選檔後在背景 isolate 解碼，假時鐘不會推進它；用真實時間輪詢到 [done] 成立（最多約 5 秒）。
+Future<void> _untilDecoded(WidgetTester tester, bool Function() done) async {
+  for (var i = 0; i < 250 && !done(); i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await tester.pump();
+  }
+  await tester.pumpAndSettle();
+}
+
 void main() {
   late _RecordingRepository repo;
 
@@ -125,14 +136,17 @@ void main() {
       pick: () async => encodeClientLog('noise ${_url('log1')}\n'),
     );
     await tester.tap(find.text(l.manualCredentialPickLog));
-    await tester.pumpAndSettle();
+    await _untilDecoded(tester, () => repo.submitted.isNotEmpty);
     expect(repo.submitted.single.recordId, 'log1');
   });
 
   testWidgets('Client.log without url shows the log error', (tester) async {
     final l = await open(tester, pick: () async => encodeClientLog('x\n'));
     await tester.tap(find.text(l.manualCredentialPickLog));
-    await tester.pumpAndSettle();
+    await _untilDecoded(
+      tester,
+      () => find.text(l.manualCredentialNotFoundInLog).evaluate().isNotEmpty,
+    );
     expect(find.text(l.manualCredentialNotFoundInLog), findsOneWidget);
     expect(repo.submitted, isEmpty);
   });

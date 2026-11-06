@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,7 +99,9 @@ class _ManualCredentialDialogState
       return;
     }
     if (bytes == null || !mounted) return;
-    final cred = credentialFromClientLogBytes(bytes);
+    // Client.log 可能有好幾 MB，逐位元組解碼放在 UI isolate 會卡住畫面。
+    final cred = await compute(credentialFromClientLogBytes, bytes);
+    if (!mounted) return;
     if (cred == null) {
       _log.info(
         'manual input rejected: no convene url in file bytes=${bytes.length}',
