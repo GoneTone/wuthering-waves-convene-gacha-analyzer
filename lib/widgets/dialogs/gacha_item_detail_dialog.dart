@@ -15,8 +15,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.d
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/encore_entry_text.dart';

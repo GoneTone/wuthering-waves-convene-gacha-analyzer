@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart' show DefaultCupertinoLocalizations;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
@@ -173,6 +174,7 @@ Future<void> generateAndShareImage({
 
 /// 依 [action] 把 [png] 存檔、分享或複製，並以結果視窗回報。
 /// 取消存檔與分享成功不彈視窗；Android 存檔訊息只顯示檔名、不給開啟資料夾。
+@visibleForTesting
 Future<void> deliverShareImage({
   required BuildContext context,
   required AppLocalizations l,

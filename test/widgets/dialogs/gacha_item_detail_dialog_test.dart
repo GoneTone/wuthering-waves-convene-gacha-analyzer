@@ -9,6 +9,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
@@ -1456,6 +1457,76 @@ void main() {
       expect(find.text(l.shareFailed), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 2200));
       await tester.pumpAndSettle();
+    });
+
+    /// 開 dialog、選單點 [label]，並等動作與 toast 動畫跑完。
+    Future<void> runMenuAction(WidgetTester tester, String label) async {
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await openImageMenu(tester);
+      await tester.tap(find.text(label));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    /// 結束前 flush toast 的停留計時器。
+    Future<void> flushToast(WidgetTester tester) async {
+      await tester.pump(const Duration(milliseconds: 2200));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Windows save toast shows the full path and logs the outcome', (
+      tester,
+    ) async {
+      addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSaveDialog = (_, _, _, _, _) async => r'C:\out\Char_造型A.png';
+      final messages = <String>[];
+      final sub = Logger.root.onRecord
+          .where((r) => r.loggerName == 'gacha.itemimage.save')
+          .listen((r) => messages.add(r.message));
+      addTearDown(sub.cancel);
+      await seedCharacterWithSkin(tester);
+      await runMenuAction(tester, '儲存圖片');
+      final l = AppLocalizations.of(
+        tester.element(find.byType(GachaItemDetailDialog)),
+      )!;
+      expect(
+        find.text(l.itemImageSavedTo(r'C:\out\Char_造型A.png')),
+        findsOneWidget,
+      );
+      expect(messages, [
+        'item image action=save name=Char_造型A.png outcome=ok',
+      ]);
+      await flushToast(tester);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+    testWidgets('Android save toast shows only the file name', (tester) async {
+      addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSaveDialog = (_, _, _, _, _) async =>
+          '/document/primary:Download/Char_造型A.png';
+      await seedCharacterWithSkin(tester, android: true);
+      await runMenuAction(tester, '儲存圖片');
+      final l = AppLocalizations.of(
+        tester.element(find.byType(GachaItemDetailDialog)),
+      )!;
+      expect(find.text(l.itemImageSavedTo('Char_造型A.png')), findsOneWidget);
+      await flushToast(tester);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('sharing successfully shows no toast', (tester) async {
+      addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSharer = (_, _, _) async {};
+      await seedCharacterWithSkin(tester, android: true);
+      await runMenuAction(tester, '分享');
+      expect(find.byKey(const ValueKey('dialogToast')), findsNothing);
     });
 
     testWidgets('點重抓圖片 → 造型圖切回 loading（spinner 出現）', (tester) async {

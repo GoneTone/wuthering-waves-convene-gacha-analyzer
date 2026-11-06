@@ -88,4 +88,18 @@ void main() {
 
     expect(find.text(l.shareImageCopiedOnly), findsOneWidget);
   });
+
+  testWidgets('複製失敗 → 顯示 shareImageCopyFailed', (t) async {
+    pngClipboardWriter = (b) async => false;
+    final l = await _run(t, ShareImageAction.copy);
+
+    expect(find.text(l.shareImageCopyFailed), findsOneWidget);
+  });
+
+  testWidgets('複製丟例外 → 顯示 shareImageCopyFailed', (t) async {
+    pngClipboardWriter = (b) async => throw StateError('boom');
+    final l = await _run(t, ShareImageAction.copy);
+
+    expect(find.text(l.shareImageCopyFailed), findsOneWidget);
+  });
 }
