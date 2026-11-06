@@ -188,6 +188,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 **直接跳到「無線偵錯」頁**
 - 系統設定沒有公開「無線偵錯」頁的 Activity。但快速設定磚長按的入口可以用：送 `android.service.quicksettings.action.QS_TILE_PREFERENCES` 給 `com.android.settings/.Settings$DevelopmentSettingsActivity`，並帶 `Intent.EXTRA_COMPONENT_NAME = com.android.settings/.development.qstile.DevelopmentTiles$WirelessDebugging`，就會直接開「無線偵錯」頁。這不是公開保證的介面，其他廠牌要另外驗證。
+- **這個 intent 一定要加 `FLAG_ACTIVITY_NO_HISTORY`**：開發人員選項處理完磚的 intent 後會留在無線偵錯頁底下，每次回到它（例如橫向 App 跳過去、返回時被重建）都會再開一次無線偵錯頁，玩家按返回永遠回不到 App。加上 NO_HISTORY 讓它開完頁面就結束，返回一次就回到 App。退回開發人員選項的那條路沒有這個問題。
 - Shizuku 的做法是開 `Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS`，帶 `":settings:fragment_args_key" = "toggle_adb_wireless"`，系統會捲到「無線偵錯」那一項。把這個參數也加在上面的 intent 上，系統不認得直接開頁時，至少會捲到正確位置。
 - 用 `adb shell am start` 測試時，PowerShell 要注意 `$` 的跳脫：在雙引號字串裡用 `` `$ ``，不要用 `\$`，否則 `\` 會被原樣送到手機上，導致找不到 Activity。
 
@@ -201,7 +202,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 **一鍵恢復與重開機**
 - 首次連上 shell 後執行 `pm grant <套件> android.permission.WRITE_SECURE_SETTINGS`。**重開機後授權仍在**；無線偵錯會被系統關掉，但 App 可以自己再打開，約 2.2 秒拿到 shell。
 - **NSD 會回傳已關閉的舊連接埠**：無線偵錯重新開啟後連接埠會換，NSD 結果裡舊的記錄還在，而且常排在前面，連過去會 `Connection refused`。要收集約 2 秒內的所有結果，逐一嘗試連線。
-- **緊接著開下一個 shell 串流會失敗**：前一個串流剛結束就立刻開下一個，`flutter_adb` 偶爾回 `Stream open failed or refused by remote peer`，稍等再開就正常。指令要排隊執行，失敗時延遲重試一次。
+- **緊接著開下一個 shell 串流會失敗**：前一個串流剛結束就立刻開下一個，`flutter_adb` 偶爾回 `Stream open failed or refused by remote peer`，稍等再開就正常。指令要排隊執行，失敗時延遲重試一次。實機上連上後的第一條指令常卡滿 10 秒才失敗，所以每條指令前都補足 250 ms 間隔，比事後重試快得多。
 - 鳴潮的 `Client.log` 實測將近 10 MB，透過 shell 讀時要只讀新增的部分（`stat -c %s` 取長度，`tail -c +N | head -c M` 取範圍）。
 
 **飛行模式取得網址（鳴潮限定，原神要另外驗證）**
@@ -212,3 +213,31 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - Android：上傳 `Client.log`（由網站解碼）、使用 Ascent App（原理同我們的無線偵錯）。
 - Windows：執行從 GitHub 下載腳本的 PowerShell 指令，或上傳 `Client.log`。我們的 App 能直接讀檔，不需要叫使用者執行外部腳本。
 
+### 20. 實作後在實機與模擬器才發現的問題（通用，2026-11-06）
+
+**權限與系統限制**
+- **要宣告 `ACCESS_NETWORK_STATE`**：沒宣告時 `ConnectivityManager.getNetworkCapabilities` 會丟 SecurityException，判斷 Wi-Fi 的程式回 false，結果被誤判成「沒連 Wi-Fi」。
+- **背景 App 的網路會被擋（`APP_BACKGROUND`）**：玩家還在遊戲裡時 App 就讀到網址，此時立刻抓資料會直接 `Failed host lookup`。要等玩家切回本 App（`AppLifecycleListener` 的 resume）才開始抓，等待時畫面提示「請回到本 App」。
+- **儲存權限被「不要再詢問」後，再要求也不會跳視窗**（Android 10 以下的直接讀檔）：被拒時若 `shouldShowRequestPermissionRationale` 為 false，就直接開本 App 的系統設定頁（`ACTION_APPLICATION_DETAILS_SETTINGS`），玩家開好權限回到 App 時自動重試。
+- **能自動開關的裝置被收回 `WRITE_SECURE_SETTINGS` 後，下次連上會自動補回**（連上 shell 時順便 `pm grant`）。設定頁的配對狀態要在每次讀取結束後重讀，否則開著的設定頁會一直顯示「需手動開啟」。
+- **解除配對只能刪掉本機金鑰**：系統「已配對的裝置」清單裡的紀錄 shell 刪不掉，會留著（不影響使用，重新配對也正常）。
+
+**root**
+- **root 時每條指令都 `su -c` 會讓 root 工具每秒跳一次授權提示**：改成整次更新只開一個常駐 `su`，指令從 stdin 送進去，以隨機結束標記切出每條指令的輸出。
+- **Google APIs 模擬器內建的 `su`（`4750 root:shell`）一般 App 用不了**：SELinux 連 `stat` 都擋，`File('/system/xbin/su').exists()` 回 false，所以會直接略過 root，不會白等授權逾時。要實測真正的 root 讀取，得用 Magisk root 過的裝置或模擬器（例如 rootAVD）。
+
+**配對與輸入**
+- **注音輸入法會把組字中的注音一起送進 RemoteInput**：配對碼只保留數字（`filter { it.isDigit() }`）。
+- **橫幅通知幾秒就收起**：玩家來不及點「配對」時要從通知欄拉下來找；教學文字寫「從螢幕頂端往下拉」是對的。
+- **輸入法的自動校正會改網址**：手動輸入欄位要設 `keyboardType: TextInputType.url`、`autocorrect: false`、`enableSuggestions: false`，否則 `&lang=` 會被改成 `&Lang=`，網址就失效了。
+
+**版面**
+- 手機橫向時對話框高度只剩約 390，等待畫面放不下，`AppDialog` 要開 `scrollable: true`。
+- 英文標題很長（「Can't read convene history automatically」），標題列 `Row` 裡的文字要包 `Flexible` 才會換行。
+
+### 21. 用 adb 測試的小技巧（通用）
+
+- **Git Bash 會把 `/sdcard/...` 轉成 Windows 路徑**：送給 `adb shell`、`adb push` 的裝置路徑前要先 `export MSYS_NO_PATHCONV=1`。
+- **假的 `Client.log`**：鳴潮的混淆規則是明文位元組為偶數就 XOR `0xA5`、奇數就 XOR `0xEF`，用這個規則就能自己產生測試檔。推到 `/sdcard/Android/data/<遊戲套件>/files/UE4Game/Client/Client/Saved/Logs/Client.log`，再用 `cat hit.log >> Client.log` 模擬遊戲寫入新網址。
+- **`adb shell input text` 會受輸入法影響**：注音輸入法下數字會變成注音符號，要先切到數字鍵盤再點按鍵。`&` 在裝置 shell 的雙引號內不需要跳脫，加了 `\` 會被原樣輸入。
+- **ROG 手機閒置時可能自動進入「鎖定觸控模式」**，要雙指上滑才能解除，adb 做不到，需要人工操作。
