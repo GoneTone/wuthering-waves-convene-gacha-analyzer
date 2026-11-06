@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -21,6 +22,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/client_log_watch.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/adb_pairing.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_foreground.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
@@ -153,7 +155,8 @@ void main() {
   late ProviderContainer container;
   late bool failFirstPool;
   late _Foreground foreground;
-  late ProviderContainer Function({bool android}) makeContainer;
+  late ProviderContainer Function({bool android, List<Override> extra})
+  makeContainer;
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('repo_android_');
@@ -190,23 +193,25 @@ void main() {
         headers: {'content-type': 'application/json'},
       );
     });
-    makeContainer = ({bool android = true}) => ProviderContainer(
-      overrides: [
-        noGameDirOverride,
-        isAndroidProvider.overrideWithValue(android),
-        appForegroundProvider.overrideWithValue(foreground),
-        logAccessResolverProvider.overrideWithValue(resolver),
-        clientLogWatchProvider.overrideWithValue(watch),
-        gachaCaptureProvider.overrideWithValue(capture),
-        gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
-        gachaFetcherProvider.overrideWithValue(
-          GachaFetcher(rateLimit: Duration.zero),
-        ),
-        cancellableHttpClientFactoryProvider.overrideWithValue(
-          () => CancellableHttpClient(client: mock, cancel: () {}),
-        ),
-      ],
-    );
+    makeContainer = ({bool android = true, List<Override> extra = const []}) =>
+        ProviderContainer(
+          overrides: [
+            ...extra,
+            noGameDirOverride,
+            isAndroidProvider.overrideWithValue(android),
+            appForegroundProvider.overrideWithValue(foreground),
+            logAccessResolverProvider.overrideWithValue(resolver),
+            clientLogWatchProvider.overrideWithValue(watch),
+            gachaCaptureProvider.overrideWithValue(capture),
+            gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
+            gachaFetcherProvider.overrideWithValue(
+              GachaFetcher(rateLimit: Duration.zero),
+            ),
+            cancellableHttpClientFactoryProvider.overrideWithValue(
+              () => CancellableHttpClient(client: mock, cancel: () {}),
+            ),
+          ],
+        );
     container = makeContainer();
   });
 
@@ -245,6 +250,35 @@ void main() {
     );
     expect(progress(), isA<UpdateCompleted>());
     expect((progress()! as UpdateCompleted).wirelessDebuggingLeftOn, isFalse);
+  });
+
+  test('refreshes pairing status after connecting', () async {
+    // 連上時可能順便補回授權，設定頁開著的話要重讀狀態。
+    var computes = 0;
+    container.dispose();
+    container = makeContainer(
+      extra: [
+        wirelessPairingStatusProvider.overrideWith((ref) async {
+          computes++;
+          return (paired: true, canToggle: true);
+        }),
+      ],
+    );
+    final sub = container.listen(wirelessPairingStatusProvider, (_, _) {});
+    await container.read(wirelessPairingStatusProvider.future);
+    expect(computes, 1);
+
+    final ready = _Ready();
+    resolver.results.add(ready.outcome);
+    final r = await repo();
+    final done = r.update();
+    await _until(() => watch.hits.isNotEmpty);
+    watch.hits[0].complete(_cred());
+    await done;
+
+    await container.read(wirelessPairingStatusProvider.future);
+    expect(computes, 2);
+    sub.close();
   });
 
   test('blocked: waits for manual input without watching', () async {

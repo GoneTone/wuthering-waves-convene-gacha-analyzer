@@ -23,6 +23,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/game_dir_locator.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/adb_pairing.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/client_log_watch.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_language_converter.dart';
@@ -601,7 +602,11 @@ class GachaRepository extends Notifier<GachaState> {
       _logAccessRetry = null;
       await healthSub?.cancel();
       await _stopClientLogWatch();
-      if (ready != null && await ready.release()) _wirelessLeftOn = true;
+      if (ready != null) {
+        if (await ready.release()) _wirelessLeftOn = true;
+        // 連上時可能順便補回授權，設定頁的配對狀態要重讀。
+        if (ref.mounted) ref.invalidate(wirelessPairingStatusProvider);
+      }
     }
   }
 
