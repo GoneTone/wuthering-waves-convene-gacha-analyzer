@@ -86,8 +86,12 @@ class LogAccessPlatform {
   Future<bool> hasStoragePermission() => _call('hasStoragePermission', false);
 
   /// 請求讀取外部儲存空間的權限，回傳最終是否允許。
-  Future<bool> requestStoragePermission() =>
-      _call('requestStoragePermission', false);
+  ///
+  /// [openSettingsIfBlocked] 為 true 時（玩家按「重新授權」），系統已不再詢問就改開本 App 的系統設定頁。
+  Future<bool> requestStoragePermission({bool openSettingsIfBlocked = false}) =>
+      _call('requestStoragePermission', false, {
+        'openSettingsIfBlocked': openSettingsIfBlocked,
+      });
 
   /// 是否安裝了國際服鳴潮。
   Future<bool> isGameInstalled() => _call('isGameInstalled', false);

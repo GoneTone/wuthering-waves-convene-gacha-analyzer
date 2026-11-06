@@ -518,13 +518,17 @@ class GachaRepository extends Notifier<GachaState> {
     CaptureSession? watch;
     StreamSubscription<bool>? healthSub;
     try {
+      // 只有第一次判斷可以跳權限詢問；回到前景的自動重試只檢查，否則永久拒絕時會一直跳去設定頁。
+      var requestPermissions = true;
       while (true) {
         final outcome = await ref
             .read(logAccessResolverProvider)
             .resolve(
               preferred: ref.read(settingsProvider).logAccessMethod,
               forceDisableAfterUse: _afterPairing,
+              requestPermissions: requestPermissions,
             );
+        requestPermissions = false;
         if (outcome is LogAccessReady) {
           ready = outcome;
           if (_captureCancelRequested || !ref.mounted) return null;

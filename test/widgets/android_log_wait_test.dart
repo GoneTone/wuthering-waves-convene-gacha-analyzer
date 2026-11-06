@@ -59,8 +59,10 @@ class _Platform extends LogAccessPlatform {
   Future<void> openWirelessDebugging() async =>
       calls.add('openWirelessDebugging');
   @override
-  Future<bool> requestStoragePermission() async {
-    calls.add('requestStoragePermission');
+  Future<bool> requestStoragePermission({
+    bool openSettingsIfBlocked = false,
+  }) async {
+    calls.add('requestStoragePermission settings=$openSettingsIfBlocked');
     return true;
   }
 }
@@ -211,7 +213,8 @@ void main() {
     );
     await tester.tap(find.text(l.actionRegrantStorage));
     await tester.pump();
-    expect(platform.calls, ['requestStoragePermission']);
+    // 玩家主動按的才可以在永久拒絕時改開系統設定頁。
+    expect(platform.calls, ['requestStoragePermission settings=true']);
     expect(repo.retries, 1);
   });
 

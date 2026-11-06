@@ -42,8 +42,16 @@ class _FakePlatform extends LogAccessPlatform {
   Future<List<int>> discoverAdbConnectPorts() async => ports;
   @override
   Future<bool> hasStoragePermission() async => storage;
+
+  /// requestStoragePermission 被呼叫的次數。
+  int storageRequests = 0;
   @override
-  Future<bool> requestStoragePermission() async => storage = grantStorage;
+  Future<bool> requestStoragePermission({
+    bool openSettingsIfBlocked = false,
+  }) async {
+    storageRequests++;
+    return storage = grantStorage;
+  }
 }
 
 /// root 狀態可設定的替身。
@@ -155,6 +163,17 @@ void main() {
     platform.sdk = 29;
     final r = await resolver().resolve() as LogAccessBlocked;
     expect(r.reason, LogAccessUnavailable.storagePermissionDenied);
+  });
+
+  test('retries only check the storage permission', () async {
+    // 自動重試若再要求權限，永久拒絕時會一直跳去系統設定頁。
+    platform
+      ..sdk = 29
+      ..grantStorage = true;
+    final r =
+        await resolver().resolve(requestPermissions: false) as LogAccessBlocked;
+    expect(r.reason, LogAccessUnavailable.storagePermissionDenied);
+    expect(platform.storageRequests, 0);
   });
 
   test('android 10 asks for permission once and uses it', () async {

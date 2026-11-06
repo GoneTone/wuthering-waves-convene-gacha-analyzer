@@ -42,14 +42,19 @@ class _FakeResolver extends LogAccessResolver {
   final results = <FutureOr<LogAccessOutcome> Function()>[];
 
   /// 每次 resolve 收到的參數。
-  final calls = <({LogAccessMethod? preferred, bool force})>[];
+  final calls = <({LogAccessMethod? preferred, bool force, bool request})>[];
 
   @override
   Future<LogAccessOutcome> resolve({
     LogAccessMethod? preferred,
     bool forceDisableAfterUse = false,
+    bool requestPermissions = true,
   }) async {
-    calls.add((preferred: preferred, force: forceDisableAfterUse));
+    calls.add((
+      preferred: preferred,
+      force: forceDisableAfterUse,
+      request: requestPermissions,
+    ));
     final f = results[(calls.length - 1).clamp(0, results.length - 1)];
     return f();
   }
@@ -357,6 +362,8 @@ void main() {
     watch.hits[0].complete(_cred());
     await done;
     expect(progress(), isA<UpdateCompleted>());
+    // 只有第一次可以跳權限詢問；回到前景的自動重試不行，否則永久拒絕時會一直跳去設定頁。
+    expect(resolver.calls.map((c) => c.request), [true, false]);
   });
 
   test(

@@ -49,6 +49,9 @@ class LogAccessChannel(private val activity: Activity, messenger: BinaryMessenge
     private val main = Handler(Looper.getMainLooper())
     private val pendingPermissions = mutableMapOf<Int, MethodChannel.Result>()
 
+    /** 這次儲存權限要求被拒時是否改開系統設定頁（只有玩家按「重新授權」時）。 */
+    private var openSettingsIfStorageBlocked = false
+
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         val resolver = activity.contentResolver
         when (call.method) {
@@ -100,6 +103,7 @@ class LogAccessChannel(private val activity: Activity, messenger: BinaryMessenge
                 if (hasStoragePermission()) {
                     result.success(true)
                 } else {
+                    openSettingsIfStorageBlocked = call.argument<Boolean>("openSettingsIfBlocked") == true
                     requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, REQ_STORAGE, result)
                 }
             }
@@ -130,7 +134,7 @@ class LogAccessChannel(private val activity: Activity, messenger: BinaryMessenge
         val pending = pendingPermissions.remove(requestCode) ?: return false
         val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
         // 玩家勾過「不要再詢問」後系統不再跳視窗，只能請他到 App 設定頁自己開。
-        if (!granted && requestCode == REQ_STORAGE &&
+        if (!granted && requestCode == REQ_STORAGE && openSettingsIfStorageBlocked &&
             !activity.shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)
         ) {
             Log.i(TAG, "storage permission permanently denied, opening app settings")

@@ -82,7 +82,9 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
 
   /// 重新請求儲存權限，再請 repository 重新判斷。
   Future<void> _regrantStorage() async {
-    await ref.read(logAccessPlatformProvider).requestStoragePermission();
+    await ref
+        .read(logAccessPlatformProvider)
+        .requestStoragePermission(openSettingsIfBlocked: true);
     await ref.read(gachaRepositoryProvider.notifier).retryLogAccess();
   }
 

@@ -121,9 +121,12 @@ class LogAccessResolver {
   static final _log = Logger('capture.android');
 
   /// 決定讀取方式；[preferred] 先試，[forceDisableAfterUse] 為 true 時用完一律關閉無線偵錯（剛配對完時）。
+  ///
+  /// [requestPermissions] 為 false 時（自動重試）只檢查權限、不跳系統詢問。
   Future<LogAccessOutcome> resolve({
     LogAccessMethod? preferred,
     bool forceDisableAfterUse = false,
+    bool requestPermissions = true,
   }) async {
     final sw = Stopwatch()..start();
     final order = {
@@ -136,7 +139,7 @@ class LogAccessResolver {
     for (final method in order) {
       final outcome = switch (method) {
         LogAccessMethod.root => await _tryRoot(),
-        LogAccessMethod.legacyDirect => await _tryLegacy(),
+        LogAccessMethod.legacyDirect => await _tryLegacy(requestPermissions),
         LogAccessMethod.wirelessDebugging => await _tryWireless(
           forceDisableAfterUse,
         ),
@@ -170,11 +173,11 @@ class LogAccessResolver {
     );
   }
 
-  /// Android 10 以下：取得儲存權限後直接讀檔。
-  Future<LogAccessOutcome?> _tryLegacy() async {
+  /// Android 10 以下：取得儲存權限後直接讀檔；[request] 為 false 時只檢查不詢問。
+  Future<LogAccessOutcome?> _tryLegacy(bool request) async {
     if (await platform.sdkInt() > 29) return null;
     if (!await platform.hasStoragePermission() &&
-        !await platform.requestStoragePermission()) {
+        !(request && await platform.requestStoragePermission())) {
       return const LogAccessBlocked(
         LogAccessUnavailable.storagePermissionDenied,
       );
