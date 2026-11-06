@@ -137,6 +137,10 @@ class _ManualCredentialDialogState
             controller: _controller,
             minLines: 2,
             maxLines: 4,
+            // 輸入法的自動校正會改掉網址參數名稱的大小寫（`lang` → `Lang`）。
+            keyboardType: TextInputType.url,
+            autocorrect: false,
+            enableSuggestions: false,
             decoration: InputDecoration(
               hintText: l.manualCredentialFieldHint,
               errorText: _error,

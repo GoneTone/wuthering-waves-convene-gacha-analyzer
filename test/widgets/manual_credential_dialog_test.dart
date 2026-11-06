@@ -71,6 +71,17 @@ void main() {
     return AppLocalizations.of(tester.element(find.byType(TextField)))!;
   }
 
+  testWidgets('field does not let the keyboard rewrite the url', (
+    tester,
+  ) async {
+    // 實機輸入法的自動校正會把 `&lang=` 改成 `&Lang=`，網址就失效了。
+    await open(tester);
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.keyboardType, TextInputType.url);
+    expect(field.autocorrect, isFalse);
+    expect(field.enableSuggestions, isFalse);
+  });
+
   testWidgets('text without url shows error and keeps dialog open', (
     tester,
   ) async {
