@@ -218,7 +218,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 **權限與系統限制**
 - **要宣告 `ACCESS_NETWORK_STATE`**：沒宣告時 `ConnectivityManager.getNetworkCapabilities` 會丟 SecurityException，判斷 Wi-Fi 的程式回 false，結果被誤判成「沒連 Wi-Fi」。
 - **背景 App 的網路會被擋（`APP_BACKGROUND`）**：玩家還在遊戲裡時 App 就讀到網址，此時立刻抓資料會直接 `Failed host lookup`。要等玩家切回本 App（`AppLifecycleListener` 的 resume）才開始抓，等待時畫面提示「請回到本 App」。
-- **儲存權限被「不要再詢問」後，再要求也不會跳視窗**（Android 10 以下的直接讀檔）：被拒時若 `shouldShowRequestPermissionRationale` 為 false，就直接開本 App 的系統設定頁（`ACTION_APPLICATION_DETAILS_SETTINGS`），玩家開好權限回到 App 時自動重試。
+- **儲存權限被「不要再詢問」後，再要求也不會跳視窗**（Android 10 以下的直接讀檔）：玩家按「重新授權」時被拒、且 `shouldShowRequestPermissionRationale` 為 false，就改開本 App 的系統設定頁（`ACTION_APPLICATION_DETAILS_SETTINGS`）。**回到 App 時的自動重試只能檢查權限、不能再要求**，否則永久拒絕時每次回來都會再被送去設定頁，玩家連「取消」都按不到。
 - **能自動開關的裝置被收回 `WRITE_SECURE_SETTINGS` 後，下次連上會自動補回**（連上 shell 時順便 `pm grant`）。設定頁的配對狀態要在每次讀取結束後重讀，否則開著的設定頁會一直顯示「需手動開啟」。
 - **解除配對只能刪掉本機金鑰**：系統「已配對的裝置」清單裡的紀錄 shell 刪不掉，會留著（不影響使用，重新配對也正常）。
 
