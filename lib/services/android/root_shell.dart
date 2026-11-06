@@ -138,6 +138,7 @@ class RootShell {
     final process = await _start('su', const []);
     _process = process;
     _buffer.clear();
+    _tail = Uint8List(0);
     process.stdout.listen(
       _onStdout,
       onDone: () => _onExit(process),
@@ -149,19 +150,40 @@ class RootShell {
     return process;
   }
 
+  /// 結束標記行的開頭（換行＋標記＋空白）。
+  late final _head = utf8.encode('\n$_marker ');
+
+  /// 上一批輸出的結尾（結束標記可能被切在兩批之間）；長度最多 [_head] 再加結束碼的幾個位元組。
+  Uint8List _tail = Uint8List(0);
+
   /// 收到輸出時，找到結束標記就把標記前的內容交給等待中的指令。
+  ///
+  /// 大檔會分成很多批送來，每批只在「上一批結尾＋這一批」裡找標記；
+  /// 每批都把整個緩衝區合併再從頭掃，讀幾 MB 就要花好幾秒。
   void _onStdout(List<int> data) {
     _buffer.add(data);
+    final window = Uint8List(_tail.length + data.length)
+      ..setAll(0, _tail)
+      ..setAll(_tail.length, data);
+    final keep = _head.length + 8;
+    _tail = window.length > keep
+        ? window.sublist(window.length - keep)
+        : window;
     final pending = _pending;
     if (pending == null || pending.isCompleted) return;
+    final inWindow = _indexOf(window, _head);
+    if (inWindow < 0 || window.indexOf(0x0A, inWindow + _head.length) < 0) {
+      return;
+    }
     final bytes = _buffer.toBytes();
-    final head = utf8.encode('\n$_marker ');
-    final at = _indexOf(bytes, head);
-    if (at < 0) return;
-    final lineEnd = bytes.indexOf(0x0A, at + head.length);
-    if (lineEnd < 0) return;
+    final at = _indexOf(bytes, _head);
+    final lineEnd = bytes.indexOf(0x0A, at + _head.length);
     _buffer.clear();
-    if (lineEnd + 1 < bytes.length) _buffer.add(bytes.sublist(lineEnd + 1));
+    _tail = Uint8List(0);
+    if (lineEnd + 1 < bytes.length) {
+      _tail = bytes.sublist(lineEnd + 1);
+      _buffer.add(_tail);
+    }
     pending.complete(Uint8List.sublistView(bytes, 0, at));
   }
 

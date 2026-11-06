@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -9,7 +10,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/android/root_she
 
 /// 模擬常駐 `su` 的程序：讀 stdin 的每一行指令，依 [reply] 產生輸出後印出結束標記。
 class _FakeSu implements Process {
-  _FakeSu(this.reply) {
+  _FakeSu(this.reply, {this.chunkSize}) {
     _stdinCtl.stream
         .transform(utf8.decoder)
         .transform(const LineSplitter())
@@ -18,6 +19,9 @@ class _FakeSu implements Process {
 
   /// 指令 → 輸出位元組；回傳 null 代表 `su` 直接結束（例如授權被拒）。
   final List<int>? Function(String command) reply;
+
+  /// 每批 stdout 的位元組數；null 時整段一次送出。
+  final int? chunkSize;
 
   final _stdinCtl = StreamController<List<int>>();
   final _stdoutCtl = StreamController<List<int>>();
@@ -40,7 +44,11 @@ class _FakeSu implements Process {
         if (!_exit.isCompleted) _exit.complete(1);
         return;
       }
-      _stdoutCtl.add([...out, 0x0A, ...utf8.encode('$marker 0\n')]);
+      final all = [...out, 0x0A, ...utf8.encode('$marker 0\n')];
+      final size = chunkSize ?? all.length;
+      for (var i = 0; i < all.length; i += size) {
+        _stdoutCtl.add(all.sublist(i, math.min(i + size, all.length)));
+      }
       return;
     }
     if (line == 'exit') {
@@ -160,6 +168,35 @@ void main() {
       );
     },
   );
+
+  test('large output in many small chunks is read in linear time', () async {
+    // 每批都重掃整個緩衝區的話，8 MB 分成 2 KB 一批要掃好幾 GB。
+    final big = List<int>.filled(8 << 20, 0x61);
+    final shell = RootShell(
+      suPaths: [fakeSuPath()],
+      start: (exe, args) async => _FakeSu(
+        (c) => c == 'id' ? utf8.encode('uid=0') : big,
+        chunkSize: 2048,
+      ),
+    );
+    await shell.verify();
+    final sw = Stopwatch()..start();
+    final out = await shell.exec('tail');
+    expect(out.length, big.length);
+    expect(sw.elapsed, lessThan(const Duration(seconds: 2)));
+  });
+
+  test('marker split across chunks is still found', () async {
+    final shell = RootShell(
+      suPaths: [fakeSuPath()],
+      start: (exe, args) async => _FakeSu(
+        (c) => c == 'id' ? utf8.encode('uid=0') : utf8.encode('hello'),
+        chunkSize: 3,
+      ),
+    );
+    expect(await shell.verify(), isTrue);
+    expect(utf8.decode(await shell.exec('x')), 'hello');
+  });
 
   test('exec fails when the su process died', () async {
     var calls = 0;
