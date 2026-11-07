@@ -856,7 +856,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
           )
         else
           ?chipBar,
-        if (twoColumn || chipBar != null) const SizedBox(height: AppSpacing.m),
+        if (chipBar != null) const SizedBox(height: AppSpacing.m),
         if (current != null)
           Expanded(
             child: _buildCurrentImageArea(

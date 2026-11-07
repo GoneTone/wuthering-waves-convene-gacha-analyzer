@@ -23,6 +23,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
@@ -1372,10 +1373,79 @@ void main() {
         final rect = tester.getRect(close);
         expect(sameRow(rect, name), isTrue);
         expect(rect.left, greaterThanOrEqualTo(name.right));
-        expect(rect.width, greaterThanOrEqualTo(44));
-        expect(rect.height, greaterThanOrEqualTo(44));
+        expect(tester.getSize(close), const Size(44, 44));
+        final icon = tester.getCenter(
+          find.descendant(of: close, matching: find.byIcon(Icons.close)),
+        );
+        expect((icon.dy - name.center.dy).abs(), lessThanOrEqualTo(2));
         await tapClosesDialog(tester);
       }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+      /// 圖片區（圖片最近的 [Expanded]）頂端與 ✕ 所在頂列底端的距離。
+      double gapBelowClose(WidgetTester tester, Finder image) =>
+          tester
+              .getTopLeft(
+                find.ancestor(of: image, matching: find.byType(Expanded)).first,
+              )
+              .dy -
+          tester
+              .getRect(
+                find.ancestor(of: close, matching: find.byType(Row)).first,
+              )
+              .bottom;
+
+      testWidgets('two columns with a chip bar: gap under the top row', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        final illustFile = await seedCharacterWithSkin(tester);
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+        );
+        expect(
+          gapBelowClose(tester, find.byKey(ValueKey(illustFile.path))),
+          closeTo(AppSpacing.m, 0.5),
+        );
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+      testWidgets('two columns, single image: X row without the extra gap', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        const iconUrl = 'https://cdn.example.com/w_icon.webp';
+        late File iconFile;
+        await tester.runAsync(() async {
+          await container
+              .read(itemImageIndexProvider.notifier)
+              .mergeIcon(
+                resourceId: 77,
+                iconUrl: iconUrl,
+                noImage: false,
+                permanentNoImage: false,
+              );
+          iconFile = itemIconCacheFile(
+            baseDir: tempDir,
+            resourceId: 77,
+            url: iconUrl,
+          );
+          await _touchFile(tempDir, iconFile.uri.pathSegments.last);
+        });
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 77, name: 'WeaponX', resourceType: '武器'),
+        );
+        expect(find.byType(ChoiceChip), findsNothing);
+        expect(close, findsOneWidget);
+        expect(
+          gapBelowClose(tester, find.byKey(ValueKey(iconFile.path))),
+          closeTo(0, 0.5),
+        );
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
       for (final (label, size, platform) in [
         ('phone landscape', const Size(914, 411), TargetPlatform.android),
