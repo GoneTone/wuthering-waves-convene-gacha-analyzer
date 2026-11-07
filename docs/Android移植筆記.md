@@ -422,3 +422,27 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 處理：`installer.iss` 的 `RemoveCaArtifacts` 在解除安裝最後**一定**執行（不受「是否刪除資料」影響）：先 `certutil -user -delstore Root "<CN>"`（Windows 會跳出確認視窗，玩家按「是」才會刪），再刪掉 `ca` 資料夾；就算玩家拒絕刪憑證，私鑰也已經不在，留下的憑證無法拿來偽造。
 - **呼叫 certutil 不可用 `SW_HIDE`**：確認視窗是 certutil 第一個顯示的視窗，會套用啟動時的隱藏設定，玩家看不到它，解除安裝就會一直等。靜默解除安裝（`/VERYSILENT`）也一樣會停在這個系統視窗。憑證名稱與路徑必須和 `rust/src/ca.rs` 的 `EXPECTED_CN`、`ca_dir()` 一致。原神版的解除安裝程式應該也有同樣的問題。
 
+
+---
+
+## 十一、滑動流暢度
+
+### 41. 165Hz 手機上的「頓頓的」（通用）
+
+- **先確認不是 debug 版**：debug 版是邊跑邊編譯（JIT），一定會卡，剛打開時尤其明顯。判斷方法：APK 裡有 `assets/flutter_assets/kernel_blob.bin`，就是 debug 版。效能一律用 profile 版看（`fvm flutter build apk --profile`，`adb install -r` 蓋過去，資料會保留）。
+- **量法**：`tool/measure_frame_pacing.sh` 讀 SurfaceFlinger `--latency` 的實際上屏時間，只統計放手後的慣性滑動。adb 注入的拖曳事件取樣不足，量拖曳期間會讓輕量頁面也出現假的「晚一拍」（設定頁拖曳量到 69%，慣性滑動實為 99%）。想知道每幀時間花在哪，用 logcat 的 `The Dart VM service is listening on ...` 取得位址，`adb forward` 後經 VM Service 的 `setVMTimelineFlags`／`getVMTimeline` 抓 timeline，看 `Animator::BeginFrame` 底下的 `SEMANTICS`、`PAINT`，以及 raster 執行緒的 `Rasterizer::DoDraw`。
+- **根因一：無障礙服務會讓 Flutter 每幀都更新語意樹**。只要手機開著任何無障礙服務（這次是 ASUS GlideX；密碼管理器、投放、讀屏也都算），語意樹就會啟用。綜合頁每幀 8.1ms 中，SEMANTICS 佔 4.4ms、PAINT 佔 3.3ms，raster 只有 2.2ms。165Hz 的預算是 6.06ms。
+- **根因二：整頁一次建好**。`SingleChildScrollView` + `Column` 每捲一點，整頁（包含畫面外的五星一覽、時間軸）都要重新繪製與更新語意。改成 `ListView`／`CustomScrollView` + `SliverList.list` 後，只處理畫面附近的區塊。橫向時間軸也從 `Row` 改成橫向 `ListView.builder`。帶本地狀態的區塊（紀錄表頁碼、搜尋框、垂直時間軸已載入筆數、橫向時間軸位置）要加 `AutomaticKeepAliveClientMixin`，否則捲出畫面再捲回來會重設。
+- **根因三：`AnimationController.repeat()` 無條件在跑**。保底卡呼吸動畫只在「快保底」時才顯示，但計時器從頁面打開就一直在跑，每個 vsync 都排一幀，卡池頁靜止時也以 165fps 重畫（主要是耗電）。改成依階段與「移除動畫」設定啟停。
+- **前後對照**（ROG Phone 9，165Hz，開著無障礙服務，慣性滑動準時率）：
+
+  | 頁面 | 修正前 | 修正後 |
+  |---|---|---|
+  | 綜合（冷啟動後） | 41～44% | 96.1% |
+  | 綜合 | 43.5% | 97.4% |
+  | 角色活動 | 92.3% | 97.7% |
+  | 武器活動 | 96.9% | 97.9% |
+  | 其他有紀錄的卡池頁 | 98.6～99.2% | 98.5～99.3% |
+  | 設定、貢獻者 | 98.9%、100% | 98.8%、100% |
+
+  靜止時出幀：修正前，有紀錄的卡池頁全部持續約 165fps；修正後只剩正處於「快保底」的頁面（設計上的動畫），其餘為 0。
