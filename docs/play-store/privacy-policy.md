@@ -16,7 +16,10 @@
 - 查詢喚取紀錄用的網址參數（從鳴潮的記錄檔或你手動輸入的網址取得）。
 - App 設定與執行紀錄（log）。
 
-以上資料只存在你的裝置上。解除安裝 App 或在 App 內刪除帳號，就會一併刪除。
+以上資料存在你的裝置上，在 App 內刪除帳號會一併刪除該帳號的資料。
+
+- **Android 版**：解除安裝 App 會刪除裝置上的資料。Android 的系統備份可能會把 App 資料（喚取紀錄、設定）備份到你自己的 Google 帳號，是否備份由你裝置上的備份設定決定；重新安裝或換新裝置時，系統可能會還原這份備份。加密保存的憑證（例如無線偵錯的配對金鑰）不會備份，還原後需要重新配對。
+- **Windows 版**：資料存在 `%APPDATA%\tw.reh\wuthering_waves_convene_gacha_analyzer`。解除安裝時會詢問是否一併刪除，預設保留；保留的話可以之後自行刪除這個資料夾。
 
 ### 會連線的對象
 
@@ -32,6 +35,13 @@ Android 不允許 App 直接讀取其他 App 的檔案。本 App 會在你按下
 
 - 只讀取鳴潮的記錄檔，讀完立刻中斷連線並關閉無線偵錯。
 - `WRITE_SECURE_SETTINGS` 權限只用來開關無線偵錯，讓你不用每次手動設定。你可以隨時在設定頁解除。
+
+### Windows 版取得查詢參數的方式
+
+按下「更新資料」後，App 會在你的電腦上啟動一個本機攔截程式（需要系統管理員權限，會跳出一次 UAC 確認），並安裝一張在本機產生的根憑證，只把鳴潮喚取記錄頁面對官方喚取歷史 API 的那一條請求導到本機解析，取得查詢參數。App 也會讀取鳴潮在你電腦上的記錄檔作為備援。
+
+- 不讀取或修改遊戲檔案與記憶體，其餘網路流量原樣放行。
+- 攔截只在更新期間進行，完成後立即停止並還原網路設定。
 
 ### 不會做的事
 
@@ -56,7 +66,10 @@ This app is an unofficial fan-made tool and is not affiliated with Kuro Games. T
 - The URL parameters used to query your convene history (taken from the game's log file or a URL you enter).
 - App settings and logs.
 
-This data stays on your device. Uninstalling the app, or deleting an account in the app, removes it.
+This data is stored on your device. Deleting an account in the app removes that account's data.
+
+- **Android**: uninstalling the app removes the data on the device. Android's system backup may back up the app data (convene history, settings) to your own Google account, depending on your device's backup setting, and may restore it when you reinstall or set up a new device. Encrypted credentials (such as the wireless debugging pairing key) are not backed up; after a restore you need to pair again.
+- **Windows**: the data is stored in `%APPDATA%\tw.reh\wuthering_waves_convene_gacha_analyzer`. The uninstaller asks whether to delete it and keeps it by default; you can delete that folder yourself later.
 
 ### Services the app connects to
 
@@ -72,6 +85,13 @@ Android doesn't let apps read other apps' files. When you tap "Update", the app 
 
 - It reads only the game's log file, then disconnects and turns wireless debugging off right away.
 - The `WRITE_SECURE_SETTINGS` permission is used only to turn wireless debugging on and off, so you don't have to set it up each time. You can remove it at any time in Settings.
+
+### How the Windows version gets the query parameters
+
+When you click "Update", the app starts a local interception helper on your computer (it needs administrator rights, so Windows shows a UAC prompt once) and installs a root certificate generated on your computer. Only the one request the game's Convene History page sends to the official convene history API is redirected to the app to read the query parameters. The app also reads the game's log file on your computer as a fallback.
+
+- It never reads or modifies game files or memory, and all other network traffic passes through untouched.
+- Interception runs only during an update; it stops and restores the network settings right after.
 
 ### What the app does not do
 

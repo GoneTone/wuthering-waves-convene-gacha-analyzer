@@ -22,7 +22,7 @@
    ```
    keytool -genkeypair -v -storetype PKCS12 -keystore upload.jks -alias upload -keyalg RSA -keysize 4096 -validity 10000
    ```
-   密碼在終端機輸入，不要寫進任何檔案或對話中。
+   密碼在終端機輸入，不要寫進任何檔案或對話中。密碼不要包含反斜線 `\`（`key.properties` 是 Java Properties 格式，`\` 會被當成跳脫字元），用英文字母、數字和 `\` 以外的符號即可。
 2. **建立 `android/key.properties`**（已在 `.gitignore`，不會進 repo）：
    ```
    storeFile=<upload.jks 的絕對路徑，或相對於 android/ 的路徑>
@@ -30,7 +30,7 @@
    keyAlias=upload
    keyPassword=<密碼>
    ```
-   沒有這個檔案時，release 建置會改用 debug 金鑰，只能在本機測試，不能上傳。
+   密碼照原樣填，不需要加引號或跳脫（所以第 1 步的密碼不能含 `\`）。沒有這個檔案時，release 建置會改用 debug 金鑰，只能在本機測試，不能上傳。
 3. **在 Play Console 建立 App**：套件名稱 `tw.reh.wuwa.gacha`，預設語言繁體中文（台灣），免費，類別「工具」。開啟「Play 應用程式簽署」。
 4. **第一次手動上傳**（Play 規定新 App 的第一個版本必須手動上傳）：
    ```
