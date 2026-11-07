@@ -30,6 +30,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/pity_card.d
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/pager.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/search_filter_bar.dart';
 
 import '../helpers/no_game_dir.dart';
 
@@ -80,13 +82,14 @@ void main() {
     if (await tempDir.exists()) await tempDir.delete(recursive: true);
   });
 
-  /// 在 [size] 的畫面上呈現 [page]（已有一個帳號的紀錄）。
-  Future<void> pump(
+  /// 在 [size] 的畫面上呈現 [page]（已有一個帳號的紀錄，預設為 [_records]），回傳 container。
+  Future<ProviderContainer> pump(
     WidgetTester tester,
     Size size,
     Widget page, {
     double keyboard = 0,
     PairingPhase phase = PairingPhase.disclosure,
+    List<GachaRecord>? records,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -100,7 +103,7 @@ void main() {
           playerId: '701000000',
           languageCode: 'zh-Hant',
           lastUpdated: DateTime.utc(2026, 5, 1),
-          banners: {'1': _records()},
+          banners: {'1': records ?? _records()},
         ),
       );
       container = ProviderContainer(
@@ -144,6 +147,7 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
+    return container;
   }
 
   /// 沒有例外；有的話把完整錯誤（含溢出元件的位置）放進失敗訊息。
@@ -275,6 +279,11 @@ void main() {
     ];
     expect(tops, hasLength(3));
     expect(tops.toSet(), hasLength(1));
+    final heights = {
+      for (final e in find.byType(StatCard).evaluate())
+        tester.getSize(find.byWidget(e.widget)).height,
+    };
+    expect(heights, hasLength(1), reason: 'IntrinsicHeight keeps cards equal');
   }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
   testWidgets('banner page keeps pity and total cards in one row on desktop', (
@@ -323,4 +332,62 @@ void main() {
     await pump(tester, const Size(1280, 800), const OverviewPage());
     expect(find.byType(TimelineVertical, skipOffstage: false), findsNothing);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  testWidgets(
+    'banner page keeps table and search state when the five-star section appears',
+    (tester) async {
+      List<GachaRecord> records({required bool withFiveStar}) => [
+        for (var i = 0; i < 45; i++)
+          GachaRecord(
+            resourceId: 2000 + i,
+            qualityLevel: withFiveStar && i == 44 ? 5 : (i % 3 == 0 ? 4 : 3),
+            resourceType: '武器',
+            cardPoolType: '1',
+            name: 'Item $i',
+            count: 1,
+            time: DateTime(2026, 5, 1).subtract(Duration(hours: i)),
+          ),
+      ];
+      final container = await pump(
+        tester,
+        const Size(360, 800),
+        const BannerPage(cardPoolType: '1'),
+        records: records(withFiveStar: false),
+      );
+      await tester.scrollUntilVisible(
+        find.byType(Pager),
+        500,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.byType(Pager));
+      await tester.pump();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(Pager),
+          matching: find.byIcon(Icons.chevron_right),
+        ),
+      );
+      await tester.pump();
+      expect(tester.widget<Pager>(find.byType(Pager)).page, 1);
+      final searchBar = find.byType(SearchFilterBar, skipOffstage: false);
+      final searchState = tester.state(searchBar);
+
+      container
+          .read(gachaRepositoryProvider.notifier)
+          .debugSeedAccount(
+            BannerStorage(
+              playerId: '701000000',
+              languageCode: 'zh-Hant',
+              lastUpdated: DateTime.utc(2026, 5, 1),
+              banners: {'1': records(withFiveStar: true)},
+            ),
+          );
+      await tester.pump();
+
+      final after = searchBar.evaluate();
+      expect(after, hasLength(1), reason: 'search bar state was dropped');
+      expect((after.single as StatefulElement).state, same(searchState));
+      expect(tester.widget<Pager>(find.byType(Pager)).page, 1);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
 }
