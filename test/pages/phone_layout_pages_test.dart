@@ -37,6 +37,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.d
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/last_updated_label.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/inline_section_title.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/pager.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/search_filter_bar.dart';
 
@@ -388,6 +389,87 @@ void main() {
       find.descendant(of: pity, matching: find.byType(FractionallySizedBox)),
       findsNWidgets(2),
     );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('banner page has one sort button, inside the filter bar', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const Size(360, 800),
+      const BannerPage(cardPoolType: '1'),
+    );
+    await tester.scrollUntilVisible(
+      find.byType(SortableTable),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byType(RecordSortButton), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(SearchFilterBar),
+        matching: find.byType(RecordSortButton),
+      ),
+      findsOneWidget,
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('banner page shows record cards in phone landscape', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const Size(800, 360),
+      const BannerPage(cardPoolType: '1'),
+    );
+    await tester.scrollUntilVisible(
+      find.byType(SortableTable),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    final l = AppLocalizations.of(tester.element(find.byType(SortableTable)))!;
+    expect(find.text(l.tableTotalIndex), findsNothing);
+    expect(find.byType(RecordSortButton), findsOneWidget);
+    expect(find.textContaining('#', findRichText: true), findsWidgets);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('changing the record page scrolls back to the list title', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const Size(360, 800),
+      const BannerPage(cardPoolType: '1'),
+      records: [
+        for (var i = 0; i < 45; i++)
+          GachaRecord(
+            resourceId: 2000 + i,
+            qualityLevel: 3,
+            resourceType: '武器',
+            cardPoolType: '1',
+            name: 'Item $i',
+            count: 1,
+            time: DateTime(2026, 5, 1).subtract(Duration(hours: i)),
+          ),
+      ],
+    );
+    final scrollable = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.byType(Pager),
+      100,
+      scrollable: scrollable,
+    );
+    final l = AppLocalizations.of(tester.element(find.byType(Pager)))!;
+    await tester.ensureVisible(find.byTooltip(l.actionNextPage));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip(l.actionNextPage));
+    await tester.pumpAndSettle();
+    final title = find.widgetWithText(
+      InlineSectionTitle,
+      l.pageBannerRecordList,
+    );
+    final top = tester.getTopLeft(scrollable).dy;
+    expect(tester.getTopLeft(title).dy, closeTo(top, 8));
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   for (final locale in [const Locale('en'), const Locale('ja')]) {
