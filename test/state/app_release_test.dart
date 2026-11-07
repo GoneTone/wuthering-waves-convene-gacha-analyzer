@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -363,7 +364,8 @@ void main() {
     test('skipped play version is not prompted on auto check', () async {
       final container = _androidContainer(
         gateway: _FakePlayGateway(info: _playV190),
-        client: _githubThree(),
+        // GitHub 失敗 → releases 為空，只有比對 Play 換算的 tag 才能略過
+        client: MockClient((_) async => http.Response('', 500)),
         prefs: {'pref.skippedReleaseTag': 'v1.9.0'},
       );
       await container.read(settingsProvider.notifier).waitForLoad();
@@ -387,10 +389,23 @@ void main() {
         client: _githubThree(),
       );
       await container.read(settingsProvider.notifier).waitForLoad();
+      final warnings = <String>[];
+      final sub = Logger.root.onRecord.listen((r) {
+        if (r.level == Level.WARNING) warnings.add(r.message);
+      });
+      addTearDown(sub.cancel);
+      final notifier = container.read(appReleaseProvider.notifier);
 
-      await container.read(appReleaseProvider.notifier).check(manual: true);
-
+      await notifier.check(manual: true);
       expect(container.read(appReleaseProvider), isA<ReleaseUpToDate>());
+
+      await notifier.check(manual: false);
+      expect(container.read(appReleaseProvider), isA<ReleaseIdle>());
+
+      expect(
+        warnings.where((m) => m.contains('has no tag mapping')),
+        hasLength(2),
+      );
     });
   });
 }

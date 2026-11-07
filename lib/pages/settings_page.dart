@@ -519,7 +519,7 @@ class _AboutContent extends ConsumerWidget {
 
   /// 把 notifier 給的 token 轉成 i18n 字串。
   /// Token 格式：
-  ///   - "network" / "timeout" / "rateLimited" / "format"
+  ///   - "network" / "timeout" / "rateLimited" / "format" / "play"
   ///   - "server:&lt;status&gt;"（status 為 HTTP code）
   String _resolveReason(AppLocalizations l, String token) {
     if (token == 'network') return l.updateErrorNetwork;
