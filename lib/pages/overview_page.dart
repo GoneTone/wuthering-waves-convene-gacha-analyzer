@@ -23,6 +23,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.d
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/five_star_overview.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/empty_state.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/last_updated_label.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/inline_section_title.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/item_type_pie.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/loading_state.dart';
@@ -43,12 +44,31 @@ class OverviewPage extends ConsumerWidget {
     final tokens = Theme.of(context).gacha;
     final state = ref.watch(gachaRepositoryProvider);
     final activeData = state.activeData;
+    // 手機橫向沒有底部狀態列，最後更新時間改放在頁首。
+    final lastUpdated =
+        phoneOrientationOf(context) == PhoneOrientation.landscape
+        ? LastUpdatedLabel(
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: tokens.textMuted),
+          )
+        : null;
 
     if (state.isBootstrapping) {
       return const LoadingState();
     }
     if (activeData == null) {
-      return EmptyState.noSync(context);
+      if (lastUpdated == null) return EmptyState.noSync(context);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.m),
+            child: lastUpdated,
+          ),
+          Expanded(child: EmptyState.noSync(context)),
+        ],
+      );
     }
 
     final imageIndex = ref.watch(itemImageIndexProvider);
@@ -94,6 +114,16 @@ class OverviewPage extends ConsumerWidget {
                         icon: Icons.dashboard_outlined,
                       ),
                     ),
+                    ?(lastUpdated == null
+                        ? null
+                        : Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.s,
+                              ),
+                              child: lastUpdated,
+                            ),
+                          )),
                     ShareActionButton(
                       enabled: activeData.banners.values.any(
                         (r) => r.isNotEmpty,

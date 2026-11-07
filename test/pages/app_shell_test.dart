@@ -18,8 +18,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_download.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/last_updated_label.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_text.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/uid_indicator.dart';
 
 import '../helpers/fake_url_launcher.dart';
@@ -348,25 +348,58 @@ void main() {
 
   testWidgets('phone footer is 48dp tall', (tester) async {
     await pump(tester, const Size(360, 800));
-    final footer = find
-        .ancestor(
-          of: find.byType(TeamLinksBar),
-          matching: find.byType(Container),
-        )
-        .first;
-    expect(tester.getSize(footer).height, 48);
+    expect(
+      tester.getSize(find.byKey(const Key('shell-bottom-bar'))).height,
+      48,
+    );
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
-  testWidgets('phone footer keeps last updated and only the icon links', (
+  testWidgets('phone portrait footer keeps only last updated', (tester) async {
+    await pump(tester, const Size(360, 800));
+    final bar = find.byKey(const Key('shell-bottom-bar'));
+    expect(
+      find.descendant(of: bar, matching: find.byType(LastUpdatedLabel)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: bar, matching: find.byType(TeamLinksBar)),
+      findsNothing,
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('phone landscape has no footer', (tester) async {
+    await pump(tester, const Size(800, 360));
+    expect(find.byKey(const Key('shell-bottom-bar')), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('phone drawer shows the full team links', (tester) async {
+    await pump(tester, const Size(360, 800));
+    await tester.tap(drawerButton(tester));
+    await tester.pumpAndSettle();
+    final bar = find.descendant(
+      of: find.byType(Drawer),
+      matching: find.byType(TeamLinksBar),
+    );
+    expect(bar, findsOneWidget);
+    expect(tester.widget<TeamLinksBar>(bar).compact, isFalse);
+    expect(find.text(TeamInfo.name), findsOneWidget);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('desktop footer has last updated and team links, no drawer', (
     tester,
   ) async {
-    await pump(tester, const Size(360, 800));
+    await pump(tester, const Size(1280, 800));
+    final bar = find.byKey(const Key('shell-bottom-bar'));
     expect(
-      tester.widget<TeamLinksBar>(find.byType(TeamLinksBar)).compact,
-      isTrue,
+      find.descendant(of: bar, matching: find.byType(LastUpdatedLabel)),
+      findsOneWidget,
     );
-    expect(find.text(TeamInfo.name), findsNothing);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    expect(
+      find.descendant(of: bar, matching: find.byType(TeamLinksBar)),
+      findsOneWidget,
+    );
+    expect(find.byType(Drawer), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
   testWidgets('system back closes the open drawer instead of leaving the app', (
     tester,
@@ -503,34 +536,27 @@ void main() {
   testWidgets('phone landscape keeps the page clear of the camera cutout', (
     tester,
   ) async {
-    // 橫向時開孔鏡頭在左邊；標題列由 AppBar 自己避開，內容區和狀態列也要避開。
+    // 橫向時開孔鏡頭在左邊；標題列由 AppBar 自己避開，內容區也要避開。
     await pump(tester, const Size(800, 360));
     tester.view.padding = const FakeViewPadding(left: 44);
     tester.view.viewPadding = const FakeViewPadding(left: 44);
     await tester.pumpAndSettle();
     expect(tester.getRect(find.text('page:/')).left, greaterThanOrEqualTo(44));
-    expect(
-      tester.getRect(find.byType(RelativeTimeText)).left,
-      greaterThanOrEqualTo(44),
-    );
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   testWidgets('phone footer sits above the gesture bar', (tester) async {
-    // 背景延伸到螢幕底，但文字和連結要在手勢列上方。
+    // 背景延伸到螢幕底，但文字要在手勢列上方。
     await pump(tester, const Size(360, 800));
     tester.view.padding = const FakeViewPadding(bottom: 24);
     tester.view.viewPadding = const FakeViewPadding(bottom: 24);
     await tester.pumpAndSettle();
     expect(
-      tester.getRect(find.byType(TeamLinksBar)).bottom,
+      tester.getRect(find.byType(LastUpdatedLabel)).bottom,
       lessThanOrEqualTo(800 - 24),
     );
-    final footer = find
-        .ancestor(
-          of: find.byType(TeamLinksBar),
-          matching: find.byType(Container),
-        )
-        .first;
-    expect(tester.getRect(footer).bottom, 800);
+    expect(
+      tester.getRect(find.byKey(const Key('shell-bottom-bar'))).bottom,
+      800,
+    );
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 }

@@ -16,7 +16,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/new_version_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_type_icons.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_text.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/last_updated_label.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/uid_indicator.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/update_progress_dialog.dart';
@@ -154,9 +154,7 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     final tokens = Theme.of(context).gacha;
     final location = GoRouterState.of(context).uri.path;
-    final activeData = ref.watch(
-      gachaRepositoryProvider.select((s) => s.activeData),
-    );
+    final phoneOrientation = phoneOrientationOf(context);
     final width = MediaQuery.of(context).size.width;
     final compact = isCompactLayout(context);
     final extendedRail = width >= 1180;
@@ -206,6 +204,20 @@ class _AppShellState extends ConsumerState<AppShell> {
                       width: double.infinity,
                       onNavigate: Scaffold.of(drawerContext).closeDrawer,
                       header: _DrawerHeader(version: version, l: l),
+                      footer: phoneOrientation == null
+                          ? null
+                          : const Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: AppSpacing.m,
+                                vertical: AppSpacing.s,
+                              ),
+                              // 完整列（含團隊名稱）比抽屜寬度內距後略寬，放大字級時更寬，等比縮小。
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: TeamLinksBar(),
+                              ),
+                            ),
                       l: l,
                     ),
                   ),
@@ -286,39 +298,35 @@ class _AppShellState extends ConsumerState<AppShell> {
                 ),
               ),
             ),
-            // 手機開著鍵盤時高度很少（橫向約 50dp），先收起狀態列讓內容有空間。
-            if (!(compact && MediaQuery.viewInsetsOf(context).bottom > 0))
+            // 手機橫向高度寶貴，不放狀態列；開著鍵盤時高度更少，電腦版與直向也先收起。
+            if (phoneOrientation != PhoneOrientation.landscape &&
+                !(compact && MediaQuery.viewInsetsOf(context).bottom > 0))
               Container(
+                key: const Key('shell-bottom-bar'),
                 width: double.infinity,
                 color: tokens.surfaceCardHigh,
                 // 背景延伸到螢幕底與兩側，文字和連結避開手勢列與開孔鏡頭。
                 child: SafeArea(
                   top: false,
                   child: Padding(
-                    // 手機排版的連結圖示已有 48dp 觸控區，不再加上下內距，狀態列維持 48dp。
+                    // 手機直向沒有連結圖示撐高，改用最小高度 48dp 維持觸控尺寸的狀態列。
                     padding: EdgeInsets.symmetric(
                       horizontal: AppSpacing.l,
                       vertical: compact ? 0 : AppSpacing.xs * 1.5,
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: activeData == null
-                              ? Text(
-                                  l.footerNotSynced,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                  overflow: TextOverflow.ellipsis,
-                                )
-                              : RelativeTimeText(
-                                  time: activeData.lastUpdated,
-                                  templateBuilder: l.footerLastUpdated,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                        ),
-                        const SizedBox(width: AppSpacing.s),
-                        TeamLinksBar(compact: compact),
-                      ],
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: phoneOrientation == null ? 0 : 48,
+                      ),
+                      child: Row(
+                        children: [
+                          const Expanded(child: LastUpdatedLabel()),
+                          if (phoneOrientation == null) ...[
+                            const SizedBox(width: AppSpacing.s),
+                            TeamLinksBar(compact: compact),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -377,7 +385,11 @@ class _Rail extends StatelessWidget {
     this.width,
     this.onNavigate,
     this.header,
+    this.footer,
   });
+
+  /// 抽屜底部（團隊社群連結）；固定在底部按鈕下方，太矮時跟著清單捲動。桌面 rail 沒有。
+  final Widget? footer;
 
   /// 抽屜頂部（App 資訊）；跟著清單一起捲動。桌面 rail 沒有。
   final Widget? header;
@@ -487,12 +499,12 @@ class _Rail extends StatelessWidget {
                           hideLabel: collapsedNoLabel,
                         ),
                       const SizedBox(height: AppSpacing.s),
-                      if (!pinBottom) ...bottomButtons,
+                      if (!pinBottom) ...[...bottomButtons, ?footer],
                     ],
                   ),
                 ),
               ),
-              if (pinBottom) ...bottomButtons,
+              if (pinBottom) ...[...bottomButtons, ?footer],
             ],
           );
         },

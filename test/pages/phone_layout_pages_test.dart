@@ -29,7 +29,9 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/pity_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/five_star_overview.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/empty_state.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/last_updated_label.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/pager.dart';
@@ -92,6 +94,7 @@ void main() {
     double keyboard = 0,
     PairingPhase phase = PairingPhase.disclosure,
     List<GachaRecord>? records,
+    bool synced = true,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -100,14 +103,16 @@ void main() {
     late ProviderContainer container;
     await tester.runAsync(() async {
       final storage = GachaStorage(tempDir);
-      await storage.save(
-        BannerStorage(
-          playerId: '701000000',
-          languageCode: 'zh-Hant',
-          lastUpdated: DateTime.utc(2026, 5, 1),
-          banners: {'1': records ?? _records()},
-        ),
-      );
+      if (synced) {
+        await storage.save(
+          BannerStorage(
+            playerId: '701000000',
+            languageCode: 'zh-Hant',
+            lastUpdated: DateTime.utc(2026, 5, 1),
+            banners: {'1': records ?? _records()},
+          ),
+        );
+      }
       container = ProviderContainer(
         overrides: [
           noGameDirOverride,
@@ -222,6 +227,34 @@ void main() {
     );
     await scrollToEnd(tester);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  for (final (name, page) in [
+    ('overview', const OverviewPage()),
+    ('banner', const BannerPage(cardPoolType: '1')),
+  ]) {
+    testWidgets('$name header shows last updated in phone landscape', (
+      tester,
+    ) async {
+      await pump(tester, const Size(800, 360), page);
+      expect(find.byType(LastUpdatedLabel), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('$name header has no last updated in phone portrait', (
+      tester,
+    ) async {
+      await pump(tester, const Size(360, 800), page);
+      expect(find.byType(LastUpdatedLabel), findsNothing);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('$name unsynced landscape shows not-synced text and empty', (
+      tester,
+    ) async {
+      await pump(tester, const Size(800, 360), page, synced: false);
+      expect(find.text('尚未同步'), findsOneWidget);
+      expect(find.byType(EmptyState), findsOneWidget);
+      expectNoException(tester);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
 
   testWidgets('banner page padding is 12 on phones', (tester) async {
     await pump(
