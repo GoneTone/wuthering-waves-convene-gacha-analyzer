@@ -549,8 +549,8 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   }
 
   /// 造型圖下方 caption：Name（標題）＋SubDecName（次標、弱色）＋BgDescription
-  /// （內文、含 HTML；[constrainHeight] 為 true 時過長捲動）。三者皆空則不繪。
-  Widget _buildSkinCaption(
+  /// （內文、含 HTML；[constrainHeight] 為 true 時過長捲動）。三者皆空回 null。
+  Widget? _buildSkinCaption(
     BuildContext context,
     ItemSkin skin, {
     required bool constrainHeight,
@@ -560,7 +560,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     final hasName = skin.name.trim().isNotEmpty;
     final hasSub = skin.subDecName.trim().isNotEmpty;
     final hasBg = skin.bgDescription.trim().isNotEmpty;
-    if (!hasName && !hasSub && !hasBg) return const SizedBox.shrink();
+    if (!hasName && !hasSub && !hasBg) return null;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.m),
       child: Column(
@@ -835,7 +835,6 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
             current!.skin!,
             constrainHeight: !twoColumn,
           );
-    // 兩欄時造型說明放左欄，否則會把右欄的立繪擠扁。
     final gallery = Column(
       mainAxisSize: current != null ? MainAxisSize.max : MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -857,6 +856,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
               count: chipEntries.length,
             ),
           ),
+        // 兩欄時造型說明放左欄，否則會把右欄的立繪擠扁。
         if (caption != null && !twoColumn) caption,
       ],
     );
@@ -913,7 +913,22 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                               controller: _detailsScroll,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [header, ?caption],
+                                children: [
+                                  header,
+                                  if (caption != null) ...[
+                                    // 上方留白與 caption 自帶的 top padding 對稱。
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: AppSpacing.m,
+                                      ),
+                                      child: Divider(
+                                        height: 1,
+                                        color: tokens.borderSubtle,
+                                      ),
+                                    ),
+                                    caption,
+                                  ],
+                                ],
                               ),
                             ),
                           ),

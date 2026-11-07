@@ -1410,6 +1410,25 @@ void main() {
         expect(bottomFade(), findsNothing);
       }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
+      testWidgets('divider separates tags from the skin caption only', (
+        tester,
+      ) async {
+        await pumpAt(tester, const Size(1280, 800));
+        final divider = find.descendant(
+          of: find.byKey(detailsColumnKey),
+          matching: find.byType(Divider),
+        );
+        expect(divider, findsOneWidget);
+        expect(
+          tester.getRect(divider).bottom,
+          lessThan(tester.getRect(find.text('造型A').first).top),
+        );
+        // 切到 Icon（無造型說明）→ 分隔線一併消失。
+        await tester.tap(find.byType(ChoiceChip).last);
+        await tester.pump();
+        expect(divider, findsNothing);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
       testWidgets('no bottom fade when the column fits', (tester) async {
         await pumpAt(tester, const Size(1280, 800), intro: '<p>短</p>');
         await tester.pump();
