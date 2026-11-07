@@ -161,15 +161,18 @@ jobs:
 
       - name: Write step summary
         if: success()
+        env:
+          TAG: ${{ inputs.tag }}
+          RELEASE_STATUS: ${{ inputs.release_status }}
         run: |
           aab=build/app/outputs/bundle/release/app-release.aab
           {
-            echo "## Android release ${{ inputs.tag }}"
+            echo "## Android release $TAG"
             echo
             echo "- **Version name**: $BUILD_NAME"
             echo "- **Version code**: $VERSION_CODE"
             echo "- **Size**: $(du -h "$aab" | cut -f1)"
             echo "- **SHA-256**: \`$(sha256sum "$aab" | cut -d' ' -f1)\`"
-            echo "- **Play track**: internal (${{ inputs.release_status }})"
+            echo "- **Play track**: internal ($RELEASE_STATUS)"
             echo "- Next: fill in \"What's new\" and promote to production in Play Console (stable tags only)"
           } >> "$GITHUB_STEP_SUMMARY"
