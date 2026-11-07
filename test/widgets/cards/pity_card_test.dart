@@ -238,6 +238,33 @@ void main() {
       },
     );
 
+    testWidgets('turning on reduce motion stops a running animation', (
+      tester,
+    ) async {
+      // 同一個 widget 實例：只有 MediaQuery 變，走 didChangeDependencies 而非 didUpdateWidget。
+      final card = PityCard(
+        label: '5★',
+        rank: 5,
+        pity: closePity,
+        accent: GachaTokens.dark.fiveStar,
+      );
+      Widget host({required bool reduce}) => wrap(
+        Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: reduce),
+            child: card,
+          ),
+        ),
+      );
+      await tester.pumpWidget(host(reduce: false));
+      await tester.pump();
+      expect(tester.binding.hasScheduledFrame, isTrue);
+      await tester.pumpWidget(host(reduce: true));
+      await tester.pump();
+      await tester.pump();
+      expect(tester.binding.hasScheduledFrame, isFalse);
+    });
+
     testWidgets('reduce motion keeps close phase still', (tester) async {
       await pumpCard(tester, closePity, disableAnimations: true);
       await tester.pump();
