@@ -2,7 +2,8 @@
 # 量測 Android 實機上某一頁的出幀節奏（profile 或 release 版，需 adb 連線）。
 #
 # 輸出兩個數字：
-#   idle    靜止 1.5 秒內的出幀率（>=83 表示緩衝已滿，實際約等於螢幕刷新率）。
+#   idle    靜止 1.5 秒內的出幀率；SurfaceFlinger 只留最近約 127 幀（扣掉尚未上屏的
+#           約剩 125），取到 120 幀以上就顯示「滿」：實際約等於螢幕刷新率。
 #   準時率  放手後慣性滑動的幀間隔 ≤ 1.5 個 vsync（165Hz 下 9.1ms）的比例。
 # 只量慣性滑動：adb 注入的拖曳事件取樣不足，會讓輕量頁面也出現假的「晚一拍」。
 #
@@ -17,8 +18,7 @@ layer=$(adb shell dumpsys SurfaceFlinger --list | tr -d '\r\000' | grep -a 'Surf
 lat() { adb shell "dumpsys SurfaceFlinger --latency '$layer'" | tr -d '\r' | awk 'NR>1 && $2>0 && $2<9e18 {print $2}' | sort -n; }
 clr() { adb shell dumpsys SurfaceFlinger --latency-clear >/dev/null; }
 clr; sleep 1.5
-idle=$(lat | awk '{n++} END{ if(n<2) print 0; else printf "%.0f", (n-1)/1.5 }')
-[ "$idle" -ge 80 ] && idle=">=83"
+idle=$(lat | awk '{n++} END{ if(n>=120) print "滿"; else if(n<2) print 0; else printf "%.0f", (n-1)/1.5 }')
 all=""
 for d in "1900 900" "1900 900" "900 1900" "900 1900" "1900 900" "900 1900"; do
   set -- $d
