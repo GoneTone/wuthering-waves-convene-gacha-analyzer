@@ -65,31 +65,11 @@ class BannerPage extends ConsumerWidget {
     final tokens = Theme.of(context).gacha;
     final state = ref.watch(gachaRepositoryProvider);
     final activeData = state.activeData;
-    // 手機橫向沒有底部狀態列，最後更新時間改放在頁首。
-    final lastUpdated =
-        phoneOrientationOf(context) == PhoneOrientation.landscape
-        ? LastUpdatedLabel(
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: tokens.textMuted),
-          )
-        : null;
-
     if (state.isBootstrapping) {
       return const LoadingState();
     }
     if (activeData == null) {
-      if (lastUpdated == null) return EmptyState.noSync(context);
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.m),
-            child: lastUpdated,
-          ),
-          Expanded(child: EmptyState.noSync(context)),
-        ],
-      );
+      return noSyncPageBody(context);
     }
     final type = _resolveType();
     final records = activeData.banners[cardPoolType] ?? const [];
@@ -110,7 +90,7 @@ class BannerPage extends ConsumerWidget {
                     icon: _iconForGachaType(type),
                   ),
                 ),
-                ?(lastUpdated == null ? null : Flexible(child: lastUpdated)),
+                ?phoneLandscapeLastUpdated(context),
               ],
             ),
             SizedBox(height: 320, child: EmptyState.noRecords(context)),
@@ -172,16 +152,7 @@ class BannerPage extends ConsumerWidget {
                           icon: _iconForGachaType(type),
                         ),
                       ),
-                      ?(lastUpdated == null
-                          ? null
-                          : Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.s,
-                                ),
-                                child: lastUpdated,
-                              ),
-                            )),
+                      ?phoneLandscapeLastUpdated(context),
                       ShareActionButton(
                         enabled: records.isNotEmpty,
                         onGenerate: () => _generateBannerShare(
