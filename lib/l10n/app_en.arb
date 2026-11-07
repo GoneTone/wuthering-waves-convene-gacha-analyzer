@@ -1022,6 +1022,10 @@
   "@galleryNextTab": {
     "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
   },
+  "detailScrollDown": "Scroll down",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "Image failed to load",
   "@galleryLazyLoadFailed": {
     "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."

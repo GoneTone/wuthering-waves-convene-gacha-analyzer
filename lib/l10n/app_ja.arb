@@ -1018,6 +1018,10 @@
   "@galleryNextTab": {
     "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
   },
+  "detailScrollDown": "下へスクロール",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "画像の読み込みに失敗しました",
   "@galleryLazyLoadFailed": {
     "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."

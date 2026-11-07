@@ -77,8 +77,8 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   /// 電腦版改用兩欄的最小視窗寬度；更窄時左欄加圖片放不下，維持單欄。
   static const double _desktopTwoColumnMinWidth = 1000;
 
-  /// 左欄底部漸層提示的高度。
-  static const double _detailsFadeHeight = 24;
+  /// 左欄底部漸層提示的高度；需蓋得住其上的往下捲箭頭圓鈕。
+  static const double _detailsFadeHeight = 40;
 
   /// 水平滑動換圖的放手門檻：位移（dp）。
   static const double _swipeDistance = 48;
@@ -909,30 +909,46 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                       child: Stack(
                         children: [
                           Positioned.fill(
-                            child: SingleChildScrollView(
-                              controller: _detailsScroll,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  header,
-                                  if (caption != null) ...[
-                                    // 上方留白與 caption 自帶的 top padding 對稱。
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: AppSpacing.m,
-                                      ),
-                                      child: Divider(
-                                        height: 1,
-                                        color: tokens.borderSubtle,
-                                      ),
-                                    ),
-                                    caption,
-                                  ],
-                                ],
+                            // 捲軸常駐才看得出左欄可捲；關掉預設捲軸，免得電腦版再疊一條只在
+                            // hover／捲動時才出現的。內容放不下時才畫 thumb。
+                            child: ScrollConfiguration(
+                              behavior: ScrollConfiguration.of(
+                                context,
+                              ).copyWith(scrollbars: false),
+                              child: Scrollbar(
+                                controller: _detailsScroll,
+                                thumbVisibility: true,
+                                child: SingleChildScrollView(
+                                  controller: _detailsScroll,
+                                  // 右側讓出捲軸位置，thumb 不壓在文字上。
+                                  padding: const EdgeInsets.only(
+                                    right: AppSpacing.m,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      header,
+                                      if (caption != null) ...[
+                                        // 上方留白與 caption 自帶的 top padding 對稱。
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: AppSpacing.m,
+                                          ),
+                                          child: Divider(
+                                            height: 1,
+                                            color: tokens.borderSubtle,
+                                          ),
+                                        ),
+                                        caption,
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                          if (_detailsHasMore)
+                          if (_detailsHasMore) ...[
                             const Positioned(
                               left: 0,
                               right: 0,
@@ -942,6 +958,24 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                                 child: ScrollEdgeFade(side: ScrollSide.bottom),
                               ),
                             ),
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: ScrollArrowButton(
+                                  icon: Icons.expand_more,
+                                  tooltip: l.detailScrollDown,
+                                  tokens: tokens,
+                                  largeHitArea: true,
+                                  onPressed: () => _detailsScroll.animateBy(
+                                    _detailsScroll.position.viewportDimension *
+                                        0.8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
