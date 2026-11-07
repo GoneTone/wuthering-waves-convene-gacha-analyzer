@@ -17,6 +17,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart'
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/account_management.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import '../../helpers/no_game_dir.dart';
 
 class _NullCapture implements GachaCapture {
@@ -325,6 +326,19 @@ void main() {
       await tester.tap(find.text('移除'));
       await tester.pumpAndSettle();
       expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('remove-account dialog: the close button cancels', (
+      tester,
+    ) async {
+      final c = await pumpTwo(tester);
+      await openMenu(tester, 0);
+      await tester.tap(find.text('移除'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(AppDialogCloseButton));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsNothing);
+      expect(c.read(gachaRepositoryProvider).knownUids, hasLength(2));
     });
   });
 

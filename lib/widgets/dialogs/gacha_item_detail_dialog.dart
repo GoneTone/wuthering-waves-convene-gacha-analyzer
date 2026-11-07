@@ -835,18 +835,28 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
             current!.skin!,
             constrainHeight: !twoColumn,
           );
+    final chipBar = chipEntries.length > 1
+        ? GalleryChipBar(
+            labels: [for (final e in chipEntries) e.label],
+            selectedIndex: clampedIndex,
+            onSelected: (i) => setState(() => _selectedIndex = i),
+          )
+        : null;
     final gallery = Column(
       mainAxisSize: current != null ? MainAxisSize.max : MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (chipEntries.length > 1) ...[
-          GalleryChipBar(
-            labels: [for (final e in chipEntries) e.label],
-            selectedIndex: clampedIndex,
-            onSelected: (i) => setState(() => _selectedIndex = i),
-          ),
-          const SizedBox(height: AppSpacing.m),
-        ],
+        // 兩欄時沒有標題列，✕ 改放右欄頂列、接在頁籤列的 › 之後。
+        if (twoColumn)
+          Row(
+            children: [
+              Expanded(child: chipBar ?? const SizedBox.shrink()),
+              const AppDialogCloseButton(),
+            ],
+          )
+        else
+          ?chipBar,
+        if (twoColumn || chipBar != null) const SizedBox(height: AppSpacing.m),
         if (current != null)
           Expanded(
             child: _buildCurrentImageArea(
@@ -889,6 +899,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
       return AppDialog(
         size: phoneLandscape ? AppDialogSize.lg : AppDialogSize.xl,
         maxHeight: 880,
+        showCloseButton: false,
         content: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

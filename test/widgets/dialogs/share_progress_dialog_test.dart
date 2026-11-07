@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/share_progress_dialog.dart';
 
 void main() {
@@ -20,6 +21,7 @@ void main() {
     final l = await AppLocalizations.delegate.load(const Locale('zh'));
     expect(find.text(l.shareImageGenerating), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.byType(AppDialogCloseButton), findsNothing);
   });
 
   testWidgets('PopScope 不允許使用者關閉（canPop=false）', (t) async {

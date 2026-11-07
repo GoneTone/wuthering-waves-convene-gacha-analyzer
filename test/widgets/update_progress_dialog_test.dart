@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/update_progress_dialog.dart';
 import '../helpers/no_game_dir.dart';
 
@@ -56,6 +57,18 @@ Future<void> _pumpDialog(
 }
 
 void main() {
+  for (final progress in const <UpdateProgress>[
+    Preparing(),
+    WaitingForCapture(),
+  ]) {
+    testWidgets('no close button while running (${progress.runtimeType})', (
+      tester,
+    ) async {
+      await _pumpDialog(tester, progress: progress);
+      expect(find.byType(AppDialogCloseButton), findsNothing);
+    });
+  }
+
   testWidgets('WaitingForCapture shows not-detected link that opens help', (
     tester,
   ) async {
