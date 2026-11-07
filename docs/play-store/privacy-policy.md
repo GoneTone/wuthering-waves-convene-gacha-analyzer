@@ -19,7 +19,7 @@
 以上資料存在你的裝置上，在 App 內刪除帳號會一併刪除該帳號的資料。
 
 - **Android 版**：解除安裝 App 會刪除裝置上的資料。Android 的系統備份可能會把 App 資料（喚取紀錄、設定）備份到你自己的 Google 帳號，是否備份由你裝置上的備份設定決定；重新安裝或換新裝置時，系統可能會還原這份備份。加密保存的憑證（例如無線偵錯的配對金鑰）不會備份，還原後需要重新配對。
-- **Windows 版**：資料存在 `%APPDATA%\tw.reh\wuthering_waves_convene_gacha_analyzer`。解除安裝時會詢問是否一併刪除，預設保留；保留的話可以之後自行刪除這個資料夾。解除安裝時一定會移除本機產生的根憑證（Windows 會跳出一次確認視窗）與它的私密金鑰資料夾 `%APPDATA%\wuthering_waves_convene_gacha_analyzer\ca`，不受上述「是否刪除資料」的選擇影響。
+- **Windows 版**：資料存在 `%APPDATA%\tw.reh\wuthering_waves_convene_gacha_analyzer`。解除安裝時會詢問是否一併刪除，預設保留；保留的話可以之後自行刪除這個資料夾。解除安裝時一定會嘗試移除本機產生的根憑證（Windows 會跳出一次確認視窗，按「是」才會刪除）並刪除它的私密金鑰資料夾 `%APPDATA%\wuthering_waves_convene_gacha_analyzer\ca`，不受上述「是否刪除資料」的選擇影響。
 
 ### 會連線的對象
 
@@ -69,7 +69,7 @@ This app is an unofficial fan-made tool and is not affiliated with Kuro Games. T
 This data is stored on your device. Deleting an account in the app removes that account's data.
 
 - **Android**: uninstalling the app removes the data on the device. Android's system backup may back up the app data (convene history, settings) to your own Google account, depending on your device's backup setting, and may restore it when you reinstall or set up a new device. Encrypted credentials (such as the wireless debugging pairing key) are not backed up; after a restore you need to pair again.
-- **Windows**: the data is stored in `%APPDATA%\tw.reh\wuthering_waves_convene_gacha_analyzer`. The uninstaller asks whether to delete it and keeps it by default; you can delete that folder yourself later. Uninstalling always removes the locally generated root certificate (Windows asks you to confirm once) and its private key folder `%APPDATA%\wuthering_waves_convene_gacha_analyzer\ca`, whatever you choose about the data.
+- **Windows**: the data is stored in `%APPDATA%\tw.reh\wuthering_waves_convene_gacha_analyzer`. The uninstaller asks whether to delete it and keeps it by default; you can delete that folder yourself later. Uninstalling always tries to remove the locally generated root certificate (Windows asks you to confirm once; it is deleted only if you choose Yes) and deletes its private key folder `%APPDATA%\wuthering_waves_convene_gacha_analyzer\ca`, whatever you choose about the data.
 
 ### Services the app connects to
 

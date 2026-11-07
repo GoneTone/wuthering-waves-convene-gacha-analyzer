@@ -396,7 +396,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 不是從 Play 安裝的版本（`flutter run`、側載），`checkForUpdate` 會丟例外：啟動時的自動檢查安靜略過，手動檢查顯示原因。
 - 彈性更新：按「更新」後背景下載，完成時跳出不會自動消失的「重新啟動」提示（`SnackBar.persist`）；提示被滑掉後，再開更新對話框按「更新」會直接安裝。
 - **in_app_update 5.0.0 的幾個坑**（讀外掛 Kotlin 原始碼確認）：
-  - `startFlexibleUpdate` 只在下載完成或確認畫面回傳時才回覆。流程根本沒啟動時（已經下載好、不允許彈性更新）Future 永遠不會完成，所以呼叫前要先 `checkForUpdate` 判斷：已下載就直接進入「已下載」，不允許就當失敗。
+  - `startFlexibleUpdate` 只在幾種情況回覆：下載完成、安裝出錯、確認畫面按拒絕。確認畫面按同意不會回覆（要等下載完）；流程根本沒啟動時（已經下載好、不允許彈性更新），以及從通知列取消下載（狀態 CANCELED、錯誤碼 NO_ERROR）時，Future **永遠不會完成**。所以呼叫前要先 `checkForUpdate` 判斷（已下載就直接進入「已下載」，不允許就當失敗），下載期間還要同時監聽安裝狀態串流，收到取消或失敗就自行結束。
   - 安裝狀態的事件串流只有在**這次執行中呼叫過 `startFlexibleUpdate`** 之後才會送事件。重開 App 時若下載還在背景進行，只能等下一次檢查才知道結果。
   - 重開 App 時，之前觸發的更新會回報成 `developerTriggeredUpdateInProgress`（不是 `updateAvailable`），要一併當成有更新，並依 `installStatus` 接續：已下載就直接跳「重新啟動」提示。
   - `completeFlexibleUpdate` 成功時 App 直接重啟、從不回覆，所以只有前置條件錯誤會以例外回來。
@@ -419,5 +419,6 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 ### 40. Windows 解除安裝要清掉根憑證（通用，Windows）
 
 - 這不是 Android 的問題，但在寫隱私權政策時發現：Windows 版的解除安裝程式原本只刪資料資料夾，App 產生的根憑證仍留在「目前使用者」的信任清單，私鑰也留在 `%APPDATA%\wuthering_waves_convene_gacha_analyzer\ca`。拿到這把私鑰就能偽造任何網站的身分。
-- 處理：`installer.iss` 的 `RemoveCaArtifacts` 在解除安裝最後**一定**執行（不受「是否刪除資料」影響）：`certutil -user -delstore Root "<CN>"`（Windows 會跳出一次確認視窗），再刪掉 `ca` 資料夾。憑證名稱與路徑必須和 `rust/src/ca.rs` 的 `EXPECTED_CN`、`ca_dir()` 一致。原神版的解除安裝程式應該也有同樣的問題。
+- 處理：`installer.iss` 的 `RemoveCaArtifacts` 在解除安裝最後**一定**執行（不受「是否刪除資料」影響）：先 `certutil -user -delstore Root "<CN>"`（Windows 會跳出確認視窗，玩家按「是」才會刪），再刪掉 `ca` 資料夾；就算玩家拒絕刪憑證，私鑰也已經不在，留下的憑證無法拿來偽造。
+- **呼叫 certutil 不可用 `SW_HIDE`**：確認視窗是 certutil 第一個顯示的視窗，會套用啟動時的隱藏設定，玩家看不到它，解除安裝就會一直等。靜默解除安裝（`/VERYSILENT`）也一樣會停在這個系統視窗。憑證名稱與路徑必須和 `rust/src/ca.rs` 的 `EXPECTED_CN`、`ca_dir()` 一致。原神版的解除安裝程式應該也有同樣的問題。
 
