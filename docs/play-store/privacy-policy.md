@@ -40,7 +40,7 @@ Android 不允許 App 直接讀取其他 App 的檔案。本 App 會在你按下
 
 按下「更新資料」後，App 會在你的電腦上啟動一個本機攔截程式（需要系統管理員權限，會跳出一次 UAC 確認），並安裝一張在本機產生的根憑證，只把鳴潮喚取記錄頁面對官方喚取歷史 API 的那一條請求導到本機解析，取得查詢參數。App 也會讀取鳴潮在你電腦上的記錄檔作為備援。
 
-- 不讀取或修改遊戲檔案與記憶體，其餘網路流量原樣放行。
+- 除了上述記錄檔之外不讀取其他遊戲檔案，不修改任何遊戲檔案，也不讀取遊戲記憶體；其餘網路流量原樣放行。
 - 攔截只在更新期間進行，完成後立即停止並還原網路設定。
 
 ### 不會做的事
@@ -90,7 +90,7 @@ Android doesn't let apps read other apps' files. When you tap "Update", the app 
 
 When you click "Update", the app starts a local interception helper on your computer (it needs administrator rights, so Windows shows a UAC prompt once) and installs a root certificate generated on your computer. Only the one request the game's Convene History page sends to the official convene history API is redirected to the app to read the query parameters. The app also reads the game's log file on your computer as a fallback.
 
-- It never reads or modifies game files or memory, and all other network traffic passes through untouched.
+- Apart from that log file it reads no game files, it never modifies game files or reads game memory, and all other network traffic passes through untouched.
 - Interception runs only during an update; it stops and restores the network settings right after.
 
 ### What the app does not do
