@@ -1,0 +1,175 @@
+name: release-android
+run-name: release android ${{ inputs.tag }}
+
+# 先跑 release-windows（產生版本號 commit 與 Release 草稿），再跑本流程並輸入同一個 tag。
+# AAB 只上傳到 Play 的內部測試軌道；「新功能」由維護者在 Play Console 升級正式版時手動填寫。
+# 預覽版（-rc.N）只留在內部測試，不要升級正式版（App 內查 GitHub 更新說明時會略過預覽版）。
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (vX.Y.Z or vX.Y.Z-rc.N), same as the Windows release'
+        required: true
+        type: string
+      ref:
+        description: 'Branch or commit to build (master already carries the Windows version bump)'
+        required: false
+        type: string
+        default: master
+      release_status:
+        description: 'Play release status (use draft until the app has been published once)'
+        required: true
+        type: choice
+        options:
+          - completed
+          - draft
+        default: completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-android-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      # === A. Checkout ==============================================
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      # === B. Toolchain =============================================
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .fvmrc
+          channel: stable
+          cache: true
+
+      # super_native_extensions 透過 cargokit 編 Rust，需要 rustup 自動加 Android target。
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      # === C. Version code ==========================================
+      # tag 不合法時 CLI 以非 0 結束碼離開，流程直接失敗。
+      - name: Compute version code
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          out="$(dart run tool/android_version_code.dart "$TAG")"
+          echo "$out"
+          echo "$out" | grep -E '^(VERSION_CODE|BUILD_NAME)=' >> "$GITHUB_ENV"
+
+      # === D. Secrets ===============================================
+      # 缺任何一個簽章或上傳 secret 就失敗，絕不退回 debug 金鑰簽章。
+      - name: Restore upload key
+        env:
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          missing=0
+          for name in ANDROID_UPLOAD_KEYSTORE_BASE64 ANDROID_UPLOAD_STORE_PASSWORD ANDROID_UPLOAD_KEY_ALIAS ANDROID_UPLOAD_KEY_PASSWORD PLAY_SERVICE_ACCOUNT_JSON; do
+            if [ -z "${!name}" ]; then
+              echo "::error::secret $name is not set"
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+          printf '%s' "$ANDROID_UPLOAD_KEYSTORE_BASE64" | base64 -d > android/upload.jks
+          {
+            echo "storeFile=upload.jks"
+            echo "storePassword=$ANDROID_UPLOAD_STORE_PASSWORD"
+            echo "keyAlias=$ANDROID_UPLOAD_KEY_ALIAS"
+            echo "keyPassword=$ANDROID_UPLOAD_KEY_PASSWORD"
+          } > android/key.properties
+
+      # 雲端同步 OAuth 憑證不進 repo；缺 secrets 時只停用該功能，與 Windows 流程一致。
+      - name: Write cloud sync defines from secrets
+        env:
+          CLOUD_SYNC_CLIENT_ID: ${{ secrets.CLOUD_SYNC_CLIENT_ID }}
+          CLOUD_SYNC_CLIENT_SECRET: ${{ secrets.CLOUD_SYNC_CLIENT_SECRET }}
+        run: |
+          if [ -n "$CLOUD_SYNC_CLIENT_ID" ] && [ -n "$CLOUD_SYNC_CLIENT_SECRET" ]; then
+            mkdir -p secrets
+            jq -n --arg id "$CLOUD_SYNC_CLIENT_ID" --arg secret "$CLOUD_SYNC_CLIENT_SECRET" \
+              '{CLOUD_SYNC_CLIENT_ID: $id, CLOUD_SYNC_CLIENT_SECRET: $secret}' > secrets/cloud_sync_defines.json
+            echo "DEFINES_ARG=--dart-define-from-file=secrets/cloud_sync_defines.json" >> "$GITHUB_ENV"
+            echo "cloud sync defines written"
+          else
+            echo "::warning::CLOUD_SYNC_CLIENT_ID/SECRET secrets not set; cloud sync will be disabled in this release build"
+          fi
+
+      # === E. Build =================================================
+      - name: Build app bundle
+        run: |
+          flutter build appbundle --release \
+            --build-name "$BUILD_NAME" \
+            --build-number "$VERSION_CODE" \
+            ${DEFINES_ARG:-}
+
+      - name: Verify bundle is not debug-signed
+        run: |
+          owner="$(keytool -printcert -jarfile build/app/outputs/bundle/release/app-release.aab | grep -m1 'Owner:')"
+          echo "$owner"
+          if echo "$owner" | grep -q 'CN=Android Debug'; then
+            echo "::error::bundle is signed with the debug key"
+            exit 1
+          fi
+
+      # === F. Upload to Play ========================================
+      - name: Upload to Play internal track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: tw.reh.wuwa.gacha
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          releaseName: ${{ inputs.tag }}
+          track: internal
+          status: ${{ inputs.release_status }}
+
+      # === G. Artifact & cleanup ====================================
+      - name: Upload bundle as workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-bundle-${{ env.BUILD_NAME }}
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Remove signing material
+        if: always()
+        run: rm -f android/upload.jks android/key.properties secrets/cloud_sync_defines.json
+
+      - name: Write step summary
+        if: success()
+        run: |
+          aab=build/app/outputs/bundle/release/app-release.aab
+          {
+            echo "## Android release ${{ inputs.tag }}"
+            echo
+            echo "- **Version name**: $BUILD_NAME"
+            echo "- **Version code**: $VERSION_CODE"
+            echo "- **Size**: $(du -h "$aab" | cut -f1)"
+            echo "- **SHA-256**: \`$(sha256sum "$aab" | cut -d' ' -f1)\`"
+            echo "- **Play track**: internal (${{ inputs.release_status }})"
+            echo "- Next: fill in \"What's new\" and promote to production in Play Console (stable tags only)"
+          } >> "$GITHUB_STEP_SUMMARY"
