@@ -70,8 +70,17 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   /// 兩欄（手機橫向）時左欄的寬度。
   static const double _twoColumnDetailsWidth = 240;
 
+  /// 水平滑動換圖的放手門檻：位移（dp）。
+  static const double _swipeDistance = 48;
+
+  /// 水平滑動換圖的放手門檻：速度（dp/s）。
+  static const double _swipeVelocity = 300;
+
   /// 當前選中 chip 的 index；超出範圍由 `clampedIndex` 收斂。
   int _selectedIndex = 0;
+
+  /// 本次水平拖曳累計的 dx。
+  double _swipeDx = 0;
 
   /// 每張圖的下載／載入狀態，key 為該圖本地 cache 檔絕對路徑。
   final Map<String, _ImageLoadState> _loadStates = {};
@@ -327,8 +336,51 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     showDialogToast(context, message);
   }
 
+  /// 放手時依位移（優先）或速度判斷左右滑換圖；到頭不循環，放手後直接換圖不跟手。
+  void _onSwipeEnd(DragEndDetails details, int index, int count) {
+    final velocity = details.velocity.pixelsPerSecond.dx;
+    final direction = _swipeDx.abs() >= _swipeDistance
+        ? _swipeDx.sign
+        : (velocity.abs() >= _swipeVelocity ? velocity.sign : 0);
+    // 往左滑看下一張，往右滑回上一張。
+    final next = index - direction.toInt();
+    if (direction == 0 || next < 0 || next >= count) return;
+    setState(() => _selectedIndex = next);
+  }
+
+  /// 圖片區：依當前 chip 狀態顯示內容（ready→可縮放圖／loading→spinner／failed→重試），
+  /// 外包左右滑換圖手勢，多於一張時底部疊頁點；[index]／[count] 為目前張數位置。
+  Widget _buildCurrentImageArea(
+    BuildContext context,
+    _ImageChipEntry current, {
+    required int index,
+    required int count,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragStart: (_) => _swipeDx = 0,
+      onHorizontalDragUpdate: (d) => _swipeDx += d.delta.dx,
+      onHorizontalDragEnd: (d) => _onSwipeEnd(d, index, count),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _buildImageState(context, current),
+          if (count > 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: AppSpacing.s,
+              child: IgnorePointer(
+                child: _PageDots(count: count, index: index),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   /// 依當前 chip 狀態顯示內容（ready→可縮放圖／loading→spinner／failed→重試）。
-  Widget _buildCurrentImageArea(BuildContext context, _ImageChipEntry current) {
+  Widget _buildImageState(BuildContext context, _ImageChipEntry current) {
     final theme = Theme.of(context);
     final tokens = theme.gacha;
     final l = AppLocalizations.of(context)!;
@@ -741,7 +793,14 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
           const SizedBox(height: AppSpacing.m),
         ],
         if (current != null)
-          Expanded(child: _buildCurrentImageArea(context, current)),
+          Expanded(
+            child: _buildCurrentImageArea(
+              context,
+              current,
+              index: clampedIndex,
+              count: chipEntries.length,
+            ),
+          ),
         if (caption != null && !twoColumn) caption,
       ],
     );
@@ -829,6 +888,44 @@ List<String> _tagsFor(
   if (elementName.isNotEmpty) elementName,
   if (weaponTypeName.isNotEmpty) weaponTypeName,
 ];
+
+/// 圖片區底部的頁點：選中者寬 18、主色，其餘 6x6、[GachaTokens.borderEmphasis] 色。
+class _PageDots extends StatelessWidget {
+  /// 建立 [_PageDots]。
+  const _PageDots({required this.count, required this.index});
+
+  /// 頁點總數（圖片張數）。
+  final int count;
+
+  /// 選中的頁點索引。
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (var i = 0; i < count; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3),
+            child: AnimatedContainer(
+              key: ValueKey('page-dot-$i'),
+              duration: const Duration(milliseconds: 150),
+              width: i == index ? 18 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: i == index
+                    ? theme.colorScheme.primary
+                    : theme.gacha.borderEmphasis,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 /// chip 類別 — icon 永遠 ready（已快取），造型走 lazy，luckdraw 由 webview 擷取。
 enum _ChipKind {

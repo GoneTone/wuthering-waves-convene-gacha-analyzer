@@ -1310,6 +1310,172 @@ void main() {
       expect(name.bottom, lessThan(image.top));
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
+    group('swipe between images', () {
+      const iconUrl = 'https://cdn.example.com/m_icon.png';
+
+      /// 開啟「造型A＋Icon」兩張圖的詳情，回傳 (造型檔, icon 檔)。
+      Future<(File, File)> openTwoImages(WidgetTester tester) async {
+        final skin = await seedCharacterWithSkin(tester);
+        final icon = itemIconCacheFile(
+          baseDir: tempDir,
+          resourceId: 111,
+          url: iconUrl,
+        );
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+        );
+        return (skin, icon);
+      }
+
+      /// 圖片區目前顯示 [file] 的那張。
+      Finder shown(File file) => find.byKey(ValueKey(file.path));
+
+      /// 頁點（key 為 `page-dot-N`）。
+      Finder dots() => find.byWidgetPredicate((w) {
+        final k = w.key;
+        return k is ValueKey<String> && k.value.startsWith('page-dot-');
+      });
+
+      /// 第 [i] 個頁點的寬度。
+      double dotWidth(WidgetTester tester, int i) =>
+          tester.getSize(find.byKey(ValueKey('page-dot-$i'))).width;
+
+      testWidgets('swipe left goes to the next image, right goes back', (
+        tester,
+      ) async {
+        final (skin, icon) = await openTwoImages(tester);
+        expect(shown(skin), findsOneWidget);
+        await tester.drag(shown(skin), const Offset(-120, 0));
+        await tester.pump();
+        expect(shown(icon), findsOneWidget);
+        expect(shown(skin), findsNothing);
+        await tester.drag(shown(icon), const Offset(120, 0));
+        await tester.pump();
+        expect(shown(skin), findsOneWidget);
+      });
+
+      testWidgets('no wrap-around at either end', (tester) async {
+        final (skin, icon) = await openTwoImages(tester);
+        await tester.drag(shown(skin), const Offset(120, 0));
+        await tester.pump();
+        expect(shown(skin), findsOneWidget);
+        await tester.drag(shown(skin), const Offset(-120, 0));
+        await tester.pump();
+        await tester.drag(shown(icon), const Offset(-120, 0));
+        await tester.pump();
+        expect(shown(icon), findsOneWidget);
+      });
+
+      testWidgets('vertical drag never switches', (tester) async {
+        final (skin, _) = await openTwoImages(tester);
+        await tester.drag(shown(skin), const Offset(0, -120));
+        await tester.pump();
+        expect(shown(skin), findsOneWidget);
+      });
+
+      testWidgets('short slow drag does not switch', (tester) async {
+        final (skin, _) = await openTwoImages(tester);
+        await tester.timedDrag(
+          shown(skin),
+          const Offset(-20, 0),
+          const Duration(seconds: 1),
+        );
+        await tester.pump();
+        expect(shown(skin), findsOneWidget);
+      });
+
+      testWidgets('short fast flick switches', (tester) async {
+        final (skin, icon) = await openTwoImages(tester);
+        await tester.timedDrag(
+          shown(skin),
+          const Offset(-40, 0),
+          const Duration(milliseconds: 60),
+        );
+        await tester.pump();
+        expect(shown(icon), findsOneWidget);
+      });
+
+      testWidgets('trackpad horizontal pan switches', (tester) async {
+        final (skin, icon) = await openTwoImages(tester);
+        final center = tester.getCenter(shown(skin));
+        final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+        await tester.sendEventToBinding(pointer.panZoomStart(center));
+        await tester.sendEventToBinding(
+          pointer.panZoomUpdate(center, pan: const Offset(-60, 0)),
+        );
+        await tester.sendEventToBinding(
+          pointer.panZoomUpdate(center, pan: const Offset(-120, 0)),
+        );
+        await tester.sendEventToBinding(pointer.panZoomEnd());
+        await tester.pump();
+        expect(shown(icon), findsOneWidget);
+      });
+
+      testWidgets('tap still opens zoom and the menu button stays', (
+        tester,
+      ) async {
+        final (skin, _) = await openTwoImages(tester);
+        expect(find.byIcon(Icons.more_vert), findsOneWidget);
+        await tester.tap(shown(skin));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+      });
+
+      testWidgets('page dots: one per image, selected one is wider', (
+        tester,
+      ) async {
+        final (skin, _) = await openTwoImages(tester);
+        expect(dots(), findsNWidgets(2));
+        expect(dotWidth(tester, 0), 18);
+        expect(dotWidth(tester, 1), 6);
+        await tester.drag(shown(skin), const Offset(-120, 0));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(dotWidth(tester, 0), 6);
+        expect(dotWidth(tester, 1), 18);
+      });
+
+      testWidgets('single image: no dots, swipe does not throw', (
+        tester,
+      ) async {
+        await tester.runAsync(() async {
+          await container
+              .read(itemImageIndexProvider.notifier)
+              .mergeIcon(
+                resourceId: 222,
+                iconUrl: iconUrl,
+                noImage: false,
+                permanentNoImage: false,
+              );
+          final f = itemIconCacheFile(
+            baseDir: tempDir,
+            resourceId: 222,
+            url: iconUrl,
+          );
+          await _touchFile(tempDir, f.uri.pathSegments.last);
+        });
+        rebuildContainer();
+        await tester.runAsync(loadIndex);
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 222, name: 'Weapon', resourceType: '武器'),
+        );
+        final icon = itemIconCacheFile(
+          baseDir: tempDir,
+          resourceId: 222,
+          url: iconUrl,
+        );
+        expect(dots(), findsNothing);
+        await tester.drag(shown(icon), const Offset(-120, 0));
+        await tester.drag(shown(icon), const Offset(120, 0));
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        expect(shown(icon), findsOneWidget);
+      });
+    });
+
     testWidgets('點 dialog 外圍 → barrier 仍能關閉（Scaffold 包裹不擋 barrier）', (
       tester,
     ) async {
