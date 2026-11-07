@@ -1495,8 +1495,11 @@ void main() {
     group('swipe between images', () {
       const iconUrl = 'https://cdn.example.com/m_icon.png';
 
-      /// 開啟「造型A＋Icon」兩張圖的詳情，回傳 (造型檔, icon 檔)。
-      Future<(File, File)> openTwoImages(WidgetTester tester) async {
+      /// 以 [theme]（預設深色）開啟「造型A＋Icon」兩張圖的詳情，回傳 (造型檔, icon 檔)。
+      Future<(File, File)> openTwoImages(
+        WidgetTester tester, {
+        ThemeData? theme,
+      }) async {
         final skin = await seedCharacterWithSkin(tester);
         final icon = itemIconCacheFile(
           baseDir: tempDir,
@@ -1506,6 +1509,7 @@ void main() {
         await pumpDialog(
           tester,
           _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+          theme: theme,
         );
         return (skin, icon);
       }
@@ -1618,6 +1622,43 @@ void main() {
         expect(dotWidth(tester, 0), 6);
         expect(dotWidth(tester, 1), 18);
       });
+
+      /// 第 [i] 個頁點的底色。
+      Color dotColor(WidgetTester tester, int i) =>
+          ((tester
+                      .widget<AnimatedContainer>(
+                        find.byKey(ValueKey('page-dot-$i')),
+                      )
+                      .decoration!
+                  as BoxDecoration)
+              .color)!;
+
+      for (final (name, theme) in [
+        ('light', buildLightTheme()),
+        ('dark', buildDarkTheme()),
+      ]) {
+        testWidgets('page dots sit on a dark pill readable over any image '
+            '($name)', (tester) async {
+          // 頁點直接畫在圖上，深色圖會吃掉 borderEmphasis 色的點；比照 ⋮ 鈕墊半透明黑底。
+          await openTwoImages(tester, theme: theme);
+          final pill = find.byKey(const ValueKey('page-dots-scrim'));
+          expect(pill, findsOneWidget);
+          for (final i in [0, 1]) {
+            expect(
+              find.descendant(
+                of: pill,
+                matching: find.byKey(ValueKey('page-dot-$i')),
+              ),
+              findsOneWidget,
+            );
+          }
+          final decoration =
+              tester.widget<DecoratedBox>(pill).decoration as ShapeDecoration;
+          expect(decoration.color, Colors.black.withValues(alpha: 0.4));
+          expect(dotColor(tester, 0), theme.colorScheme.primary);
+          expect(dotColor(tester, 1), Colors.white70);
+        });
+      }
 
       testWidgets('single image: no dots, swipe does not throw', (
         tester,
