@@ -25,6 +25,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/scroll/scroll_affordance.dart';
 
 GachaRecord _rec({
   required int resourceId,
@@ -42,6 +43,9 @@ GachaRecord _rec({
   time: DateTime(2026, 5, 24),
   languageCode: languageCode,
 );
+
+/// 雙欄版面左欄（資訊欄）的 key。
+const detailsColumnKey = ValueKey('detail-info-column');
 
 /// 找 label 文字為 [text] 的詳情 tag [Chip]（與 [ChoiceChip] 切換器 chip 區隔）。
 Finder _chipWithText(String text) =>
@@ -318,7 +322,8 @@ void main() {
     });
 
     testWidgets('長簡介在寬視窗下換行、不把 dialog 撐寬（保持 ≤ md 寬）', (tester) async {
-      tester.view.physicalSize = const Size(1400, 900);
+      // 寬度未達雙欄門檻（1000），維持單欄：簡介在 title 區。
+      tester.view.physicalSize = const Size(990, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
         tester.view.resetPhysicalSize();
@@ -364,7 +369,7 @@ void main() {
       expect(find.byType(Html), findsOneWidget);
       // AppDialog 把 title 鎖在 md(640) 寬 → 簡介 Html 被限制在 title 內（約
       // 640 扣掉 icon／間距／padding ≈ 560px）換行，不會以 intrinsic 單行寬度
-      // 擴張到接近視窗寬(1400)。修壞時 Html 會 >1000px。
+      // 擴張到接近視窗寬(990)。修壞時 Html 會 >900px。
       expect(tester.getSize(find.byType(Html)).width, lessThan(700));
     });
 
@@ -1137,6 +1142,8 @@ void main() {
       WidgetTester tester, {
       ItemImageFetcher? fetcher,
       bool android = false,
+      String intro = '',
+      String bgDescription = '',
     }) async {
       const iconUrl = 'https://cdn.example.com/m_icon.png';
       const illustUrl = 'https://cdn.example.com/m_illust.png';
@@ -1152,8 +1159,8 @@ void main() {
         await n.mergeItemDetail(
           resourceId: 111,
           lang: 'zh-Hant',
-          detail: const ItemDetailL10n(
-            intro: '',
+          detail: ItemDetailL10n(
+            intro: intro,
             elementName: '',
             weaponTypeName: '',
             skins: [
@@ -1161,7 +1168,7 @@ void main() {
                 formationCard: illustUrl,
                 name: '造型A',
                 subDecName: '',
-                bgDescription: '',
+                bgDescription: bgDescription,
               ),
             ],
           ),
@@ -1266,12 +1273,21 @@ void main() {
       expect(find.text('儲存圖片'), findsOneWidget);
     });
 
-    /// 以 [size] 的手機畫面開啟詳情，回傳名稱與圖片的位置。
-    Future<(Rect, Rect)> pumpPhone(WidgetTester tester, Size size) async {
+    /// 以 [size] 的畫面開啟詳情（平台由 test variant 決定），回傳名稱與圖片的位置。
+    Future<(Rect, Rect)> pumpAt(
+      WidgetTester tester,
+      Size size, {
+      String intro = '',
+      String bgDescription = '',
+    }) async {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      final illustFile = await seedCharacterWithSkin(tester);
+      final illustFile = await seedCharacterWithSkin(
+        tester,
+        intro: intro,
+        bgDescription: bgDescription,
+      );
       await pumpDialog(
         tester,
         _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
@@ -1286,16 +1302,17 @@ void main() {
     testWidgets('phone landscape puts details and image side by side', (
       tester,
     ) async {
-      final (name, image) = await pumpPhone(tester, const Size(800, 360));
+      final (name, image) = await pumpAt(tester, const Size(800, 360));
       expect(name.right, lessThan(image.left));
       expect((name.top - image.top).abs(), lessThan(100));
+      expect(tester.getSize(find.byKey(detailsColumnKey)).width, 240);
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
     testWidgets('phone landscape keeps the skin caption in the left column', (
       tester,
     ) async {
       // 造型說明放在右欄會把立繪擠扁（實機上只剩約 120dp 高）。
-      final (_, image) = await pumpPhone(tester, const Size(800, 360));
+      final (_, image) = await pumpAt(tester, const Size(800, 360));
       final captions = find
           .text('造型A')
           .evaluate()
@@ -1306,9 +1323,113 @@ void main() {
     testWidgets('phone portrait stacks details above the image', (
       tester,
     ) async {
-      final (name, image) = await pumpPhone(tester, const Size(360, 800));
+      final (name, image) = await pumpAt(tester, const Size(360, 800));
       expect(name.bottom, lessThan(image.top));
+      expect(find.byKey(detailsColumnKey), findsNothing);
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('wide desktop window puts details and image side by side', (
+      tester,
+    ) async {
+      final (name, image) = await pumpAt(tester, const Size(1280, 800));
+      expect(name.right, lessThan(image.left));
+      expect(tester.getSize(find.byKey(detailsColumnKey)).width, 320);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+    testWidgets('desktop window under 1000 wide stays single column', (
+      tester,
+    ) async {
+      final (name, image) = await pumpAt(tester, const Size(900, 700));
+      expect(name.bottom, lessThan(image.top));
+      expect(find.byKey(detailsColumnKey), findsNothing);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+    group('two-column details scroll as one region', () {
+      /// 超過原本內層捲動上限的長簡介（使用者以「千咲」回報的情境）。
+      final longIntro = '<p>${'千咲的簡介很長。' * 120}</p>';
+
+      /// 簡介的 [Html]（左欄第一個 Html）。
+      Finder intro() => find.byType(Html).first;
+
+      /// 左欄底部的漸層提示。
+      Finder bottomFade() => find.byWidgetPredicate(
+        (w) => w is ScrollEdgeFade && w.side == ScrollSide.bottom,
+      );
+
+      testWidgets('dragging on the intro scrolls the whole column', (
+        tester,
+      ) async {
+        await pumpAt(
+          tester,
+          const Size(1280, 800),
+          intro: longIntro,
+          bgDescription: '<p>造型說明</p>',
+        );
+        final scrollables = find.ancestor(
+          of: intro(),
+          matching: find.byType(Scrollable),
+        );
+        expect(scrollables, findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byKey(detailsColumnKey),
+            matching: find.byType(Scrollable),
+          ),
+          findsOneWidget,
+        );
+        final introTop = tester.getRect(intro()).top;
+        final encore = tester.getRect(find.text('在 encore.moe 查看'));
+        final close = tester.getRect(find.text('關閉'));
+
+        await tester.dragFrom(
+          tester.getTopLeft(intro()) + const Offset(40, 20),
+          const Offset(0, -200),
+        );
+        await tester.pump();
+
+        final position = tester.state<ScrollableState>(scrollables).position;
+        expect(position.pixels, greaterThan(0));
+        expect(tester.getRect(intro()).top, lessThan(introTop));
+        expect(tester.getRect(find.text('在 encore.moe 查看')).top, encore.top);
+        expect(tester.getRect(find.text('關閉')).top, close.top);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+      testWidgets('bottom fade shows until scrolled to the end', (
+        tester,
+      ) async {
+        await pumpAt(tester, const Size(1280, 800), intro: longIntro);
+        await tester.pump();
+        expect(bottomFade(), findsOneWidget);
+        final position = tester
+            .state<ScrollableState>(
+              find.ancestor(of: intro(), matching: find.byType(Scrollable)),
+            )
+            .position;
+        position.jumpTo(position.maxScrollExtent);
+        await tester.pump();
+        expect(bottomFade(), findsNothing);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+      testWidgets('no bottom fade when the column fits', (tester) async {
+        await pumpAt(tester, const Size(1280, 800), intro: '<p>短</p>');
+        await tester.pump();
+        expect(bottomFade(), findsNothing);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+      testWidgets('phone portrait keeps the capped inner intro scroll', (
+        tester,
+      ) async {
+        await pumpAt(tester, const Size(360, 800), intro: longIntro);
+        final inner = find.ancestor(
+          of: intro(),
+          matching: find.byType(SingleChildScrollView),
+        );
+        expect(inner, findsOneWidget);
+        expect(tester.getSize(inner).height, lessThanOrEqualTo(120));
+        expect(tester.getSize(intro()).height, greaterThan(120));
+        expect(bottomFade(), findsNothing);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    });
 
     group('swipe between images', () {
       const iconUrl = 'https://cdn.example.com/m_icon.png';

@@ -27,6 +27,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/dialog_to
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gallery_chip_bar.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/item_image_actions.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/scroll/scroll_affordance.dart';
 
 /// module-level logger，供 dialog 與其 tap target 共用。
 final _log = Logger('gacha.itemimage.detail');
@@ -67,8 +68,17 @@ class GachaItemDetailDialog extends ConsumerStatefulWidget {
 
 /// [GachaItemDetailDialog] 的 state：維護 chip 選中索引與各圖 lazy 下載狀態。
 class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
-  /// 兩欄（手機橫向）時左欄的寬度。
-  static const double _twoColumnDetailsWidth = 240;
+  /// 手機橫向兩欄時左欄的寬度。
+  static const double _phoneDetailsWidth = 240;
+
+  /// 電腦版兩欄時左欄的寬度。
+  static const double _desktopDetailsWidth = 320;
+
+  /// 電腦版改用兩欄的最小視窗寬度；更窄時左欄加圖片放不下，維持單欄。
+  static const double _desktopTwoColumnMinWidth = 1000;
+
+  /// 左欄底部漸層提示的高度。
+  static const double _detailsFadeHeight = 24;
 
   /// 水平滑動換圖的放手門檻：位移（dp）。
   static const double _swipeDistance = 48;
@@ -94,16 +104,32 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   /// http client（dispose 時 close 中斷 in-flight 請求）。
   late final http.Client _client;
 
+  /// 兩欄時左欄（資訊欄）的捲動控制器。
+  final ScrollController _detailsScroll = ScrollController();
+
+  /// true 時左欄下方還有內容，疊底部漸層提示。
+  bool _detailsHasMore = false;
+
   @override
   void initState() {
     super.initState();
     _client = http.Client();
+    _detailsScroll.addListener(_updateDetailsFade);
   }
 
   @override
   void dispose() {
+    _detailsScroll.dispose();
     _client.close();
     super.dispose();
+  }
+
+  /// 依左欄捲動位置更新 [_detailsHasMore]：還沒捲到底才顯示底部漸層。
+  void _updateDetailsFade() {
+    if (!mounted || !_detailsScroll.hasClients) return;
+    final pos = _detailsScroll.position;
+    final hasMore = pos.pixels < pos.maxScrollExtent - 1;
+    if (hasMore != _detailsHasMore) setState(() => _detailsHasMore = hasMore);
   }
 
   /// 對立繪 [url] 做 lazy 下載；成功寫 cache 並 setState 為 ready，失敗為 failed。
@@ -506,9 +532,29 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     ),
   );
 
+  /// 詳情 HTML 區塊；[constrainHeight] 為 true 時限高 [maxHeight] 並自帶內層捲動，
+  /// false（兩欄）時完整展開、交給左欄整欄捲動。
+  Widget _detailHtmlBlock(
+    ThemeData theme,
+    String data, {
+    required double maxHeight,
+    required bool constrainHeight,
+  }) {
+    final html = _detailHtml(theme, data);
+    if (!constrainHeight) return html;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: SingleChildScrollView(child: html),
+    );
+  }
+
   /// 造型圖下方 caption：Name（標題）＋SubDecName（次標、弱色）＋BgDescription
-  /// （內文、含 HTML、過長捲動）。三者皆空則不繪。
-  Widget _buildSkinCaption(BuildContext context, ItemSkin skin) {
+  /// （內文、含 HTML；[constrainHeight] 為 true 時過長捲動）。三者皆空則不繪。
+  Widget _buildSkinCaption(
+    BuildContext context,
+    ItemSkin skin, {
+    required bool constrainHeight,
+  }) {
     final theme = Theme.of(context);
     final tokens = theme.gacha;
     final hasName = skin.name.trim().isNotEmpty;
@@ -540,11 +586,11 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
           ],
           if (hasBg) ...[
             const SizedBox(height: AppSpacing.xs),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 96),
-              child: SingleChildScrollView(
-                child: _detailHtml(theme, skin.bgDescription),
-              ),
+            _detailHtmlBlock(
+              theme,
+              skin.bgDescription,
+              maxHeight: 96,
+              constrainHeight: constrainHeight,
             ),
           ],
         ],
@@ -680,6 +726,14 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
       });
     }
 
+    final size = MediaQuery.sizeOf(context);
+    final phoneLandscape =
+        phoneOrientationOf(context) == PhoneOrientation.landscape;
+    // 手機橫向高度不夠、電腦版寬度夠時都改左右兩欄，避免立繪被標題區擠扁。
+    final twoColumn =
+        phoneLandscape ||
+        (!isCompactLayout(context) && size.width >= _desktopTwoColumnMinWidth);
+
     final nameColor = switch (record.qualityLevel) {
       5 => tokens.fiveStar,
       4 => tokens.fourStar,
@@ -721,11 +775,11 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                 Padding(
                   // 名稱與簡介間留一點間距，避免兩者貼齊（2dp，無對應 token 故用字面值）。
                   padding: const EdgeInsets.only(top: 2),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 120),
-                    child: SingleChildScrollView(
-                      child: _detailHtml(theme, intro),
-                    ),
+                  child: _detailHtmlBlock(
+                    theme,
+                    intro,
+                    maxHeight: 120,
+                    constrainHeight: !twoColumn,
                   ),
                 ),
               if (_tagsFor(
@@ -776,10 +830,12 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     );
     final caption = current?.skin == null
         ? null
-        : _buildSkinCaption(context, current!.skin!);
-    // 兩欄（手機橫向）時造型說明放左欄，否則會把右欄的立繪擠扁。
-    final size = MediaQuery.sizeOf(context);
-    final twoColumn = isCompactLayout(context) && size.width > size.height;
+        : _buildSkinCaption(
+            context,
+            current!.skin!,
+            constrainHeight: !twoColumn,
+          );
+    // 兩欄時造型說明放左欄，否則會把右欄的立繪擠扁。
     final gallery = Column(
       mainAxisSize: current != null ? MainAxisSize.max : MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -829,24 +885,49 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
       ),
     ];
 
-    // 手機橫向時高度不夠，改成左右兩欄，避免立繪被標題區擠扁。
     if (twoColumn) {
       return AppDialog(
-        size: AppDialogSize.lg,
+        size: phoneLandscape ? AppDialogSize.lg : AppDialogSize.xl,
         maxHeight: 880,
         content: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(
-              width: _twoColumnDetailsWidth,
+              key: const ValueKey('detail-info-column'),
+              width: phoneLandscape ? _phoneDetailsWidth : _desktopDetailsWidth,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [header, ?caption],
+                    // 左欄全部內容同一個捲動區；內容尺寸變動（切換造型、Html 排版完成）
+                    // 不會觸發 controller listener，改靠 metrics 通知重算漸層。
+                    child: NotificationListener<ScrollMetricsNotification>(
+                      onNotification: (_) {
+                        _updateDetailsFade();
+                        return false;
+                      },
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: SingleChildScrollView(
+                              controller: _detailsScroll,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [header, ?caption],
+                              ),
+                            ),
+                          ),
+                          if (_detailsHasMore)
+                            const Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              height: _detailsFadeHeight,
+                              child: IgnorePointer(
+                                child: ScrollEdgeFade(side: ScrollSide.bottom),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
