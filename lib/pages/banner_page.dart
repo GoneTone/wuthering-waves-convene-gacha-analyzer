@@ -127,6 +127,7 @@ class BannerPage extends ConsumerWidget {
 
     // 按需建構：畫面外的區塊不建構、不繪製、不產生語意，捲動時只重算看得到的部分。
     return ListView(
+      scrollCacheExtent: pageScrollCacheExtent(),
       padding: EdgeInsets.all(
         isCompactLayout(context) ? AppSpacing.m : AppSpacing.l,
       ),

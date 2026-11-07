@@ -291,4 +291,36 @@ void main() {
       tester.getTopLeft(find.byType(PityCard).first).dy,
     );
   }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+  testWidgets(
+    'desktop builds the whole overview so the scrollbar stays stable',
+    (tester) async {
+      await pump(tester, const Size(1280, 800), const OverviewPage());
+      expect(
+        find.byType(TimelineVertical, skipOffstage: false),
+        findsOneWidget,
+      );
+      expectNoException(tester);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
+
+  testWidgets(
+    'desktop builds the whole banner page so the scrollbar stays stable',
+    (tester) async {
+      await pump(
+        tester,
+        const Size(1280, 400),
+        const BannerPage(cardPoolType: '1'),
+      );
+      expect(find.byType(SortableTable, skipOffstage: false), findsOneWidget);
+      expectNoException(tester);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
+  testWidgets('android tablets still build the overview on demand', (
+    tester,
+  ) async {
+    await pump(tester, const Size(1280, 800), const OverviewPage());
+    expect(find.byType(TimelineVertical, skipOffstage: false), findsNothing);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 }
