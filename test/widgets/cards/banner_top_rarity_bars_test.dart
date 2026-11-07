@@ -89,8 +89,14 @@ void main() {
     // 放大字級時說明換行更多，仍不得溢出、右緣仍要對齊。
     for (final lang in ['en', 'ja'])
       for (final w in [800.0, 420.0]) (Locale(lang), w, 1.3),
+    // 上下兩行版：短名稱與會換行的長名稱並存，各列數字仍要貼齊右緣。
+    // 測試字型每字等寬，英文名稱全會換行；中文名稱短，才測得到不換行的列。
+    (const Locale('zh'), 360.0, 1.0),
+    (const Locale('en'), 360.0, 1.0),
+    for (final lang in ['en', 'ja'])
+      for (final w in [320.0, 419.0]) (Locale(lang), w, 1.3),
   ]) {
-    testWidgets('wide layout: trailing stats end flush at the right edge '
+    testWidgets('trailing stats end flush at the right edge '
         '(${locale.languageCode}, $width, ${scale}x)', (tester) async {
       tester.platformDispatcher.textScaleFactorTestValue = scale;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
@@ -136,27 +142,6 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
-
-  testWidgets('stacked layout keeps the summary end-aligned', (tester) async {
-    await tester.pumpWidget(
-      _wrap(
-        (ctx, colors) => BannerTopRarityBars(
-          types: gachaTypes,
-          banners: const {},
-          colors: colors,
-        ),
-        width: 360,
-      ),
-    );
-    final l = AppLocalizations.of(
-      tester.element(find.byType(BannerTopRarityBars)),
-    )!;
-    final edge = tester.getRect(find.byType(BannerTopRarityBars)).right;
-    final subtitle = find.text(l.pityNoMainRarity(l.rarityStar(5))).first;
-    for (final right in _lineRights(tester, subtitle)) {
-      expect(right, closeTo(edge, 0.5));
-    }
-  });
 
   testWidgets('empty banners → renders one row per gachaType', (tester) async {
     await tester.pumpWidget(
