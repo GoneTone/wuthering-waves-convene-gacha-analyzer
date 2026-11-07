@@ -434,6 +434,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 ` 報錯） 讀 SurfaceFlinger `--latency` 的實際上屏時間，只統計放手後的慣性滑動。adb 注入的拖曳事件取樣不足，量拖曳期間會讓輕量頁面也出現假的「晚一拍」（設定頁拖曳量到 69%，慣性滑動實為 99%）。想知道每幀時間花在哪，用 logcat 的 `The Dart VM service is listening on ...` 取得位址，`adb forward` 後經 VM Service 的 `setVMTimelineFlags`／`getVMTimeline` 抓 timeline，看 `Animator::BeginFrame` 底下的 `SEMANTICS`、`PAINT`，以及 raster 執行緒的 `Rasterizer::DoDraw`。
 - **根因一：無障礙服務會讓 Flutter 每幀都更新語意樹**。只要手機開著任何無障礙服務（這次是 ASUS GlideX；密碼管理器、投放、讀屏也都算），語意樹就會啟用。綜合頁每幀 8.1ms 中，SEMANTICS 佔 4.4ms、PAINT 佔 3.3ms，raster 只有 2.2ms。165Hz 的預算是 6.06ms。
 - **根因二：整頁一次建好**。`SingleChildScrollView` + `Column` 每捲一點，整頁（包含畫面外的五星一覽、時間軸）都要重新繪製與更新語意。改成 `ListView`／`CustomScrollView` + `SliverList.list` 後，只處理畫面附近的區塊。橫向時間軸也從 `Row` 改成橫向 `ListView.builder`。帶本地狀態的區塊（紀錄表頁碼、搜尋框、垂直時間軸已載入筆數、橫向時間軸位置）要加 `AutomaticKeepAliveClientMixin`，否則捲出畫面再捲回來會重設。
+- **按需建構的副作用：大區塊進場那一幀會卡**。整頁一次建好時，五星一覽（數十個圖示的 `Wrap`）是在開頁時建；改成按需建構後，它變成在滑動途中、捲入畫面那一幀才一次建好，量到 11～27ms 的尖峰（使用者感覺「中途卡一下」）。處理：`SliverFiveStarOverview` 依寬度切成列，每次只多建一列，尖峰降到約 7ms。**`SliverLayoutBuilder` 每次捲動都會重跑**（捲動位置也在 sliver 約束裡），若每次都回傳新的 `SliverList`，畫面上的列會每幀重建，綜合頁準時率從 97% 掉到 80%；要依寬度快取、寬度沒變就回傳同一個 widget。垂直五星時間軸進場仍有約 10ms 的語意樹尖峰（晚 1 拍）。
 - **根因三：`AnimationController.repeat()` 無條件在跑**。保底卡呼吸動畫只在「快保底」時才顯示，但計時器從頁面打開就一直在跑，每個 vsync 都排一幀，卡池頁靜止時也以 165fps 重畫（主要是耗電）。改成依階段與「移除動畫」設定啟停。
 - **前後對照**（ROG Phone 9，165Hz，開著無障礙服務，慣性滑動準時率；修正後為最終版 0cb1fff 的量測）：
 

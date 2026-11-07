@@ -28,6 +28,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/pity_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/five_star_overview.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/pager.dart';
@@ -390,4 +392,41 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.android),
   );
+
+  /// 200 個不同的五星（手機寬約 40 列），用來驗證五星一覽按列建構。
+  List<GachaRecord> manyFiveStars() => [
+    for (var i = 0; i < 200; i++)
+      GachaRecord(
+        resourceId: 3000 + i,
+        qualityLevel: 5,
+        resourceType: '角色',
+        cardPoolType: '1',
+        name: 'Star $i',
+        count: 1,
+        time: DateTime(2026, 5, 1).subtract(Duration(hours: i)),
+      ),
+  ];
+
+  for (final (name, page) in [
+    ('overview', const OverviewPage() as Widget),
+    ('banner page', const BannerPage(cardPoolType: '1')),
+  ]) {
+    testWidgets('$name builds the five-star overview row by row', (
+      tester,
+    ) async {
+      await pump(tester, const Size(360, 800), page, records: manyFiveStars());
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.star_outline),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump();
+      final chips = find.descendant(
+        of: find.byType(SliverFiveStarOverview, skipOffstage: false),
+        matching: find.byType(GachaItemIcon, skipOffstage: false),
+      );
+      expect(chips.evaluate(), isNotEmpty);
+      expect(chips.evaluate().length, lessThan(200));
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
 }
