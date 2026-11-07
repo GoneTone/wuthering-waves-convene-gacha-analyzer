@@ -371,6 +371,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 - Play 的版本代碼必須遞增且不能重複；預覽版也要排在正式版前面。公式：`MAJOR × 1,000,000 ＋ MINOR × 10,000 ＋ PATCH × 100 ＋ 尾碼`，正式版尾碼 99、`-rc.N` 尾碼 N（1–98）。例：`1.9.0-rc.2` → `1090002`，`1.9.0` → `1090099`。
 - 換算寫成 `lib/services/android_version_code.dart`，App（反推 Play 回報的版本）與 CI（`tool/android_version_code.dart`）共用同一份規則。
+- tag 的每一段數字都不接受前導零（`v01.9.0` 會和 `v1.9.0` 算出同一個代碼），MAJOR 最大 2099（Play 版本代碼上限是 2,100,000,000）；不合法一律失敗。
 - **Windows 照舊用 workflow 的執行序號**：Windows 版本資源的每一欄上限是 65535，放不下這個公式的數字。所以版本代碼只在 Android 建置時用 `--build-number` 傳入，不寫回 `pubspec.yaml`。
 - `dart run` 的「Running build hooks...」提示走 stderr，CI 解析 stdout 不受影響；保險起見 workflow 仍只擷取 `VERSION_CODE=`／`BUILD_NAME=` 兩行。
 
@@ -381,6 +382,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - `release-android.yml`：缺任何一個金鑰或服務帳戶 secret 就失敗；建置後再用 `keytool -printcert -jarfile` 檢查 AAB，若是 debug 金鑰簽的就失敗。上傳用 `r0adkll/upload-google-play`，只上 internal 軌道、不填「新功能」。
 - **從來沒發佈過的 App 只能建立 draft 狀態的版本**，所以 workflow 有 `release_status` 選項，正式上架前選 `draft`。
 - secrets 一覽與每次發版步驟見 `docs/play-store/README.md`。
+- 修改 workflow 後用 actionlint 檢查（`go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/*.yml`）。
 
 ### 36. 簽章指紋：每把金鑰各建一筆 Android 用戶端（通用）
 
@@ -390,10 +392,16 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 ### 37. 應用程式內更新（通用）
 
 - Android 的「有沒有新版」以 Play 為準（`in_app_update` 的 `checkForUpdate`），而不是 GitHub：Play 上架有審核與分階段推出，GitHub 有新版不代表玩家已經能從 Play 下載。
-- `in_app_update` **不提供版本說明**，所以說明仍取自 GitHub Release，只顯示「目前版本之後、Play 版本以內」的項目；GitHub 查不到時照樣提示有新版，只是內容顯示「無法取得更新內容」。
+- `in_app_update` **不提供版本說明**，所以說明仍取自 GitHub Release，只顯示「目前版本之後、Play 版本以內」的項目。GitHub 查不到（包括 TLS 錯誤這類不是一般網路錯誤的例外）時照樣提示有新版，內容顯示「無法取得更新內容」；Play 的版本在 GitHub 還沒發佈說明時，也會在既有說明上方顯示這句提示。
 - 不是從 Play 安裝的版本（`flutter run`、側載），`checkForUpdate` 會丟例外：啟動時的自動檢查安靜略過，手動檢查顯示原因。
 - 彈性更新：按「更新」後背景下載，完成時跳出不會自動消失的「重新啟動」提示（`SnackBar.persist`）；提示被滑掉後，再開更新對話框按「更新」會直接安裝。
-- **測試方式**：Play Console 的「內部應用程式分享」可以上傳任意版本代碼，不會用掉正式的版本號。從舊版的分享連結安裝，再分享一個版本代碼較大的版本，舊版開啟時就會偵測到更新。
+- **in_app_update 5.0.0 的幾個坑**（讀外掛 Kotlin 原始碼確認）：
+  - `startFlexibleUpdate` 只在下載完成或確認畫面回傳時才回覆。流程根本沒啟動時（已經下載好、不允許彈性更新）Future 永遠不會完成，所以呼叫前要先 `checkForUpdate` 判斷：已下載就直接進入「已下載」，不允許就當失敗。
+  - 安裝狀態的事件串流只有在**這次執行中呼叫過 `startFlexibleUpdate`** 之後才會送事件。重開 App 時若下載還在背景進行，只能等下一次檢查才知道結果。
+  - 重開 App 時，之前觸發的更新會回報成 `developerTriggeredUpdateInProgress`（不是 `updateAvailable`），要一併當成有更新，並依 `installStatus` 接續：已下載就直接跳「重新啟動」提示。
+  - `completeFlexibleUpdate` 成功時 App 直接重啟、從不回覆，所以只有前置條件錯誤會以例外回來。
+- **取消與失敗分開處理**：玩家在確認畫面按拒絕、或從通知列取消下載，都視為玩家的選擇，不顯示任何提示；真正的失敗（外掛錯誤、不允許彈性更新）才顯示「目前無法在 App 內更新，請到 Google Play 更新」並附「前往 Google Play」。
+- **測試方式**：Play Console 的「內部應用程式分享」可以上傳任意版本代碼，不會用掉正式的版本號。從舊版的分享連結安裝，再分享一個版本代碼較大的版本，舊版開啟時就會偵測到更新。要特別測：下載完成後滑掉提示再重開 App、下載途中關掉 App 再重開、從通知列取消下載。
 - 預覽版只放內部測試、不要升級正式版：App 查 GitHub 更新說明時會略過預覽版。
 
 ### 38. 自適應圖示（通用）
@@ -401,4 +409,15 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 只放傳統 `ic_launcher.png` 的話，新版啟動器會把它縮小放進白底圓形。`tool/generate_app_icons.dart` 另外產生 `mipmap-*/ic_launcher_foreground.png`，`mipmap-anydpi-v26/ic_launcher.xml` 指向前景與 `@color/ic_launcher_background`。
 - 主體幾乎佔滿原圖、背景又是漸層，去背不可靠，所以前景層是**整張圖縮進中央 72dp 可見區，外圍用邊緣像素延伸到 108dp**，啟動器做視差位移時也不會露出接縫。比例用圓形與方圓形遮罩的預覽圖決定。
 - 配對通知的小圖示沿用 `R.mipmap.ic_launcher`。Android 8.0 把自適應圖示當通知小圖示有已知崩潰，但無線偵錯配對只在 Android 11 以上出現，碰不到。
+
+### 39. 系統自動備份要排除加密儲存（通用）
+
+- manifest 沒設定 `allowBackup` 時預設為開啟，Android 會把 App 資料備份到玩家的 Google 帳號，重裝或換手機時自動還原。喚取紀錄能還原是好事，但 `flutter_secure_storage` 的值是用綁在裝置上的 Keystore 金鑰加密的，還原到另一台裝置後讀不出來。
+- 處理：保留備份，但用 `android:fullBackupContent`（Android 11 以下）與 `android:dataExtractionRules`（Android 12 以上，雲端備份與裝置轉移兩段）排除 `flutter_secure_storage` 寫的 SharedPreferences 檔。檔名要看實際使用的套件版本原始碼（10.3.1 是 `FlutterSecureStorage`、`FlutterSecureKeyStorage`、`FlutterSecureStorageConfiguration` 等），不要用猜的。
+- 隱私權政策與資料安全表單要寫明系統備份這件事，否則和「資料只存在裝置上」的說法矛盾。
+
+### 40. Windows 解除安裝要清掉根憑證（通用，Windows）
+
+- 這不是 Android 的問題，但在寫隱私權政策時發現：Windows 版的解除安裝程式原本只刪資料資料夾，App 產生的根憑證仍留在「目前使用者」的信任清單，私鑰也留在 `%APPDATA%\wuthering_waves_convene_gacha_analyzer\ca`。拿到這把私鑰就能偽造任何網站的身分。
+- 處理：`installer.iss` 的 `RemoveCaArtifacts` 在解除安裝最後**一定**執行（不受「是否刪除資料」影響）：`certutil -user -delstore Root "<CN>"`（Windows 會跳出一次確認視窗），再刪掉 `ca` 資料夾。憑證名稱與路徑必須和 `rust/src/ca.rs` 的 `EXPECTED_CN`、`ca_dir()` 一致。原神版的解除安裝程式應該也有同樣的問題。
 
