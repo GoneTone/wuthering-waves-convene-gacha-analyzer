@@ -360,3 +360,45 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 未實測：在 Google 帳戶設定撤銷 App 存取權後的反應。因為授權是整個專案共用，撤銷會讓所有裝置都需要重新連結，所以只用單元測試涵蓋（快取的失效通行證：清掉重取，重取不到就進入「需要重新連結」）。
 - **舊版 Play 服務不支援清除快取憑證**：模擬器（Play 服務 23.18）呼叫 `clearAuthorizationToken` 會丟 `PlatformException(clearAuthorizationToken failed, Missing Feature{name=auth_api_credentials_clear_token ...})`，而且要好幾分鐘才回來。所以中斷連結與「失效憑證清掉重取」都把清除當成盡力而為：失敗只記警告，流程照常進行。實機的 Play 服務會自動更新，不受影響。
 - **測完記得中斷模擬器的連結**：模擬器登入真實 Google 帳號並連結後，之後在模擬器做清除資料、移除帳號這類測試，刪除會同步到雲端，PC 和手機也會跟著少掉紀錄。2026-11-06 測完已在模擬器 App 中斷連結（只清本機）。另外，模擬器關機會存快照，重開後是從原狀態繼續跑，不是全新啟動。
+
+---
+
+## 十、Play 上架與更新（子專案 7）
+
+上架步驟、商店頁文字、隱私權政策、資料安全表單與審查說明都在 `docs/play-store/`。這一節只記技術決定與踩雷。
+
+### 34. 版本代碼只給 Android 用（通用）
+
+- Play 的版本代碼必須遞增且不能重複；預覽版也要排在正式版前面。公式：`MAJOR × 1,000,000 ＋ MINOR × 10,000 ＋ PATCH × 100 ＋ 尾碼`，正式版尾碼 99、`-rc.N` 尾碼 N（1–98）。例：`1.9.0-rc.2` → `1090002`，`1.9.0` → `1090099`。
+- 換算寫成 `lib/services/android_version_code.dart`，App（反推 Play 回報的版本）與 CI（`tool/android_version_code.dart`）共用同一份規則。
+- **Windows 照舊用 workflow 的執行序號**：Windows 版本資源的每一欄上限是 65535，放不下這個公式的數字。所以版本代碼只在 Android 建置時用 `--build-number` 傳入，不寫回 `pubspec.yaml`。
+- `dart run` 的「Running build hooks...」提示走 stderr，CI 解析 stdout 不受影響；保險起見 workflow 仍只擷取 `VERSION_CODE=`／`BUILD_NAME=` 兩行。
+
+### 35. release 簽章與 CI（通用）
+
+- `android/app/build.gradle.kts` 讀 `android/key.properties`（`android/.gitignore` 已排除它與 `*.jks`）；檔案不存在時 release 退回 debug 金鑰，`flutter run --release` 照常能用。
+- Gradle Kotlin DSL 裡寫 `java.util.Properties()` 會編不過：`java` 被解析成 Gradle 的 `java` 擴充。要在檔頭 `import java.util.Properties`。
+- `release-android.yml`：缺任何一個金鑰或服務帳戶 secret 就失敗；建置後再用 `keytool -printcert -jarfile` 檢查 AAB，若是 debug 金鑰簽的就失敗。上傳用 `r0adkll/upload-google-play`，只上 internal 軌道、不填「新功能」。
+- **從來沒發佈過的 App 只能建立 draft 狀態的版本**，所以 workflow 有 `release_status` 選項，正式上架前選 `draft`。
+- secrets 一覽與每次發版步驟見 `docs/play-store/README.md`。
+
+### 36. 簽章指紋：每把金鑰各建一筆 Android 用戶端（通用）
+
+- 接續 #32：Google Cloud 的 Android OAuth 用戶端一筆只能填一個 SHA-1，所以 debug、上傳金鑰、Play 應用程式簽署金鑰各建一筆（套件名稱相同、同一個專案）。
+- **玩家從 Play 下載的版本是用 Play 應用程式簽署金鑰簽的**，SHA-1 要到 Play Console「應用程式完整性」頁複製，不是上傳金鑰的。
+
+### 37. 應用程式內更新（通用）
+
+- Android 的「有沒有新版」以 Play 為準（`in_app_update` 的 `checkForUpdate`），而不是 GitHub：Play 上架有審核與分階段推出，GitHub 有新版不代表玩家已經能從 Play 下載。
+- `in_app_update` **不提供版本說明**，所以說明仍取自 GitHub Release，只顯示「目前版本之後、Play 版本以內」的項目；GitHub 查不到時照樣提示有新版，只是內容顯示「無法取得更新內容」。
+- 不是從 Play 安裝的版本（`flutter run`、側載），`checkForUpdate` 會丟例外：啟動時的自動檢查安靜略過，手動檢查顯示原因。
+- 彈性更新：按「更新」後背景下載，完成時跳出不會自動消失的「重新啟動」提示（`SnackBar.persist`）；提示被滑掉後，再開更新對話框按「更新」會直接安裝。
+- **測試方式**：Play Console 的「內部應用程式分享」可以上傳任意版本代碼，不會用掉正式的版本號。從舊版的分享連結安裝，再分享一個版本代碼較大的版本，舊版開啟時就會偵測到更新。
+- 預覽版只放內部測試、不要升級正式版：App 查 GitHub 更新說明時會略過預覽版。
+
+### 38. 自適應圖示（通用）
+
+- 只放傳統 `ic_launcher.png` 的話，新版啟動器會把它縮小放進白底圓形。`tool/generate_app_icons.dart` 另外產生 `mipmap-*/ic_launcher_foreground.png`，`mipmap-anydpi-v26/ic_launcher.xml` 指向前景與 `@color/ic_launcher_background`。
+- 主體幾乎佔滿原圖、背景又是漸層，去背不可靠，所以前景層是**整張圖縮進中央 72dp 可見區，外圍用邊緣像素延伸到 108dp**，啟動器做視差位移時也不會露出接縫。比例用圓形與方圓形遮罩的預覽圖決定。
+- 配對通知的小圖示沿用 `R.mipmap.ic_launcher`。Android 8.0 把自適應圖示當通知小圖示有已知崩潰，但無線偵錯配對只在 Android 11 以上出現，碰不到。
+
