@@ -259,10 +259,9 @@ class _AppShellState extends ConsumerState<AppShell> {
                             horizontal: AppSpacing.m,
                             vertical: AppSpacing.s,
                           ),
-                          // 完整列（含團隊名稱）比抽屜寬度內距後略寬，放大字級時更寬，等比縮小。
+                          // 完整列（含團隊名稱）比抽屜寬度內距後略寬，放大字級時更寬，等比縮小；放得下時置中。
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
                             child: TeamLinksBar(),
                           ),
                         ),

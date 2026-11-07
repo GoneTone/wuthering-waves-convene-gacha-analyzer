@@ -399,6 +399,28 @@ void main() {
     expect(find.text(TeamInfo.name), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
+  for (final (name, size) in const [
+    ('portrait', Size(360, 800)),
+    ('landscape', Size(914, 411)),
+  ]) {
+    testWidgets('phone drawer centres the team links ($name)', (tester) async {
+      // 測試字型比實機寬，列會被等比縮到滿寬而「剛好」置中；縮小字級讓它像實機一樣放得下。
+      await pump(tester, size, textScale: 0.8);
+      await tester.tap(drawerButton(tester));
+      await tester.pumpAndSettle();
+      final bar = find.descendant(
+        of: find.byType(Drawer),
+        matching: find.byType(TeamLinksBar),
+      );
+      await tester.ensureVisible(bar);
+      await tester.pumpAndSettle();
+      expect(
+        tester.getCenter(bar).dx,
+        closeTo(tester.getCenter(find.byType(Drawer)).dx, 1),
+      );
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
+
   testWidgets('desktop footer has last updated and team links, no drawer', (
     tester,
   ) async {
