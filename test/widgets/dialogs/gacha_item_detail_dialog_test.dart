@@ -235,14 +235,18 @@ void main() {
     });
   });
 
-  Future<void> pumpDialog(WidgetTester tester, GachaRecord record) async {
+  Future<void> pumpDialog(
+    WidgetTester tester,
+    GachaRecord record, {
+    ThemeData? theme,
+  }) async {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
           // 鎖繁中：立繪／圖示／encore 連結等斷言均比對 app_zh.arb 文案。
           locale: const Locale('zh'),
-          theme: buildDarkTheme(),
+          theme: theme ?? buildDarkTheme(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const Scaffold(body: SizedBox()),
@@ -1279,6 +1283,7 @@ void main() {
       Size size, {
       String intro = '',
       String bgDescription = '',
+      ThemeData? theme,
     }) async {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1.0;
@@ -1291,6 +1296,7 @@ void main() {
       await pumpDialog(
         tester,
         _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+        theme: theme,
       );
       expect(tester.takeException(), isNull);
       return (
@@ -1409,6 +1415,42 @@ void main() {
         await tester.pump();
         expect(bottomFade(), findsNothing);
       }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+      for (final (name, theme) in [
+        ('light', buildLightTheme()),
+        ('dark', buildDarkTheme()),
+      ]) {
+        testWidgets('bottom fade blends into the dialog surface ($name)', (
+          tester,
+        ) async {
+          await pumpAt(
+            tester,
+            const Size(1280, 800),
+            intro: longIntro,
+            theme: theme,
+          );
+          await tester.pump();
+          final dialogColor = tester
+              .widget<Material>(
+                find
+                    .descendant(
+                      of: find.byType(Dialog),
+                      matching: find.byType(Material),
+                    )
+                    .first,
+              )
+              .color;
+          final box = tester.widget<DecoratedBox>(
+            find.descendant(
+              of: bottomFade(),
+              matching: find.byType(DecoratedBox),
+            ),
+          );
+          final gradient =
+              (box.decoration as BoxDecoration).gradient! as LinearGradient;
+          expect(gradient.colors.first, dialogColor);
+        }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+      }
 
       testWidgets('divider separates tags from the skin caption only', (
         tester,
