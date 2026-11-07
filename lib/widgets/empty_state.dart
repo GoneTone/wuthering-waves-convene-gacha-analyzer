@@ -5,7 +5,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 
 /// 嵌入文字的佔位標記字元（Unicode 物件替代字元）。
-const _iconMarker = '￼';
+const _iconMarker = '\uFFFC';
 
 /// 空白狀態佔位元件，支援滿屏置中與縮小版兩種佈局。
 class EmptyState extends StatelessWidget {

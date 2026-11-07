@@ -375,7 +375,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                     ),
                   ),
                 ),
-                // 手機橫向高度寶貴，不放狀態列；開著鍵盤時高度更少，電腦版與直向也先收起。
+                // 手機橫向高度寶貴，不放狀態列；compact 排版開著鍵盤時高度更少，也先收起。
                 if (phoneOrientation != PhoneOrientation.landscape &&
                     !(compact && MediaQuery.viewInsetsOf(context).bottom > 0))
                   Container(
