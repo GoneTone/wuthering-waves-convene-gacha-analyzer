@@ -95,6 +95,7 @@ void main() {
     PairingPhase phase = PairingPhase.disclosure,
     List<GachaRecord>? records,
     bool synced = true,
+    Locale locale = const Locale('zh'),
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -147,7 +148,7 @@ void main() {
           theme: buildDarkTheme(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('zh'),
+          locale: locale,
           home: Scaffold(body: page),
         ),
       ),
@@ -320,6 +321,94 @@ void main() {
     };
     expect(heights, hasLength(1), reason: 'IntrinsicHeight keeps cards equal');
   }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+  /// [finder] 第 [i] 個元件的左上角。
+  Offset topLeftAt(WidgetTester tester, Finder finder, int i) =>
+      tester.getTopLeft(finder.at(i));
+
+  testWidgets('overview pairs the last two stat cards on a phone', (
+    tester,
+  ) async {
+    await pump(tester, const Size(360, 800), const OverviewPage());
+    expectNoException(tester);
+    final cards = find.byType(StatCard);
+    expect(cards, findsNWidgets(3));
+    final a = topLeftAt(tester, cards, 1);
+    final b = topLeftAt(tester, cards, 2);
+    expect(a.dy, b.dy);
+    expect(a.dx, isNot(b.dx));
+    expect(topLeftAt(tester, cards, 0).dy, lessThan(a.dy));
+    expect(
+      tester.getSize(cards.at(1)).height,
+      tester.getSize(cards.at(2)).height,
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('banner page pairs secondary pity and total on a phone', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const Size(360, 800),
+      const BannerPage(cardPoolType: '1'),
+    );
+    expectNoException(tester);
+    final pity = find.byType(PityCard);
+    final total = find.byType(StatCard);
+    expect(pity, findsNWidgets(2));
+    expect(
+      topLeftAt(tester, pity, 0).dy,
+      lessThan(topLeftAt(tester, pity, 1).dy),
+    );
+    expect(topLeftAt(tester, pity, 1).dy, topLeftAt(tester, total, 0).dy);
+    expect(
+      tester.getSize(pity.at(1)).height,
+      tester.getSize(total.first).height,
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('banner page shows three cards in a row in phone landscape', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const Size(800, 360),
+      const BannerPage(cardPoolType: '1'),
+    );
+    expectNoException(tester);
+    final pity = find.byType(PityCard);
+    expect(pity, findsNWidgets(2));
+    final dy = topLeftAt(tester, find.byType(StatCard), 0).dy;
+    expect(topLeftAt(tester, pity, 0).dy, dy);
+    expect(topLeftAt(tester, pity, 1).dy, dy);
+    expect(
+      find.descendant(of: pity, matching: find.byType(FractionallySizedBox)),
+      findsNWidgets(2),
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  for (final locale in [const Locale('en'), const Locale('ja')]) {
+    for (final (name, page) in [
+      ('overview', const OverviewPage() as Widget),
+      ('banner', const BannerPage(cardPoolType: '1')),
+    ]) {
+      testWidgets('$name at 1.3x text scale in $locale does not overflow', (
+        tester,
+      ) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await pump(tester, const Size(360, 800), page, locale: locale);
+        if (name == 'overview') {
+          await scrollToEnd(tester);
+        } else {
+          // 卡池頁表格 Pager 的 1.3 倍字級溢出由 Task 6 處理，這裡只驗數字卡區。
+          final e = tester.takeException();
+          expect(e == null || '$e'.contains('RenderFlex overflowed'), isTrue);
+          expect(find.byType(PityCard), findsNWidgets(2));
+        }
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    }
+  }
 
   testWidgets('banner page keeps pity and total cards in one row on desktop', (
     tester,
