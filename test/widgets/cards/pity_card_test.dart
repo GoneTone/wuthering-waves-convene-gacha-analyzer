@@ -174,4 +174,74 @@ void main() {
     expect(find.textContaining('保底中'), findsOneWidget);
     expect(find.textContaining('平均 70.50 抽出'), findsOneWidget);
   });
+  group('breath animation', () {
+    Pity pityAt(int current) => Pity(
+      current: current,
+      threshold: 80,
+      lastRecordAt: null,
+      averageInterval: null,
+      hitCount: 0,
+      completedInterval: 0,
+    );
+    final normalPity = pityAt(30);
+    final closePity = pityAt(70);
+
+    Future<void> pumpCard(
+      WidgetTester tester,
+      Pity pity, {
+      bool disableAnimations = false,
+    }) => tester.pumpWidget(
+      wrap(
+        Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(disableAnimations: disableAnimations),
+            child: PityCard(
+              label: '5★',
+              rank: 5,
+              pity: pity,
+              accent: GachaTokens.dark.fiveStar,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    testWidgets('normal phase does not keep scheduling frames', (tester) async {
+      await pumpCard(tester, normalPity);
+      await tester.pump();
+      expect(tester.binding.hasScheduledFrame, isFalse);
+    });
+
+    testWidgets('close phase keeps the breath animation running', (
+      tester,
+    ) async {
+      await pumpCard(tester, closePity);
+      await tester.pump();
+      expect(tester.binding.hasScheduledFrame, isTrue);
+    });
+
+    testWidgets(
+      'entering and leaving close phase starts and stops the animation',
+      (tester) async {
+        await pumpCard(tester, normalPity);
+        await tester.pump();
+        expect(tester.binding.hasScheduledFrame, isFalse);
+        await pumpCard(tester, closePity);
+        await tester.pump();
+        expect(tester.binding.hasScheduledFrame, isTrue);
+        await pumpCard(tester, normalPity);
+        await tester.pump();
+        await tester.pump();
+        expect(tester.binding.hasScheduledFrame, isFalse);
+      },
+    );
+
+    testWidgets('reduce motion keeps close phase still', (tester) async {
+      await pumpCard(tester, closePity, disableAnimations: true);
+      await tester.pump();
+      expect(tester.binding.hasScheduledFrame, isFalse);
+    });
+  });
 }
