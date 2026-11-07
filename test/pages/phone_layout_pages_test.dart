@@ -92,7 +92,7 @@ void main() {
     if (await tempDir.exists()) await tempDir.delete(recursive: true);
   });
 
-  /// 在 [size] 的畫面上呈現 [page]（已有一個帳號的紀錄，預設為 [_records]），回傳 container。
+  /// 在 [size] 的畫面上呈現 [page]（已有一個帳號的紀錄，預設為 [_records]，放在 [pool] 卡池），回傳 container。
   Future<ProviderContainer> pump(
     WidgetTester tester,
     Size size,
@@ -102,6 +102,7 @@ void main() {
     List<GachaRecord>? records,
     bool synced = true,
     Locale locale = const Locale('zh'),
+    String pool = '1',
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -116,7 +117,7 @@ void main() {
             playerId: '701000000',
             languageCode: 'zh-Hant',
             lastUpdated: DateTime.utc(2026, 5, 1),
-            banners: {'1': records ?? _records()},
+            banners: {pool: records ?? _records()},
           ),
         );
       }
@@ -392,25 +393,61 @@ void main() {
     );
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
-  testWidgets('banner page shows three cards in a row in phone landscape', (
-    tester,
-  ) async {
-    await pump(
-      tester,
-      const Size(800, 360),
-      const BannerPage(cardPoolType: '1'),
-    );
-    expectNoException(tester);
-    final pity = find.byType(PityCard);
-    expect(pity, findsNWidgets(2));
-    final dy = topLeftAt(tester, find.byType(StatCard), 0).dy;
-    expect(topLeftAt(tester, pity, 0).dy, dy);
-    expect(topLeftAt(tester, pity, 1).dy, dy);
-    expect(
-      find.descendant(of: pity, matching: find.byType(FractionallySizedBox)),
-      findsNWidgets(2),
-    );
-  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  for (final size in const [Size(800, 360), Size(640, 360)]) {
+    testWidgets('banner page shows three cards in a row in phone landscape '
+        '(${size.width.toInt()}x${size.height.toInt()})', (tester) async {
+      await pump(tester, size, const BannerPage(cardPoolType: '1'));
+      expectNoException(tester);
+      final pity = find.byType(PityCard);
+      expect(pity, findsNWidgets(2));
+      final dy = topLeftAt(tester, find.byType(StatCard), 0).dy;
+      expect(topLeftAt(tester, pity, 0).dy, dy);
+      expect(topLeftAt(tester, pity, 1).dy, dy);
+      expect(
+        tester.getTopRight(pity.at(1)).dx,
+        lessThanOrEqualTo(tester.getTopLeft(find.byType(StatCard)).dx),
+      );
+      expect(
+        find.descendant(of: pity, matching: find.byType(FractionallySizedBox)),
+        findsNWidgets(2),
+      );
+      // 兩張保底卡都保留「平均」抽數。
+      final l = AppLocalizations.of(tester.element(pity.first))!;
+      final [before, after] = l.pityAverageInterval('#').split('#');
+      final average = RegExp(
+        '${RegExp.escape(before)}[0-9.]+${RegExp.escape(after)}',
+      );
+      expect(
+        find.descendant(
+          of: pity,
+          matching: find.textContaining(average, findRichText: true),
+        ),
+        findsNWidgets(2),
+      );
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
+
+  for (final size in const [Size(914, 411), Size(640, 360)]) {
+    testWidgets('long ja pool title fits the landscape header at 1.3x '
+        '(${size.width.toInt()}x${size.height.toInt()})', (tester) async {
+      // 日文卡池名最長的是「初心者応援セレクト集音」；標題旁還有最後更新與分享按鈕。
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await pump(
+        tester,
+        size,
+        const BannerPage(cardPoolType: '6'),
+        locale: const Locale('ja'),
+        pool: '6',
+      );
+      expectNoException(tester);
+      expect(find.text('初心者応援セレクト集音'), findsWidgets);
+      expect(
+        tester.getRect(find.byType(ShareActionButton)).right,
+        size.width - 12,
+      );
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
 
   testWidgets('banner page has one sort button, inside the filter bar', (
     tester,

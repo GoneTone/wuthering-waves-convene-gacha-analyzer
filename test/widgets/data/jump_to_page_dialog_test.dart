@@ -69,6 +69,18 @@ void main() {
     expect(find.text('Currently on page 1 · 1620 records'), findsOneWidget);
   });
 
+  for (final (typed, kept) in [('12a', '12'), (' 5 ', '5'), ('-3', '3')]) {
+    testWidgets('輸入框只留數字："$typed" → "$kept"', (tester) async {
+      await _open(tester);
+      await tester.enterText(find.byType(TextField), typed);
+      await tester.pump();
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
+        kept,
+      );
+    });
+  }
+
   for (final (text, total) in [
     ('0', 367),
     ('368', 367),
