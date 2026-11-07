@@ -26,7 +26,10 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/chart_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/pity_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/item_type_pie.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rarity_pie.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/five_star_overview.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/empty_state.dart';
@@ -405,9 +408,62 @@ void main() {
           final e = tester.takeException();
           expect(e == null || '$e'.contains('RenderFlex overflowed'), isTrue);
           expect(find.byType(PityCard), findsNWidgets(2));
+          await tester.scrollUntilVisible(
+            find.byType(ItemTypeChartCard),
+            200,
+            scrollable: find.byType(Scrollable).first,
+          );
         }
       }, variant: TargetPlatformVariant.only(TargetPlatform.android));
     }
+  }
+
+  /// 兩張圓餅卡目前的版面。
+  List<ChartCardLayout> pieLayouts(WidgetTester tester) => [
+    tester.widget<RarityChartCard>(find.byType(RarityChartCard)).layout,
+    tester.widget<ItemTypeChartCard>(find.byType(ItemTypeChartCard)).layout,
+  ];
+
+  for (final (name, page) in [
+    ('overview', const OverviewPage() as Widget),
+    ('banner', const BannerPage(cardPoolType: '1')),
+  ]) {
+    testWidgets('$name pie cards are compact on a portrait phone', (
+      tester,
+    ) async {
+      await pump(tester, const Size(360, 800), page);
+      expectNoException(tester);
+      expect(pieLayouts(tester), everyElement(ChartCardLayout.compact));
+      expect(
+        tester.getSize(find.byType(RarityChartCard)).height,
+        lessThan(260),
+      );
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('$name pie cards sit side by side in phone landscape', (
+      tester,
+    ) async {
+      await pump(tester, const Size(800, 360), page);
+      expect(
+        pieLayouts(tester),
+        everyElement(ChartCardLayout.compactTitleBeside),
+      );
+      expect(
+        tester.getTopLeft(find.byType(RarityChartCard)).dy,
+        tester.getTopLeft(find.byType(ItemTypeChartCard)).dy,
+      );
+      expect(
+        tester.getTopLeft(find.byType(ItemTypeChartCard)).dx,
+        greaterThan(tester.getTopRight(find.byType(RarityChartCard)).dx),
+      );
+      await scrollToEnd(tester);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('$name pie cards stay standard on desktop', (tester) async {
+      await pump(tester, const Size(1280, 800), page);
+      expect(pieLayouts(tester), everyElement(ChartCardLayout.standard));
+      expect(tester.getSize(find.byType(RarityChartCard)).height, 380);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
   }
 
   testWidgets('banner page keeps pity and total cards in one row on desktop', (

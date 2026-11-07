@@ -256,7 +256,12 @@ class BannerPage extends ConsumerWidget {
                   LayoutBuilder(
                     builder: (context, c) {
                       final wide = c.maxWidth >= 1024;
-                      final col = wide ? 3 : (c.maxWidth >= 800 ? 2 : 1);
+                      final layout = ChartCardLayout.of(context, c.maxWidth);
+                      final landscape =
+                          layout == ChartCardLayout.compactTitleBeside;
+                      final col = wide
+                          ? 3
+                          : (c.maxWidth >= 800 || landscape ? 2 : 1);
                       final tileWidth = col == 1
                           ? c.maxWidth
                           : (c.maxWidth - AppSpacing.m * (col - 1)) / col;
@@ -266,11 +271,17 @@ class BannerPage extends ConsumerWidget {
                         children: [
                           SizedBox(
                             width: tileWidth,
-                            child: RarityChartCard(stats: stats),
+                            child: RarityChartCard(
+                              stats: stats,
+                              layout: layout,
+                            ),
                           ),
                           SizedBox(
                             width: tileWidth,
-                            child: ItemTypeChartCard(stats: stats),
+                            child: ItemTypeChartCard(
+                              stats: stats,
+                              layout: layout,
+                            ),
                           ),
                           SizedBox(
                             width: tileWidth,

@@ -284,8 +284,15 @@ class _OverviewSection extends StatelessWidget {
                 final wide = c.maxWidth >= 1024;
                 final mid = c.maxWidth >= 800 && c.maxWidth < 1024;
 
-                final rarityCard = RarityChartCard(stats: stats);
-                final itemTypeCard = ItemTypeChartCard(stats: stats);
+                final layout = ChartCardLayout.of(context, c.maxWidth);
+                final rarityCard = RarityChartCard(
+                  stats: stats,
+                  layout: layout,
+                );
+                final itemTypeCard = ItemTypeChartCard(
+                  stats: stats,
+                  layout: layout,
+                );
 
                 if (wide) {
                   // 對齊 Stat row（flex 6/3/3 + 兩個 m gap）：
@@ -302,7 +309,7 @@ class _OverviewSection extends StatelessWidget {
                     ),
                   );
                 }
-                if (mid) {
+                if (mid || layout == ChartCardLayout.compactTitleBeside) {
                   return IntrinsicHeight(
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -33,7 +33,11 @@ class DistributionLegend extends StatelessWidget {
     super.key,
     required this.entries,
     this.showAllEntries = false,
+    this.compact = false,
   });
+
+  /// true：窄欄用的精簡版，件數與百分比欄寬縮小並隨字級縮放。
+  final bool compact;
 
   /// 圖例條目列表。
   final List<DistributionEntry> entries;
@@ -46,6 +50,9 @@ class DistributionLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = theme.gacha;
+    final scaler = MediaQuery.textScalerOf(context);
+    final countWidth = compact ? scaler.scale(36) : 60.0;
+    final rateWidth = compact ? scaler.scale(54) : 70.0;
     final visible = showAllEntries
         ? entries
         : entries.where((e) => e.count > 0).toList(growable: false);
@@ -77,7 +84,7 @@ class DistributionLegend extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  width: 60,
+                  width: countWidth,
                   child: Text(
                     '${e.count}',
                     textAlign: TextAlign.right,
@@ -89,7 +96,7 @@ class DistributionLegend extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.s),
                 SizedBox(
-                  width: 70,
+                  width: rateWidth,
                   child: Text(
                     '${formatPercent(e.rate)}%',
                     textAlign: TextAlign.right,
