@@ -9,13 +9,14 @@ Future<Future<int?>> _open(
   WidgetTester tester, {
   int totalPages = 367,
   int? totalItems,
+  Locale locale = const Locale('zh'),
 }) async {
   await tester.pumpWidget(
     MaterialApp(
       theme: buildDarkTheme(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('zh'),
+      locale: locale,
       home: Builder(builder: (context) => const Scaffold(body: Text('host'))),
     ),
   );
@@ -61,6 +62,11 @@ void main() {
   testWidgets('帶 totalItems 時顯示目前頁與總筆數', (tester) async {
     await _open(tester, totalItems: 7340);
     expect(find.text('目前在第 1 頁，共 7340 筆'), findsOneWidget);
+  });
+
+  testWidgets('英文的目前頁與總筆數不會讀成「第幾筆」', (tester) async {
+    await _open(tester, totalItems: 1620, locale: const Locale('en'));
+    expect(find.text('Currently on page 1 · 1620 records'), findsOneWidget);
   });
 
   for (final (text, total) in [

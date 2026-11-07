@@ -611,7 +611,7 @@
   "pagerLast": "Last",
   "pagerJumpTitle": "Go to page",
   "pagerJumpLabel": "Page ({min}–{max})",
-  "pagerJumpCurrent": "On page {page} of {total} records",
+  "pagerJumpCurrent": "Currently on page {page} · {total} records",
   "pagerJumpGo": "Go",
   "pagerJumpInvalid": "Enter a page from {min}–{max}",
   "settingsClearActive": "Clear current account data",
