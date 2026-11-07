@@ -91,7 +91,8 @@ class InAppUpdatePlayGateway implements PlayUpdateGateway {
       (status) {
         final result = switch (status) {
           InstallStatus.downloaded => PlayDownloadResult.downloaded,
-          InstallStatus.canceled ||
+          // 使用者取消（同意對話框或通知列）屬於使用者的選擇，不提示改到 Play 更新。
+          InstallStatus.canceled => PlayDownloadResult.denied,
           InstallStatus.failed => PlayDownloadResult.failed,
           _ => null,
         };
