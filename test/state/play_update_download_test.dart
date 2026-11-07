@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/play_update.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_download.dart';
@@ -37,8 +38,14 @@ class _Gateway implements PlayUpdateGateway {
     return result;
   }
 
+  /// completeFlexible 是否拋例外。
+  bool throwOnComplete = false;
+
   @override
-  Future<void> completeFlexible() async => completes++;
+  Future<void> completeFlexible() async {
+    completes++;
+    if (throwOnComplete) throw StateError('complete boom');
+  }
 }
 
 /// 建立使用 [gateway] 的容器。
@@ -50,7 +57,19 @@ ProviderContainer _container(_Gateway gateway) {
   return c;
 }
 
+/// 收集 [Logger.root] 的記錄訊息，測試結束自動取消監聽。
+List<String> _collectLogs() {
+  final logs = <String>[];
+  final sub = Logger.root.onRecord.listen(
+    (r) => logs.add('${r.level.name} ${r.message}'),
+  );
+  addTearDown(sub.cancel);
+  return logs;
+}
+
 void main() {
+  Logger.root.level = Level.ALL;
+
   test('download success → downloaded', () async {
     final g = _Gateway(PlayDownloadResult.downloaded)..gate.complete();
     final c = _container(g);
@@ -59,17 +78,21 @@ void main() {
   });
 
   test('flexible update denied or failed → no restart prompt', () async {
-    for (final r in [PlayDownloadResult.denied, PlayDownloadResult.failed]) {
-      final g = _Gateway(r)..gate.complete();
-      final c = _container(g);
+    final logs = _collectLogs();
+    final cases = {
+      'denied': _Gateway(PlayDownloadResult.denied),
+      'failed': _Gateway(PlayDownloadResult.failed),
+      'throw': _Gateway(PlayDownloadResult.failed, throwOnDownload: true),
+    };
+    for (final e in cases.entries) {
+      e.value.gate.complete();
+      final c = _container(e.value);
       await c.read(playUpdateDownloadProvider.notifier).start();
       expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.idle);
+      final want = e.key == 'throw' ? 'failed' : e.key;
+      expect(logs, contains('INFO play flexible update result=$want'));
+      logs.clear();
     }
-    final g = _Gateway(PlayDownloadResult.failed, throwOnDownload: true)
-      ..gate.complete();
-    final c = _container(g);
-    await c.read(playUpdateDownloadProvider.notifier).start();
-    expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.idle);
   });
 
   test('start while downloading does not call the gateway twice', () async {
@@ -90,5 +113,21 @@ void main() {
     final c = _container(g);
     await c.read(playUpdateDownloadProvider.notifier).install();
     expect(g.completes, 1);
+  });
+
+  test('install failure logs a warning and keeps the state', () async {
+    final logs = _collectLogs();
+    final g = _Gateway(PlayDownloadResult.downloaded)
+      ..gate.complete()
+      ..throwOnComplete = true;
+    final c = _container(g);
+    final n = c.read(playUpdateDownloadProvider.notifier);
+    await n.start();
+    await n.install();
+    expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.downloaded);
+    expect(
+      logs.any((m) => m.startsWith('WARNING play flexible update install')),
+      isTrue,
+    );
   });
 }

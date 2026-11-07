@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -14,8 +15,23 @@ class _Download extends PlayUpdateDownloadNotifier {
   /// start 被呼叫的次數。
   int starts = 0;
 
+  /// install 被呼叫的次數。
+  int installs = 0;
+
+  /// 建立替身；[initial] 為初始階段。
+  _Download([this.initial = PlayDownloadPhase.idle]);
+
+  /// 初始階段。
+  final PlayDownloadPhase initial;
+
+  @override
+  PlayDownloadPhase build() => initial;
+
   @override
   Future<void> start() async => starts++;
+
+  @override
+  Future<void> install() async => installs++;
 }
 
 /// 建立測試用 release。
@@ -34,11 +50,12 @@ Future<_Download> _pump(
   required bool android,
   required List<AppRelease> releases,
   String? playTag,
+  PlayDownloadPhase phase = PlayDownloadPhase.idle,
 }) async {
   tester.view.physicalSize = const Size(320, 640);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  final download = _Download();
+  final download = _Download(phase);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -94,17 +111,49 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('android: already downloaded + Update installs instead', (
+    tester,
+  ) async {
+    final d = await _pump(
+      tester,
+      android: true,
+      releases: [_release('v1.2.0')],
+      playTag: 'v1.2.0',
+      phase: PlayDownloadPhase.downloaded,
+    );
+    await tester.tap(find.text('Update'));
+    await tester.pumpAndSettle();
+    expect(d.installs, 1);
+    expect(d.starts, 0);
+    expect(find.byType(NewVersionDialog), findsNothing);
+  });
+
   testWidgets('windows: primary button still opens the GitHub page', (
     tester,
   ) async {
+    final launched = <String>[];
+    const channel = MethodChannel('plugins.flutter.io/url_launcher');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'launch') {
+            launched.add((call.arguments as Map)['url'] as String);
+          }
+          return true;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
     final d = await _pump(
       tester,
       android: false,
       releases: [_release('v1.2.0')],
     );
-    expect(find.text('Download'), findsOneWidget);
     expect(find.text('Update'), findsNothing);
+    await tester.tap(find.text('Download'));
+    await tester.pumpAndSettle();
     expect(d.starts, 0);
+    expect(launched, ['https://github.com/o/r/releases/tag/v1.2.0']);
     expect(tester.takeException(), isNull);
   });
 }

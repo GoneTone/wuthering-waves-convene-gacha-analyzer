@@ -158,6 +158,8 @@ void main() {
     expect(find.text(l.updateDownloadedMessage), findsOneWidget);
     await tester.tap(find.text(l.updateRestartAction));
     expect(download.installs, 1);
+    final bar = tester.widget<SnackBar>(find.byType(SnackBar));
+    expect(bar.persist, isTrue);
   });
 
   testWidgets('phone portrait uses a drawer instead of the rail', (

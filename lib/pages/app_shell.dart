@@ -97,8 +97,7 @@ class _AppShellState extends ConsumerState<AppShell> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l.updateDownloadedMessage),
-          // shortcut: 不用 indefinite（需 Flutter 3.29+ 且無消失手段），一天視同常駐。
-          duration: const Duration(days: 1),
+          persist: true,
           action: SnackBarAction(
             label: l.updateRestartAction,
             onPressed: () =>

@@ -70,7 +70,14 @@ class NewVersionDialog extends ConsumerWidget {
           ),
           onPressed: () async {
             if (isAndroid) {
-              unawaited(ref.read(playUpdateDownloadProvider.notifier).start());
+              final download = ref.read(playUpdateDownloadProvider.notifier);
+              // 已下載完卻沒裝（提示被滑掉或安裝失敗）時，直接重試安裝。
+              unawaited(
+                ref.read(playUpdateDownloadProvider) ==
+                        PlayDownloadPhase.downloaded
+                    ? download.install()
+                    : download.start(),
+              );
             } else {
               await openExternalUrl(Uri.parse(releases.first.htmlUrl));
             }
