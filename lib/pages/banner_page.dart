@@ -16,7 +16,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/record_filter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/last_updated_label.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_type_icons.dart';
@@ -30,6 +29,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_tab
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/empty_state.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/inline_section_title.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/item_type_pie.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/last_updated_label.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/loading_state.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/page_header.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rank_palette.dart';
@@ -151,6 +151,7 @@ class _BannerPageState extends ConsumerState<BannerPage> {
           ..sort();
     final fiveStarItems = buildFiveStarCollection(records);
 
+    /// 依 [col] 輪替排序（降冪 → 升冪 → 取消）。
     void cycleSort(SortColumn col) =>
         ref.read(recordFilterProvider(cardPoolType).notifier).cycleSort(col);
     final pagePadding = isCompactLayout(context) ? AppSpacing.m : AppSpacing.l;

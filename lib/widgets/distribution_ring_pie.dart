@@ -11,7 +11,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_lege
 const double _kRingRadius = 75;
 
 /// 預設圓環直徑（邏輯像素），即 [_kRingRadius] 與 [_kCenterRadius] 的總和乘二。
-const double kDefaultRingDiameter = 230;
+const double kDefaultRingDiameter = (_kRingRadius + _kCenterRadius) * 2;
 
 /// Pie 中心圓半徑（邏輯像素）。與 [_kRingRadius] 配合決定圓環寬度。
 const double _kCenterRadius = 40;
