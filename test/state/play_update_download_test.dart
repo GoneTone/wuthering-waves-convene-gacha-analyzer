@@ -102,6 +102,11 @@ void main() {
       expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.idle);
       final want = e.key == 'throw' ? 'failed' : e.key;
       expect(logs, contains('INFO play flexible update result=$want'));
+      expect(
+        logs.contains('WARNING play flexible update threw: Bad state: boom'),
+        e.key == 'throw',
+        reason: e.key,
+      );
       logs.clear();
     }
   });

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,6 +8,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_downloa
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/new_version_dialog.dart';
+
+import '../../helpers/fake_url_launcher.dart';
 
 /// 記錄 start 呼叫的下載替身。
 class _Download extends PlayUpdateDownloadNotifier {
@@ -149,19 +150,7 @@ void main() {
   testWidgets('windows: primary button still opens the GitHub page', (
     tester,
   ) async {
-    final launched = <String>[];
-    const channel = MethodChannel('plugins.flutter.io/url_launcher');
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-          if (call.method == 'launch') {
-            launched.add((call.arguments as Map)['url'] as String);
-          }
-          return true;
-        });
-    addTearDown(
-      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, null),
-    );
+    final launcher = installFakeUrlLauncher();
     final d = await _pump(
       tester,
       android: false,
@@ -171,7 +160,7 @@ void main() {
     await tester.tap(find.text('Download'));
     await tester.pumpAndSettle();
     expect(d.starts, 0);
-    expect(launched, ['https://github.com/o/r/releases/tag/v1.2.0']);
+    expect(launcher.launched, ['https://github.com/o/r/releases/tag/v1.2.0']);
     expect(tester.takeException(), isNull);
   });
 }

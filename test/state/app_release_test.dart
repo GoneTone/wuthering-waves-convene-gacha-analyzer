@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:logging/logging.dart';
-import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
