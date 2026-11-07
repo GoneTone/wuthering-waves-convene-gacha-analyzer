@@ -164,26 +164,33 @@ void main() {
     expect(bar.persist, isTrue);
   });
 
-  testWidgets('in-app update failure offers Google Play; denial stays '
-      'silent', (tester) async {
-    final launcher = installFakeUrlLauncher();
-    final l = await pump(tester, const Size(320, 640));
-    download.setPhase(PlayDownloadPhase.downloading);
-    await tester.pump();
-    download.setPhase(PlayDownloadPhase.idle);
-    await tester.pumpAndSettle();
-    expect(find.byType(SnackBar), findsNothing);
+  for (final locale in const [
+    Locale('zh'),
+    Locale('en'),
+    Locale('ja'),
+    Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
+  ]) {
+    testWidgets('in-app update failure offers Google Play; denial stays '
+        'silent ($locale)', (tester) async {
+      final launcher = installFakeUrlLauncher();
+      final l = await pump(tester, const Size(320, 640), locale: locale);
+      download.setPhase(PlayDownloadPhase.downloading);
+      await tester.pump();
+      download.setPhase(PlayDownloadPhase.idle);
+      await tester.pumpAndSettle();
+      expect(find.byType(SnackBar), findsNothing);
 
-    download.setPhase(PlayDownloadPhase.failed);
-    await tester.pumpAndSettle();
-    expect(find.text(l.updateInAppUnavailable), findsOneWidget);
-    expect(tester.takeException(), isNull);
-    await tester.tap(find.text(l.updateOpenPlayStore));
-    await tester.pump();
-    expect(launcher.launched, [
-      'https://play.google.com/store/apps/details?id=tw.reh.wuwa.gacha',
-    ]);
-  });
+      download.setPhase(PlayDownloadPhase.failed);
+      await tester.pumpAndSettle();
+      expect(find.text(l.updateInAppUnavailable), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text(l.updateOpenPlayStore));
+      await tester.pump();
+      expect(launcher.launched, [
+        'https://play.google.com/store/apps/details?id=tw.reh.wuwa.gacha',
+      ]);
+    });
+  }
 
   testWidgets('phone portrait uses a drawer instead of the rail', (
     tester,
