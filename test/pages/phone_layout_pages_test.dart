@@ -37,6 +37,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.d
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/last_updated_label.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/page_header.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_action_button.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_horizontal.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/inline_section_title.dart';
@@ -482,7 +483,7 @@ void main() {
     );
     await tester.scrollUntilVisible(
       find.byType(SortableTable),
-      500,
+      200,
       scrollable: find.byType(Scrollable).first,
     );
     final l = AppLocalizations.of(tester.element(find.byType(SortableTable)))!;
@@ -679,6 +680,62 @@ void main() {
       expect(tester.getSize(find.byType(RarityChartCard)).height, 380);
     }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
   }
+
+  /// 橫向時間軸所在的 [ChartCard]。
+  Finder timelineCard() => find.ancestor(
+    of: find.byType(TimelineHorizontal),
+    matching: find.byType(ChartCard),
+  );
+
+  for (final (name, size) in const [
+    ('portrait', Size(360, 800)),
+    ('landscape', Size(914, 411)),
+  ]) {
+    testWidgets('banner timeline card spans the row and fits its content '
+        'on a phone ($name)', (tester) async {
+      await pump(tester, size, const BannerPage(cardPoolType: '1'));
+      await tester.scrollUntilVisible(
+        find.byType(TimelineHorizontal),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump();
+      expectNoException(tester);
+      final card = tester.getRect(timelineCard());
+      // 與上方圓餅列同寬：左緣對齊稀有度卡、右緣對齊類型卡。
+      final rarity = find.byType(RarityChartCard, skipOffstage: false);
+      final itemType = find.byType(ItemTypeChartCard, skipOffstage: false);
+      expect(card.left, tester.getTopLeft(rarity).dx);
+      expect(card.right, tester.getTopRight(itemType).dx);
+      expect(card.top, greaterThan(tester.getBottomLeft(itemType).dy));
+      expect(card.height, lessThan(kChartCardHeight - 60));
+      // 時間軸高度貼合欄內容：首個月份標籤就在時間軸頂端，上方沒有空白帶。
+      final l = AppLocalizations.of(tester.element(timelineCard()))!;
+      final timeline = tester.getRect(find.byType(TimelineHorizontal));
+      final label = tester.getRect(
+        find.text(l.timelineMonthLabel('2026', '05')).first,
+      );
+      expect(label.top - timeline.top, lessThan(2));
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
+
+  testWidgets('banner timeline card shares the pie row on desktop', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const Size(1280, 800),
+      const BannerPage(cardPoolType: '1'),
+    );
+    expectNoException(tester);
+    final card = tester.getRect(timelineCard());
+    final rarity = tester.getRect(find.byType(RarityChartCard));
+    expect(card.top, rarity.top);
+    expect(card.height, rarity.height);
+    expect(card.height, kChartCardHeight);
+    expect(card.width, rarity.width);
+    expect(card.left, greaterThan(rarity.right));
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
   testWidgets('banner page keeps pity and total cards in one row on desktop', (
     tester,

@@ -273,7 +273,7 @@ class _BannerPageState extends ConsumerState<BannerPage> {
 
                   const SizedBox(height: AppSpacing.l),
 
-                  // Row 2: 兩 Pie + Timeline placeholder
+                  // Row 2: 兩 Pie + Timeline
                   LayoutBuilder(
                     builder: (context, c) {
                       final wide = c.maxWidth >= 1024;
@@ -304,9 +304,11 @@ class _BannerPageState extends ConsumerState<BannerPage> {
                               layout: layout,
                             ),
                           ),
+                          // 除了電腦版三欄同列需與圓餅卡等高，時間軸都獨佔一列：撐滿寬、高度依內容。
                           SizedBox(
-                            width: tileWidth,
+                            width: wide ? tileWidth : c.maxWidth,
                             child: ChartCard(
+                              height: wide ? kChartCardHeight : null,
                               title: l.timelineTopRarityTitle(
                                 l.rarityStar(primary.rank),
                                 _countAtRank(stats, primary.rank),
