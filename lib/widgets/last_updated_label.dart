@@ -38,8 +38,8 @@ class LastUpdatedLabel extends ConsumerWidget {
   }
 }
 
-/// 手機橫向（沒有底部狀態列）時頁面自己顯示的弱色最後更新時間；其他情況回傳 null。
-LastUpdatedLabel? _landscapeLabel(BuildContext context) {
+/// 手機橫向（沒有底部狀態列）時頁面自己顯示的弱色最後更新時間（放在頁首標題旁）；其他情況回傳 null。
+LastUpdatedLabel? phoneLandscapeLastUpdated(BuildContext context) {
   if (phoneOrientationOf(context) != PhoneOrientation.landscape) return null;
   return LastUpdatedLabel(
     style: Theme.of(
@@ -48,21 +48,9 @@ LastUpdatedLabel? _landscapeLabel(BuildContext context) {
   );
 }
 
-/// 手機橫向時放在頁首標題列的最後更新時間（要放進 Row）；其他情況回傳 null。
-Widget? phoneLandscapeLastUpdated(BuildContext context) {
-  final label = _landscapeLabel(context);
-  if (label == null) return null;
-  return Flexible(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s),
-      child: label,
-    ),
-  );
-}
-
 /// 尚未同步時的頁面內容；手機橫向在左上角多顯示「尚未同步」。
 Widget noSyncPageBody(BuildContext context) {
-  final label = _landscapeLabel(context);
+  final label = phoneLandscapeLastUpdated(context);
   if (label == null) return EmptyState.noSync(context);
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,

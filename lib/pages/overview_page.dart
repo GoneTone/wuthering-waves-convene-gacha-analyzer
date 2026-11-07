@@ -92,9 +92,9 @@ class OverviewPage extends ConsumerWidget {
                       child: PageHeader(
                         title: l.pageOverviewTitle,
                         icon: Icons.dashboard_outlined,
+                        trailing: phoneLandscapeLastUpdated(context),
                       ),
                     ),
-                    ?phoneLandscapeLastUpdated(context),
                     ShareActionButton(
                       enabled: activeData.banners.values.any(
                         (r) => r.isNotEmpty,

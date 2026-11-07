@@ -107,16 +107,10 @@ class _BannerPageState extends ConsumerState<BannerPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: PageHeader(
-                    title: type.resolveName(l),
-                    icon: _iconForGachaType(type),
-                  ),
-                ),
-                ?phoneLandscapeLastUpdated(context),
-              ],
+            PageHeader(
+              title: type.resolveName(l),
+              icon: _iconForGachaType(type),
+              trailing: phoneLandscapeLastUpdated(context),
             ),
             SizedBox(height: 320, child: EmptyState.noRecords(context)),
           ],
@@ -183,9 +177,9 @@ class _BannerPageState extends ConsumerState<BannerPage> {
                             child: PageHeader(
                               title: type.resolveName(l),
                               icon: _iconForGachaType(type),
+                              trailing: phoneLandscapeLastUpdated(context),
                             ),
                           ),
-                          ?phoneLandscapeLastUpdated(context),
                           ShareActionButton(
                             enabled: records.isNotEmpty,
                             onGenerate: () => _generateBannerShare(

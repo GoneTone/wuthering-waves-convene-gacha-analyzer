@@ -35,6 +35,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/five_star_o
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/empty_state.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/last_updated_label.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/page_header.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_action_button.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/inline_section_title.dart';
@@ -242,6 +244,25 @@ void main() {
     ) async {
       await pump(tester, const Size(800, 360), page);
       expect(find.byType(LastUpdatedLabel), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('$name landscape header: label after title, share at edge', (
+      tester,
+    ) async {
+      await pump(tester, const Size(800, 360), page);
+      final title = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(PageHeader),
+              matching: find.byType(Text),
+            )
+            .first,
+      );
+      final label = tester.getRect(find.byType(LastUpdatedLabel));
+      expect(label.left - title.right, inInclusiveRange(0, 16));
+      expect(label.center.dy, inInclusiveRange(title.top, title.bottom));
+      // 頁面左右內距 12：分享按鈕和直向一樣貼齊右緣。
+      expect(tester.getRect(find.byType(ShareActionButton)).right, 800 - 12);
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
     testWidgets('$name header has no last updated in phone portrait', (
