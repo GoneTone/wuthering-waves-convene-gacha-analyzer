@@ -920,6 +920,7 @@
     }
   },
   "updateErrorFormat": "応答フォーマットが異常です",
+  "updateErrorPlay": "Google Play に接続できないか、このアプリは Google Play からインストールされていません",
   "currentReleaseTitle": "現在のバージョンの更新内容",
   "@currentReleaseTitle": {
     "description": "Title of the dialog showing release notes for the currently installed version."

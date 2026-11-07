@@ -924,6 +924,7 @@
     }
   },
   "updateErrorFormat": "Unexpected response format",
+  "updateErrorPlay": "Couldn't reach Google Play, or this copy wasn't installed from Google Play",
   "currentReleaseTitle": "Current release notes",
   "@currentReleaseTitle": {
     "description": "Title of the dialog showing release notes for the currently installed version."

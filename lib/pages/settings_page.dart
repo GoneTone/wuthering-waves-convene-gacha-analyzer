@@ -526,6 +526,7 @@ class _AboutContent extends ConsumerWidget {
     if (token == 'timeout') return l.updateErrorTimeout;
     if (token == 'rateLimited') return l.updateErrorRateLimited;
     if (token == 'format') return l.updateErrorFormat;
+    if (token == 'play') return l.updateErrorPlay;
     if (token.startsWith('server:')) {
       final status = token.substring('server:'.length);
       return l.updateErrorServer(status);

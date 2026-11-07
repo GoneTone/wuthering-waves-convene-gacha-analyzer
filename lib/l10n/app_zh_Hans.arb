@@ -914,6 +914,7 @@
     }
   },
   "updateErrorFormat": "响应格式异常",
+  "updateErrorPlay": "无法连接到 Google Play，或此版本不是从 Google Play 安装",
   "currentReleaseTitle": "当前版本的更新内容",
   "@currentReleaseTitle": {
     "description": "Title of the dialog showing release notes for the currently installed version."

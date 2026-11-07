@@ -7,7 +7,9 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/play_update.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 http.Response _ok(List<Map<String, dynamic>> body) =>
@@ -38,6 +40,66 @@ ProviderContainer _container({
   addTearDown(container.dispose);
   return container;
 }
+
+/// 測試用 [PlayUpdateGateway]：回傳固定 [info]，[error] 非 null 時改拋出。
+class _FakePlayGateway implements PlayUpdateGateway {
+  /// 建立 [_FakePlayGateway]。
+  _FakePlayGateway({this.info, this.error});
+
+  /// check() 回傳的資訊。
+  final PlayUpdateInfo? info;
+
+  /// check() 要拋出的例外。
+  final Object? error;
+
+  @override
+  Future<PlayUpdateInfo> check() async {
+    if (error != null) throw error!;
+    return info!;
+  }
+
+  @override
+  Future<PlayDownloadResult> downloadFlexible() async =>
+      PlayDownloadResult.downloaded;
+
+  @override
+  Future<void> completeFlexible() async {}
+}
+
+/// 建立 Android 情境的 container：Play 回報 [gateway]，GitHub 走 [client]。
+ProviderContainer _androidContainer({
+  required PlayUpdateGateway gateway,
+  required http.Client client,
+  Map<String, Object> prefs = const {},
+}) {
+  SharedPreferences.setMockInitialValues(Map<String, Object>.from(prefs));
+  final container = ProviderContainer(
+    overrides: [
+      appVersionProvider.overrideWithValue('1.8.0'),
+      httpClientProvider.overrideWithValue(client),
+      isAndroidProvider.overrideWithValue(true),
+      playUpdateGatewayProvider.overrideWithValue(gateway),
+    ],
+  );
+  addTearDown(container.dispose);
+  return container;
+}
+
+/// Play 回報有 v1.9.0 可更新。
+const _playV190 = PlayUpdateInfo(
+  available: true,
+  availableVersionCode: 1090099,
+  flexibleAllowed: true,
+);
+
+/// GitHub 有 v1.10.0、v1.9.0、v1.8.2 三個 release。
+MockClient _githubThree() => MockClient(
+  (_) async => _ok([
+    _release('v1.10.0', '2026-06-03T00:00:00Z'),
+    _release('v1.9.0', '2026-06-02T00:00:00Z'),
+    _release('v1.8.2', '2026-06-01T00:00:00Z'),
+  ]),
+);
 
 void main() {
   test('初始 state = ReleaseIdle', () async {
@@ -226,5 +288,109 @@ void main() {
 
     expect(callCount, 1);
     expect(container.read(appReleaseProvider), isA<ReleaseUpToDate>());
+  });
+
+  group('android (Play)', () {
+    test(
+      'play update + github notes → available with notes up to the play version',
+      () async {
+        final container = _androidContainer(
+          gateway: _FakePlayGateway(info: _playV190),
+          client: _githubThree(),
+        );
+        await container.read(settingsProvider.notifier).waitForLoad();
+
+        await container.read(appReleaseProvider.notifier).check(manual: true);
+
+        final state = container.read(appReleaseProvider) as ReleaseAvailable;
+        expect(state.playTag, 'v1.9.0');
+        expect(state.releases.map((r) => r.tagName), ['v1.9.0', 'v1.8.2']);
+      },
+    );
+
+    test('play update + github failure → available without notes', () async {
+      final container = _androidContainer(
+        gateway: _FakePlayGateway(info: _playV190),
+        client: MockClient((_) async => http.Response('', 500)),
+      );
+      await container.read(settingsProvider.notifier).waitForLoad();
+
+      await container.read(appReleaseProvider.notifier).check(manual: false);
+
+      final state = container.read(appReleaseProvider) as ReleaseAvailable;
+      expect(state.releases, isEmpty);
+      expect(state.playTag, 'v1.9.0');
+    });
+
+    test('play reports no update but github has one → no prompt', () async {
+      const none = PlayUpdateInfo(
+        available: false,
+        availableVersionCode: null,
+        flexibleAllowed: false,
+      );
+      final container = _androidContainer(
+        gateway: _FakePlayGateway(info: none),
+        client: _githubThree(),
+      );
+      await container.read(settingsProvider.notifier).waitForLoad();
+      final notifier = container.read(appReleaseProvider.notifier);
+
+      await notifier.check(manual: true);
+      expect(container.read(appReleaseProvider), isA<ReleaseUpToDate>());
+
+      await notifier.check(manual: false);
+      expect(container.read(appReleaseProvider), isA<ReleaseIdle>());
+    });
+
+    test('non-play install: silent on auto, failure on manual', () async {
+      final container = _androidContainer(
+        gateway: _FakePlayGateway(error: Exception('not from play')),
+        client: _githubThree(),
+      );
+      await container.read(settingsProvider.notifier).waitForLoad();
+      final notifier = container.read(appReleaseProvider.notifier);
+
+      await notifier.check(manual: false);
+      expect(container.read(appReleaseProvider), isA<ReleaseIdle>());
+
+      await notifier.check(manual: true);
+      expect(
+        (container.read(appReleaseProvider) as ReleaseCheckFailed).reason,
+        'play',
+      );
+    });
+
+    test('skipped play version is not prompted on auto check', () async {
+      final container = _androidContainer(
+        gateway: _FakePlayGateway(info: _playV190),
+        client: _githubThree(),
+        prefs: {'pref.skippedReleaseTag': 'v1.9.0'},
+      );
+      await container.read(settingsProvider.notifier).waitForLoad();
+      final notifier = container.read(appReleaseProvider.notifier);
+
+      await notifier.check(manual: false);
+      expect(container.read(appReleaseProvider), isA<ReleaseIdle>());
+
+      await notifier.check(manual: true);
+      expect(container.read(appReleaseProvider), isA<ReleaseAvailable>());
+    });
+
+    test('undecodable play version code → no prompt', () async {
+      const bad = PlayUpdateInfo(
+        available: true,
+        availableVersionCode: 17,
+        flexibleAllowed: true,
+      );
+      final container = _androidContainer(
+        gateway: _FakePlayGateway(info: bad),
+        client: _githubThree(),
+      );
+      await container.read(settingsProvider.notifier).waitForLoad();
+
+      await container.read(appReleaseProvider.notifier).check(manual: true);
+
+      expect(container.read(appReleaseProvider), isA<ReleaseUpToDate>());
+    });
   });
 }

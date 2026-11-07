@@ -695,6 +695,7 @@
     "placeholders": { "status": { "type": "String" } }
   },
   "updateErrorFormat": "回應格式異常",
+  "updateErrorPlay": "無法連線到 Google Play，或此版本不是從 Google Play 安裝",
   "currentReleaseTitle": "目前版本的更新內容",
   "@currentReleaseTitle": {
     "description": "Title of the dialog showing release notes for the currently installed version."
