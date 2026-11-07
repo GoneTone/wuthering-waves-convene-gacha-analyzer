@@ -486,9 +486,6 @@ void main() {
         if (name == 'overview') {
           await scrollToEnd(tester);
         } else {
-          // 卡池頁表格 Pager 的 1.3 倍字級溢出由 Task 6 處理，這裡只驗數字卡區。
-          final e = tester.takeException();
-          expect(e == null || '$e'.contains('RenderFlex overflowed'), isTrue);
           expect(find.byType(PityCard), findsNWidgets(2));
           await tester.scrollUntilVisible(
             find.byType(ItemTypeChartCard),
