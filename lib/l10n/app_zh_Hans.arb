@@ -889,6 +889,10 @@
     }
   },
   "updateButtonDownload": "前往下载",
+  "updateButtonUpdate": "更新",
+  "updateNotesUnavailable": "目前无法获取更新内容，详情请见 Google Play。",
+  "updateDownloadedMessage": "新版本已下载完成",
+  "updateRestartAction": "重新启动",
   "updateButtonSkip": "跳过此版本",
   "updateButtonLater": "稍后再说",
   "updateCheckButton": "检查更新",

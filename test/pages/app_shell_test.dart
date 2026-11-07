@@ -15,6 +15,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/pages/app_shell.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_download.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.dart';
@@ -50,6 +51,18 @@ class _Release extends AppReleaseNotifier {
   Future<void> check({required bool manual}) async {}
 }
 
+/// 可手動切換階段、記錄 install 呼叫的下載替身。
+class _Download extends PlayUpdateDownloadNotifier {
+  /// install 被呼叫的次數。
+  int installs = 0;
+
+  /// 直接把狀態設為 [phase]。
+  void setPhase(PlayDownloadPhase phase) => state = phase;
+
+  @override
+  Future<void> install() async => installs++;
+}
+
 /// 不啟動同步的雲端同步替身。
 class _Sync extends CloudSyncNotifier {
   @override
@@ -59,6 +72,7 @@ class _Sync extends CloudSyncNotifier {
 void main() {
   late _Repo repo;
   late ProviderContainer container;
+  late _Download download;
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -78,12 +92,14 @@ void main() {
     tester.platformDispatcher.textScaleFactorTestValue = textScale;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     repo = _Repo();
+    download = _Download();
     container = ProviderContainer(
       overrides: [
         appVersionProvider.overrideWithValue('1.8.1'),
         gachaRepositoryProvider.overrideWith(() => repo),
         appReleaseProvider.overrideWith(_Release.new),
         cloudSyncProvider.overrideWith(_Sync.new),
+        playUpdateDownloadProvider.overrideWith(() => download),
       ],
     );
     addTearDown(container.dispose);
@@ -130,6 +146,19 @@ void main() {
       tester.element(find.byType(AppShell)),
     ).openAppDrawerTooltip,
   );
+
+  testWidgets('downloaded update shows a persistent restart snackbar', (
+    tester,
+  ) async {
+    final l = await pump(tester, const Size(360, 800));
+    expect(find.text(l.updateDownloadedMessage), findsNothing);
+    download.setPhase(PlayDownloadPhase.downloaded);
+    await tester.pump();
+    await tester.pump(const Duration(minutes: 5));
+    expect(find.text(l.updateDownloadedMessage), findsOneWidget);
+    await tester.tap(find.text(l.updateRestartAction));
+    expect(download.installs, 1);
+  });
 
   testWidgets('phone portrait uses a drawer instead of the rail', (
     tester,

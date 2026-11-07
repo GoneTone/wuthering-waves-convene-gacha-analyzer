@@ -899,6 +899,10 @@
     }
   },
   "updateButtonDownload": "Download",
+  "updateButtonUpdate": "Update",
+  "updateNotesUnavailable": "Release notes are unavailable right now. See Google Play for details.",
+  "updateDownloadedMessage": "The update has been downloaded",
+  "updateRestartAction": "Restart",
   "updateButtonSkip": "Skip this version",
   "updateButtonLater": "Later",
   "updateCheckButton": "Check for updates",

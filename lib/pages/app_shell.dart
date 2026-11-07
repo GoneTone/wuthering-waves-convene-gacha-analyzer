@@ -10,6 +10,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_download.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/new_version_dialog.dart';
@@ -82,7 +83,8 @@ class _AppShellState extends ConsumerState<AppShell> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (_) => NewVersionDialog(releases: next.releases),
+          builder: (_) =>
+              NewVersionDialog(releases: next.releases, playTag: next.playTag),
         ).whenComplete(() {
           _releaseDialogOpen = false;
         });
@@ -90,6 +92,22 @@ class _AppShellState extends ConsumerState<AppShell> {
     });
 
     final l = AppLocalizations.of(context)!;
+    ref.listen<PlayDownloadPhase>(playUpdateDownloadProvider, (prev, next) {
+      if (next != PlayDownloadPhase.downloaded) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l.updateDownloadedMessage),
+          // shortcut: 不用 indefinite（需 Flutter 3.29+ 且無消失手段），一天視同常駐。
+          duration: const Duration(days: 1),
+          action: SnackBarAction(
+            label: l.updateRestartAction,
+            onPressed: () =>
+                ref.read(playUpdateDownloadProvider.notifier).install(),
+          ),
+        ),
+      );
+    });
+
     final tokens = Theme.of(context).gacha;
     final location = GoRouterState.of(context).uri.path;
     final activeData = ref.watch(

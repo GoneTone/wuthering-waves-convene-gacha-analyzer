@@ -678,6 +678,10 @@
     "placeholders": { "date": { "type": "String" } }
   },
   "updateButtonDownload": "前往下載",
+  "updateButtonUpdate": "更新",
+  "updateNotesUnavailable": "目前無法取得更新內容，詳情請見 Google Play。",
+  "updateDownloadedMessage": "新版本已下載完成",
+  "updateRestartAction": "重新啟動",
   "updateButtonSkip": "跳過此版本",
   "updateButtonLater": "稍後再說",
   "updateCheckButton": "檢查更新",
