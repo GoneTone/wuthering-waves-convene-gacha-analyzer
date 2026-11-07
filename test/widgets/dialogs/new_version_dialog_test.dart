@@ -96,6 +96,7 @@ void main() {
       playTag: 'v1.2.0',
     );
     expect(find.text('Download'), findsNothing);
+    expect(find.textContaining('Release notes are unavailable'), findsNothing);
     await tester.tap(find.text('Update'));
     await tester.pumpAndSettle();
     expect(d.starts, 1);
@@ -108,6 +109,23 @@ void main() {
     await _pump(tester, android: true, releases: [], playTag: 'v1.3.0');
     expect(find.textContaining('v1.3.0'), findsOneWidget);
     expect(find.textContaining('Release notes are unavailable'), findsOne);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('android: play version without notes shows the hint above the '
+      'older notes', (tester) async {
+    await _pump(
+      tester,
+      android: true,
+      releases: [_release('v1.2.0')],
+      playTag: 'v1.3.0',
+    );
+    final hint = find.textContaining('Release notes are unavailable');
+    expect(hint, findsOne);
+    expect(
+      tester.getTopLeft(hint).dy,
+      lessThan(tester.getTopLeft(find.textContaining('Notes v1.2.0')).dy),
+    );
     expect(tester.takeException(), isNull);
   });
 

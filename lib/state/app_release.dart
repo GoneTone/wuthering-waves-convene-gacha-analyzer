@@ -8,6 +8,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/android_version_
 import 'package:wuthering_waves_convene_gacha_analyzer/services/app_release_checker.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/play_update.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_download.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 export 'package:wuthering_waves_convene_gacha_analyzer/services/app_release_checker.dart'
@@ -140,8 +141,26 @@ class AppReleaseNotifier extends Notifier<ReleaseCheckState> {
     final code = info.availableVersionCode;
     final tag = code == null ? null : tagForAndroidVersionCode(code);
     log.info(
-      'play update check: available=${info.available} code=$code tag=$tag',
+      'play update check: available=${info.available} code=$code tag=$tag '
+      'flexibleAllowed=${info.flexibleAllowed} '
+      'installStatus=${info.installStatus.name}',
     );
+    final download = ref.read(playUpdateDownloadProvider.notifier);
+    final wasDownloaded =
+        ref.read(playUpdateDownloadProvider) == PlayDownloadPhase.downloaded;
+    download.syncWithPlay(info);
+    // 剛同步成已下載時，常駐的「重新啟動」SnackBar 就是提示，不再多跳一個 dialog。
+    if (info.downloaded && !wasDownloaded) {
+      log.info('play update already downloaded, showing restart prompt');
+      state = const ReleaseIdle();
+      return;
+    }
+    // 之前已開始下載，自動檢查不用再問一次；手動檢查照常顯示新版。
+    if (info.downloading && !manual) {
+      log.info('play update download already in progress');
+      state = const ReleaseIdle();
+      return;
+    }
     if (!info.available) {
       state = manual ? const ReleaseUpToDate() : const ReleaseIdle();
       return;
@@ -166,7 +185,8 @@ class AppReleaseNotifier extends Notifier<ReleaseCheckState> {
       releases = newer
           .where((r) => Version.parse(r.version) <= playVersion)
           .toList();
-    } on ReleaseCheckError catch (e) {
+    } catch (e) {
+      // Android 的更新說明只是附加資訊，任何錯誤（含 TLS 等未轉換的例外）都照樣提示新版。
       log.info('release notes unavailable, prompting without notes: $e');
     }
     state = ReleaseAvailable(releases, playTag: tag);

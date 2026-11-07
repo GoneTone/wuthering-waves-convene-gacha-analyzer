@@ -28,9 +28,22 @@ class PlayUpdateDownloadNotifier extends Notifier<PlayDownloadPhase> {
     if (state != PlayDownloadPhase.idle) return;
     state = PlayDownloadPhase.downloading;
     _log.info('play flexible update start');
+    final gateway = ref.read(playUpdateGatewayProvider);
     var result = PlayDownloadResult.failed;
     try {
-      result = await ref.read(playUpdateGatewayProvider).downloadFlexible();
+      // 已下載完或不允許彈性更新時 plugin 不會啟動流程，也永遠不回覆，所以先重查再決定。
+      final info = await gateway.check();
+      if (info.downloaded) {
+        result = PlayDownloadResult.downloaded;
+      } else if (!info.flexibleAllowed) {
+        _log.warning(
+          'play flexible update not allowed '
+          'availability=${info.updateAvailability.name} '
+          'installStatus=${info.installStatus.name}',
+        );
+      } else {
+        result = await gateway.downloadFlexible();
+      }
     } catch (e) {
       _log.warning('play flexible update threw: $e');
     }
@@ -40,7 +53,23 @@ class PlayUpdateDownloadNotifier extends Notifier<PlayDownloadPhase> {
         : PlayDownloadPhase.idle;
   }
 
+  /// 依 Play 回報的進度同步狀態（例如重新開啟 App 時接續之前開始的更新）；只往前推進，不會倒退。
+  ///
+  /// shortcut: plugin 的進度事件只在本 process 呼叫過 startFlexibleUpdate 後才會送出，
+  /// 所以接續中的下載要等下次檢查（手動檢查或下次啟動）才會變成 downloaded；
+  /// 背景下載失敗也要到下次啟動才回到 idle。若 plugin 改成啟動就註冊監聽，再改用 installUpdateListener。
+  void syncWithPlay(PlayUpdateInfo info) {
+    if (info.downloaded) {
+      state = PlayDownloadPhase.downloaded;
+    } else if (info.downloading && state == PlayDownloadPhase.idle) {
+      state = PlayDownloadPhase.downloading;
+    }
+  }
+
   /// 安裝已下載的更新；失敗只記 log，狀態維持不變。
+  ///
+  /// plugin 的 completeFlexibleUpdate 成功時不會回覆（App 直接重新啟動），
+  /// 所以這裡只會收到前置條件不符（例如未先 check）之類的例外。
   Future<void> install() async {
     _log.info('play flexible update install');
     try {

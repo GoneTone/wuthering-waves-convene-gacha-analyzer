@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/play_update.dart';
@@ -9,8 +10,11 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_downloa
 
 /// 可控制下載結果並記錄呼叫次數的 Play 更新替身。
 class _Gateway implements PlayUpdateGateway {
-  /// 建立替身；[result] 為下載結果，[throwOnDownload] 為 true 時下載拋例外。
-  _Gateway(this.result, {this.throwOnDownload = false});
+  /// 建立替身；[result] 為下載結果，[throwOnDownload] 為 true 時下載拋例外，[info] 為重查結果。
+  _Gateway(this.result, {this.throwOnDownload = false, this.info = _allowed});
+
+  /// check() 回傳的資訊。
+  final PlayUpdateInfo info;
 
   /// 下載要回傳的結果。
   final PlayDownloadResult result;
@@ -28,7 +32,7 @@ class _Gateway implements PlayUpdateGateway {
   final gate = Completer<void>();
 
   @override
-  Future<PlayUpdateInfo> check() => throw UnimplementedError();
+  Future<PlayUpdateInfo> check() async => info;
 
   @override
   Future<PlayDownloadResult> downloadFlexible() async {
@@ -47,6 +51,13 @@ class _Gateway implements PlayUpdateGateway {
     if (throwOnComplete) throw StateError('complete boom');
   }
 }
+
+/// Play 回報有新版且允許彈性更新。
+const _allowed = PlayUpdateInfo(
+  updateAvailability: UpdateAvailability.updateAvailable,
+  availableVersionCode: 1090099,
+  flexibleAllowed: true,
+);
 
 /// 建立使用 [gateway] 的容器。
 ProviderContainer _container(_Gateway gateway) {
@@ -107,6 +118,48 @@ void main() {
     await n.start();
     expect(g.downloads, 1);
   });
+
+  test('already downloaded → downloaded without starting the flow', () async {
+    final g = _Gateway(
+      PlayDownloadResult.failed,
+      info: const PlayUpdateInfo(
+        updateAvailability:
+            UpdateAvailability.developerTriggeredUpdateInProgress,
+        availableVersionCode: 1090099,
+        flexibleAllowed: false,
+        installStatus: InstallStatus.downloaded,
+      ),
+    );
+    final c = _container(g);
+    await c.read(playUpdateDownloadProvider.notifier).start();
+    expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.downloaded);
+    expect(g.downloads, 0);
+  });
+
+  test(
+    'flexible not allowed → idle with a warning, flow not started',
+    () async {
+      final logs = _collectLogs();
+      final g = _Gateway(
+        PlayDownloadResult.downloaded,
+        info: const PlayUpdateInfo(
+          updateAvailability: UpdateAvailability.updateAvailable,
+          availableVersionCode: 1090099,
+          flexibleAllowed: false,
+        ),
+      );
+      final c = _container(g);
+      await c.read(playUpdateDownloadProvider.notifier).start();
+      expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.idle);
+      expect(g.downloads, 0);
+      expect(
+        logs.any(
+          (m) => m.startsWith('WARNING play flexible update not allowed'),
+        ),
+        isTrue,
+      );
+    },
+  );
 
   test('install calls completeFlexible', () async {
     final g = _Gateway(PlayDownloadResult.downloaded);

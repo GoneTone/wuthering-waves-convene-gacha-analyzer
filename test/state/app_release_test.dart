@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:in_app_update/in_app_update.dart';
 import 'package:logging/logging.dart';
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +13,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/play_update.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_download.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 http.Response _ok(List<Map<String, dynamic>> body) =>
@@ -59,9 +62,14 @@ class _FakePlayGateway implements PlayUpdateGateway {
     return info!;
   }
 
+  /// downloadFlexible() 被呼叫的次數。
+  int downloads = 0;
+
   @override
-  Future<PlayDownloadResult> downloadFlexible() async =>
-      PlayDownloadResult.downloaded;
+  Future<PlayDownloadResult> downloadFlexible() async {
+    downloads++;
+    return PlayDownloadResult.downloaded;
+  }
 
   @override
   Future<void> completeFlexible() async {}
@@ -88,9 +96,17 @@ ProviderContainer _androidContainer({
 
 /// Play 回報有 v1.9.0 可更新。
 const _playV190 = PlayUpdateInfo(
-  available: true,
+  updateAvailability: UpdateAvailability.updateAvailable,
   availableVersionCode: 1090099,
   flexibleAllowed: true,
+);
+
+/// 重新開啟 App 時，Play 回報開發者觸發的 v1.9.0 更新處於 [status]。
+PlayUpdateInfo _inProgress(InstallStatus status) => PlayUpdateInfo(
+  updateAvailability: UpdateAvailability.developerTriggeredUpdateInProgress,
+  availableVersionCode: 1090099,
+  flexibleAllowed: false,
+  installStatus: status,
 );
 
 /// GitHub 有 v1.10.0、v1.9.0、v1.8.2 三個 release。
@@ -325,7 +341,7 @@ void main() {
 
     test('play reports no update but github has one → no prompt', () async {
       const none = PlayUpdateInfo(
-        available: false,
+        updateAvailability: UpdateAvailability.updateNotAvailable,
         availableVersionCode: null,
         flexibleAllowed: false,
       );
@@ -380,7 +396,7 @@ void main() {
 
     test('undecodable play version code → no prompt', () async {
       const bad = PlayUpdateInfo(
-        available: true,
+        updateAvailability: UpdateAvailability.updateAvailable,
         availableVersionCode: 17,
         flexibleAllowed: true,
       );
@@ -407,5 +423,100 @@ void main() {
         hasLength(2),
       );
     });
+    test('relaunch with the update already downloaded → restart prompt only, '
+        'manual re-check opens the dialog', () async {
+      final logs = <String>[];
+      final sub = Logger.root.onRecord.listen((r) => logs.add(r.message));
+      addTearDown(sub.cancel);
+      final gateway = _FakePlayGateway(
+        info: _inProgress(InstallStatus.downloaded),
+      );
+      final container = _androidContainer(
+        gateway: gateway,
+        client: _githubThree(),
+      );
+      await container.read(settingsProvider.notifier).waitForLoad();
+      final notifier = container.read(appReleaseProvider.notifier);
+
+      await notifier.check(manual: false);
+      expect(
+        container.read(playUpdateDownloadProvider),
+        PlayDownloadPhase.downloaded,
+      );
+      expect(container.read(appReleaseProvider), isA<ReleaseIdle>());
+      expect(
+        logs,
+        contains(
+          'play update check: available=true code=1090099 tag=v1.9.0 '
+          'flexibleAllowed=false installStatus=downloaded',
+        ),
+      );
+
+      await notifier.check(manual: true);
+      expect(container.read(appReleaseProvider), isA<ReleaseAvailable>());
+      expect(gateway.downloads, 0);
+    });
+
+    test('relaunch while the download is in progress → downloading, no new '
+        'flow, not reported as up to date', () async {
+      for (final status in [InstallStatus.pending, InstallStatus.downloading]) {
+        final gateway = _FakePlayGateway(info: _inProgress(status));
+        final container = _androidContainer(
+          gateway: gateway,
+          client: _githubThree(),
+        );
+        await container.read(settingsProvider.notifier).waitForLoad();
+        final notifier = container.read(appReleaseProvider.notifier);
+
+        await notifier.check(manual: false);
+        expect(
+          container.read(playUpdateDownloadProvider),
+          PlayDownloadPhase.downloading,
+        );
+        expect(container.read(appReleaseProvider), isA<ReleaseIdle>());
+
+        await notifier.check(manual: true);
+        expect(container.read(appReleaseProvider), isA<ReleaseAvailable>());
+        expect(gateway.downloads, 0);
+      }
+    });
+
+    test(
+      'developer-triggered update in progress is not "up to date"',
+      () async {
+        final container = _androidContainer(
+          gateway: _FakePlayGateway(info: _inProgress(InstallStatus.canceled)),
+          client: _githubThree(),
+        );
+        await container.read(settingsProvider.notifier).waitForLoad();
+
+        await container.read(appReleaseProvider.notifier).check(manual: true);
+
+        expect(container.read(appReleaseProvider), isA<ReleaseAvailable>());
+        expect(
+          container.read(playUpdateDownloadProvider),
+          PlayDownloadPhase.idle,
+        );
+      },
+    );
+
+    test(
+      'github throws a non-ReleaseCheckError → still prompts without notes',
+      () async {
+        final container = _androidContainer(
+          gateway: _FakePlayGateway(info: _playV190),
+          client: MockClient(
+            (_) async => throw const HandshakeException('bad cert'),
+          ),
+        );
+        await container.read(settingsProvider.notifier).waitForLoad();
+
+        await container.read(appReleaseProvider.notifier).check(manual: false);
+
+        final state = container.read(appReleaseProvider) as ReleaseAvailable;
+        expect(state.releases, isEmpty);
+        expect(state.playTag, 'v1.9.0');
+      },
+    );
   });
 }

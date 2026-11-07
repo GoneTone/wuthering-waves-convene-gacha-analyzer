@@ -44,7 +44,12 @@ class NewVersionDialog extends ConsumerWidget {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (releases.isEmpty) Text(l.updateNotesUnavailable),
+          // Play 上的版本可能還沒發布說明，只有較舊版本的說明。
+          if (releases.isEmpty ||
+              (playTag != null && releases.first.tagName != playTag)) ...[
+            Text(l.updateNotesUnavailable),
+            if (releases.isNotEmpty) const SizedBox(height: AppSpacing.m),
+          ],
           for (int i = 0; i < releases.length; i++) ...[
             ReleaseNotesContent(release: releases[i]),
             if (i < releases.length - 1) const SizedBox(height: AppSpacing.m),

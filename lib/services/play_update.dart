@@ -6,19 +6,37 @@ import 'package:in_app_update/in_app_update.dart';
 class PlayUpdateInfo {
   /// 建立 [PlayUpdateInfo]。
   const PlayUpdateInfo({
-    required this.available,
+    required this.updateAvailability,
     required this.availableVersionCode,
     required this.flexibleAllowed,
+    this.installStatus = InstallStatus.unknown,
   });
 
-  /// Play 是否有可用的新版。
-  final bool available;
+  /// Play 回報的更新可用性。
+  final UpdateAvailability updateAvailability;
 
   /// Play 上新版的 versionCode；無新版時可能為 null。
   final int? availableVersionCode;
 
   /// 此次更新是否允許彈性（背景下載）更新。
   final bool flexibleAllowed;
+
+  /// 更新的下載／安裝進度。
+  final InstallStatus installStatus;
+
+  /// 是否有 App 該處理的新版；之前已開始的更新（下載中或已下載完）也算。
+  bool get available =>
+      updateAvailability == UpdateAvailability.updateAvailable ||
+      updateAvailability ==
+          UpdateAvailability.developerTriggeredUpdateInProgress;
+
+  /// 更新是否已下載完、只差重新啟動安裝。
+  bool get downloaded => installStatus == InstallStatus.downloaded;
+
+  /// 更新是否正在排隊或下載中。
+  bool get downloading =>
+      installStatus == InstallStatus.pending ||
+      installStatus == InstallStatus.downloading;
 }
 
 /// 彈性更新下載的結果。
@@ -38,7 +56,7 @@ abstract class PlayUpdateGateway {
   /// 查詢 Play 是否有新版；不是從 Play 安裝等狀況會拋例外。
   Future<PlayUpdateInfo> check();
 
-  /// 開始彈性更新，下載完成才回傳。
+  /// 開始彈性更新，下載完成才回傳；呼叫前須先在同一個 process 呼叫過 [check]。
   Future<PlayDownloadResult> downloadFlexible();
 
   /// 安裝已下載的更新（App 會重新啟動）。
@@ -51,9 +69,10 @@ class InAppUpdatePlayGateway implements PlayUpdateGateway {
   Future<PlayUpdateInfo> check() async {
     final info = await InAppUpdate.checkForUpdate();
     return PlayUpdateInfo(
-      available: info.updateAvailability == UpdateAvailability.updateAvailable,
+      updateAvailability: info.updateAvailability,
       availableVersionCode: info.availableVersionCode,
       flexibleAllowed: info.flexibleUpdateAllowed,
+      installStatus: info.installStatus,
     );
   }
 
