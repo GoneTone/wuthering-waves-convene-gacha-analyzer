@@ -454,6 +454,43 @@ void main() {
     expect(find.textContaining('#', findRichText: true), findsWidgets);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
+  testWidgets('banner filter bar is kept alive when scrolled out of view', (
+    tester,
+  ) async {
+    // 篩選列包在 LayoutBuilder 裡建構，捲出可視範圍後仍要保留原本的 State（輸入框內容、計時器）。
+    await pump(
+      tester,
+      const Size(360, 800),
+      const BannerPage(cardPoolType: '1'),
+      records: [
+        for (var i = 0; i < 60; i++)
+          GachaRecord(
+            resourceId: 3000 + i,
+            qualityLevel: 3,
+            resourceType: '武器',
+            cardPoolType: '1',
+            name: 'Item $i',
+            count: 1,
+            time: DateTime(2026, 5, 1).subtract(Duration(hours: i)),
+          ),
+      ],
+    );
+    final scrollable = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.byType(SearchFilterBar),
+      300,
+      scrollable: scrollable,
+    );
+    final bar = tester.state(find.byType(SearchFilterBar));
+    await tester.drag(scrollable, const Offset(0, -3000));
+    await tester.pumpAndSettle();
+    expect(find.byType(SearchFilterBar), findsNothing);
+    expect(
+      tester.state(find.byType(SearchFilterBar, skipOffstage: false)),
+      same(bar),
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
   testWidgets(
     'banner page does not rebuild its cards when only height changes',
     (tester) async {
