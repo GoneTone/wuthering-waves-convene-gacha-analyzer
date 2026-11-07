@@ -1666,6 +1666,27 @@ void main() {
         });
       }
 
+      /// 頁點的半透明底。
+      Finder pill() => find.byKey(const ValueKey('page-dots-scrim'));
+
+      testWidgets('tap on the page-dots pill still opens zoom', (tester) async {
+        // 頁點墊了底色但不接手勢，點在上面仍要放大圖片。
+        await openTwoImages(tester);
+        await tester.tapAt(tester.getCenter(pill()));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+      });
+
+      testWidgets('swipe starting on the page-dots pill switches the image', (
+        tester,
+      ) async {
+        final (_, icon) = await openTwoImages(tester);
+        await tester.dragFrom(tester.getCenter(pill()), const Offset(-120, 0));
+        await tester.pump();
+        expect(shown(icon), findsOneWidget);
+      });
+
       testWidgets('single image: no dots, swipe does not throw', (
         tester,
       ) async {
