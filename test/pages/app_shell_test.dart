@@ -164,16 +164,23 @@ void main() {
     expect(bar.persist, isTrue);
   });
 
-  for (final locale in const [
-    Locale('zh'),
-    Locale('en'),
-    Locale('ja'),
-    Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
+  for (final (locale, scale) in const [
+    (Locale('zh'), 1.0),
+    (Locale('en'), 1.0),
+    (Locale('ja'), 1.0),
+    (Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'), 1.0),
+    (Locale('en'), 1.3),
+    (Locale('ja'), 1.3),
   ]) {
     testWidgets('in-app update failure offers Google Play; denial stays '
-        'silent ($locale)', (tester) async {
+        'silent ($locale x$scale)', (tester) async {
       final launcher = installFakeUrlLauncher();
-      final l = await pump(tester, const Size(320, 640), locale: locale);
+      final l = await pump(
+        tester,
+        const Size(320, 640),
+        locale: locale,
+        textScale: scale,
+      );
       download.setPhase(PlayDownloadPhase.downloading);
       await tester.pump();
       download.setPhase(PlayDownloadPhase.idle);
@@ -185,10 +192,11 @@ void main() {
       expect(find.text(l.updateInAppUnavailable), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.tap(find.text(l.updateOpenPlayStore));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(launcher.launched, [
         'https://play.google.com/store/apps/details?id=tw.reh.wuwa.gacha',
       ]);
+      expect(find.text(l.updateInAppUnavailable), findsNothing);
     });
   }
 

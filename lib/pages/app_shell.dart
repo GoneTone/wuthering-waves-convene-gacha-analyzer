@@ -100,13 +100,39 @@ class _AppShellState extends ConsumerState<AppShell> {
     final l = AppLocalizations.of(context)!;
     ref.listen<PlayDownloadPhase>(playUpdateDownloadProvider, (prev, next) {
       if (next == PlayDownloadPhase.failed) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        final messenger = ScaffoldMessenger.of(context);
+        final theme = Theme.of(context);
+        messenger.showSnackBar(
           SnackBar(
-            content: Text(l.updateInAppUnavailable),
             persist: false,
-            action: SnackBarAction(
-              label: l.updateOpenPlayStore,
-              onPressed: () => openExternalUrl(_playStoreUri),
+            // SnackBarAction 的按鈕文字不會換行，窄螢幕或放大字體時會溢出；
+            // 改把按鈕放進內容，讓它受 SnackBar 寬度約束而換行。
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(l.updateInAppUnavailable),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor:
+                          theme.snackBarTheme.actionTextColor ??
+                          theme.colorScheme.inversePrimary,
+                    ),
+                    onPressed: () {
+                      messenger.hideCurrentSnackBar(
+                        reason: SnackBarClosedReason.action,
+                      );
+                      openExternalUrl(_playStoreUri);
+                    },
+                    child: Text(
+                      l.updateOpenPlayStore,
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
