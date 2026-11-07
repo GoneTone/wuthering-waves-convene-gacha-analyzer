@@ -23,6 +23,12 @@ void main() {
       'v1.100.0',
       'v1.0.100',
       'v0.9.0',
+      'v01.9.0',
+      'v1.09.0',
+      'v1.9.00',
+      'v1.9.0-rc.02',
+      'v2100.0.0',
+      'v99999999999999999999999.0.0',
     ]) {
       expect(
         () => androidVersionCodeForTag(t),
@@ -30,6 +36,21 @@ void main() {
         reason: t,
       );
     }
+  });
+  test("largest major still fits Play's versionCode limit", () {
+    expect(androidVersionCodeForTag('v2099.99.99'), 2099999999);
+  });
+  test('overflowing digits give a clear message', () {
+    expect(
+      () => androidVersionCodeForTag('v99999999999999999999999.0.0'),
+      throwsA(
+        isA<FormatException>().having(
+          (e) => e.message,
+          'message',
+          'Release tag out of range',
+        ),
+      ),
+    );
   });
   test('reverse mapping', () {
     expect(tagForAndroidVersionCode(1080199), 'v1.8.1');

@@ -1,5 +1,10 @@
-/// 符合 `vX.Y.Z` 或 `vX.Y.Z-rc.N` 的 release tag 格式。
-final _tagPattern = RegExp(r'^v(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?$');
+/// 符合 `vX.Y.Z` 或 `vX.Y.Z-rc.N` 的 release tag 格式；各數字不得有前導零。
+final _tagPattern = RegExp(
+  r'^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-rc\.(0|[1-9]\d*))?$',
+);
+
+/// Play versionCode 上限 2,100,000,000 所允許的最大 MAJOR。
+const _maxMajor = 2099;
 
 /// 正式版的尾碼，使其永遠大於同版本的任何 rc。
 const _releaseSuffix = 99;
@@ -10,16 +15,18 @@ const _releaseSuffix = 99;
 int androidVersionCodeForTag(String tag) {
   final m = _tagPattern.firstMatch(tag);
   if (m == null) throw FormatException('Invalid release tag', tag);
-  final major = int.parse(m[1]!);
-  final minor = int.parse(m[2]!);
-  final patch = int.parse(m[3]!);
-  final rc = m[4] == null ? null : int.parse(m[4]!);
+  final outOfRange = FormatException('Release tag out of range', tag);
+  final major = int.tryParse(m[1]!) ?? (throw outOfRange);
+  final minor = int.tryParse(m[2]!) ?? (throw outOfRange);
+  final patch = int.tryParse(m[3]!) ?? (throw outOfRange);
+  final rc = m[4] == null ? null : int.tryParse(m[4]!) ?? (throw outOfRange);
   final suffix = rc ?? _releaseSuffix;
   if (major < 1 ||
+      major > _maxMajor ||
       minor > 99 ||
       patch > 99 ||
       (rc != null && (rc < 1 || rc >= _releaseSuffix))) {
-    throw FormatException('Release tag out of range', tag);
+    throw outOfRange;
   }
   return major * 1000000 + minor * 10000 + patch * 100 + suffix;
 }
