@@ -682,6 +682,8 @@
   "updateNotesUnavailable": "目前無法取得更新內容，詳情請見 Google Play。",
   "updateDownloadedMessage": "新版本已下載完成",
   "updateRestartAction": "重新啟動",
+  "updateInAppUnavailable": "目前無法在 App 內更新，請到 Google Play 更新。",
+  "updateOpenPlayStore": "前往 Google Play",
   "updateButtonSkip": "跳過此版本",
   "updateButtonLater": "稍後再說",
   "updateCheckButton": "檢查更新",

@@ -899,6 +899,8 @@
   "updateNotesUnavailable": "現在アップデート内容を取得できません。詳しくは Google Play をご覧ください。",
   "updateDownloadedMessage": "アップデートのダウンロードが完了しました",
   "updateRestartAction": "再起動",
+  "updateInAppUnavailable": "現在アプリ内でアップデートできません。Google Play からアップデートしてください。",
+  "updateOpenPlayStore": "Google Play を開く",
   "updateButtonSkip": "このバージョンをスキップ",
   "updateButtonLater": "後で",
   "updateCheckButton": "更新を確認",

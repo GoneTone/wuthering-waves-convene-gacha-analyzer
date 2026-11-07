@@ -39,7 +39,8 @@ class ReleaseUpToDate extends ReleaseCheckState {
 
 /// 有可用的新版本。
 class ReleaseAvailable extends ReleaseCheckState {
-  /// 建立 [ReleaseAvailable]，[releases] 為所有比當前更新的版本（降序）；Android 時為不超過 [playTag] 的子集，可能為空。
+  /// 建立 [ReleaseAvailable]，[releases] 為所有比當前更新的版本（降序）；
+  /// Android 時為不超過 [playTag] 的子集，可能為空。
   const ReleaseAvailable(this.releases, {this.playTag});
 
   /// 比當前版本更新的版本列表（降序）；Android 取不到說明時可能為空。
@@ -134,7 +135,7 @@ class AppReleaseNotifier extends Notifier<ReleaseCheckState> {
     try {
       info = await ref.read(playUpdateGatewayProvider).check();
     } catch (e) {
-      log.warning('play update check failed: $e');
+      log.warning('play update check failed type=${e.runtimeType}: $e');
       state = manual ? const ReleaseCheckFailed('play') : const ReleaseIdle();
       return;
     }

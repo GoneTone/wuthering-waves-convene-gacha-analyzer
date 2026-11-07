@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_update/in_app_update.dart';
+import 'package:logging/logging.dart';
 
 /// Play 回報的更新資訊。
 class PlayUpdateInfo {
@@ -65,6 +68,9 @@ abstract class PlayUpdateGateway {
 
 /// 以 `in_app_update` 套件實作的 [PlayUpdateGateway]。
 class InAppUpdatePlayGateway implements PlayUpdateGateway {
+  /// 此類別的 logger。
+  static final _log = Logger('release');
+
   @override
   Future<PlayUpdateInfo> check() async {
     final info = await InAppUpdate.checkForUpdate();
@@ -78,6 +84,36 @@ class InAppUpdatePlayGateway implements PlayUpdateGateway {
 
   @override
   Future<PlayDownloadResult> downloadFlexible() async {
+    // 從通知列取消下載等狀況下 plugin 的 startFlexibleUpdate 永遠不回覆，
+    // 所以同時看進度事件，先到先用。
+    final fromStatus = Completer<PlayDownloadResult>();
+    final sub = InAppUpdate.installUpdateListener.listen(
+      (status) {
+        final result = switch (status) {
+          InstallStatus.downloaded => PlayDownloadResult.downloaded,
+          InstallStatus.canceled ||
+          InstallStatus.failed => PlayDownloadResult.failed,
+          _ => null,
+        };
+        if (result == null || fromStatus.isCompleted) return;
+        _log.info(
+          'play flexible update ended by install status=${status.name}',
+        );
+        fromStatus.complete(result);
+      },
+      // 事件串流出錯時仍以 startFlexibleUpdate 的回覆為準，不誤判成失敗。
+      onError: (Object e) =>
+          _log.warning('play install status stream error: $e'),
+    );
+    try {
+      return await Future.any([_startFlexible(), fromStatus.future]);
+    } finally {
+      await sub.cancel();
+    }
+  }
+
+  /// 呼叫 plugin 開始彈性更新，並把回覆轉成 [PlayDownloadResult]。
+  static Future<PlayDownloadResult> _startFlexible() async {
     try {
       return switch (await InAppUpdate.startFlexibleUpdate()) {
         AppUpdateResult.success => PlayDownloadResult.downloaded,

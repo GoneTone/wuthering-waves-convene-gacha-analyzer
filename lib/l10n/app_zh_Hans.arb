@@ -893,6 +893,8 @@
   "updateNotesUnavailable": "目前无法获取更新内容，详情请见 Google Play。",
   "updateDownloadedMessage": "新版本已下载完成",
   "updateRestartAction": "重新启动",
+  "updateInAppUnavailable": "目前无法在 App 内更新，请到 Google Play 更新。",
+  "updateOpenPlayStore": "前往 Google Play",
   "updateButtonSkip": "跳过此版本",
   "updateButtonLater": "稍后再说",
   "updateCheckButton": "检查更新",

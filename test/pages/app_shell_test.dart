@@ -22,6 +22,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.da
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_text.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/uid_indicator.dart';
 
+import '../helpers/fake_url_launcher.dart';
+
 /// 已有一個帳號、記錄 update 呼叫次數的 repository 替身。
 class _Repo extends GachaRepository {
   /// update 被呼叫的次數。
@@ -160,6 +162,27 @@ void main() {
     expect(download.installs, 1);
     final bar = tester.widget<SnackBar>(find.byType(SnackBar));
     expect(bar.persist, isTrue);
+  });
+
+  testWidgets('in-app update failure offers Google Play; denial stays '
+      'silent', (tester) async {
+    final launcher = installFakeUrlLauncher();
+    final l = await pump(tester, const Size(320, 640));
+    download.setPhase(PlayDownloadPhase.downloading);
+    await tester.pump();
+    download.setPhase(PlayDownloadPhase.idle);
+    await tester.pumpAndSettle();
+    expect(find.byType(SnackBar), findsNothing);
+
+    download.setPhase(PlayDownloadPhase.failed);
+    await tester.pumpAndSettle();
+    expect(find.text(l.updateInAppUnavailable), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text(l.updateOpenPlayStore));
+    await tester.pump();
+    expect(launcher.launched, [
+      'https://play.google.com/store/apps/details?id=tw.reh.wuwa.gacha',
+    ]);
   });
 
   testWidgets('phone portrait uses a drawer instead of the rail', (

@@ -13,12 +13,18 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_download.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/new_version_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_type_icons.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_text.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/team_links_bar.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/uid_indicator.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/update_progress_dialog.dart';
+
+/// 本 App 的 Google Play 商店頁。
+final _playStoreUri = Uri.parse(
+  'https://play.google.com/store/apps/details?id=tw.reh.wuwa.gacha',
+);
 
 /// 頂層 shell，包含 AppBar、側欄 rail（手機排版改為抽屜）、底部狀態列。
 ///
@@ -93,6 +99,19 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     final l = AppLocalizations.of(context)!;
     ref.listen<PlayDownloadPhase>(playUpdateDownloadProvider, (prev, next) {
+      if (next == PlayDownloadPhase.failed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.updateInAppUnavailable),
+            persist: false,
+            action: SnackBarAction(
+              label: l.updateOpenPlayStore,
+              onPressed: () => openExternalUrl(_playStoreUri),
+            ),
+          ),
+        );
+        return;
+      }
       if (next != PlayDownloadPhase.downloaded) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

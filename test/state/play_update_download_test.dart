@@ -59,6 +59,14 @@ const _allowed = PlayUpdateInfo(
   flexibleAllowed: true,
 );
 
+/// 重新開啟 App 時，Play 回報開發者觸發的更新處於 [status]。
+PlayUpdateInfo _inProgress(InstallStatus status) => PlayUpdateInfo(
+  updateAvailability: UpdateAvailability.developerTriggeredUpdateInProgress,
+  availableVersionCode: 1090099,
+  flexibleAllowed: false,
+  installStatus: status,
+);
+
 /// 建立使用 [gateway] 的容器。
 ProviderContainer _container(_Gateway gateway) {
   final c = ProviderContainer(
@@ -88,7 +96,7 @@ void main() {
     expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.downloaded);
   });
 
-  test('flexible update denied or failed → no restart prompt', () async {
+  test('flexible update denied → idle; failed or threw → failed', () async {
     final logs = _collectLogs();
     final cases = {
       'denied': _Gateway(PlayDownloadResult.denied),
@@ -99,7 +107,11 @@ void main() {
       e.value.gate.complete();
       final c = _container(e.value);
       await c.read(playUpdateDownloadProvider.notifier).start();
-      expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.idle);
+      expect(
+        c.read(playUpdateDownloadProvider),
+        e.key == 'denied' ? PlayDownloadPhase.idle : PlayDownloadPhase.failed,
+        reason: e.key,
+      );
       final want = e.key == 'throw' ? 'failed' : e.key;
       expect(logs, contains('INFO play flexible update result=$want'));
       expect(
@@ -142,7 +154,7 @@ void main() {
   });
 
   test(
-    'flexible not allowed → idle with a warning, flow not started',
+    'flexible not allowed → failed with a warning, flow not started',
     () async {
       final logs = _collectLogs();
       final g = _Gateway(
@@ -155,7 +167,7 @@ void main() {
       );
       final c = _container(g);
       await c.read(playUpdateDownloadProvider.notifier).start();
-      expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.idle);
+      expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.failed);
       expect(g.downloads, 0);
       expect(
         logs.any(
@@ -165,6 +177,51 @@ void main() {
       );
     },
   );
+
+  test('start after failed runs the flow again', () async {
+    final g = _Gateway(PlayDownloadResult.failed)..gate.complete();
+    final c = _container(g);
+    final n = c.read(playUpdateDownloadProvider.notifier);
+    await n.start();
+    expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.failed);
+    await n.start();
+    expect(g.downloads, 2);
+  });
+
+  test('resumed download that Play reports as failed → idle, start works '
+      'again', () async {
+    final logs = _collectLogs();
+    final g = _Gateway(PlayDownloadResult.downloaded)..gate.complete();
+    final c = _container(g);
+    final n = c.read(playUpdateDownloadProvider.notifier);
+    n.syncWithPlay(_inProgress(InstallStatus.downloading));
+    expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.downloading);
+    n.syncWithPlay(_inProgress(InstallStatus.failed));
+    expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.idle);
+    expect(
+      logs,
+      contains(
+        'INFO play flexible update no longer in progress '
+        'installStatus=failed, back to idle',
+      ),
+    );
+    await n.start();
+    expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.downloaded);
+    expect(g.downloads, 1);
+  });
+
+  test('download started in this process is not reset by a check', () async {
+    final g = _Gateway(PlayDownloadResult.downloaded);
+    final c = _container(g);
+    final n = c.read(playUpdateDownloadProvider.notifier);
+    final started = n.start();
+    await Future<void>.delayed(Duration.zero);
+    n.syncWithPlay(_inProgress(InstallStatus.unknown));
+    expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.downloading);
+    g.gate.complete();
+    await started;
+    expect(c.read(playUpdateDownloadProvider), PlayDownloadPhase.downloaded);
+  });
 
   test('install calls completeFlexible', () async {
     final g = _Gateway(PlayDownloadResult.downloaded);

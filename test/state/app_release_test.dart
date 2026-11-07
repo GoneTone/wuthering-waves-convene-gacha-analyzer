@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -361,10 +362,17 @@ void main() {
 
     test('non-play install: silent on auto, failure on manual', () async {
       final container = _androidContainer(
-        gateway: _FakePlayGateway(error: Exception('not from play')),
+        gateway: _FakePlayGateway(
+          error: PlatformException(code: 'TASK_FAILURE'),
+        ),
         client: _githubThree(),
       );
       await container.read(settingsProvider.notifier).waitForLoad();
+      final warnings = <String>[];
+      final sub = Logger.root.onRecord.listen((r) {
+        if (r.level == Level.WARNING) warnings.add(r.message);
+      });
+      addTearDown(sub.cancel);
       final notifier = container.read(appReleaseProvider.notifier);
 
       await notifier.check(manual: false);
@@ -375,6 +383,31 @@ void main() {
         (container.read(appReleaseProvider) as ReleaseCheckFailed).reason,
         'play',
       );
+      expect(
+        warnings.where(
+          (m) =>
+              m.startsWith('play update check failed type=PlatformException'),
+        ),
+        hasLength(2),
+      );
+    });
+
+    test('flexible update not allowed is still prompted', () async {
+      const immediateOnly = PlayUpdateInfo(
+        updateAvailability: UpdateAvailability.updateAvailable,
+        availableVersionCode: 1090099,
+        flexibleAllowed: false,
+      );
+      final container = _androidContainer(
+        gateway: _FakePlayGateway(info: immediateOnly),
+        client: _githubThree(),
+      );
+      await container.read(settingsProvider.notifier).waitForLoad();
+
+      await container.read(appReleaseProvider.notifier).check(manual: false);
+
+      final state = container.read(appReleaseProvider) as ReleaseAvailable;
+      expect(state.playTag, 'v1.9.0');
     });
 
     test('skipped play version is not prompted on auto check', () async {
