@@ -27,6 +27,9 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/pity_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
 
 import '../helpers/no_game_dir.dart';
 
@@ -230,5 +233,62 @@ void main() {
       const BannerPage(cardPoolType: '1'),
     );
     expect(tester.getTopLeft(find.byType(PityCard).first).dx, 16);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+  testWidgets('overview builds bottom sections only when scrolled near', (
+    tester,
+  ) async {
+    await pump(tester, const Size(360, 800), const OverviewPage());
+    expect(find.byType(TimelineVertical, skipOffstage: false), findsNothing);
+    await tester.scrollUntilVisible(
+      find.byType(TimelineVertical),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byType(TimelineVertical), findsOneWidget);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('banner page builds the record table only when scrolled near', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const Size(360, 800),
+      const BannerPage(cardPoolType: '1'),
+    );
+    expect(find.byType(SortableTable, skipOffstage: false), findsNothing);
+    await tester.scrollUntilVisible(
+      find.byType(SortableTable),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byType(SortableTable), findsOneWidget);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('overview keeps its three stat cards in one row on desktop', (
+    tester,
+  ) async {
+    await pump(tester, const Size(1280, 800), const OverviewPage());
+    expectNoException(tester);
+    final tops = [
+      for (final e in find.byType(StatCard).evaluate())
+        tester.getTopLeft(find.byWidget(e.widget)).dy,
+    ];
+    expect(tops, hasLength(3));
+    expect(tops.toSet(), hasLength(1));
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+  testWidgets('banner page keeps pity and total cards in one row on desktop', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const Size(1280, 800),
+      const BannerPage(cardPoolType: '1'),
+    );
+    expectNoException(tester);
+    expect(
+      tester.getTopLeft(find.byType(StatCard).first).dy,
+      tester.getTopLeft(find.byType(PityCard).first).dy,
+    );
   }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 }

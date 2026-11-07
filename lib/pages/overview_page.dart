@@ -75,43 +75,53 @@ class OverviewPage extends ConsumerWidget {
       ),
     ];
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(
-        isCompactLayout(context) ? AppSpacing.m : AppSpacing.l,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: PageHeader(
-                  title: l.pageOverviewTitle,
-                  icon: Icons.dashboard_outlined,
+    // 按需建構：標題列與區塊內容都是清單裡的獨立項目，畫面外的五星一覽與時間軸不會被建構。
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.all(
+            isCompactLayout(context) ? AppSpacing.m : AppSpacing.l,
+          ),
+          sliver: SliverMainAxisGroup(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: PageHeader(
+                        title: l.pageOverviewTitle,
+                        icon: Icons.dashboard_outlined,
+                      ),
+                    ),
+                    ShareActionButton(
+                      enabled: activeData.banners.values.any(
+                        (r) => r.isNotEmpty,
+                      ),
+                      onGenerate: () =>
+                          _generateOverviewShare(context, ref, l, activeData),
+                    ),
+                  ],
                 ),
               ),
-              ShareActionButton(
-                enabled: activeData.banners.values.any((r) => r.isNotEmpty),
-                onGenerate: () =>
-                    _generateOverviewShare(context, ref, l, activeData),
+              _OverviewSection(
+                title: l.pageOverviewGachaSection,
+                types: sec.types,
+                banners: sec.banners,
+                stats: sec.stats,
+                bannerColors: bannerColors,
+                statCards: statCards,
+                emptyTitle: l.emptyNoGachaRecords,
+                timeline: sec.timeline,
+                timelineNowPulls: sec.timelineNowPulls,
+                timelineRank: sec.timelineRank,
+                fiveStarItems: buildFiveStarCollectionAcrossBanners(
+                  sec.banners,
+                ),
               ),
             ],
           ),
-          _OverviewSection(
-            title: l.pageOverviewGachaSection,
-            types: sec.types,
-            banners: sec.banners,
-            stats: sec.stats,
-            bannerColors: bannerColors,
-            statCards: statCards,
-            emptyTitle: l.emptyNoGachaRecords,
-            timeline: sec.timeline,
-            timelineNowPulls: sec.timelineNowPulls,
-            timelineRank: sec.timelineRank,
-            fiveStarItems: buildFiveStarCollectionAcrossBanners(sec.banners),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -142,7 +152,7 @@ class OverviewPage extends ConsumerWidget {
   }
 }
 
-/// 總覽頁的聚合段落，包含 stat 卡、圖表與 timeline。
+/// 總覽頁的聚合段落，包含 stat 卡、圖表與 timeline；以 sliver 回傳，讓每個區塊按需建構。
 class _OverviewSection extends StatelessWidget {
   const _OverviewSection({
     required this.title,
@@ -197,8 +207,7 @@ class _OverviewSection extends StatelessWidget {
     final hasData = banners.values.any((r) => r.isNotEmpty);
 
     if (!hasData) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      return SliverList.list(
         children: [
           InlineSectionTitle(icon: Icons.summarize_outlined, title: title),
           const SizedBox(height: AppSpacing.m),
@@ -207,8 +216,7 @@ class _OverviewSection extends StatelessWidget {
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return SliverList.list(
       children: [
         InlineSectionTitle(icon: Icons.summarize_outlined, title: title),
         const SizedBox(height: AppSpacing.m),
