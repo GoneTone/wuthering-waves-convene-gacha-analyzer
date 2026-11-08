@@ -508,7 +508,18 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **處理**
   - `PollingClientLogWatch` 把「接上 carry、解碼、找最新憑證」整段移到背景 isolate（`_scanInBackground`），串接改用 `BytesBuilder`。背景 isolate 的 log 不會進 App log，被拒網址的原因由背景交回，在主 isolate 寫 warning。
   - 兩頁改用 `select` 只訂閱 `activeData` 與 `isBootstrapping`。紀錄在全部卡池抓完才一次替換 `byUid`，所以整個更新只重算一次。**其他頁面要讀 repository 狀態時，也要用 `select`，不要訂閱整個狀態**。
+  - `phone_layout_pages_test` 鎖住：只改進度（`clearProgress()` 產生新狀態物件）時，兩頁不會重建（以 `debugOnRebuildDirtyWidget` 計數）。
+  - 剩下的 14.2 ms 是開 App 後第一次讀語言對照表（之後走 `LangCatalogService` 的 memo）：`LangCatalogStorage.load` 改在背景 isolate 讀檔並解析 JSON。
 - **未量**：沒有實測新增大量紀錄的情況（需要實際抽卡）。抓完那一次的重算成本會隨紀錄數增加。
+
+### 49. 打開設定頁卡一下（通用，桌面也適用）
+
+- **實測（ROG Phone 9，profile 版，開 App 後第一次打開）**：主 isolate 連續忙碌 53 ms，其中 LAYOUT 28 ms，大多是引擎原生的文字排版，Dart 堆疊只看到 `_LocaleDropdown`。
+- **原因**：`DropdownButton` 即使 `isExpanded: true`，也會把所有選項放進 `IndexedStack`，而 `IndexedStack` 會排版每個子項。介面語言選單有 32 個選項，各用自己的文字書寫，資料語言選單也有日、韓、泰文；每次打開設定頁都要全部排版，第一次還要載入多種文字的系統字型。
+- **處理**：`selectedItemBuilder` 改用 `_onlySelectedLabel`，只有已選項目放文字，其餘放 `SizedBox.shrink()`；展開後的清單仍由 `items` 顯示全部名稱。兩個 setter 都先同步改狀態再存檔，選完後外層與表單在同一幀重建，按鈕不會閃空白。`settings_locale_dropdown_test` 鎖住收合時不建構其他語言名稱。
+- **結果**：最長 53 → 43 ms（LAYOUT 28 → 17 ms），其餘幾段 15～22 → 約 9 ms。
+- **沒做**：剩下的是整頁一次建構與排版（`SingleChildScrollView`），且大多是原生文字排版，對不到特定區塊。改成按需建構的清單，捲出畫面的區塊會被銷毀，進行中的同步、匯入、轉換等忙碌狀態會遺失，風險大於收益。
+- **量測坑：腳本盲點座標會點到別的 App**。第一次量測時，選單沒打開；腳本接著按「返回」，直接退出 App，後續點擊落在桌面，打開了別的 App。量測腳本 `attach.py` 已改為每次 `input` 前都檢查前景是不是本 App（`dumpsys activity activities` 的 `topResumedActivity`），不是就中止。開選單這類前置步驟先手動執行、截圖確認，再開始錄。
 ---
 
 ## 十二、手機版 UI/UX 調整
