@@ -14,7 +14,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/routing/app_router.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/android/app_night_mode.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/window_state_keeper.dart';
@@ -26,6 +25,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/src/rust/api/logging.dart
 import 'package:wuthering_waves_convene_gacha_analyzer/src/rust/frb_generated.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/localization_metadata.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/log_service.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/android_app_prefs_sync.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
@@ -161,20 +161,9 @@ class _MainAppState extends ConsumerState<MainApp> {
   @override
   void initState() {
     super.initState();
-    if (Platform.isAndroid) unawaited(_syncNightMode());
-  }
-
-  /// 設定載入後把主題同步給 Android 系統（啟動畫面用），之後切換時再同步。
-  ///
-  /// 載入前不送：預設值是「跟隨系統」，先送出去會讓選了深色／淺色的人多一次設定變更。
-  Future<void> _syncNightMode() async {
-    await ref.read(settingsProvider.notifier).waitForLoad();
-    if (!mounted) return;
-    ref.listenManual(
-      settingsProvider.select((s) => s.themeMode),
-      (_, mode) => unawaited(AppNightMode.sync(mode)),
-      fireImmediately: true,
-    );
+    if (Platform.isAndroid) {
+      unawaited(ref.read(androidAppPrefsSyncProvider).start());
+    }
   }
 
   @override
