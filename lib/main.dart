@@ -14,6 +14,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/routing/app_router.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/app_night_mode.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/window_state_keeper.dart';
@@ -156,6 +157,25 @@ class MainApp extends ConsumerStatefulWidget {
 class _MainAppState extends ConsumerState<MainApp> {
   /// 快取 router 實例，避免每次 build（主題 / 語言切換）時重建並重設到 initialLocation。
   late final GoRouter _router = buildAppRouter();
+
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isAndroid) unawaited(_syncNightMode());
+  }
+
+  /// 設定載入後把主題同步給 Android 系統（啟動畫面用），之後切換時再同步。
+  ///
+  /// 載入前不送：預設值是「跟隨系統」，先送出去會讓選了深色／淺色的人多一次設定變更。
+  Future<void> _syncNightMode() async {
+    await ref.read(settingsProvider.notifier).waitForLoad();
+    if (!mounted) return;
+    ref.listenManual(
+      settingsProvider.select((s) => s.themeMode),
+      (_, mode) => unawaited(AppNightMode.sync(mode)),
+      fireImmediately: true,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

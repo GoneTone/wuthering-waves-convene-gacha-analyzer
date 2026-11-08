@@ -5,15 +5,19 @@ import io.flutter.embedding.engine.FlutterEngine
 
 class MainActivity : FlutterActivity() {
     private var logAccess: LogAccessChannel? = null
+    private var appTheme: AppThemeChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         logAccess = LogAccessChannel(this, flutterEngine.dartExecutor.binaryMessenger)
+        appTheme = AppThemeChannel(this, flutterEngine.dartExecutor.binaryMessenger)
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         logAccess?.detach()
         logAccess = null
+        appTheme?.detach()
+        appTheme = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 
