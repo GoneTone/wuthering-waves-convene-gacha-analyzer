@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:logging/logging.dart';
 
@@ -63,7 +64,10 @@ class GachaStorage {
   /// 將 [data] 寫回磁碟。
   Future<void> save(BannerStorage data) async {
     try {
-      await _atomicWrite(recordsFile(data.playerId), jsonEncode(data.toJson()));
+      await _atomicWrite(
+        recordsFile(data.playerId),
+        await _encodeInBackground(data),
+      );
       final total = data.banners.values.fold<int>(0, (a, b) => a + b.length);
       _log.fine('saved playerId=${sanitizeUid(data.playerId)} records=$total');
     } catch (e, st) {
@@ -144,3 +148,9 @@ class GachaStorage {
     await tmp.rename(target.path); // atomic on same volume
   }
 }
+
+/// 在背景 isolate 把 [data] 編成 JSON：大帳號的 jsonEncode 在主 isolate 實機量到數十毫秒。
+///
+/// 送過去的物件複製仍在主 isolate，但比整份編碼便宜得多；寫成 top-level 讓閉包只抓參數。
+Future<String> _encodeInBackground(BannerStorage data) =>
+    Isolate.run(() => jsonEncode(data.toJson()));

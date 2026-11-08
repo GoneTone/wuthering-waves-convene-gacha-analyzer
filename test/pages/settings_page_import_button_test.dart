@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../helpers/wait_until.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/pages/settings_page.dart';
@@ -273,6 +274,10 @@ void main() {
         tester,
         Uint8List.fromList(utf8.encode(json)),
         '匯入資料',
+      );
+      await pumpUntil(
+        tester,
+        () => find.textContaining('我的帳號').evaluate().isNotEmpty,
       );
 
       expect(find.textContaining('我的帳號'), findsOneWidget);

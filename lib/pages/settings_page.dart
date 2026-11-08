@@ -724,16 +724,16 @@ class _DataManagement extends ConsumerWidget {
         ? settings.lastActiveUid
         : null;
 
-    final bytes = utf8.encode(
-      exportAccounts(
-        byUid: filteredByUid,
-        uidOrder: filteredOrder,
-        uidAliases: filteredAliases,
-        lastActiveUid: lastActive,
-        appVersion: appVersion,
-        now: now,
-      ),
+    final bytes = await exportAccountsBytesInBackground(
+      byUid: filteredByUid,
+      recordsFileOf: ref.read(gachaStorageProvider).recordsFile,
+      uidOrder: filteredOrder,
+      uidAliases: filteredAliases,
+      lastActiveUid: lastActive,
+      appVersion: appVersion,
+      now: now,
     );
+    if (!ctx.mounted) return;
     final records = filteredByUid.values.fold<int>(
       0,
       (a, b) => a + b.allRecords.length,
@@ -807,19 +807,24 @@ class _DataManagement extends ConsumerWidget {
 
     final AccountsBundle bundle;
     try {
-      bundle = importAccounts(text);
+      bundle = await importAccountsInBackground(text);
     } on ForeignBundleException {
+      Logger('accounts.io').warning('import failed: foreign bundle');
       if (!ctx.mounted) return;
       _showSnack(ctx, l.settingsImportFailed(l.importReasonForeignApp));
       return;
-    } on UnsupportedSchemaVersionException {
+    } on UnsupportedSchemaVersionException catch (e) {
+      Logger(
+        'accounts.io',
+      ).warning('import failed: unsupported schema version ${e.version}');
       if (!ctx.mounted) return;
       _showSnack(
         ctx,
         l.settingsImportFailed(l.importReasonIncompatibleVersion),
       );
       return;
-    } on FormatException {
+    } on FormatException catch (e) {
+      Logger('accounts.io').warning('import failed: ${e.message}');
       if (!ctx.mounted) return;
       _showSnack(ctx, l.settingsImportFailed(l.importReasonInvalidFormat));
       return;

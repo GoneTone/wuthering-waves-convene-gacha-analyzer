@@ -15,3 +15,21 @@ Future<void> waitUntil(
   }
   expect(cond(), isTrue, reason: 'condition never became true');
 }
+
+/// widget 測試用：被測程式在背景 isolate 做事、結果要真實時間才回來時，
+/// 每輪讓背景跑一下（[WidgetTester.runAsync]）再推進畫面，直到 [cond] 成立
+/// （最多 [timeout] 的實際時間），最後再 settle。
+Future<void> pumpUntil(
+  WidgetTester tester,
+  bool Function() cond, {
+  Duration timeout = const Duration(seconds: 5),
+}) async {
+  final stopwatch = Stopwatch()..start();
+  while (!cond() && stopwatch.elapsed < timeout) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+    await tester.pump();
+  }
+  await tester.pumpAndSettle();
+}

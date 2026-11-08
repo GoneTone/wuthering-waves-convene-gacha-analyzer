@@ -1466,8 +1466,11 @@ class GachaRepository extends Notifier<GachaState> {
     for (final entry in state.byUid.entries) {
       try {
         final out = await converter.convert(entry.value, target);
-        await storage.save(out.data);
-        newByUid[entry.key] = out.data;
+        // 沒有任何紀錄需要轉換時不重寫檔案：寫檔的 JSON 編碼在主 isolate 實機量到數十毫秒。
+        if (!out.data.sameContentAs(entry.value)) {
+          await storage.save(out.data);
+          newByUid[entry.key] = out.data;
+        }
         agg = agg + out.result;
       } catch (e, st) {
         Logger('wish.langconvert').warning(
@@ -1478,7 +1481,9 @@ class GachaRepository extends Notifier<GachaState> {
       }
       if (!ref.mounted) return agg;
     }
-    state = state.copyWith(byUid: newByUid);
+    if (newByUid.entries.any((e) => !identical(state.byUid[e.key], e.value))) {
+      state = state.copyWith(byUid: newByUid);
+    }
     if (!ref.mounted) return agg;
 
     // best-effort 補抓目標語言 icon／詳情（backfill 的真實 id 也順帶補圖）。
