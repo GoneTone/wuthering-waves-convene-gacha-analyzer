@@ -671,6 +671,11 @@ void main() {
         tester.getTopLeft(find.byType(ItemTypeChartCard)).dx,
         greaterThan(tester.getTopRight(find.byType(RarityChartCard)).dx),
       );
+      // 圖例列數不同（稀有度 3 列、類型 2 列）時，同一列的兩張卡仍要等高。
+      expect(
+        tester.getSize(find.byType(ItemTypeChartCard)).height,
+        tester.getSize(find.byType(RarityChartCard)).height,
+      );
       await scrollToEnd(tester);
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 

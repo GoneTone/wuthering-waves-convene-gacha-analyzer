@@ -286,24 +286,37 @@ class _BannerPageState extends ConsumerState<BannerPage> {
                       final tileWidth = col == 1
                           ? c.maxWidth
                           : (c.maxWidth - AppSpacing.m * (col - 1)) / col;
+                      final rarityCard = RarityChartCard(
+                        stats: stats,
+                        layout: layout,
+                      );
+                      final itemTypeCard = ItemTypeChartCard(
+                        stats: stats,
+                        layout: layout,
+                      );
                       return Wrap(
                         spacing: AppSpacing.m,
                         runSpacing: AppSpacing.m,
                         children: [
-                          SizedBox(
-                            width: tileWidth,
-                            child: RarityChartCard(
-                              stats: stats,
-                              layout: layout,
+                          if (col == 1) ...[
+                            SizedBox(width: tileWidth, child: rarityCard),
+                            SizedBox(width: tileWidth, child: itemTypeCard),
+                          ] else
+                            // 兩張圓餅卡同列時等高：精簡版高度跟著圖例列數走，不拉齊會一高一低。
+                            SizedBox(
+                              width: tileWidth * 2 + AppSpacing.m,
+                              child: IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(child: rarityCard),
+                                    const SizedBox(width: AppSpacing.m),
+                                    Expanded(child: itemTypeCard),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                          SizedBox(
-                            width: tileWidth,
-                            child: ItemTypeChartCard(
-                              stats: stats,
-                              layout: layout,
-                            ),
-                          ),
                           // 除了電腦版三欄同列需與圓餅卡等高，時間軸都獨佔一列：撐滿寬、高度依內容。
                           SizedBox(
                             width: wide ? tileWidth : c.maxWidth,
