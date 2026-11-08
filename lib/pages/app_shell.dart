@@ -262,7 +262,12 @@ class _AppShellState extends ConsumerState<AppShell> {
                           // 完整列（含團隊名稱）比抽屜寬度內距後略寬，放大字級時更寬，等比縮小；放得下時置中。
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: TeamLinksBar(),
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                right: TeamLinksBar.iconInset,
+                              ),
+                              child: TeamLinksBar(),
+                            ),
                           ),
                         ),
                   l: l,

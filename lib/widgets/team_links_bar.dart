@@ -15,6 +15,16 @@ class TeamLinksBar extends StatelessWidget {
   /// 手機排版：只留三個圖示，觸控區放大到 48dp。
   final bool compact;
 
+  /// 圖示大小。
+  static const double _iconSize = 16;
+
+  /// 非 compact 時圖示按鈕的最小寬度。
+  static const double _iconButtonMinWidth = 40;
+
+  /// 非 compact 時，圖示按鈕在圖示兩側自帶的空白。整列要置中時在文字那一端補同寬，
+  /// 看得到的內容才會左右對稱。
+  static const double iconInset = (_iconButtonMinWidth - _iconSize) / 2;
+
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).gacha;
@@ -83,13 +93,16 @@ class _IconLink extends StatelessWidget {
     final tokens = Theme.of(context).gacha;
     return IconButton(
       tooltip: tooltip,
-      iconSize: 16,
+      iconSize: TeamLinksBar._iconSize,
       // compact 密度會把 48dp 觸控區縮成 40，手機排版改回標準密度。
       visualDensity: compact ? VisualDensity.standard : VisualDensity.compact,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s),
       constraints: compact
           ? const BoxConstraints(minWidth: 48, minHeight: 48)
-          : const BoxConstraints(minWidth: 40, minHeight: 32),
+          : const BoxConstraints(
+              minWidth: TeamLinksBar._iconButtonMinWidth,
+              minHeight: 32,
+            ),
       mouseCursor: SystemMouseCursors.click,
       icon: FaIcon(icon, color: tokens.textSecondary),
       onPressed: () => openExternalUrlString(url, context: 'TeamLinksBar'),

@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -414,8 +415,16 @@ void main() {
       );
       await tester.ensureVisible(bar);
       await tester.pumpAndSettle();
+      // 量看得到的內容（FB 圖示左緣到團隊名稱右緣），不是整列：圖示按鈕自帶左右空白，
+      // 文字沒有，整列置中時看起來左寬右窄。
+      final left = tester
+          .getRect(
+            find.descendant(of: bar, matching: find.byType(FaIcon)).first,
+          )
+          .left;
+      final right = tester.getRect(find.text(TeamInfo.name)).right;
       expect(
-        tester.getCenter(bar).dx,
+        (left + right) / 2,
         closeTo(tester.getCenter(find.byType(Drawer)).dx, 1),
       );
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
