@@ -918,7 +918,7 @@
   "@manualCredentialNotFoundInLog": {
     "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
   },
-  "manualCredentialHelpAndroid": "方法一：飛行模式\n1. 在遊戲進到「喚取」畫面\n2. 開啟飛行模式，再點「喚取記錄」\n3. 頁面會顯示載入失敗：長按 → 全選 → 複製\n4. 關閉飛行模式，回來貼上整段文字\n\n方法二：已有 Client.log 檔案\n按「選擇 Client.log 檔案」，本程式會自動找出網址。",
+  "manualCredentialHelpAndroid": "方法一：飛航模式\n1. 在遊戲進到「喚取」畫面\n2. 開啟飛航模式，再點「喚取記錄」\n3. 頁面會顯示載入失敗：長按 → 全選 → 複製\n4. 關閉飛航模式，回來貼上整段文字\n\n方法二：已有 Client.log 檔案\n按「選擇 Client.log 檔案」，本程式會自動找出網址。",
   "@manualCredentialHelpAndroid": {
     "description": "Help text in the manual input dialog on Android. Keep the line breaks."
   },

@@ -48,7 +48,7 @@ void main() {
         '$host/aki/gacha/index.html#/record?svr_id=s&player_id=1&lang=en'
         '&gacha_id=1&resources_id=r&record_id=$id';
 
-    // 飛行模式在遊戲內複製到的整段錯誤頁文字（帳號資料為假值）。
+    // 飛航模式在遊戲內複製到的整段錯誤頁文字（帳號資料為假值）。
     const airplaneText =
         '網頁無法使用\n無法載入位於 '
         'https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record'
@@ -56,7 +56,7 @@ void main() {
         '&svr_area=global&record_id=rec1&resources_id=res1&platform=Android '
         '的網頁，原因如下：\n\nnet::ERR_NAME_NOT_RESOLVED';
 
-    test('從飛行模式複製的整段錯誤頁文字取出憑證', () {
+    test('從飛航模式複製的整段錯誤頁文字取出憑證', () {
       final c = latestCredentialIn(airplaneText)!;
       expect(c.recordId, 'rec1');
       expect(c.playerId, '700000001');

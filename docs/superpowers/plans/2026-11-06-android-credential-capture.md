@@ -172,7 +172,7 @@ git commit -m "refactor(capture): read Client.log through a pluggable source"
 `client_log_credential_test.dart`：
 
 ```dart
-// 飛行模式複製到的整段錯誤頁文字（帳號資料為假值）。
+// 飛航模式複製到的整段錯誤頁文字（帳號資料為假值）。
 const airplaneText = '網頁無法使用\n無法載入位於 '
     'https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record'
     '?svr_id=s1&player_id=700000001&lang=zh-Hant&gacha_id=100087&gacha_type=1'
@@ -206,7 +206,7 @@ test('manual credential when idle starts an update without capture', ...); // ca
 test('manual credential while fetching is ignored', ...);              // MockClient 卡住第一池時 submit，fetch 次數不變、不重入
 ```
 
-`manual_credential_dialog_test.dart`：貼上無網址文字按確定 → 顯示 `l.manualCredentialNotFound` 且對話框仍在；貼上 `airplaneText` 按確定 → `submitManualCredential` 被呼叫一次且對話框關閉；`pickClientLog` 回傳編碼 bytes → 同上；`isAndroidProvider` override 為 true／false 時，展開「如何取得網址？」分別出現飛行模式說明／Windows 路徑說明。
+`manual_credential_dialog_test.dart`：貼上無網址文字按確定 → 顯示 `l.manualCredentialNotFound` 且對話框仍在；貼上 `airplaneText` 按確定 → `submitManualCredential` 被呼叫一次且對話框關閉；`pickClientLog` 回傳編碼 bytes → 同上；`isAndroidProvider` override 為 true／false 時，展開「如何取得網址？」分別出現飛航模式說明／Windows 路徑說明。
 
 `update_progress_dialog_test.dart`：`WaitingForCapture()` 時兩平台都有 `l.progressManualInputLink`。
 
@@ -580,7 +580,7 @@ git commit -m "feat(android): add log access settings and unpairing"
 **Files:**
 - Modify: `docs/Android移植筆記.md`（第六節補實作踩雷）、`docs/superpowers/specs/2026-11-06-android-credential-capture-design.md`（驗證結果；尚未驗證項目更新）
 
-- [ ] **Step 1: ASUS 實機（spec 第十節清單）**：全新安裝走完說明頁→配對→自動更新；關無線偵錯、重開機、換 Wi‑Fi 後各更新一次；等待中切去遊戲再切回；配對逾時後重新開始；手動輸入（飛行模式整段文字、選 Client.log 檔案）；解除配對後再按更新出現「設定讀取方式」；用 `adb shell pm revoke tw.reh.wuwa.gacha android.permission.WRITE_SECURE_SETTINGS` 模擬手動開關模式。每項用 `adb logcat -s flutter:I capture.pairing:*` 確認 log 無憑證與配對碼。
+- [ ] **Step 1: ASUS 實機（spec 第十節清單）**：全新安裝走完說明頁→配對→自動更新；關無線偵錯、重開機、換 Wi‑Fi 後各更新一次；等待中切去遊戲再切回；配對逾時後重新開始；手動輸入（飛航模式整段文字、選 Client.log 檔案）；解除配對後再按更新出現「設定讀取方式」；用 `adb shell pm revoke tw.reh.wuwa.gacha android.permission.WRITE_SECURE_SETTINGS` 模擬手動開關模式。每項用 `adb logcat -s flutter:I capture.pairing:*` 確認 log 無憑證與配對碼。
 - [ ] **Step 2: 模擬器**：Android 10、Android 9（放假的 `Client.log` 到遊戲路徑，確認直接讀取）；Android 12 或 13（配對服務與 3 分鐘自行逾時）；有 root 的模擬器（`su` 路徑）。
 - [ ] **Step 3: 電腦版回歸**：`fvm flutter build windows --release` 後，攔截更新、Client.log 監看、手動輸入（貼上與選檔）各一次。
 - [ ] **Step 4: 更新文件並 commit**
