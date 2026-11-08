@@ -19,21 +19,32 @@ class UpdateProgressDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    void closeSelf() {
+      final route = ModalRoute.of(context);
+      // route 已離開 stack 時 popUntil 永遠比不到，會把所有頁面 pop 光。
+      if (route == null || !route.isActive) return;
+      // 上面可能疊著說明視窗，先收回到自己這層再關，避免多 pop 底下的頁面。
+      final nav = Navigator.of(context);
+      nav.popUntil((r) => r == route);
+      if (nav.canPop()) nav.pop();
+    }
+
     ref.listen<UpdateProgress?>(
       gachaRepositoryProvider.select((s) => s.progress),
       (prev, next) {
-        final route = ModalRoute.of(context);
-        // route 已離開 stack 時 popUntil 永遠比不到，會把所有頁面 pop 光。
-        if (next != null || route == null || !route.isActive) return;
-        // 上面可能疊著說明視窗，先收回到自己這層再關，避免多 pop 底下的頁面。
-        final nav = Navigator.of(context);
-        nav.popUntil((r) => r == route);
-        if (nav.canPop()) nav.pop();
+        if (next == null) closeSelf();
       },
     );
     final progress = ref.watch(
       gachaRepositoryProvider.select((s) => s.progress),
     );
+    // 流程很快結束時（例如轉換資料語言沒東西要轉），進度可能在 dialog 第一次建構前
+    // 就被清掉，上面的 listen 收不到這次變化，dialog 會留著空白內容。
+    if (progress == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) closeSelf();
+      });
+    }
     final notifier = ref.read(gachaRepositoryProvider.notifier);
     final l = AppLocalizations.of(context)!;
     final tokens = Theme.of(context).gacha;

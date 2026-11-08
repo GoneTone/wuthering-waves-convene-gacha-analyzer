@@ -233,4 +233,40 @@ void main() {
       expect(find.textContaining('殘留語言'), findsNothing);
     });
   });
+
+  testWidgets('進度在 dialog 建構前就已清空 → dialog 自己關掉，不留空白框', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          noGameDirOverride,
+          gachaRepositoryProvider.overrideWith(
+            () => _FakeGachaRepository(null),
+          ),
+        ],
+        child: MaterialApp(
+          theme: buildDarkTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh', 'Hant'),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const UpdateProgressDialog(),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(UpdateProgressDialog), findsNothing);
+    expect(find.text('open'), findsOneWidget);
+  });
 }
