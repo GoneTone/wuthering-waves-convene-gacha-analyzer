@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -80,22 +81,16 @@ class PollingClientLogWatch implements ClientLogWatch {
         );
         if (chunk.isEmpty) return;
         offset += chunk.length;
-        final buf = Uint8List.fromList([
-          ...carry,
-          ...decodeClientLogBytes(chunk),
-        ]);
-        final end = buf.lastIndexOf(0x0A);
-        carry = end < 0 ? buf : buf.sublist(end + 1);
+        final scan = await _scanInBackground(carry, chunk);
+        carry = scan.carry;
         if (carry.length > _maxCarryBytes) {
           _log.warning('client log carry overflow bytes=${carry.length}');
           carry = Uint8List(0);
         }
-        if (end < 0) return;
-        final cred = latestCredentialIn(
-          utf8.decode(buf.sublist(0, end + 1), allowMalformed: true),
-          onRejected: (e) =>
-              _log.warning('client log url rejected reason=${e.message}'),
-        );
+        for (final reason in scan.rejected) {
+          _log.warning('client log url rejected reason=$reason');
+        }
+        final cred = scan.cred;
         if (cred != null && !completer.isCompleted) {
           _log.info(
             'client log hit cred=${sanitizeCredential(cred.toJsonString())}',
@@ -127,6 +122,34 @@ class PollingClientLogWatch implements ClientLogWatch {
       },
     );
   }
+}
+
+/// 一輪增量的掃描結果：尚未成行的 [carry]、找到的最新憑證、被拒網址的原因（背景 isolate 的 log 不會進 App log，交回主 isolate 寫）。
+typedef _ScanResult = ({
+  Uint8List carry,
+  GachaCredential? cred,
+  List<String> rejected,
+});
+
+/// 在背景 isolate 執行 [_scanChunk]；閉包只抓參數，避免把呼叫端的 Timer／Completer 一起送過去。
+Future<_ScanResult> _scanInBackground(Uint8List carry, Uint8List chunk) =>
+    Isolate.run(() => _scanChunk(carry, chunk));
+
+/// 把 [carry] 接上解碼後的 [chunk]，只在完整的行內找最新且合法的喚取記錄憑證。
+_ScanResult _scanChunk(Uint8List carry, Uint8List chunk) {
+  final buf =
+      (BytesBuilder(copy: false)
+            ..add(carry)
+            ..add(decodeClientLogBytes(chunk)))
+          .takeBytes();
+  final end = buf.lastIndexOf(0x0A);
+  if (end < 0) return (carry: buf, cred: null, rejected: const <String>[]);
+  final rejected = <String>[];
+  final cred = latestCredentialIn(
+    utf8.decode(Uint8List.sublistView(buf, 0, end + 1), allowMalformed: true),
+    onRejected: (e) => rejected.add(e.message),
+  );
+  return (carry: buf.sublist(end + 1), cred: cred, rejected: rejected);
 }
 
 /// 提供 [ClientLogWatch]，測試可 override。
