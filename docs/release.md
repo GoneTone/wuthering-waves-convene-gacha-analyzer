@@ -14,7 +14,6 @@
    - GitHub repo → Actions → `release` → **"Run workflow"**
    - **tag**：`vX.Y.Z`（必須符合 semver；不要帶 `+build` 部分；prerelease 寫 `vX.Y.Z-rc.N`）
    - **prerelease**：要發 prerelease 才勾選
-   - **release_status**：Play 的版本狀態；App 在 Play 正式發佈過一次之前選 `draft`，之後維持 `completed`
    - 點 **"Run workflow"**（CI 固定以 `master` 為發版基準）
 
 2. **等 CI 跑完**
