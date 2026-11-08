@@ -32,6 +32,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.da
 import 'package:wuthering_waves_convene_gacha_analyzer/services/data_language.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/format_bytes.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
@@ -1300,11 +1301,10 @@ class _UsageRows extends StatelessWidget {
     );
     Widget row(String label, String value, TextStyle? style) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Expanded(child: Text(label, style: style)),
-          Text(value, style: style),
-        ],
+      // 數值放不下時換到下一行並靠右，長語言＋大字級下的「計算中」也不會擠出右緣。
+      child: CompactLegendRow(
+        name: Text(label, style: style),
+        numbers: Text(value, style: style, textAlign: TextAlign.end),
       ),
     );
     return Column(

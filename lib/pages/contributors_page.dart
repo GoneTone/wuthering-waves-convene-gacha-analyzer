@@ -130,13 +130,12 @@ class _LanguageList extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: AppSpacing.xs),
             child: entry.value.translator.isEmpty
                 ? Text(entry.value.nativeName)
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                // 語言名稱長（例如 Português (Portugal)）或字級放大時，翻譯者改排到下一行，
+                // 不擠出右緣；放得下時仍同一行。
+                : Wrap(
                     children: [
                       Text('${entry.value.nativeName} — '),
-                      Expanded(
-                        child: TranslatorText(raw: entry.value.translator),
-                      ),
+                      TranslatorText(raw: entry.value.translator),
                     ],
                   ),
           ),
