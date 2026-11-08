@@ -91,8 +91,8 @@ void main() {
     ..writeAsBytesSync(img.encodePng(_circle(_resize(source, 640))));
   stdout.writeln('✓ $splashIconPath  640x640');
 
-  // Play 商店圖示（Play 會自己套圓角遮罩，所以維持滿版）。
-  const playIconPath = 'docs/play-store/icon-512.png';
+  // Play 商店圖示（Play 會自己套圓角遮罩，所以維持滿版）；上架資料不公開，輸出到不進版控的 private/。
+  const playIconPath = 'private/play-store/icon-512.png';
   File(playIconPath)
     ..createSync(recursive: true)
     ..writeAsBytesSync(img.encodePng(_resize(source, 512)));

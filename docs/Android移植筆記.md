@@ -366,7 +366,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 ## 十、Play 上架與更新（子專案 7）
 
-上架步驟、商店頁文字、隱私權政策、資料安全表單與審查說明都在 `docs/play-store/`。這一節只記技術決定與踩雷。
+上架步驟、商店頁文字、資料安全表單與審查說明不公開，放在本機不進版控的 `private/play-store/`；隱私權政策要給 Play 公開網址，留在 `docs/privacy-policy.md`。這一節只記技術決定與踩雷。
 
 ### 34. 版本代碼只給 Android 用（通用）
 
@@ -382,7 +382,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - Gradle Kotlin DSL 裡寫 `java.util.Properties()` 會編不過：`java` 被解析成 Gradle 的 `java` 擴充。要在檔頭 `import java.util.Properties`。
 - `release-android.yml`：缺任何一個金鑰或服務帳戶 secret 就失敗；建置後再用 `keytool -printcert -jarfile` 檢查 AAB，若是 debug 金鑰簽的就失敗。上傳用 `r0adkll/upload-google-play`，只上 internal 軌道、不填「新功能」。
 - **從來沒發佈過的 App 只能建立 draft 狀態的版本**，所以 workflow 有 `release_status` 選項，正式上架前選 `draft`。
-- secrets 一覽與每次發版步驟見 `docs/play-store/README.md`。
+- secrets 一覽與每次發版步驟見本機的 `private/play-store/README.md`。
 - 修改 workflow 後用 actionlint 檢查（`go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/*.yml`）。
 
 ### 36. 簽章指紋：每把金鑰各建一筆 Android 用戶端（通用）
