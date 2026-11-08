@@ -77,9 +77,6 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   /// 電腦版改用兩欄的最小視窗寬度；更窄時左欄加圖片放不下，維持單欄。
   static const double _desktopTwoColumnMinWidth = 1000;
 
-  /// 左欄底部漸層提示的高度；需蓋得住其上的往下捲箭頭圓鈕。
-  static const double _detailsFadeHeight = 40;
-
   /// 水平滑動換圖的放手門檻：位移（dp）。
   static const double _swipeDistance = 48;
 
@@ -104,32 +101,16 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   /// http client（dispose 時 close 中斷 in-flight 請求）。
   late final http.Client _client;
 
-  /// 兩欄時左欄（資訊欄）的捲動控制器。
-  final ScrollController _detailsScroll = ScrollController();
-
-  /// true 時左欄下方還有內容，疊底部漸層提示。
-  bool _detailsHasMore = false;
-
   @override
   void initState() {
     super.initState();
     _client = http.Client();
-    _detailsScroll.addListener(_updateDetailsFade);
   }
 
   @override
   void dispose() {
-    _detailsScroll.dispose();
     _client.close();
     super.dispose();
-  }
-
-  /// 依左欄捲動位置更新 [_detailsHasMore]：還沒捲到底才顯示底部漸層。
-  void _updateDetailsFade() {
-    if (!mounted || !_detailsScroll.hasClients) return;
-    final pos = _detailsScroll.position;
-    final hasMore = pos.pixels < pos.maxScrollExtent - 1;
-    if (hasMore != _detailsHasMore) setState(() => _detailsHasMore = hasMore);
   }
 
   /// 對立繪 [url] 做 lazy 下載；成功寫 cache 並 setState 為 ready，失敗為 failed。
@@ -532,8 +513,8 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     ),
   );
 
-  /// 詳情 HTML 區塊；[constrainHeight] 為 true 時限高 [maxHeight] 並自帶內層捲動，
-  /// false（兩欄）時完整展開、交給左欄整欄捲動。
+  /// 詳情 HTML 區塊；[constrainHeight] 為 true 時限高 [maxHeight] 並自帶內層捲動（附捲動
+  /// 提示），false（兩欄）時完整展開、交給左欄整欄捲動。
   Widget _detailHtmlBlock(
     ThemeData theme,
     String data, {
@@ -544,7 +525,7 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     if (!constrainHeight) return html;
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxHeight),
-      child: SingleChildScrollView(child: html),
+      child: _ScrollHintBox(child: html),
     );
   }
 
@@ -910,82 +891,22 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
-                    // 左欄全部內容同一個捲動區；內容尺寸變動（切換造型、Html 排版完成）
-                    // 不會觸發 controller listener，改靠 metrics 通知重算漸層。
-                    child: NotificationListener<ScrollMetricsNotification>(
-                      onNotification: (_) {
-                        _updateDetailsFade();
-                        return false;
-                      },
-                      child: Stack(
+                    // 左欄全部內容同一個捲動區。
+                    child: _ScrollHintBox(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Positioned.fill(
-                            // 捲軸常駐才看得出左欄可捲；關掉預設捲軸，免得電腦版再疊一條只在
-                            // hover／捲動時才出現的。內容放不下時才畫 thumb。
-                            child: ScrollConfiguration(
-                              behavior: ScrollConfiguration.of(
-                                context,
-                              ).copyWith(scrollbars: false),
-                              child: Scrollbar(
-                                controller: _detailsScroll,
-                                thumbVisibility: true,
-                                child: SingleChildScrollView(
-                                  controller: _detailsScroll,
-                                  // 右側讓出捲軸位置，thumb 不壓在文字上。
-                                  padding: const EdgeInsets.only(
-                                    right: AppSpacing.m,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      header,
-                                      if (caption != null) ...[
-                                        // 上方留白與 caption 自帶的 top padding 對稱。
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: AppSpacing.m,
-                                          ),
-                                          child: Divider(
-                                            height: 1,
-                                            color: tokens.borderSubtle,
-                                          ),
-                                        ),
-                                        caption,
-                                      ],
-                                    ],
-                                  ),
-                                ),
+                          header,
+                          if (caption != null) ...[
+                            // 上方留白與 caption 自帶的 top padding 對稱。
+                            Padding(
+                              padding: const EdgeInsets.only(top: AppSpacing.m),
+                              child: Divider(
+                                height: 1,
+                                color: tokens.borderSubtle,
                               ),
                             ),
-                          ),
-                          if (_detailsHasMore) ...[
-                            const Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              height: _detailsFadeHeight,
-                              child: IgnorePointer(
-                                child: ScrollEdgeFade(side: ScrollSide.bottom),
-                              ),
-                            ),
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              child: Center(
-                                child: ScrollArrowButton(
-                                  icon: Icons.expand_more,
-                                  tooltip: l.detailScrollDown,
-                                  tokens: tokens,
-                                  largeHitArea: true,
-                                  onPressed: () => _detailsScroll.animateBy(
-                                    _detailsScroll.position.viewportDimension *
-                                        0.8,
-                                  ),
-                                ),
-                              ),
-                            ),
+                            caption,
                           ],
                         ],
                       ),
@@ -1029,6 +950,114 @@ List<String> _tagsFor(
   if (elementName.isNotEmpty) elementName,
   if (weaponTypeName.isNotEmpty) weaponTypeName,
 ];
+
+/// 可直向捲動的詳情區塊，附捲動提示：常駐捲軸，下方還有內容時疊底部漸層與「往下捲」圓鈕。
+///
+/// 兩欄的左欄與單欄限高的簡介／造型說明共用。高度跟著內容走（不撐滿上限），所以短內容
+/// 不會多出空白。
+class _ScrollHintBox extends StatefulWidget {
+  /// 建立 [_ScrollHintBox]。
+  const _ScrollHintBox({required this.child});
+
+  /// 要捲動的內容。
+  final Widget child;
+
+  @override
+  State<_ScrollHintBox> createState() => _ScrollHintBoxState();
+}
+
+/// [_ScrollHintBox] 的狀態：持有捲動控制器並追蹤是否還沒捲到底。
+class _ScrollHintBoxState extends State<_ScrollHintBox> {
+  /// 底部漸層提示的高度；需蓋得住其上的往下捲箭頭圓鈕。
+  static const double _fadeHeight = 40;
+
+  /// 內容的捲動控制器。
+  final ScrollController _controller = ScrollController();
+
+  /// true 時下方還有內容，疊底部漸層與往下捲圓鈕。
+  bool _hasMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_update);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// 依捲動位置更新 [_hasMore]：還沒捲到底才顯示提示。
+  void _update() {
+    if (!mounted || !_controller.hasClients) return;
+    final pos = _controller.position;
+    final hasMore = pos.pixels < pos.maxScrollExtent - 1;
+    if (hasMore != _hasMore) setState(() => _hasMore = hasMore);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).gacha;
+    // 內容尺寸變動（切換造型、Html 排版完成）不會觸發 controller listener，改靠
+    // metrics 通知重算。
+    return NotificationListener<ScrollMetricsNotification>(
+      onNotification: (_) {
+        _update();
+        return false;
+      },
+      child: Stack(
+        children: [
+          // 捲軸常駐才看得出可捲；關掉預設捲軸，免得電腦版再疊一條只在 hover／捲動時
+          // 才出現的。內容放不下時才畫 thumb。
+          ScrollConfiguration(
+            behavior: ScrollConfiguration.of(
+              context,
+            ).copyWith(scrollbars: false),
+            child: Scrollbar(
+              controller: _controller,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                controller: _controller,
+                // 右側讓出捲軸位置，thumb 不壓在文字上。
+                padding: const EdgeInsets.only(right: AppSpacing.m),
+                child: widget.child,
+              ),
+            ),
+          ),
+          if (_hasMore) ...[
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: _fadeHeight,
+              child: IgnorePointer(
+                child: ScrollEdgeFade(side: ScrollSide.bottom),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Center(
+                child: ScrollArrowButton(
+                  icon: Icons.expand_more,
+                  tooltip: AppLocalizations.of(context)!.detailScrollDown,
+                  tokens: tokens,
+                  largeHitArea: true,
+                  onPressed: () => _controller.animateBy(
+                    _controller.position.viewportDimension * 0.8,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
 
 /// 圖片區底部的頁點：選中者寬 18、主色，其餘 6x6、白色；墊在半透明黑底膠囊上。
 class _PageDots extends StatelessWidget {

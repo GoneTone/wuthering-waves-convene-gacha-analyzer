@@ -1673,8 +1673,74 @@ void main() {
         expect(inner, findsOneWidget);
         expect(tester.getSize(inner).height, lessThanOrEqualTo(120));
         expect(tester.getSize(intro()).height, greaterThan(120));
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+      testWidgets('phone portrait: long intro shows the scroll hint and the '
+          'chevron pages it', (tester) async {
+        await pumpAt(tester, const Size(360, 800), intro: longIntro);
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(bottomFade(), findsOneWidget);
+        expect(scrollDown(), findsOneWidget);
+        final scrollbar = find.ancestor(
+          of: intro(),
+          matching: find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.foregroundPainter is ScrollbarPainter,
+          ),
+        );
+        final painter = tester
+            .widget<CustomPaint>(scrollbar)
+            .foregroundPainter!;
+        final size = tester.getSize(scrollbar);
+        expect((Canvas c) => painter.paint(c, size), visibleThumb);
+        final position = tester
+            .state<ScrollableState>(
+              find.ancestor(of: intro(), matching: find.byType(Scrollable)),
+            )
+            .position;
+        await tester.tap(scrollDown());
+        await tester.pumpAndSettle();
+        expect(position.pixels, closeTo(position.viewportDimension * 0.8, 1));
+        position.jumpTo(position.maxScrollExtent);
+        await tester.pump();
+        expect(scrollDown(), findsNothing);
+        expect(bottomFade(), findsNothing);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+      testWidgets('phone portrait: long skin caption shows the scroll hint', (
+        tester,
+      ) async {
+        await pumpAt(
+          tester,
+          const Size(360, 800),
+          intro: '<p>短</p>',
+          bgDescription: longIntro,
+        );
+        await tester.pump();
+        expect(bottomFade(), findsOneWidget);
+        expect(scrollDown(), findsOneWidget);
+        final caption = find.byType(Html).last;
+        expect(
+          tester.getRect(scrollDown()).center.dy,
+          greaterThan(tester.getRect(find.text('造型A').first).bottom),
+        );
+        expect(
+          find.ancestor(of: caption, matching: find.byType(Scrollable)),
+          findsOneWidget,
+        );
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+      testWidgets('phone portrait: short intro keeps its own height, no hint', (
+        tester,
+      ) async {
+        await pumpAt(tester, const Size(360, 800), intro: '<p>短</p>');
+        await tester.pump();
         expect(bottomFade(), findsNothing);
         expect(scrollDown(), findsNothing);
+        final inner = find.ancestor(
+          of: intro(),
+          matching: find.byType(SingleChildScrollView),
+        );
+        expect(tester.getSize(inner).height, lessThan(60));
       }, variant: TargetPlatformVariant.only(TargetPlatform.android));
     });
 
