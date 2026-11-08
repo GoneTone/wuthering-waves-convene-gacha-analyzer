@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:image/image.dart' as img;
 
@@ -81,6 +82,15 @@ void main() {
     stdout.writeln('✓ $path  ${entry.value}x${entry.value}');
   }
 
+  // Android 12 以下的啟動畫面中央圖示（12 以上由系統拿啟動器圖示畫成圓形，不讀這張）。
+  // 裁成圓形與 12 以上一致；flutter_native_splash 以 4x 解讀，640px＝160dp。
+  // 換圖後要再跑 `dart run flutter_native_splash:create`。
+  const splashIconPath = 'assets/splash/icon.png';
+  File(splashIconPath)
+    ..createSync(recursive: true)
+    ..writeAsBytesSync(img.encodePng(_circle(_resize(source, 640))));
+  stdout.writeln('✓ $splashIconPath  640x640');
+
   // Play 商店圖示（Play 會自己套圓角遮罩，所以維持滿版）。
   const playIconPath = 'docs/play-store/icon-512.png';
   File(playIconPath)
@@ -101,6 +111,23 @@ img.Image _adaptiveForeground(img.Image source, int canvas) {
       final sx = (x - offset).clamp(0, inner - 1);
       final p = scaled.getPixel(sx, sy);
       out.setPixelRgba(x, y, p.r, p.g, p.b, 255);
+    }
+  }
+  return out;
+}
+
+/// 把正方形 [square] 裁成內切圓，圓外透明，邊緣 1px 反鋸齒。
+img.Image _circle(img.Image square) {
+  final size = square.width;
+  final r = size / 2;
+  final out = img.Image(width: size, height: size, numChannels: 4);
+  for (var y = 0; y < size; y++) {
+    for (var x = 0; x < size; x++) {
+      final dx = x + 0.5 - r;
+      final dy = y + 0.5 - r;
+      final alpha = (r - math.sqrt(dx * dx + dy * dy)).clamp(0.0, 1.0);
+      final p = square.getPixel(x, y);
+      out.setPixelRgba(x, y, p.r, p.g, p.b, (alpha * 255).round());
     }
   }
   return out;
