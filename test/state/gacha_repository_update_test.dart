@@ -19,6 +19,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/client_log_watch.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import '../helpers/no_game_dir.dart';
+import '../helpers/wait_until.dart';
 
 class _FakeCapture implements GachaCapture {
   _FakeCapture(this._cred);
@@ -120,14 +121,6 @@ class _FakeLocator extends GameDirLocator {
     }
     return location;
   }
-}
-
-/// 反覆讓出事件迴圈直到 [cond] 成立（避免固定延遲造成 flake）。
-Future<void> _until(bool Function() cond) async {
-  for (var i = 0; i < 1000 && !cond(); i++) {
-    await Future<void>.delayed(Duration.zero);
-  }
-  expect(cond(), isTrue, reason: 'condition never became true');
 }
 
 /// 讓出事件迴圈數輪，讓尚在排程中的非同步工作有機會執行。
@@ -620,7 +613,7 @@ void main() {
 
     final repo = container.read(gachaRepositoryProvider.notifier);
     final done = repo.update();
-    await _until(
+    await waitUntil(
       () =>
           container.read(gachaRepositoryProvider).progress is WaitingForCapture,
     );
@@ -758,7 +751,7 @@ void main() {
 
       final repo = container.read(gachaRepositoryProvider.notifier);
       final done = repo.forceRecaptureAndUpdate();
-      await _until(
+      await waitUntil(
         () =>
             container.read(gachaRepositoryProvider).progress
                 is WaitingForCapture,
@@ -839,11 +832,11 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       expect(watch.paths.single, GameDirLocator.clientLogPath(gameDir));
       watch.hits[0].complete(_cred());
 
-      await _until(() => capture.cancelCalls > 0);
+      await waitUntil(() => capture.cancelCalls > 0);
       await _settle();
       expect(t.hits, isEmpty, reason: 'no fetch before capture teardown');
 
@@ -868,9 +861,9 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       watch.hits[0].complete(_cred());
-      await _until(() => capture.cancelCalls > 0);
+      await waitUntil(() => capture.cancelCalls > 0);
       capture.result.completeError(Exception('helper stop failed'));
       await done;
 
@@ -891,7 +884,7 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       capture.result.complete(_cred());
       await done;
 
@@ -916,7 +909,7 @@ void main() {
         final repo = await bootstrap(t.container);
 
         final done = repo.update();
-        await _until(() => watch.hits.isNotEmpty);
+        await waitUntil(() => watch.hits.isNotEmpty);
         capture.result.completeError(Exception('uac denied'));
         await _settle();
 
@@ -950,7 +943,7 @@ void main() {
         final repo = await bootstrap(t.container);
 
         final done = repo.update();
-        await _until(() => locator.calls > 0);
+        await waitUntil(() => locator.calls > 0);
         capture.result.completeError(Exception('uac denied'));
         await _settle();
 
@@ -963,7 +956,7 @@ void main() {
         // 使用者在說明視窗選好資料夾 → 監看啟動，提示換成「只靠 log」。
         locator.location = loc;
         await repo.restartClientLogWatch();
-        await _until(() => watch.hits.isNotEmpty);
+        await waitUntil(() => watch.hits.isNotEmpty);
         waiting =
             t.container.read(gachaRepositoryProvider).progress!
                 as WaitingForCapture;
@@ -994,7 +987,7 @@ void main() {
         final repo = await bootstrap(t.container);
 
         final done = repo.update();
-        await _until(() => locator.calls > 0);
+        await waitUntil(() => locator.calls > 0);
         capture.result.complete(null);
         await _settle();
 
@@ -1022,7 +1015,7 @@ void main() {
         final repo = await bootstrap(t.container);
 
         final done = repo.update();
-        await _until(() => watch.hits.isNotEmpty);
+        await waitUntil(() => watch.hits.isNotEmpty);
         capture.result.complete(null);
         await _settle();
 
@@ -1049,7 +1042,7 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       capture.result.completeError(Exception('uac denied'));
       await _settle();
       await repo.cancelCapture();
@@ -1071,7 +1064,7 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       await repo.cancelCapture();
       await done;
 
@@ -1092,9 +1085,9 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       watch.hits[0].complete(_cred());
-      await _until(() => capture.cancelCalls > 0);
+      await waitUntil(() => capture.cancelCalls > 0);
       await repo.cancelCapture();
       capture.result.complete(null);
       await done;
@@ -1111,7 +1104,7 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => locator.calls > 0);
+      await waitUntil(() => locator.calls > 0);
       await _settle();
       capture.result.complete(_cred());
       await done;
@@ -1136,7 +1129,7 @@ void main() {
       expect(locator.calls, 0);
 
       final done = repo.update();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       await repo.restartClientLogWatch();
 
       expect(locator.calls, 2);
@@ -1144,7 +1137,7 @@ void main() {
       expect(watch.cancelled, [0]);
 
       watch.hits[1].complete(_cred());
-      await _until(() => capture.cancelCalls > 0);
+      await waitUntil(() => capture.cancelCalls > 0);
       capture.result.complete(null);
       await done;
 
@@ -1181,11 +1174,11 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       final waiting = t.container.read(gachaRepositoryProvider).progress;
       expect((waiting as WaitingForCapture).isFallback, isTrue);
       watch.hits[0].complete(_cred());
-      await _until(() => capture.cancelCalls > 0);
+      await waitUntil(() => capture.cancelCalls > 0);
       capture.result.complete(null);
       await done;
 
@@ -1206,7 +1199,7 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => locator.calls > 0);
+      await waitUntil(() => locator.calls > 0);
       await repo.restartClientLogWatch();
       capture.result.complete(_cred());
       await done;
@@ -1239,9 +1232,9 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       capture.result.complete(_cred());
-      await _until(() => watch.cancelled.isNotEmpty);
+      await waitUntil(() => watch.cancelled.isNotEmpty);
       await repo.cancelCapture();
       watch.cancelGate!.complete();
       await done;
@@ -1259,9 +1252,9 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => locator.gates.length == 1);
+      await waitUntil(() => locator.gates.length == 1);
       final restart = repo.restartClientLogWatch();
-      await _until(() => locator.gates.length == 2);
+      await waitUntil(() => locator.gates.length == 2);
       locator.gates[1].complete(
         const GameDirLocation(newDir, GameDirSource.setting),
       );
@@ -1284,7 +1277,7 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       locator.location = null;
       await repo.restartClientLogWatch();
 
@@ -1310,7 +1303,7 @@ void main() {
         final repo = await bootstrap(t.container);
 
         final done = repo.update();
-        await _until(() => watch.hits.isNotEmpty);
+        await waitUntil(() => watch.hits.isNotEmpty);
         await repo.submitManualCredential(_cred());
         await done;
 

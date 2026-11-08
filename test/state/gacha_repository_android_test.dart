@@ -27,6 +27,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/app_foreground.dart
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import '../helpers/no_game_dir.dart';
+import '../helpers/wait_until.dart';
 
 /// 依序回傳預先排好結果的 resolver 替身；結果可以是 gate（測試決定何時完成）。
 class _FakeResolver extends LogAccessResolver {
@@ -152,14 +153,6 @@ GachaCredential _cred() => GachaCredential(
   languageCode: 'zh-Hant',
 );
 
-/// 反覆讓出事件迴圈直到 [cond] 成立。
-Future<void> _until(bool Function() cond) async {
-  for (var i = 0; i < 1000 && !cond(); i++) {
-    await Future<void>.delayed(Duration.zero);
-  }
-  expect(cond(), isTrue, reason: 'condition never became true');
-}
-
 void main() {
   late Directory tempDir;
   late _FakeResolver resolver;
@@ -250,7 +243,7 @@ void main() {
     final r = await repo();
 
     final done = r.update();
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
     expect(watch.sources.single, same(ready.source));
     expect(progress(), isA<WaitingForCapture>());
     watch.hits[0].complete(_cred());
@@ -286,7 +279,7 @@ void main() {
     resolver.results.add(ready.outcome);
     final r = await repo();
     final done = r.update();
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
     watch.hits[0].complete(_cred());
     await done;
 
@@ -304,7 +297,7 @@ void main() {
     );
     final r = await repo();
     final done = r.update();
-    await _until(
+    await waitUntil(
       () => (progress() as WaitingForCapture?)?.logAccessUnavailable != null,
     );
     expect((progress()! as WaitingForCapture).rootDenied, isTrue);
@@ -327,11 +320,11 @@ void main() {
         ..add(ready.outcome);
       final r = await repo();
       final done = r.update();
-      await _until(
+      await waitUntil(
         () => (progress() as WaitingForCapture?)?.logAccessUnavailable != null,
       );
       await r.retryLogAccess();
-      await _until(() => watch.hits.isNotEmpty);
+      await waitUntil(() => watch.hits.isNotEmpty);
       expect(resolver.calls[0].force, isFalse);
       expect(resolver.calls[1].force, isTrue);
       await r.cancelCapture();
@@ -346,7 +339,7 @@ void main() {
     final r = await repo();
 
     final done = r.update();
-    await _until(
+    await waitUntil(
       () =>
           (progress() as WaitingForCapture?)?.logAccessUnavailable ==
           LogAccessUnavailable.notPaired,
@@ -365,9 +358,9 @@ void main() {
     final r = await repo();
 
     final done = r.update();
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
     unawaited(r.cancelCapture());
-    await _until(() => watch.cancelled.isNotEmpty);
+    await waitUntil(() => watch.cancelled.isNotEmpty);
     for (var i = 0; i < 20; i++) {
       await Future<void>.delayed(Duration.zero);
     }
@@ -386,15 +379,15 @@ void main() {
       resolver.results.add(() => gate.future);
       final r = await repo();
       final done = r.update();
-      await _until(() => resolver.calls.isNotEmpty);
+      await waitUntil(() => resolver.calls.isNotEmpty);
       await r.cancelCapture();
       await done;
       expect(progress(), isNull);
       var aborted = false;
       unawaited(resolver.aborts.single!.then((_) => aborted = true));
-      await _until(() => aborted);
+      await waitUntil(() => aborted);
       gate.complete(ready.outcome());
-      await _until(() => ready.released == 1);
+      await waitUntil(() => ready.released == 1);
       expect(watch.hits, isEmpty);
     },
   );
@@ -404,7 +397,7 @@ void main() {
     resolver.results.add(() => gate.future);
     final r = await repo();
     final done = r.update();
-    await _until(() => resolver.calls.isNotEmpty);
+    await waitUntil(() => resolver.calls.isNotEmpty);
     await r.submitManualCredential(_cred());
     await done;
     expect(progress(), isA<UpdateCompleted>());
@@ -417,7 +410,7 @@ void main() {
     );
     final r = await repo();
     final done = r.update();
-    await _until(
+    await waitUntil(
       () => (progress() as WaitingForCapture?)?.logAccessUnavailable != null,
     );
     await r.cancelCapture();
@@ -436,11 +429,11 @@ void main() {
     final r = await repo();
 
     final done = r.update();
-    await _until(
+    await waitUntil(
       () => (progress() as WaitingForCapture?)?.logAccessUnavailable != null,
     );
     await r.retryLogAccess();
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
     expect((progress()! as WaitingForCapture).logAccessUnavailable, isNull);
     watch.hits[0].complete(_cred());
     await done;
@@ -458,7 +451,7 @@ void main() {
       final r = await repo();
 
       final done = r.update();
-      await _until(() => resolver.calls.isNotEmpty);
+      await waitUntil(() => resolver.calls.isNotEmpty);
       await r.cancelCapture();
       gate.complete(ready.outcome());
       await done;
@@ -479,9 +472,9 @@ void main() {
     final r = await repo();
 
     final done = r.update();
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
     watch.hits[0].complete(_cred());
-    await _until(() => watch.hits.length == 2);
+    await waitUntil(() => watch.hits.length == 2);
     expect((progress()! as WaitingForCapture).isFallback, isTrue);
     watch.hits[1].complete(_cred());
     await done;
@@ -494,7 +487,7 @@ void main() {
     resolver.results.add(_Ready().outcome);
     final r = await repo();
     final done = r.update(afterPairing: true);
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
     watch.hits[0].complete(_cred());
     await done;
     expect(resolver.calls.single.force, isTrue);
@@ -507,7 +500,7 @@ void main() {
     resolver.results.add(_Ready().outcome);
     final r = await repo();
     final done = r.update();
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
     watch.hits[0].complete(_cred());
     await done;
     expect(resolver.calls.single.preferred, LogAccessMethod.root);
@@ -517,7 +510,7 @@ void main() {
     resolver.results.add(_Ready(leftOn: true).outcome);
     final r = await repo();
     final done = r.update();
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
     watch.hits[0].complete(_cred());
     await done;
     expect((progress()! as UpdateCompleted).wirelessDebuggingLeftOn, isTrue);
@@ -528,12 +521,14 @@ void main() {
     resolver.results.add(ready.outcome);
     final r = await repo();
     final done = r.update();
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
 
     ready.health.add(false);
-    await _until(() => (progress()! as WaitingForCapture).logConnectionLost);
+    await waitUntil(() => (progress()! as WaitingForCapture).logConnectionLost);
     ready.health.add(true);
-    await _until(() => !(progress()! as WaitingForCapture).logConnectionLost);
+    await waitUntil(
+      () => !(progress()! as WaitingForCapture).logConnectionLost,
+    );
 
     watch.hits[0].complete(_cred());
     await done;
@@ -545,10 +540,10 @@ void main() {
     resolver.results.add(ready.outcome);
     final r = await repo();
     final done = r.update();
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
     foreground.foreground = false;
     watch.hits[0].complete(_cred());
-    await _until(
+    await waitUntil(
       () => (progress() as WaitingForCapture?)?.credentialReady ?? false,
     );
     expect(fetches, isEmpty, reason: 'background network is blocked');
@@ -562,10 +557,10 @@ void main() {
     resolver.results.add(_Ready().outcome);
     final r = await repo();
     final done = r.update();
-    await _until(() => watch.hits.isNotEmpty);
+    await waitUntil(() => watch.hits.isNotEmpty);
     foreground.foreground = false;
     watch.hits[0].complete(_cred());
-    await _until(
+    await waitUntil(
       () => (progress() as WaitingForCapture?)?.credentialReady ?? false,
     );
     await r.cancelCapture();
@@ -581,7 +576,7 @@ void main() {
     final r = c.read(gachaRepositoryProvider.notifier);
     await r.waitForBootstrap();
     unawaited(r.update());
-    await _until(() => capture.starts == 1);
+    await waitUntil(() => capture.starts == 1);
     expect(resolver.calls, isEmpty);
     await r.cancelCapture();
   });
