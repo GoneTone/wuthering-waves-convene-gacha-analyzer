@@ -392,7 +392,7 @@ class _DataLanguageSectionState extends ConsumerState<_DataLanguageSection> {
         ),
         const SizedBox(height: AppSpacing.s),
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: OutlinedButton.icon(
             onPressed: (current == null || _busy) ? null : () => _unify(l),
             icon: _busy
@@ -487,7 +487,9 @@ class _AboutContent extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
+        // 固定的英文署名，由右往左的語言下也維持「Developed by GoneTone」的語序。
         Wrap(
+          textDirection: TextDirection.ltr,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Icon(Icons.code, size: 16, color: theme.gacha.textSecondary),

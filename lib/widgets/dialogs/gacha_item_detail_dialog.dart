@@ -439,9 +439,9 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                 ),
               ),
             ),
-            Positioned(
+            PositionedDirectional(
               top: AppSpacing.s,
-              right: AppSpacing.s,
+              end: AppSpacing.s,
               child: _buildImageMenu(context, current),
             ),
           ],
@@ -505,11 +505,17 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   /// AlertDialog 的 title 區，環境 [DefaultTextStyle] 是大行高的 titleTextStyle，
   /// 會讓單行說明文字在第一行上方多塞約 8px leading、換行時卻貼齊，造成「換行／不換
   /// 行」與標題的間距不一致。改用 bodyMedium 當 root 後，單行與多行皆貼齊（間距一致）。
-  Widget _detailHtml(ThemeData theme, String data) => DefaultTextStyle(
-    style: theme.textTheme.bodyMedium ?? const TextStyle(),
-    child: AppHtml(
-      data: stripEntryLinkTags(data),
-      style: _detailHtmlStyle(theme),
+  ///
+  /// 內容是 encore 的遊戲資料（中、英、日、韓等皆由左往右），固定由左往右排；否則在
+  /// 由右往左的介面語言下，句末標點會跑到行首。
+  Widget _detailHtml(ThemeData theme, String data) => Directionality(
+    textDirection: TextDirection.ltr,
+    child: DefaultTextStyle(
+      style: theme.textTheme.bodyMedium ?? const TextStyle(),
+      child: AppHtml(
+        data: stripEntryLinkTags(data),
+        style: _detailHtmlStyle(theme),
+      ),
     ),
   );
 
@@ -1021,7 +1027,7 @@ class _ScrollHintBoxState extends State<_ScrollHintBox> {
               child: SingleChildScrollView(
                 controller: _controller,
                 // 右側讓出捲軸位置，thumb 不壓在文字上。
-                padding: const EdgeInsets.only(right: AppSpacing.m),
+                padding: const EdgeInsetsDirectional.only(end: AppSpacing.m),
                 child: widget.child,
               ),
             ),

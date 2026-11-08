@@ -433,9 +433,9 @@ class _ZoomableImageOverlayState extends ConsumerState<ZoomableImageOverlay> {
           ),
         ),
         // 右上按鈕列 — 縮放切換鈕 + 關閉鈕，半透明黑底圓鈕，永遠最上層。
-        Positioned(
+        PositionedDirectional(
           top: 16,
-          right: 16,
+          end: 16,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

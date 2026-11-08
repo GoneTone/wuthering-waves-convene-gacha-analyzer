@@ -263,8 +263,8 @@ class _AppShellState extends ConsumerState<AppShell> {
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Padding(
-                              padding: EdgeInsets.only(
-                                right: TeamLinksBar.iconInset,
+                              padding: EdgeInsetsDirectional.only(
+                                end: TeamLinksBar.iconInset,
                               ),
                               child: TeamLinksBar(),
                             ),
