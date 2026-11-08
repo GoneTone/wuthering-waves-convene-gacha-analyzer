@@ -477,6 +477,27 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
     - 同步自己的合併期間不排變動檢查；變動檢查到點時若同步正在跑，就等該輪結束再比指紋。
 - **最終實機結果**（開 App 後主 isolate 最長停頓）：情境 A 約 5 ms，情境 B 約 10 ms（修正前 387 ms＋43 ms＋11 ms 等多段）。
 
+
+### 47. 轉換語言、匯入匯出、寫檔讓畫面停住（通用，桌面也適用）
+
+- **量法補充：只看時間軸會漏算**。有些主 isolate 上的工作沒有被時間軸事件框住（轉換資料語言就是），時間軸上最長只看到約 9 ms，CPU 取樣卻顯示寫檔佔了約 39 ms。改用「把連續的 CPU 取樣串成忙碌時段」來算停頓（取樣間隔 0.5 ms，間隔小於 1.5 ms 視為連續），用同一方法重查 #46 的同步量測，結論不變。量測不必重開 App：以 `--ez enable-dart-profiling true` 正常啟動，等開 App 同步跑完再連 VM Service 開始錄，同時用 `adb shell input tap`／`settings put system user_rotation` 操作畫面。手機的自動旋轉設定量完要還原。
+- **實測（ROG Phone 9，profile 版）**
+
+  | 操作 | 主 isolate 連續忙碌 | 主因 |
+  |---|---|---|
+  | 轉換資料語言（0 筆要轉） | 76、63、33、30、20 ms⋯ | 每個帳號整份重寫（`GachaStorage.save` 的 `jsonEncode`） |
+  | 轉向 | 約 21～28 ms | 整頁重新排版（LAYOUT 7～15 ms、BUILD 5～8 ms） |
+  | 切換帳號 | 約 14～17 ms | 重建卡池頁 |
+  | 開啟設定頁 | 約 52、39、28 ms | 設定頁本身建構，取樣裡沒有 App 函式（未處理） |
+
+- **處理**
+  - `GachaStorage.save` 的 JSON 編碼改在背景 isolate（送過去的物件複製仍在主 isolate，但比整份編碼便宜得多）。更新紀錄、匯入、轉換語言、同步合併都經過這裡。
+  - 轉換資料語言：轉換後內容與原本相同（`BannerStorage.sameContentAs`）就不寫檔、沿用原物件，全部沒變就不替換 `byUid`。改完實測最長約 18 ms，剩重讀語言對照表（`LangCatalogStorage.load`）。
+  - 設定頁匯出：改用與雲端同步共用的 `exportAccountsBytesInBackground`（背景讀記錄檔、編 JSON 與 UTF-8）。匯入：`importAccountsInBackground` 在背景解析；背景 isolate 的 log 會不見，失敗的 log 改由設定頁的錯誤分支記錄。
+  - **不做頁面統計快取**：轉向時 `computeGachaStats` 只出現在約 1 個取樣（約 0.5 ms），主要成本是排版，而且發生在系統轉向動畫期間。
+- **坑：流程太快結束，進度對話框留下空白框**。外層在進度出現時 `showDialog`，對話框要到下一幀才建構、才開始 `listen` 進度；流程若在那之前就把進度清空（轉換語言改成免寫檔後就會），對話框收不到清空事件，留下一個只有資訊圖示、沒有文字、關不掉的空白框。修法：對話框第一次建構後檢查一次，進度已是 null 就自己關。**只能檢查第一次**：若每次重建都檢查，Android 記錄存取流程（取消更新後推設定頁）會在設定頁推上來後被誤關，`android_log_wait_test` 有鎖。
+- **widget 測試**：背景 isolate 的結果要真實時間才回來，假時間的 `pumpAndSettle` 等不到。共用 `test/helpers/wait_until.dart` 的 `pumpUntil(tester, cond)`：每輪 `runAsync` 讓背景跑一下再 `pump`，條件成立或 5 秒為止。
+- **提交前的檢查要真的擋住失敗**：`flutter test | tail -1` 的結束碼永遠是 0，串在 `&&` 後面擋不住失敗的測試。要檢查輸出含 `All tests passed` 才提交（這次就因此誤提交過一次）。
 ---
 
 ## 十二、手機版 UI/UX 調整
