@@ -460,6 +460,12 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **效果**（電腦，真實資料 4 MB，同步期間每 4 ms 排一次計時器量主 isolate 最長停頓）：約 150 ms → 約 8 ms。
 - **還沒處理**：把雲端資料合併回本機（`importBundleForCloudSync`）仍在主 isolate，要動到 repository 狀態，沒有一起移。
 - **流量**：原本每輪不管內容有沒有變，都整份下載＋整份上傳（4 MB 的同步檔，手機每開一次 App 約用 8 MB）。現在解析雲端檔時順便算它的指紋，合併後本機指紋一樣就不上傳，log 會寫 `uploaded=skipped (unchanged)`。實測電腦版連開兩次：第二次跳過上傳，一輪從約 5 秒降到約 2.3 秒。指紋包含「目前選中的帳號」、帳號順序與別名，所以在不同裝置之間切換使用時，第一次還是會上傳。下載仍然每輪都要（想省要改成先比對 Drive 檔案的 `md5Checksum`，這次沒做）。
+- **實機量測（ROG Phone 9，profile 版，開 App 那一輪）**：電腦上的計時漏掉了幾處，要在實機上量才看得到。
+  - 作法：`am start` 帶 `--ez start-paused true --ez endless-trace-buffer true --ez enable-dart-profiling true`（不加最後一個，VM Service 會回「Profiler is disabled」），從 logcat 取得 VM Service 位址並 `adb forward`，先 `setVMTimelineFlags` 再 `resume`，等同步跑完後抓 `getVMTimeline` 與 `getCpuSamples`，把 ui 執行緒的長事件和同時段的 CPU 取樣對起來看是哪個函式。正式／profile 版的 App log 不在 logcat、私有目錄也讀不到，所以時間點要靠取樣判斷。對照組：不帶 `--dart-define-from-file` 建置（同步停用），確認停頓是不是同步造成的。
+  - 下載完把 4 MB 轉成文字的 `utf8.decode` 在主 isolate 卡 29.6 ms → 改到背景（上傳的 `utf8.encode` 一併）後剩約 5 ms。
+  - 合併雲端資料會讓 `byUid` 換成新的 Map，觸發「5 秒後的變動檢查」，又多做一次匯出；同步自己的合併期間改成不排這個檢查（該輪合併後本來就會比對指紋）。
+  - **送進 `Isolate.run` 的資料，複製本身仍在主 isolate**：匯出時把全部紀錄複製到背景 isolate，實機約 17 ms（時間軸上是主 isolate 一段沒有 Dart 堆疊的原生工作，緊接著背景 isolate 建立）。這段目前還在。
+  - Dart 的 HTTP 解析（`_HttpParser`）在主 isolate 處理下載的資料，約 11 ms；要整個下載搬到背景才能避免，目前沒做。
 
 ---
 
