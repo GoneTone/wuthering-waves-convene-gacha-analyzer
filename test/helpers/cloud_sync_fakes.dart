@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
@@ -100,8 +102,16 @@ class FakeRemote implements CloudSyncRemote {
   /// 設定後 download 會拋出此例外，模擬遠端錯誤（如 insufficient_scope）。
   Object? downloadError;
 
+  /// download 次數。
+  int downloads = 0;
+
+  /// 設定後 download 會等它完成才回傳，模擬下載途中發生其他事。
+  Completer<void>? downloadGate;
+
   @override
   Future<String?> download() async {
+    downloads++;
+    await downloadGate?.future;
     final err = downloadError;
     if (err != null) throw err;
     return content;

@@ -408,6 +408,67 @@ void main() {
     expect(container.read(settingsProvider).cloudPendingRemovals, isEmpty);
   });
 
+  test('啟動那輪途中變動檢查到點 → 等該輪結束再比對指紋，內容沒變就不補跑整輪', () async {
+    final messages = <String>[];
+    final sub = Logger.root.onRecord.listen((r) {
+      if (r.loggerName == 'cloudsync.sync') messages.add(r.message);
+    });
+    addTearDown(sub.cancel);
+
+    await GachaStorage(tempDir).save(_localBannerStorage('100000001'));
+    remote.content = _cloudBundleJson('100000001');
+    SharedPreferences.setMockInitialValues({
+      'pref.cloudAccountEmail': 'u@example.com',
+    });
+    tokenStore.token = 'refresh-1';
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    final notifier = container.read(cloudSyncProvider.notifier);
+    notifier.debounceDelay = const Duration(milliseconds: 10);
+
+    // 啟動那輪卡在下載時，本機出現一次「內容沒變」的變動（換成同內容的新 Map），
+    // 變動檢查在該輪還沒跑完時到點；此時還沒有上一輪的指紋可比。
+    remote.downloadGate = Completer<void>();
+    final round = notifier.start();
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    container
+        .read(gachaRepositoryProvider.notifier)
+        .debugSeedAccount(
+          container.read(gachaRepositoryProvider).byUid['100000001']!,
+        );
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    remote.downloadGate!.complete();
+    await round;
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+
+    expect(remote.downloads, 1);
+    expect(messages.any((m) => m.contains('trigger=rerun')), isFalse);
+  });
+
+  test('上傳內容同時含有記錄檔的帳號（背景讀檔）與只在記憶體的帳號', () async {
+    final onDisk = _localBannerStorage('100000001');
+    await GachaStorage(tempDir).save(onDisk);
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    container
+        .read(gachaRepositoryProvider.notifier)
+        .debugSeedAccount(_localBannerStorage('200000002'));
+    await container.read(cloudSyncProvider.notifier).link();
+
+    final uploaded = jsonDecode(remote.content!) as Map<String, dynamic>;
+    final accounts = (uploaded['accounts'] as List)
+        .cast<Map<String, dynamic>>();
+    expect(
+      accounts.map((a) => a['player_id']),
+      containsAll(['100000001', '200000002']),
+    );
+    // 背景讀檔還原出的內容要與記憶體版的 toJson 完全一致。
+    final fromDisk = accounts.firstWhere((a) => a['player_id'] == '100000001');
+    expect(fromDisk, onDisk.toJson());
+  });
+
   test('start：bootstrap 完成前本機紀錄不被雲端空 banner 覆蓋 (C1)', () async {
     await GachaStorage(tempDir).save(_localBannerStorage('100000001'));
     remote.content = _cloudBundleJson('100000001');

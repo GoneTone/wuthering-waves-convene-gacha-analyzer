@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
@@ -451,6 +453,11 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     _debounce?.cancel();
     _debounce = Timer(debounceDelay, () async {
       if (!ref.mounted || !_linked) return;
+      // 同步進行中：等該輪結束再比對（該輪會更新指紋），不要排一輪無條件補跑。
+      if (_syncing) {
+        _scheduleDebounced();
+        return;
+      }
       final fingerprint = await syncFingerprintInBackground(
         await _exportLocal(),
       );
@@ -474,11 +481,27 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
   }
 
   /// 把本機全帳號打包成與手動匯出同格式的 bundle JSON（在背景 isolate 序列化）。
+  ///
+  /// 有記錄檔的帳號只傳路徑、由背景 isolate 自己讀檔：把全部紀錄當訊息傳過去，
+  /// 複製本身在主 isolate 實機量到約 17ms。每條寫入路徑都是先存檔才更新 state，
+  /// 所以檔案內容與記憶體一致；沒有檔案的帳號（測試直接塞的資料）才傳物件。
   Future<String> _exportLocal() {
     final gacha = ref.read(gachaRepositoryProvider);
     final settings = ref.read(settingsProvider);
+    final storage = ref.read(gachaStorageProvider);
+    final filePaths = <String, String>{};
+    final inMemory = <String, BannerStorage>{};
+    for (final MapEntry(:key, :value) in gacha.byUid.entries) {
+      final file = storage.recordsFile(key);
+      if (file.existsSync()) {
+        filePaths[key] = file.path;
+      } else {
+        inMemory[key] = value;
+      }
+    }
     return _exportInBackground(
-      byUid: gacha.byUid,
+      filePaths: filePaths,
+      inMemory: inMemory,
       uidOrder: settings.uidOrder,
       uidAliases: settings.uidAliases,
       lastActiveUid: gacha.activeUid,
@@ -487,26 +510,34 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
   }
 }
 
-/// 在背景 isolate 跑 [exportAccounts]：數 MB 的 jsonEncode 在主 isolate 會卡住畫面。
+/// 在背景 isolate 讀記錄檔並跑 [exportAccounts]：數 MB 的 jsonEncode 在主 isolate 會卡住畫面。
 ///
 /// 刻意寫成 top-level：閉包只抓參數，不會把 notifier（含 Timer 等無法跨 isolate
 /// 傳送的物件）一起帶進去。
 Future<String> _exportInBackground({
-  required Map<String, BannerStorage> byUid,
+  required Map<String, String> filePaths,
+  required Map<String, BannerStorage> inMemory,
   required List<String> uidOrder,
   required Map<String, String> uidAliases,
   required String? lastActiveUid,
   required String appVersion,
 }) {
   final now = DateTime.now();
-  return Isolate.run(
-    () => exportAccounts(
+  return Isolate.run(() {
+    final byUid = <String, BannerStorage>{
+      for (final MapEntry(:key, :value) in filePaths.entries)
+        key: BannerStorage.fromJson(
+          jsonDecode(File(value).readAsStringSync()) as Map<String, dynamic>,
+        ),
+      ...inMemory,
+    };
+    return exportAccounts(
       byUid: byUid,
       uidOrder: uidOrder,
       uidAliases: uidAliases,
       lastActiveUid: lastActiveUid,
       appVersion: appVersion,
       now: now,
-    ),
-  );
+    );
+  });
 }
