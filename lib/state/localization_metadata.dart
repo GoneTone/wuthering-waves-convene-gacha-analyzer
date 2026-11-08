@@ -199,6 +199,11 @@ Locale? localeListResolution(
           : const Locale('zh');
       if (supportedLocales.contains(wanted)) return wanted;
     }
+    // 挪威文以 no 提供（ARB），系統回的是書面挪威語 nb 或新挪威語 nn，語言代碼對不上。
+    if (const {'nb', 'nn'}.contains(user.languageCode) &&
+        supportedLocales.contains(const Locale('no'))) {
+      return const Locale('no');
+    }
     if (hasLang(user)) return null;
   }
   return unmatched;

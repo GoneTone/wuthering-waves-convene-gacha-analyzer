@@ -59,8 +59,12 @@ class AppPrefsPlatform {
 /// 繁體、也才對得上 `locales_config.xml` 的項目。
 String systemLocaleTagOf(LanguagePreference pref) => switch (pref) {
   SystemLanguage() => '',
-  LocaleLanguage(:final code) => code == 'zh' ? 'zh-Hant' : code,
+  LocaleLanguage(:final code) =>
+    code == 'zh' ? 'zh-Hant' : _systemLanguageCodes[code] ?? code,
 };
+
+/// App 內與 Android 系統寫法不同的語言代碼：挪威文在 ARB 是 `no`，系統語言與資源資料夾是書面挪威語 `nb`。
+const _systemLanguageCodes = {'no': 'nb'};
 
 /// 系統端標籤 [tag] 對應的 App 內語言偏好；空字串為「跟隨系統」，[released] 裡沒有的語言回 null。
 ///
@@ -75,7 +79,12 @@ LanguagePreference? languagePreferenceOfSystemTag(
   final resolved =
       localeListResolution([requested], released) ??
       basicLocaleListResolution([requested], released);
-  if (resolved.languageCode != requested.languageCode) return null;
+  // 舊版送給系統的挪威文是 no，系統端可能還存著，所以 App 端與系統端兩種寫法都認。
+  final code = resolved.languageCode;
+  if (requested.languageCode != code &&
+      requested.languageCode != _systemLanguageCodes[code]) {
+    return null;
+  }
   return LocaleLanguage(resolved.toLanguageTag());
 }
 

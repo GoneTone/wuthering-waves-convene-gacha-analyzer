@@ -336,6 +336,26 @@ void main() {
       expect(result, isNull);
     });
 
+    test('系統的挪威文 nb／nn → App 的 no', () {
+      const withNo = [...supported, Locale('no')];
+      for (final user in const [
+        Locale('nb', 'NO'),
+        Locale('nb'),
+        Locale('nn', 'NO'),
+      ]) {
+        expect(
+          localeListResolution([user], withNo),
+          const Locale('no'),
+          reason: '$user',
+        );
+      }
+      // App 沒提供挪威文時照常落到英文。
+      expect(
+        localeListResolution(const [Locale('nb', 'NO')], supported),
+        const Locale('en'),
+      );
+    });
+
     test('[yue-HK, zh-CN] → zh-Hans (yue 不支援，繼續處理 zh-CN)', () {
       final result = localeListResolution([
         const Locale('yue', 'HK'),
