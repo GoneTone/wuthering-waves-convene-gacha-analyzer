@@ -638,6 +638,10 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - **Crowdin**：`crowdin.yml` 加一組，與 ARB 一樣以繁中 `values-zh-rTW/strings.xml` 為原文，輸出到 `values-%two_letters_code%`；用 `languages_mapping` 改 zh-CN／pt-BR／he，用 `translation_replace` 把 `values-en/` 換成 `values/`。不要用 `%android_code%`：它一律帶地區（例如 `de-rDE`），奧地利、瑞士等其他地區的德文使用者會對不到。同上一條，第一次同步若沒把現有翻譯匯入 Crowdin，可能被蓋掉，要回頭處理。
   - **挪威文**：ARB 是 `no`，但 Android、Windows 回報的系統語言是書面挪威語 `nb`（或新挪威語 `nn`），原本對不上，系統語言是挪威文的使用者整個 App 都落到英文。處理：`localeListResolution` 把 `nb`／`nn` 對到 `no`；送給系統的代碼（`systemLocaleTagOf`）、`locales_config.xml` 與原生字串資料夾都改用 `nb`（`values-nb`），Crowdin 對應 `"no": nb`（YAML 的 `no` 不加引號會被當成布林值 false）；從系統讀回時 `nb` 與舊版送出的 `no` 都認。模擬器以 `cmd locale set-app-locales tw.reh.wuwa.gacha --locales nb` 驗證介面為挪威文。
 - **複數**：範本（繁中）沒有複數，但只要範本把佔位符宣告成 `int`／`num`，其他語言檔可以自己寫 ICU plural，gen-l10n 會接受。英文原本的「1 pulls」「1 seconds ago」也一併改成 plural。斯拉夫語系、阿拉伯文需要 few／many 等類別；`pt` 的 `one` 包含 0，用 `=1{}` 才不會出現「0 registo」。型別是 `String` 的佔位符（例如平均間隔）不能用 plural。
+  - **後來逐語言補查**（挪威文出現「For 1 dager siden」）：丹麥、希臘、芬蘭、荷蘭、挪威、瑞典文整批沒做（相對時間、抽數、紀錄數等 15 個字串）；其他語言則漏在「數量後面接名詞、形容詞或動詞」的句子，例如英文匯入確認「1 accounts (1 records total)」、法文「1 nouveaux」、西文「quedan 1」、德文「1 IDs」。共修 16 個檔案、127 個字串。
+  - 判斷要不要改：數字後面的字會不會因為 1 而變。標籤寫法（「紀錄：3」）、單複數同形（挪威文 trekk、法文 mois、義大利文 record）不用改；分頁「共 N 筆」只在多於一頁時顯示，總數不會是 1。
+  - 一句話可以放兩組 plural（例如帳號數與紀錄數），gen-l10n 接受。`=1{}` 與 `one{}` 的選擇照上面：法文用 `one`（0 和 1 都算單數），其他用 `=1`。
+  - `test/l10n/plural_forms_test.dart` 抽查幾種語言在 1 與 2 時的實際輸出。用寬鬆的腳本列出「數字佔位符不在 plural 裡」的字串再逐筆判斷，比逐檔閱讀快。
 - **長字串溢出**：`phone_layout_pages_test` 的「1.3 倍字級不溢出」改成跑全部語言，並加上設定頁。一跑就抓到德文、加泰隆尼亞文、羅馬尼亞文的圖片快取「計算中」把列擠爆，以及貢獻者頁「Português (Portugal) — 翻譯者」整列過寬。前者改用 `CompactLegendRow`（數值放不下時換行靠右），後者改 `Wrap`。
 - **由右往左（阿拉伯文、希伯來文）**：Flutter 會自動鏡像 `Row`、`ListView`、`Scrollbar`、可鏡像的圖示，但寫死的 `left`／`right` 不會跟著翻。這次修掉的：
   - 卡片的彩色邊條 `Border(left:)` → `BorderDirectional(start:)`；進度條 `Alignment.centerLeft` → `AlignmentDirectional.centerStart`，漸層 `begin`／`end` 也要用 directional。
