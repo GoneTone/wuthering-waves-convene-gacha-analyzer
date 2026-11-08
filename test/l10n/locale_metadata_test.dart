@@ -307,7 +307,7 @@ void main() {
       );
     });
 
-    test('ja-JP / pt-BR / de-DE (其他語言) → null', () {
+    test('ja-JP / pt-BR (其他語言) → null', () {
       expect(
         localeListResolution([const Locale('ja', 'JP')], supported),
         isNull,
@@ -316,8 +316,14 @@ void main() {
         localeListResolution([const Locale('pt', 'BR')], supported),
         isNull,
       );
+    });
+
+    test('清單外的 de-DE 排在支援的 ja-JP 前 → null（交給預設選 ja）', () {
       expect(
-        localeListResolution([const Locale('de', 'DE')], supported),
+        localeListResolution([
+          const Locale('de', 'DE'),
+          const Locale('ja', 'JP'),
+        ], supported),
         isNull,
       );
     });
@@ -346,15 +352,26 @@ void main() {
       expect(localeListResolution([const Locale('zh')], supported), isNull);
     });
 
-    test('空 / null systemLocales → null', () {
-      expect(localeListResolution(null, supported), isNull);
-      expect(localeListResolution(const [], supported), isNull);
+    test('空 / null systemLocales → en', () {
+      expect(localeListResolution(null, supported), const Locale('en'));
+      expect(localeListResolution(const [], supported), const Locale('en'));
     });
 
-    test('完全不支援的語言 [ko-KR] → null', () {
+    test('完全不支援的語言 [ko-KR] → en', () {
       expect(
         localeListResolution([const Locale('ko', 'KR')], supported),
-        isNull,
+        const Locale('en'),
+      );
+    });
+
+    test('實際語言清單：不支援的 [id-ID, hi-IN] → en，不是排第一的 af', () {
+      expect(AppLocalizations.supportedLocales.first, const Locale('af'));
+      expect(
+        localeListResolution([
+          const Locale('id', 'ID'),
+          const Locale('hi', 'IN'),
+        ], AppLocalizations.supportedLocales),
+        const Locale('en'),
       );
     });
   });

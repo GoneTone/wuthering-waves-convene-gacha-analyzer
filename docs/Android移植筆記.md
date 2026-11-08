@@ -548,8 +548,15 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 ### 45. 一次補齊 27 種語言與由右往左的版面（通用）
 
 - **翻譯流程**：子代理平行翻譯（每個負責 3 種語言），共用一份說明（英文為來源、繁中 ARB 的 `@` 說明當語境、`docs/術語表.md`），每個檔用檢查腳本確認：key 齊全、佔位符與 ICU 參數名稱不變、沒有殘留中日文、翻譯者欄位固定為 `<a href="https://claude.com/claude-code">Claude Code</a>`。全部回來後再跑 gen-l10n、analyze、完整測試。繁中、簡中是原始語言，翻譯者欄位保持空白（`locale_metadata_test` 鎖住），不要加 Claude Code。
-- **遊戲用語要照官方**：AI 翻譯在遊戲有官方版本的語言會自己猜卡池名稱（法文、西文、葡文、泰文一開始 12 個全錯）。遊戲內的喚取記錄頁是官方網頁，它載入的 `locales/<語言>.json` 就是官方用語，直接 curl 下來照抄，不必自動操作遊戲切語言（有防作弊誤判風險）。卡池名稱逐字照抄（只修明顯錯字），全檔的「喚取」「共鳴者」「喚取記錄」也統一成官方說法，並整理進 `docs/術語表.md`。原神的祈願紀錄頁應該也是同樣架構，可以先找它的語系檔。
+- **遊戲用語要照官方**：AI 翻譯在遊戲有官方版本的語言會自己猜卡池名稱（法文、西文、葡文、泰文一開始 12 個全錯）。卡池名稱逐字照抄（只修明顯錯字），全檔的「喚取」「共鳴者」「喚取記錄」、表格的「喚取時間」也統一成官方說法，並整理進 `docs/術語表.md`。
+- **怎麼找官方翻譯**：遊戲內的喚取記錄頁其實是官方網頁（遊戲用內嵌瀏覽器開），網頁上的文字不寫死在遊戲裡，而是依語言另外載入語系檔，所以抓語系檔就有每種語言的官方用語，不必自動操作遊戲切語言（有防作弊誤判風險）。
+  1. 用擷取到的喚取記錄網址在一般瀏覽器開，開發者工具「網路」分頁找 `.json` 請求，或在頁面的 JS bundle 裡搜 `locales`。
+  2. 鳴潮的位置是 `https://aki-gm-resources-oversea.aki-game.net/aki/gacha/locales/<語言>.json`，有 `en`、`ja`、`ko`、`de`、`fr`、`es`、`pt`、`th`、`zh-hans`、`zh-hant`（全小寫，`zh-Hant` 會 404）；其他語言遊戲本身沒出，就沒有官方版。
+  3. 對照鍵名：`selectList.*` 是 12 個卡池名稱，`title` 是喚取記錄，`character`／`weapon`／`item` 是類型。拿英文檔對照，就知道每個值對應哪個詞。
+  4. 遊戲沒出的語言，提到遊戲畫面時用英文官方名稱（例如「Convene Records」），玩家在遊戲裡對得上。
+  - **原神**：祈願紀錄同樣是遊戲內開的官方網頁，應該也是網頁載入語系檔的架構，用同樣方法（開發者工具看請求、搜 bundle）找它的語系檔，就能拿到祈願、角色活動祈願等各語言官方名稱。
 - **Crowdin**：這 27 種語言由 Crowdin 管理，只寫進 repo 的話，下次 Crowdin 同步可能把 ARB 蓋回空白，要另外把翻譯匯入 Crowdin。
+- **不支援的語言會掉到南非語**：系統語言清單完全對不上 App 的語言時，Flutter 預設取 `supportedLocales` 的第一個；gen-l10n 依字母排序，加了 27 種語言後第一個變成 `af`（南非語），印尼文、印地文等使用者會看到整個 App 是南非語。`localeListResolution` 在整份清單都對不上（或清單為空）時改回傳英文，`locale_metadata_test` 用實際語言清單鎖住。原神版加語言時一樣會中，要一起改。模擬器上不容易重現：Android 會把系統語言接在 App 語言後面，只切 App 語言時 Flutter 還是會拿到系統的英文。
 - **複數**：範本（繁中）沒有複數，但只要範本把佔位符宣告成 `int`／`num`，其他語言檔可以自己寫 ICU plural，gen-l10n 會接受。英文原本的「1 pulls」「1 seconds ago」也一併改成 plural。斯拉夫語系、阿拉伯文需要 few／many 等類別；`pt` 的 `one` 包含 0，用 `=1{}` 才不會出現「0 registo」。型別是 `String` 的佔位符（例如平均間隔）不能用 plural。
 - **長字串溢出**：`phone_layout_pages_test` 的「1.3 倍字級不溢出」改成跑全部語言，並加上設定頁。一跑就抓到德文、加泰隆尼亞文、羅馬尼亞文的圖片快取「計算中」把列擠爆，以及貢獻者頁「Português (Portugal) — 翻譯者」整列過寬。前者改用 `CompactLegendRow`（數值放不下時換行靠右），後者改 `Wrap`。
 - **由右往左（阿拉伯文、希伯來文）**：Flutter 會自動鏡像 `Row`、`ListView`、`Scrollbar`、可鏡像的圖示，但寫死的 `left`／`right` 不會跟著翻。這次修掉的：
@@ -559,4 +566,4 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - **數字比例會被倒過來**：「5 / 80」「1 / 81」兩邊有空格時，雙向演算法會排成「80 / 5」；遮罩後的 UID「701••••••」會排成「••••••701」。這些文字固定 `textDirection: TextDirection.ltr`。
   - 遊戲資料文字（encore 的簡介、造型說明，只有由左往右的語言）在由右往左的介面裡，句末標點會跑到行首，固定用 `Directionality(ltr)` 包住。
   - `test/widgets/rtl_layout_test.dart` 以阿拉伯文鎖住以上行為。
-- **驗收**：手機用模擬器 `adb shell cmd locale set-app-locales <package> --locales ar` 切語言；Windows 不必操作滑鼠，直接把 `%APPDATA%\tw.reh\<app>\shared_preferences.json` 的 `flutter.pref.locale` 改成 `ar` 再啟動（改之前先備份，驗完還原）。
+- **驗收**：手機用模擬器 `adb shell cmd locale set-app-locales <package> --locales ar` 切語言；Windows 不必操作滑鼠，直接把 `%APPDATA%\tw.reh\<app>\shared_preferences.json` 的 `flutter.pref.locale` 改成 `ar` 再啟動（改之前先備份，驗完還原）。值是 BCP-47 代號，繁中是 `zh`、簡中是 `zh-Hans`；寫成 `zh_Hant` 之類無效的值會被當成不支援的語言。

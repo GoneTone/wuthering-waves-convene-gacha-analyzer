@@ -148,11 +148,15 @@ class _BareZhAsHantDelegate<T> extends LocalizationsDelegate<T> {
 /// （exact / lang+script / lang+country）就回 null 讓它處理；
 /// 否則若是 `zh-Hant-*` 或 Chinese region-only 就介入；否則若 lang-only 可匹配
 /// 也回 null（尊重偏好順序）；都不行才換下一個偏好 locale。
+/// 整份清單都對不上（或清單為空）時回傳英文。
 Locale? localeListResolution(
   List<Locale>? systemLocales,
   Iterable<Locale> supportedLocales,
 ) {
-  if (systemLocales == null || systemLocales.isEmpty) return null;
+  // Flutter 預設在完全對不上時取 supportedLocales 第一個（依字母排序是 af），改用英文。
+  const fallback = Locale('en');
+  final unmatched = supportedLocales.contains(fallback) ? fallback : null;
+  if (systemLocales == null || systemLocales.isEmpty) return unmatched;
 
   bool hasExact(Locale u) => supportedLocales.any(
     (s) =>
@@ -197,7 +201,7 @@ Locale? localeListResolution(
     }
     if (hasLang(user)) return null;
   }
-  return null;
+  return unmatched;
 }
 
 /// 將 `localeMetadataProvider` 的結果依 `nativeName` 字典序排序，
