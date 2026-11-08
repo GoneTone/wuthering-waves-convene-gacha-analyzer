@@ -458,7 +458,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **參考資料**：已確認的示意圖（12 個畫面，含直向、橫向、電腦版）在 https://claude.ai/artifact/TeMxuPicwtkHjezNCM7nsL ；設計文件是 `docs/superpowers/specs/2026-11-07-mobile-ui-ux-adjustments-design.md`，實作計畫是 `docs/superpowers/plans/2026-11-07-mobile-ui-ux-adjustments.md`。以下全部屬於通用，原神版可以直接照做。
 - **先分清楚三種版面**：`isCompactLayout` 在手機作業系統看短邊 < 600，在電腦看寬度 < 600。手機專屬的外殼規則（底部列、標題列收起、側欄社群連結、橫向卡片式紀錄）另外用 `phoneOrientationOf(context)` 判斷，只在 Android／iOS 回傳直向或橫向。電腦把視窗拉窄時仍是 compact，但外殼維持電腦版，不受這些規則影響。數字卡、圓餅則照寬度分支。
 - **外殼**：
-  - 手機直向的底部列只留「最後更新」，社群連結移到側欄最下方。側欄的社群連結不論直向或橫向都置中，外面包 `FittedBox`，窄的時候縮小、不會溢出。
+  - 手機直向的底部列只留「最後更新」，社群連結移到側欄最下方。側欄的社群連結不論直向或橫向都置中，外面包 `FittedBox`，窄的時候縮小、不會溢出。**踩雷：** 圖示按鈕寬 40、圖示 16，圖示兩側各自帶 12dp 空白，最右邊的團隊名稱是純文字沒有。整列置中時看起來左寬右窄，要在文字那端補同寬（`TeamLinksBar.iconInset`），只補在側欄，電腦版底部列靠右對齊不用補。測試要量「第一個圖示左緣到文字右緣」的中點，量整列抓不到。
   - 手機橫向不建底部列，「最後更新」改放在綜合頁與卡池頁的標題後面；沒有資料時，同一位置顯示「尚未同步」。
   - 頁首標題列要用「標題＋標籤」包成一組再撐開，分享按鈕才會留在最右邊。若標題用 `Expanded`、標籤用 `Flexible` 並排，兩者會各分一半寬度，標籤浮在中間，分享按鈕也被擠離右緣。
 - **橫向標題列往下捲收起**：
@@ -517,3 +517,16 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   | 武器活動 | 98.2% | 98.4%、98.1% | 98.3%、99.0% | 98.2%、98.8% | 98.4%、99.1% |
 
   「本次改版後」量於 7c0dd43；「追加項目後」量於 ce78d54，包含時間軸填滿寬度、捲動提示、對話框 ✕。靜止時出幀皆為 0。驗收標準 ≥ 95%，沒有退步。橫向量測時，慣性滑動有上有下，標題列的收起與展開動畫都包含在內。量測腳本的滑動座標是照直向寫的，量橫向時要把滑動改成 `input swipe 1200 900 1200 300`（往下捲）與 `1200 300 1200 900`（往上捲），並先 `wm user-rotation lock 1` 鎖定橫向，量完再 `wm user-rotation free` 並把 `accelerometer_rotation` 還原。ROG Phone 9 橫向時左側有瀏海避讓，選單按鈕在 (178, 137)。
+
+### 43. 啟動畫面與 App 內主題同步（通用，Android）
+
+- **Android 12 以上的限制**：啟動畫面一律由系統畫，只能設背景色（單一顏色）、中央圓形圖示（可加底色）、底部品牌圖（800×320px，以 4x 顯示為 200×80dp）。不能放全螢幕背景圖，品牌圖也不能依 App 語言切換。
+- **做法**：`flutter_native_splash`（只放 dev_dependencies，不進 App）讀根目錄的 `flutter_native_splash.yaml`，執行 `dart run flutter_native_splash:create` 產生 `res/` 下的 styles 與圖檔。只開 Android（`ios: false`、`web: false`）。
+  - 背景色對應主題的 `surfaceBackground`：淺色 #FAFBFD、深色 #0C1220。Flutter 範本預設是白／黑，跟 App 的深藍底不搭。
+  - Android 12 以上中央沿用啟動器的自適應圖示；Android 11 以下讀 `assets/splash/icon.png`，由 `tool/generate_app_icons.dart` 從同一張原圖裁成圓形（640px＝160dp），兩邊看起來一致。
+  - 品牌圖是英文 App 名稱（兩行），由 `tool/generate_splash_branding.py` 用 Flutter SDK 內附的 Roboto（Apache 2.0）畫成透明 PNG，淺色／深色各一張，顏色對應 `textSecondary`／`textMuted`。Dart 的 `image` 套件只能畫點陣字，所以改用 Python（PIL）。
+- **踩雷：啟動畫面讀不到 App 內的「深色／淺色」**。系統在 App 執行前就畫好，只看手機的深淺色。手機淺色、App 選深色的人，會先看到白底再跳成深藍（反之亦然），等於閃一下。
+  - 修法：Android 12（API 31）起用 `UiModeManager.setApplicationNightMode` 告訴系統這個 App 的深淺色，系統會記住，下次畫啟動畫面時就用對的顏色。Kotlin `AppThemeChannel` ＋ Dart `AppNightMode`；「跟隨系統」送 `MODE_NIGHT_AUTO`，對 App 層級來說就是不覆寫。Android 11 以下不支援，仍跟手機。
+  - **要等設定載入完才送**：設定是非同步載入的，載入前是預設的「跟隨系統」。一開機就送的話，選了深色／淺色的人會先被送一次「跟隨系統」再送正確值，多一次設定變更。`MainApp` 先 `await waitForLoad()`，再用 `listenManual(..., fireImmediately: true)` 同步並監聽之後的切換。
+  - 這個 API 會觸發 `uiMode` 設定變更；`AndroidManifest.xml` 的 `configChanges` 已含 `uiMode`，Activity 不會重建。
+  - 驗證方式：手機設深色、App 選淺色，`am force-stop` 後用 `screenrecord` 錄冷啟動，再用 ffmpeg 拆格看。
