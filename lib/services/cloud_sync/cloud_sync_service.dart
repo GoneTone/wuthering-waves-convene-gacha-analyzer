@@ -25,9 +25,9 @@ String syncFingerprint(String bundleJson) {
 Future<String> syncFingerprintInBackground(String bundleJson) =>
     Isolate.run(() => syncFingerprint(bundleJson));
 
-/// 在背景 isolate 解析雲端 bundle（例外原樣傳回呼叫端）。
-Future<AccountsBundle> _importInBackground(String json) =>
-    Isolate.run(() => importAccounts(json));
+/// 在背景 isolate 解析雲端 bundle 並算其 [syncFingerprint]（例外原樣傳回呼叫端）。
+Future<(AccountsBundle, String)> _importInBackground(String json) =>
+    Isolate.run(() => (importAccounts(json), syncFingerprint(json)));
 
 /// 一輪同步的結果。
 sealed class CloudSyncOutcome {
@@ -35,12 +35,12 @@ sealed class CloudSyncOutcome {
   const CloudSyncOutcome();
 }
 
-/// 同步成功：已上傳本機資料。
+/// 同步成功：雲端已與本機內容一致（已上傳，或內容相同而跳過上傳）。
 class CloudSyncSuccess extends CloudSyncOutcome {
   /// 建立 [CloudSyncSuccess]。
   const CloudSyncSuccess({required this.uploadedFingerprint});
 
-  /// 已上傳內容的 [syncFingerprint]，供後續變動觸發的跳過判斷。
+  /// 雲端目前內容（即本機內容）的 [syncFingerprint]，供後續變動觸發的跳過判斷。
   final String uploadedFingerprint;
 }
 
@@ -56,6 +56,7 @@ class CloudSyncSkippedSchemaTooNew extends CloudSyncOutcome {
 ///   被合併復活），上傳成功後經 [clearPendingRemovals] 清除。
 /// - 雲端檔損毀（非 JSON／外來檔）視為不存在，直接以本機內容上傳自癒。
 /// - [applyRemote] 拋出的例外（如更新進行中）原樣往外傳，由呼叫端重排。
+/// - 合併後本機內容與雲端相同（[syncFingerprint] 一致）就不上傳，省下整份同步檔的流量。
 Future<CloudSyncOutcome> runSyncRound({
   required CloudSyncRemote remote,
   required List<String> pendingRemovals,
@@ -65,11 +66,12 @@ Future<CloudSyncOutcome> runSyncRound({
 }) async {
   final sw = Stopwatch()..start();
   final remoteJson = await remote.download();
+  String? remoteFingerprint;
 
   if (remoteJson != null) {
     AccountsBundle? bundle;
     try {
-      bundle = await _importInBackground(remoteJson);
+      (bundle, remoteFingerprint) = await _importInBackground(remoteJson);
     } on UnsupportedSchemaVersionException catch (e) {
       _log.warning('skip round: remote schema v${e.version} too new');
       return const CloudSyncSkippedSchemaTooNew();
@@ -89,16 +91,17 @@ Future<CloudSyncOutcome> runSyncRound({
   }
 
   final localJson = await exportLocal();
-  await remote.upload(localJson);
+  final localFingerprint = await syncFingerprintInBackground(localJson);
+  final unchanged = localFingerprint == remoteFingerprint;
+  if (!unchanged) await remote.upload(localJson);
   await clearPendingRemovals(pendingRemovals);
   _log.info(
     'round done in ${sw.elapsedMilliseconds}ms, '
-    'remote=${remoteJson?.length ?? 0}B uploaded=${localJson.length}B '
+    'remote=${remoteJson?.length ?? 0}B '
+    'uploaded=${unchanged ? 'skipped (unchanged)' : '${localJson.length}B'} '
     'pendingRemovalsCleared=${pendingRemovals.length}',
   );
-  return CloudSyncSuccess(
-    uploadedFingerprint: await syncFingerprintInBackground(localJson),
-  );
+  return CloudSyncSuccess(uploadedFingerprint: localFingerprint);
 }
 
 /// 回傳剔除 [uids] 帳號後的新 bundle（其餘欄位不變）。

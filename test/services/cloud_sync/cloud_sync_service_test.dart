@@ -102,6 +102,29 @@ void main() {
       expect(cleared, ['999']);
     });
 
+    test('合併後本機與雲端內容相同（只差匯出時間）→ 不上傳，仍清 pendingRemovals', () async {
+      final cloud = _localJson();
+      final remote = _FakeRemote(content: cloud);
+      List<String>? cleared;
+      final outcome = await runSyncRound(
+        remote: remote,
+        pendingRemovals: const ['999'],
+        applyRemote: (_) async {},
+        exportLocal: () async => _localJson().replaceFirst(
+          '2026-07-04T00:00:00.000Z',
+          '2026-11-08T00:00:00.000Z',
+        ),
+        clearPendingRemovals: (uids) async => cleared = uids,
+      );
+      expect(remote.uploads, 0);
+      expect(remote.content, cloud);
+      expect(cleared, ['999']);
+      expect(
+        (outcome as CloudSyncSuccess).uploadedFingerprint,
+        syncFingerprint(cloud),
+      );
+    });
+
     test('pendingRemovals 剔除雲端帳號，避免剛刪的帳號復活', () async {
       final remote = _FakeRemote(
         content: _bundleJson(uids: ['100000001', '100000002']),

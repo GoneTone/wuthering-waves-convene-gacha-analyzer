@@ -459,6 +459,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 例外會原樣傳回呼叫端，原本的 `on FormatException` 等分支不用改。
 - **效果**（電腦，真實資料 4 MB，同步期間每 4 ms 排一次計時器量主 isolate 最長停頓）：約 150 ms → 約 8 ms。
 - **還沒處理**：把雲端資料合併回本機（`importBundleForCloudSync`）仍在主 isolate，要動到 repository 狀態，沒有一起移。
+- **流量**：原本每輪不管內容有沒有變，都整份下載＋整份上傳（4 MB 的同步檔，手機每開一次 App 約用 8 MB）。現在解析雲端檔時順便算它的指紋，合併後本機指紋一樣就不上傳，log 會寫 `uploaded=skipped (unchanged)`。實測電腦版連開兩次：第二次跳過上傳，一輪從約 5 秒降到約 2.3 秒。指紋包含「目前選中的帳號」、帳號順序與別名，所以在不同裝置之間切換使用時，第一次還是會上傳。下載仍然每輪都要（想省要改成先比對 Drive 檔案的 `md5Checksum`，這次沒做）。
 
 ---
 
