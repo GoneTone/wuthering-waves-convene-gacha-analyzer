@@ -197,7 +197,7 @@
   "timelineMonthLabel": "{month} / {year}",
   "timelineScrollLeft": "Desplaça a l'esquerra",
   "timelineScrollRight": "Desplaça a la dreta",
-  "timelineLoadMore": "Carrega'n més (en queden {n})",
+  "timelineLoadMore": "{n, plural, =1{Carrega'n més (en queda 1)} other{Carrega'n més (en queden {n})}}",
   "filterRarityAll": "Totes les rareses",
   "filterRarityRankOnly": "Només {star}",
   "filterKindAll": "Tots els tipus",

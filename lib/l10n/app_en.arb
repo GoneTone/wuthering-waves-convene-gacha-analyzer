@@ -358,7 +358,7 @@
   "settingsDataLanguageUnset": "Not set (no conversion)",
   "settingsDataLanguageUnify": "Convert data language now",
   "settingsDataLanguageUnifying": "Converting...",
-  "settingsDataLanguageUnifyDone": "Converted {converted}, recovered {backfilled} IDs, {unresolved} could not be converted.",
+  "settingsDataLanguageUnifyDone": "Converted {converted}, recovered {backfilled, plural, =1{1 ID} other{{backfilled} IDs}}, {unresolved} could not be converted.",
   "@settingsDataLanguageUnifyDone": {
     "placeholders": {
       "converted": {
@@ -779,7 +779,7 @@
     }
   },
   "settingsImportConfirmTitle": "Import confirmation",
-  "settingsImportConfirmIntro": "About to import {accounts} accounts ({records} records total):",
+  "settingsImportConfirmIntro": "{accounts, plural, =1{About to import 1 account} other{About to import {accounts} accounts}} ({records, plural, =1{1 record} other{{records} records}} total):",
   "@settingsImportConfirmIntro": {
     "placeholders": {
       "accounts": {

@@ -262,7 +262,7 @@
   "settingsExportFailed": "Uitvoer het misluk: {error}",
   "settingsExportSuccess": "Uitgevoer na {path}",
   "settingsImportConfirmTitle": "Bevestig invoer",
-  "settingsImportConfirmIntro": "{accounts, plural, one{Gaan {accounts} rekening invoer} other{Gaan {accounts} rekeninge invoer}} ({records} rekords in totaal):",
+  "settingsImportConfirmIntro": "{accounts, plural, one{Gaan {accounts} rekening invoer} other{Gaan {accounts} rekeninge invoer}} ({records, plural, =1{1 rekord} other{{records} rekords}} in totaal):",
   "settingsImportConfirmMergeHeader": "Die volgende rekeninge sal met plaaslike data saamgevoeg word; bestaande rekords sal nie geskrap word nie:",
   "settingsImportConfirmNoConflict": "Geen datakonflikte nie.",
   "settingsImportConfirmPreserveFooter": "Ander bestaande rekeninge ({uids}) sal behou word.",
