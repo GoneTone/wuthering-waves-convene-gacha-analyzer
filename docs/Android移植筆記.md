@@ -425,7 +425,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 ---
 
-## 十一、滑動流暢度
+## 十一、流暢度與畫面停住
 
 ### 41. 165Hz 手機上的「頓頓的」（通用）
 
@@ -449,7 +449,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
   靜止時出幀：修正前，有紀錄的卡池頁全部持續約 165fps；修正後只剩正處於「快保底」的頁面（設計上的動畫），其餘為 0。
 
-### 46. 雲端同步讓畫面停住（通用，桌面也適用）
+### 42. 雲端同步讓畫面停住（通用，桌面也適用）
 
 - **現象**：每次開 App 都會自動同步一輪，資料變動後 5 秒也會檢查一次。同步檔是全部帳號的 JSON，三個帳號約 4 MB。
 - **根因**：一輪同步的「解析雲端檔」「把本機資料轉成 JSON」「算內容指紋（解析＋重新轉 JSON＋SHA-256）」都在主 isolate 上一次做完，電腦上分別約 145、30、55 ms，手機更慢。下載、上傳是在等網路，不會卡。
@@ -478,9 +478,10 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **最終實機結果**（開 App 後主 isolate 最長停頓）：情境 A 約 5 ms，情境 B 約 10 ms（修正前 387 ms＋43 ms＋11 ms 等多段）。
 
 
-### 47. 轉換語言、匯入匯出、寫檔讓畫面停住（通用，桌面也適用）
+### 43. 轉換語言、匯入匯出、寫檔讓畫面停住（通用，桌面也適用）
 
-- **量法補充：只看時間軸會漏算**。有些主 isolate 上的工作沒有被時間軸事件框住（轉換資料語言就是），時間軸上最長只看到約 9 ms，CPU 取樣卻顯示寫檔佔了約 39 ms。改用「把連續的 CPU 取樣串成忙碌時段」來算停頓（取樣間隔 0.5 ms，間隔小於 1.5 ms 視為連續），用同一方法重查 #46 的同步量測，結論不變。量測不必重開 App：以 `--ez enable-dart-profiling true` 正常啟動，等開 App 同步跑完再連 VM Service 開始錄，同時用 `adb shell input tap`／`settings put system user_rotation` 操作畫面。手機的自動旋轉設定量完要還原。
+- **量法補充：只看時間軸會漏算**。有些主 isolate 上的工作沒有被時間軸事件框住（轉換資料語言就是），時間軸上最長只看到約 9 ms，CPU 取樣卻顯示寫檔佔了約 39 ms。改用「把連續的 CPU 取樣串成忙碌時段」來算停頓（取樣間隔 0.5 ms，間隔小於 1.5 ms 視為連續），用同一方法重查 #42 的同步量測，結論不變。量測不必重開 App：以 `--ez enable-dart-profiling true` 正常啟動，等開 App 同步跑完再連 VM Service 開始錄，同時用 `adb shell input tap`／`settings put system user_rotation` 操作畫面。手機的自動旋轉設定量完要還原。
+- **量測工具 `tool/measure_ui_stalls.py`**（需 `pip install websockets`；手機和模擬器同時連著時先設 `ANDROID_SERIAL`）：`record` 清空緩衝區、依動作檔操作畫面後抓回資料（`--fresh` 先以分析模式重開 App），`dump` 不清緩衝區直接抓回目前資料，`bursts` 列出最長的連續忙碌時段與當時的 App 函式。`vmTag=VM` 佔絕大多數的時段會標註出來：那通常是 VM 在處理量測請求本身（例如 `dump` 錄到前一次抓取的序列化），不是 App 的停頓。
 - **實測（ROG Phone 9，profile 版）**
 
   | 操作 | 主 isolate 連續忙碌 | 主因 |
@@ -496,13 +497,16 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 設定頁匯出：改用與雲端同步共用的 `exportAccountsBytesInBackground`（背景讀記錄檔、編 JSON 與 UTF-8）。匯入：`importAccountsInBackground` 在背景解析；背景 isolate 的 log 會不見，失敗的 log 改由設定頁的錯誤分支記錄。
   - **不做頁面統計快取**：轉向時 `computeGachaStats` 只出現在約 1 個取樣（約 0.5 ms），主要成本是排版，而且發生在系統轉向動畫期間。
 - **坑：流程太快結束，進度對話框留下空白框**。外層在進度出現時 `showDialog`，對話框要到下一幀才建構、才開始 `listen` 進度；流程若在那之前就把進度清空（轉換語言改成免寫檔後就會），對話框收不到清空事件，留下一個只有資訊圖示、沒有文字、關不掉的空白框。修法：對話框第一次建構後檢查一次，進度已是 null 就自己關。**只能檢查第一次**：若每次重建都檢查，Android 記錄存取流程（取消更新後推設定頁）會在設定頁推上來後被誤關，`android_log_wait_test` 有鎖。
-- **widget 測試**：背景 isolate 的結果要真實時間才回來，假時間的 `pumpAndSettle` 等不到。共用 `test/helpers/wait_until.dart` 的 `pumpUntil(tester, cond)`：每輪 `runAsync` 讓背景跑一下再 `pump`，條件成立或 5 秒為止。
+- **測試裡等非同步結果，要等到條件成立，不要賭時間或圈數**（共用 `test/helpers/wait_until.dart`）：
+  - widget 測試：背景 isolate 的結果要真實時間才回來，假時間的 `pumpAndSettle` 等不到。用 `pumpUntil(tester, cond)`：每輪 `runAsync` 讓背景跑一下再 `pump`，條件成立或 5 秒為止。
+  - 一般非同步測試：用 `waitUntil(cond)`，以實際時間（5 秒）為上限。原本是「空轉 1000 輪」，被測程式有真正的檔案 I/O 時，整套測試平行跑、機器忙，1000 輪可能在 I/O 回來前就跑完，偶發失敗（`fallback recapture also races the client log`）。
+  - 等 repository 從磁碟載入帳號：用 `waitForBootstrap()`，不要 `Future.delayed(50ms)`。固定延遲在快的機器上永遠會過，CI 忙時才偶爾失敗，最難查。部分純 state 測試仍有 `delay(50ms)`，CI 偶發失敗時先往這裡查。
 - **提交前的檢查要真的擋住失敗**：`flutter test | tail -1` 的結束碼永遠是 0，串在 `&&` 後面擋不住失敗的測試。要檢查輸出含 `All tests passed` 才提交（這次就因此誤提交過一次）。
 
-### 48. 更新紀錄（等待擷取、下載卡池）讓畫面停住（通用，桌面也適用）
+### 44. 更新紀錄（等待擷取、下載卡池）讓畫面停住（通用，桌面也適用）
 
-- **量法**：要人開遊戲，無法用 `adb` 腳本操作。先以分析模式開 App、清空緩衝區開始錄，由使用者按「更新紀錄」、開遊戲進喚取記錄頁；完成後**不必等固定錄製時間結束**，另外連上 VM Service、不清緩衝區直接抓 `getCpuSamples`／`getVMTimeline` 即可。
-- **實測（ROG Phone 9，profile 版，新增 0 筆）**：修正前，主 isolate 超過 8 ms 的停頓約 80 段，最長 72.8 ms；修正後剩 3 段，最長 14.2 ms（更新後重讀語言對照表 `LangCatalogStorage.load`，未處理）。
+- **量法**：要人開遊戲，無法用 `adb` 腳本操作。先以分析模式開 App、清空緩衝區開始錄，由使用者按「更新紀錄」、開遊戲進喚取記錄頁；完成後**不必等固定錄製時間結束**，用 `tool/measure_ui_stalls.py dump` 不清緩衝區直接抓即可。
+- **實測（ROG Phone 9，profile 版，新增 0 筆）**：修正前，主 isolate 超過 8 ms 的停頓 99 段，最長 72.8 ms；修正後剩 3 段，最長 14.2 ms（更新後重讀語言對照表 `LangCatalogStorage.load`，未處理）。
   - **等待擷取**：每秒輪詢 Client.log 增量，解碼都在主 isolate。約六成時間花在 `Uint8List.fromList([...carry, ...decode])`：spread 逐位元組裝進可成長的 `List<int>`，非常慢。其餘是 XOR 解碼、UTF-8 解碼與網址比對。
   - **下載卡池**：總覽頁、卡池頁 `ref.watch(gachaRepositoryProvider)` 訂閱整個狀態，每換一池更新一次 `progress`，就整頁重算統計與時間軸，約每秒一次、每次 10～25 ms。
 - **處理**
@@ -512,19 +516,19 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 剩下的 14.2 ms 是開 App 後第一次讀語言對照表（之後走 `LangCatalogService` 的 memo）：`LangCatalogStorage.load` 改在背景 isolate 讀檔並解析 JSON。
 - **未量**：沒有實測新增大量紀錄的情況（需要實際抽卡）。抓完那一次的重算成本會隨紀錄數增加。
 
-### 49. 打開設定頁卡一下（通用，桌面也適用）
+### 45. 打開設定頁卡一下（通用，桌面也適用）
 
 - **實測（ROG Phone 9，profile 版，開 App 後第一次打開）**：主 isolate 連續忙碌 53 ms，其中 LAYOUT 28 ms，大多是引擎原生的文字排版，Dart 堆疊只看到 `_LocaleDropdown`。
 - **原因**：`DropdownButton` 即使 `isExpanded: true`，也會把所有選項放進 `IndexedStack`，而 `IndexedStack` 會排版每個子項。介面語言選單有 32 個選項，各用自己的文字書寫，資料語言選單也有日、韓、泰文；每次打開設定頁都要全部排版，第一次還要載入多種文字的系統字型。
 - **處理**：`selectedItemBuilder` 改用 `_onlySelectedLabel`，只有已選項目放文字，其餘放 `SizedBox.shrink()`；展開後的清單仍由 `items` 顯示全部名稱。兩個 setter 都先同步改狀態再存檔，選完後外層與表單在同一幀重建，按鈕不會閃空白。`settings_locale_dropdown_test` 鎖住收合時不建構其他語言名稱。
 - **結果**：最長 53 → 43 ms（LAYOUT 28 → 17 ms），其餘幾段 15～22 → 約 9 ms。
-- **沒做**：剩下的是整頁一次建構與排版（`SingleChildScrollView`），且大多是原生文字排版，對不到特定區塊。改成按需建構的清單，捲出畫面的區塊會被銷毀，進行中的同步、匯入、轉換等忙碌狀態會遺失，風險大於收益。
-- **量測坑：腳本盲點座標會點到別的 App**。第一次量測時，選單沒打開；腳本接著按「返回」，直接退出 App，後續點擊落在桌面，打開了別的 App。量測腳本 `attach.py` 已改為每次 `input` 前都檢查前景是不是本 App（`dumpsys activity activities` 的 `topResumedActivity`），不是就中止。開選單這類前置步驟先手動執行、截圖確認，再開始錄。
+- **沒做**：剩下的是整頁一次建構與排版（`SingleChildScrollView`），取樣大多是原生文字排版，對不到特定區塊。改成按需建構的清單，捲出畫面的區塊會被銷毀；有進行中狀態的區塊（同步、匯入、轉換的忙碌狀態等）要逐一加 `AutomaticKeepAliveClientMixin`（第 41 條的做法），改動面大，收益又不確定。
+- **量測坑：腳本盲點座標會點到別的 App**。第一次量測時，選單沒打開；腳本接著按「返回」，直接退出 App，後續點擊落在桌面，打開了別的 App。`tool/measure_ui_stalls.py` 在每次 `input` 前都檢查前景是不是本 App（`dumpsys activity activities` 的 `topResumedActivity`），不是就中止。開選單這類前置步驟先手動執行、截圖確認，再開始錄。
 ---
 
 ## 十二、手機版 UI/UX 調整
 
-### 42. 手機直向、橫向與電腦版的版面規則（通用）
+### 46. 手機直向、橫向與電腦版的版面規則（通用）
 
 - **參考資料**：已確認的示意圖（12 個畫面，含直向、橫向、電腦版）在 https://claude.ai/artifact/TeMxuPicwtkHjezNCM7nsL ；設計文件是 `docs/superpowers/specs/2026-11-07-mobile-ui-ux-adjustments-design.md`，實作計畫是 `docs/superpowers/plans/2026-11-07-mobile-ui-ux-adjustments.md`。以下全部屬於通用，原神版可以直接照做。
 - **先分清楚三種版面**：`isCompactLayout` 在手機作業系統看短邊 < 600，在電腦看寬度 < 600。手機專屬的外殼規則（底部列、標題列收起、側欄社群連結、橫向卡片式紀錄）另外用 `phoneOrientationOf(context)` 判斷，只在 Android／iOS 回傳直向或橫向。電腦把視窗拉窄時仍是 compact，但外殼維持電腦版，不受這些規則影響。數字卡、圓餅則照寬度分支。
@@ -589,7 +593,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
   「本次改版後」量於 7c0dd43；「追加項目後」量於 ce78d54，包含時間軸填滿寬度、捲動提示、對話框 ✕。靜止時出幀皆為 0。驗收標準 ≥ 95%，沒有退步。橫向量測時，慣性滑動有上有下，標題列的收起與展開動畫都包含在內。量測腳本的滑動座標是照直向寫的，量橫向時要把滑動改成 `input swipe 1200 900 1200 300`（往下捲）與 `1200 300 1200 900`（往上捲），並先 `wm user-rotation lock 1` 鎖定橫向，量完再 `wm user-rotation free` 並把 `accelerometer_rotation` 還原。ROG Phone 9 橫向時左側有瀏海避讓，選單按鈕在 (178, 137)。
 
-### 43. 啟動畫面與 App 內主題同步（通用，Android）
+### 47. 啟動畫面與 App 內主題同步（通用，Android）
 
 - **Android 12 以上的限制**：啟動畫面一律由系統畫，只能設背景色（單一顏色）、中央圓形圖示（可加底色）、底部品牌圖（800×320px，以 4x 顯示為 200×80dp）。不能放全螢幕背景圖，品牌圖也不能依 App 語言切換。
 - **做法**：`flutter_native_splash`（只放 dev_dependencies，不進 App）讀根目錄的 `flutter_native_splash.yaml`，執行 `dart run flutter_native_splash:create` 產生 `res/` 下的 styles 與圖檔。只開 Android（`ios: false`、`web: false`）。
@@ -597,12 +601,12 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - Android 12 以上中央沿用啟動器的自適應圖示；Android 11 以下讀 `assets/splash/icon.png`，由 `tool/generate_app_icons.dart` 從同一張原圖裁成圓形（640px＝160dp），兩邊看起來一致。
   - 品牌圖是英文 App 名稱（兩行），由 `tool/generate_splash_branding.py` 用 Flutter SDK 內附的 Roboto（Apache 2.0）畫成透明 PNG，淺色／深色各一張，顏色對應 `textSecondary`／`textMuted`。Dart 的 `image` 套件只能畫點陣字，所以改用 Python（PIL）。
 - **踩雷：啟動畫面讀不到 App 內的「深色／淺色」**。系統在 App 執行前就畫好，只看手機的深淺色。手機淺色、App 選深色的人，會先看到白底再跳成深藍（反之亦然），等於閃一下。
-  - 修法：Android 12（API 31）起用 `UiModeManager.setApplicationNightMode` 告訴系統這個 App 的深淺色，系統會記住，下次畫啟動畫面時就用對的顏色。Kotlin `AppPrefsChannel` ＋ Dart `AppPrefsPlatform`（與 #44 的語言同步共用同一個 channel）；「跟隨系統」送 `MODE_NIGHT_AUTO`，對 App 層級來說就是不覆寫。Android 11 以下不支援，仍跟手機。
+  - 修法：Android 12（API 31）起用 `UiModeManager.setApplicationNightMode` 告訴系統這個 App 的深淺色，系統會記住，下次畫啟動畫面時就用對的顏色。Kotlin `AppPrefsChannel` ＋ Dart `AppPrefsPlatform`（與 #48 的語言同步共用同一個 channel）；「跟隨系統」送 `MODE_NIGHT_AUTO`，對 App 層級來說就是不覆寫。Android 11 以下不支援，仍跟手機。
   - **要等設定載入完才送**：設定是非同步載入的，載入前是預設的「跟隨系統」。一開機就送的話，選了深色／淺色的人會先被送一次「跟隨系統」再送正確值，多一次設定變更。`AndroidAppPrefsSync.start()`（由 `MainApp` 在 Android 上呼叫）先 `await waitForLoad()`，再用 `listen(..., fireImmediately: true)` 同步並監聽之後的切換。
   - 這個 API 會觸發 `uiMode` 設定變更；`AndroidManifest.xml` 的 `configChanges` 已含 `uiMode`，Activity 不會重建。
   - 驗證方式：手機設深色、App 選淺色，`am force-stop` 後用 `screenrecord` 錄冷啟動，再用 ffmpeg 拆格看。
 
-### 44. 系統設定「應用程式語言」與 App 內語言雙向同步（通用，Android 13+）
+### 48. 系統設定「應用程式語言」與 App 內語言雙向同步（通用，Android 13+）
 
 - **為什麼系統清單裡沒有這個 App**：Android 13 起，系統設定的「應用程式語言」只列出在 `<application>` 宣告 `android:localeConfig` 的 App。Flutter 範本沒有這個宣告。
 - **清單只列 App 已開放的語言**：`res/xml/locales_config.xml` 是寫死的，App 內則是翻譯釋出後才開放（`releasedLocalesProvider`）。全部 ARB 都列進去的話，系統清單會出現 App 自己不開放的語言。`test/l10n/android_locales_config_test.dart` 比對兩邊，新語言釋出時會失敗並印出該貼進 XML 的內容，CI 會擋下來。Android 14 起另有 `LocaleManager.setOverrideLocaleConfig` 可在執行時更新清單，目前沒用。
@@ -616,7 +620,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 ## 十三、多國語言
 
-### 45. 一次補齊 27 種語言與由右往左的版面（通用）
+### 49. 一次補齊 27 種語言與由右往左的版面（通用）
 
 - **翻譯流程**：子代理平行翻譯（每個負責 3 種語言），共用一份說明（英文為來源、繁中 ARB 的 `@` 說明當語境、`docs/術語表.md`），每個檔用檢查腳本確認：key 齊全、佔位符與 ICU 參數名稱不變、沒有殘留中日文、翻譯者欄位固定為 `<a href="https://claude.com/claude-code">Claude Code</a>`。全部回來後再跑 gen-l10n、analyze、完整測試。繁中、簡中是原始語言，翻譯者欄位保持空白（`locale_metadata_test` 鎖住），不要加 Claude Code。
 - **遊戲用語要照官方**：AI 翻譯在遊戲有官方版本的語言會自己猜卡池名稱（法文、西文、葡文、泰文一開始 12 個全錯）。卡池名稱逐字照抄（只修明顯錯字），全檔的「喚取」「共鳴者」「喚取記錄」、表格的「喚取時間」也統一成官方說法，並整理進 `docs/術語表.md`。
