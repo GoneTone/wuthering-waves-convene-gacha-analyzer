@@ -293,6 +293,29 @@ void main() {
     expect(uids, contains('100000001'));
   });
 
+  test('同步自身的合併不觸發 5 秒後的變動檢查（那輪已比對過指紋）', () async {
+    final messages = <String>[];
+    final sub = Logger.root.onRecord.listen((r) {
+      if (r.loggerName == 'cloudsync.sync') messages.add(r.message);
+    });
+    addTearDown(sub.cancel);
+
+    remote.content = _cloudBundleJsonWithRecord('100000001');
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    final notifier = container.read(cloudSyncProvider.notifier);
+    notifier.debounceDelay = const Duration(milliseconds: 10);
+    await notifier.link();
+    expect(
+      container.read(gachaRepositoryProvider).byUid.keys,
+      contains('100000001'),
+    );
+
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    expect(messages.where((m) => m.startsWith('dataChange check')), isEmpty);
+  });
+
   test('雲端 schema 過新 → error(schemaTooNew)、不上傳', () async {
     final map =
         jsonDecode(_cloudBundleJson('100000001')) as Map<String, dynamic>;

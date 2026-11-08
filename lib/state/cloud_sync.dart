@@ -125,6 +125,9 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
   /// 資料變動觸發的 debounce timer。
   Timer? _debounce;
 
+  /// 同步輪正在把雲端資料合併進本機；這段的本機變動不排變動檢查（該輪合併後會自己比對指紋）。
+  bool _applyingRemote = false;
+
   /// 單飛鎖：一輪同步進行中。
   bool _syncing = false;
 
@@ -321,9 +324,14 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
         remote: ref.read(cloudSyncRemoteFactoryProvider)(_client!),
         pendingRemovals: pending,
         applyRemote: (bundle) async {
-          mergeResult = await ref
-              .read(gachaRepositoryProvider.notifier)
-              .importBundleForCloudSync(bundle);
+          _applyingRemote = true;
+          try {
+            mergeResult = await ref
+                .read(gachaRepositoryProvider.notifier)
+                .importBundleForCloudSync(bundle);
+          } finally {
+            _applyingRemote = false;
+          }
         },
         exportLocal: _exportLocal,
         clearPendingRemovals: (uids) => ref
@@ -433,6 +441,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
     if (state.phase == CloudSyncPhase.reauthRequired) return;
     if (!ref.read(settingsProvider).cloudAutoSyncEnabled) return;
     if (ref.read(gachaRepositoryProvider).isBootstrapping) return;
+    if (_applyingRemote) return;
     _scheduleDebounced();
   }
 
@@ -446,7 +455,10 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
         await _exportLocal(),
       );
       if (!ref.mounted || !_linked) return;
-      if (fingerprint == _lastFingerprint) return;
+      if (fingerprint == _lastFingerprint) {
+        _log.info('dataChange check: fingerprint unchanged, round skipped');
+        return;
+      }
       unawaited(syncNow(manual: false, trigger: 'dataChange'));
     });
   }

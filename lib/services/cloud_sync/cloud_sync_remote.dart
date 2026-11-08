@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:googleapis/drive/v3.dart' as drive;
@@ -6,6 +7,16 @@ import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
+
+/// 在背景 isolate 做 UTF-8 解碼：數 MB 的同步檔在主 isolate 實機量到約 30ms（掉好幾格）。
+///
+/// 寫成 top-level 讓閉包只抓參數，不會把 Drive client 等無法跨 isolate 的物件帶進去。
+Future<String> _decodeInBackground(Uint8List bytes) =>
+    Isolate.run(() => utf8.decode(bytes));
+
+/// 在背景 isolate 做 UTF-8 編碼（理由同 [_decodeInBackground]）。
+Future<Uint8List> _encodeInBackground(String text) =>
+    Isolate.run(() => utf8.encode(text));
 
 /// 雲端同步檔的遠端存取介面；抽象化以便測試注入 fake。
 abstract class CloudSyncRemote {
@@ -63,13 +74,13 @@ class DriveSyncRemote implements CloudSyncRemote {
       bytes.add(chunk);
     }
     _log.info('download: ${bytes.length} bytes');
-    return utf8.decode(bytes.takeBytes());
+    return _decodeInBackground(bytes.takeBytes());
   }
 
   /// 上傳（覆蓋）appDataFolder 內的同步檔；無檔時建立、有檔時更新。
   @override
   Future<void> upload(String json) async {
-    final data = utf8.encode(json);
+    final data = await _encodeInBackground(json);
     final media = drive.Media(Stream.value(data), data.length);
     final id = await _findFileId();
     if (id == null) {
