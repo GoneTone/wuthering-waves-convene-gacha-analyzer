@@ -72,7 +72,7 @@ void main() {
         remote: remote,
         pendingRemovals: const [],
         applyRemote: (_) async => applied = true,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (_) async {},
       );
       expect(applied, isFalse);
@@ -93,7 +93,7 @@ void main() {
         remote: remote,
         pendingRemovals: const ['999'],
         applyRemote: (b) async => appliedBundle = b,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (uids) async => cleared = uids,
       );
       expect(appliedBundle, isNotNull);
@@ -111,7 +111,7 @@ void main() {
         remote: remote,
         pendingRemovals: const ['100000001'],
         applyRemote: (b) async => appliedBundle = b,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (_) async {},
       );
       expect(appliedBundle!.accounts.map((a) => a.data.playerId), [
@@ -126,7 +126,7 @@ void main() {
         remote: remote,
         pendingRemovals: const ['100000001'],
         applyRemote: (_) async => applied = true,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (_) async {},
       );
       expect(applied, isFalse);
@@ -143,7 +143,7 @@ void main() {
         remote: remote,
         pendingRemovals: const ['999'],
         applyRemote: (_) async => applied = true,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (_) async => cleared = true,
       );
       expect(outcome, isA<CloudSyncSkippedSchemaTooNew>());
@@ -159,7 +159,7 @@ void main() {
         remote: remote,
         pendingRemovals: const [],
         applyRemote: (_) async => applied = true,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (_) async {},
       );
       expect(applied, isFalse);

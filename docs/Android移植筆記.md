@@ -449,6 +449,17 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
   靜止時出幀：修正前，有紀錄的卡池頁全部持續約 165fps；修正後只剩正處於「快保底」的頁面（設計上的動畫），其餘為 0。
 
+### 46. 雲端同步讓畫面停住（通用，桌面也適用）
+
+- **現象**：每次開 App 都會自動同步一輪，資料變動後 5 秒也會檢查一次。同步檔是全部帳號的 JSON，三個帳號約 4 MB。
+- **根因**：一輪同步的「解析雲端檔」「把本機資料轉成 JSON」「算內容指紋（解析＋重新轉 JSON＋SHA-256）」都在主 isolate 上一次做完，電腦上分別約 145、30、55 ms，手機更慢。下載、上傳是在等網路，不會卡。
+- **處理**：這三步改用 `Isolate.run` 在背景做（`cloud_sync_service.dart` 的 `_importInBackground`、`syncFingerprintInBackground`，`state/cloud_sync.dart` 的 `_exportInBackground`），`runSyncRound` 的 `exportLocal` 改成回傳 `Future<String>`。
+  - 送進 `Isolate.run` 的閉包要寫在 top-level 函式裡、只抓參數：在 notifier 的方法裡直接寫閉包，可能把整個 notifier（含 `Timer` 等不能跨 isolate 傳的物件）一起帶過去而出錯。
+  - 背景 isolate 裡的 `Logger` 沒有接到 App 的 log 輸出，訊息會不見；需要記錄的錯誤要丟回主 isolate 再記（現有的雲端檔損毀／版本過新本來就在主 isolate 記錄）。
+  - 例外會原樣傳回呼叫端，原本的 `on FormatException` 等分支不用改。
+- **效果**（電腦，真實資料 4 MB，同步期間每 4 ms 排一次計時器量主 isolate 最長停頓）：約 150 ms → 約 8 ms。
+- **還沒處理**：把雲端資料合併回本機（`importBundleForCloudSync`）仍在主 isolate，要動到 repository 狀態，沒有一起移。
+
 ---
 
 ## 十二、手機版 UI/UX 調整

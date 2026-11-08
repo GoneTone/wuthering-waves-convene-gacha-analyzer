@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:crypto/crypto.dart';
 import 'package:logging/logging.dart';
@@ -19,6 +20,14 @@ String syncFingerprint(String bundleJson) {
   )..remove('exported_at');
   return sha256.convert(utf8.encode(jsonEncode(map))).toString();
 }
+
+/// 在背景 isolate 算 [syncFingerprint]：同步檔有數 MB，在主 isolate 算會卡住畫面。
+Future<String> syncFingerprintInBackground(String bundleJson) =>
+    Isolate.run(() => syncFingerprint(bundleJson));
+
+/// 在背景 isolate 解析雲端 bundle（例外原樣傳回呼叫端）。
+Future<AccountsBundle> _importInBackground(String json) =>
+    Isolate.run(() => importAccounts(json));
 
 /// 一輪同步的結果。
 sealed class CloudSyncOutcome {
@@ -51,7 +60,7 @@ Future<CloudSyncOutcome> runSyncRound({
   required CloudSyncRemote remote,
   required List<String> pendingRemovals,
   required Future<void> Function(AccountsBundle bundle) applyRemote,
-  required String Function() exportLocal,
+  required Future<String> Function() exportLocal,
   required Future<void> Function(List<String> uids) clearPendingRemovals,
 }) async {
   final sw = Stopwatch()..start();
@@ -60,7 +69,7 @@ Future<CloudSyncOutcome> runSyncRound({
   if (remoteJson != null) {
     AccountsBundle? bundle;
     try {
-      bundle = importAccounts(remoteJson);
+      bundle = await _importInBackground(remoteJson);
     } on UnsupportedSchemaVersionException catch (e) {
       _log.warning('skip round: remote schema v${e.version} too new');
       return const CloudSyncSkippedSchemaTooNew();
@@ -79,7 +88,7 @@ Future<CloudSyncOutcome> runSyncRound({
     }
   }
 
-  final localJson = exportLocal();
+  final localJson = await exportLocal();
   await remote.upload(localJson);
   await clearPendingRemovals(pendingRemovals);
   _log.info(
@@ -87,7 +96,9 @@ Future<CloudSyncOutcome> runSyncRound({
     'remote=${remoteJson?.length ?? 0}B uploaded=${localJson.length}B '
     'pendingRemovalsCleared=${pendingRemovals.length}',
   );
-  return CloudSyncSuccess(uploadedFingerprint: syncFingerprint(localJson));
+  return CloudSyncSuccess(
+    uploadedFingerprint: await syncFingerprintInBackground(localJson),
+  );
 }
 
 /// 回傳剔除 [uids] 帳號後的新 bundle（其餘欄位不變）。
