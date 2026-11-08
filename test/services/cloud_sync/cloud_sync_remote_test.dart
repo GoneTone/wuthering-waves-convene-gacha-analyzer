@@ -59,4 +59,40 @@ void main() {
       expect(isInsufficientScope(error), isTrue);
     });
   });
+
+  group('putDriveMedia', () {
+    test('以 PATCH uploadType=media 送出原始 UTF-8 位元組（不做 Base64）', () async {
+      late http.Request seen;
+      final client = MockClient((req) async {
+        seen = req;
+        return http.Response('{}', 200);
+      });
+      const content = '{"名稱":"值"}';
+      final sent = await putDriveMedia(client, 'file-1', 'tok', content);
+      expect(sent, utf8.encode(content).length);
+      expect(seen.method, 'PATCH');
+      expect(seen.url.path, '/upload/drive/v3/files/file-1');
+      expect(seen.url.queryParameters['uploadType'], 'media');
+      expect(seen.headers['Authorization'], 'Bearer tok');
+      expect(seen.bodyBytes, utf8.encode(content));
+    });
+
+    test('權杖失效（www-authenticate）→ 與下載相同的例外，既有判斷認得出來', () async {
+      final client = MockClient(
+        (_) async => http.Response(
+          '',
+          401,
+          headers: {'www-authenticate': 'Bearer error="invalid_token"'},
+        ),
+      );
+      final error = await putDriveMedia(
+        client,
+        'f',
+        't',
+        '{}',
+      ).then<Object?>((_) => null, onError: (Object e) => e);
+      expect(error, isA<AccessDeniedException>());
+      expect(isInvalidToken(error!), isTrue);
+    });
+  });
 }

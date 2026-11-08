@@ -102,6 +102,38 @@ void main() {
       expect(cleared, ['999']);
     });
 
+    test('紀錄全相同、只差目前選中的帳號 → 不合併，但仍上傳', () async {
+      final remote = _FakeRemote(
+        content: _bundleJson(uids: ['100000001', '100000002']),
+      );
+      var applied = false;
+      await runSyncRound(
+        remote: remote,
+        pendingRemovals: const [],
+        applyRemote: (_) async => applied = true,
+        // 帳號順序相反 → last_active_uid 不同，各帳號內容相同。
+        exportLocal: () async => _bundleJson(uids: ['100000002', '100000001']),
+        clearPendingRemovals: (_) async {},
+      );
+      expect(applied, isFalse);
+      expect(remote.uploads, 1);
+    });
+
+    test('只有部分帳號與本機相同 → 只合併不同的帳號', () async {
+      final remote = _FakeRemote(
+        content: _bundleJson(uids: ['100000001', '100000002']),
+      );
+      AccountsBundle? applied;
+      await runSyncRound(
+        remote: remote,
+        pendingRemovals: const [],
+        applyRemote: (b) async => applied = b,
+        exportLocal: () async => _bundleJson(uids: ['100000001']),
+        clearPendingRemovals: (_) async {},
+      );
+      expect(applied!.accounts.map((a) => a.data.playerId), ['100000002']);
+    });
+
     test('合併前本機就與雲端相同 → 不合併也不上傳', () async {
       final remote = _FakeRemote(content: _localJson());
       var applied = false;
