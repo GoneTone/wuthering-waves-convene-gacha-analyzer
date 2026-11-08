@@ -36,7 +36,7 @@ The utility may trigger anti-virus software during installation and execution. T
 
 1. Launch Wuthering Waves (don't open the convene record page yet).
 2. Open this utility and press *Update*. The utility will start a local interception helper (a one-time UAC administrator prompt will appear — click Yes) and wait for the request.
-3. Switch back to the game and open *Convene → Convene History* to view the convene record page.
+3. Switch back to the game and open *Convene → Convene Records* to view the convene record page.
 4. Once captured, the utility automatically stops the interception, restores your network state, and starts fetching your data. To update again later, just repeat step 2 — the captured URL will be reused if still valid.
 
 ## Features

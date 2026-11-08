@@ -139,12 +139,12 @@
   "statsItemTypeDistribution": "タイプ分布",
   "statsNoData": "データがありません",
   "kindUnknown": "不明",
-  "kindCharacter": "キャラクター",
+  "kindCharacter": "共鳴者",
   "kindWeapon": "武器",
   "kindItem": "アイテム",
-  "tableTime": "日時",
-  "tableName": "名称",
-  "tableKind": "タイプ",
+  "tableTime": "実行時間",
+  "tableName": "名前",
+  "tableKind": "種類",
   "tableRarity": "レアリティ",
   "rarityStar": "★{rank}",
   "@rarityStar": {
@@ -617,7 +617,7 @@
   "@settingsRefetchItemImagesTitle": {
     "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
   },
-  "settingsRefetchItemImagesEmpty": "集音記録がありません、再取得対象がありません",
+  "settingsRefetchItemImagesEmpty": "集音履歴がありません、再取得対象がありません",
   "@settingsRefetchItemImagesEmpty": {
     "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
   },
@@ -625,7 +625,7 @@
   "@confirmRefetchItemImagesTitle": {
     "description": "Title of the AlertDialog confirming the refetch action."
   },
-  "confirmRefetchItemImagesBody": "ローカルのアイテム画像キャッシュをすべて削除し、キャラクターアイコンを再ダウンロードします。詳細画像は次回アイテム詳細を開いたときに必要に応じてダウンロードされます。アイテム数によっては数分の通信量と時間がかかる場合があります。",
+  "confirmRefetchItemImagesBody": "ローカルのアイテム画像キャッシュをすべて削除し、共鳴者アイコンを再ダウンロードします。詳細画像は次回アイテム詳細を開いたときに必要に応じてダウンロードされます。アイテム数によっては数分の通信量と時間がかかる場合があります。",
   "@confirmRefetchItemImagesBody": {
     "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
   },
@@ -645,7 +645,7 @@
   "@settingsRefreshItemDataTitle": {
     "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
   },
-  "settingsRefreshItemDataEmpty": "集音記録がないため、アイテムデータを更新できません",
+  "settingsRefreshItemDataEmpty": "集音履歴がないため、アイテムデータを更新できません",
   "@settingsRefreshItemDataEmpty": {
     "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
   },
@@ -831,7 +831,7 @@
     }
   },
   "confirmTitle": "操作の確認",
-  "confirmClearActiveBody": "UID {uid} のすべての集音記録を完全に削除します。確認のため UID を入力してください：",
+  "confirmClearActiveBody": "UID {uid} のすべての集音履歴を完全に削除します。確認のため UID を入力してください：",
   "@confirmClearActiveBody": {
     "placeholders": {
       "uid": {
@@ -839,7 +839,7 @@
       }
     }
   },
-  "confirmClearAllBody": "すべてのアカウントの集音記録を完全に削除します。確認のため DELETE と入力してください：",
+  "confirmClearAllBody": "すべてのアカウントの集音履歴を完全に削除します。確認のため DELETE と入力してください：",
   "confirmDelete": "削除",
   "confirmImport": "インポート",
   "confirmExport": "エクスポート",

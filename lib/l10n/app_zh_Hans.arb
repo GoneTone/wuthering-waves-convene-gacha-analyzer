@@ -138,7 +138,7 @@
   "kindCharacter": "角色",
   "kindWeapon": "武器",
   "kindItem": "道具",
-  "tableTime": "时间",
+  "tableTime": "唤取时间",
   "tableName": "名称",
   "tableKind": "类型",
   "tableRarity": "稀有度",

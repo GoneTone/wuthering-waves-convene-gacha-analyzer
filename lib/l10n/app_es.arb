@@ -65,7 +65,7 @@
   "kindCharacter": "Resonador(a)",
   "kindWeapon": "Arma",
   "kindItem": "Objeto",
-  "tableTime": "Fecha",
+  "tableTime": "Hora de invocación",
   "tableName": "Nombre",
   "tableKind": "Tipo",
   "tableRarity": "Rareza",

@@ -65,7 +65,7 @@
   "kindCharacter": "공명자",
   "kindWeapon": "무기",
   "kindItem": "아이템",
-  "tableTime": "시간",
+  "tableTime": "튜닝 날짜",
   "tableName": "이름",
   "tableKind": "유형",
   "tableRarity": "등급",

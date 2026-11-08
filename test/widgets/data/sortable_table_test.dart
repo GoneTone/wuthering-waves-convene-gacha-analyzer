@@ -314,7 +314,7 @@ void main() {
         container: container,
       ),
     );
-    await tester.tap(find.text('時間'));
+    await tester.tap(find.text('喚取時間'));
     expect(tapped, SortColumn.time);
 
     await tester.tap(find.text('名稱'));

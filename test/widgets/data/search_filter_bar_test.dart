@@ -79,8 +79,8 @@ void main() {
     // 開 dropdown，確認顯示在地化標籤而非原始 key
     await tester.tap(find.byType(DropdownButton<String?>));
     await tester.pumpAndSettle();
-    // 測試環境預設英文：kindCharacter → 'Character'、kindWeapon → 'Weapon'
-    expect(find.text('Character'), findsWidgets);
+    // 測試環境預設英文：kindCharacter → 'Resonator'、kindWeapon → 'Weapon'
+    expect(find.text('Resonator'), findsWidgets);
     expect(find.text('Weapon'), findsWidgets);
     // 確認原始 key 字串不直接顯示在 dropdown 選項中
     expect(find.text(kItemKindCharacter), findsNothing);
@@ -104,7 +104,7 @@ void main() {
     await tester.tap(find.byType(DropdownButton<String?>));
     await tester.pumpAndSettle();
     // 測試環境英文下 kItemKindCharacter 顯示為「Character」；點最後一個（menu item）
-    final characterItems = find.text('Character');
+    final characterItems = find.text('Resonator');
     expect(characterItems, findsWidgets);
     await tester.tap(characterItems.last);
     await tester.pumpAndSettle();

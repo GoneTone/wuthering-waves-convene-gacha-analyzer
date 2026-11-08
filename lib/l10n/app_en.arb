@@ -139,10 +139,10 @@
   "statsItemTypeDistribution": "Type Distribution",
   "statsNoData": "No data",
   "kindUnknown": "Unknown",
-  "kindCharacter": "Character",
+  "kindCharacter": "Resonator",
   "kindWeapon": "Weapon",
   "kindItem": "Item",
-  "tableTime": "Time",
+  "tableTime": "Convene Time",
   "tableName": "Name",
   "tableKind": "Type",
   "tableRarity": "Rarity",
@@ -190,9 +190,9 @@
   "progressFetching": "Fetching...",
   "progressDone": "Update complete",
   "progressFailed": "Failed",
-  "progressOpenGameHint": "Open Wuthering Waves → Convene → Convene History",
-  "progressFallbackHint": "(The previous capture expired. Please reopen the Convene History page.)",
-  "progressCaptureUnavailableHint": "Couldn't start the capture helper (the Windows permission prompt may have been declined). Now detecting from the game's log file only. Please open Convene History.",
+  "progressOpenGameHint": "Open Wuthering Waves → Convene → Convene Records",
+  "progressFallbackHint": "(The previous capture expired. Please reopen the Convene Records page.)",
+  "progressCaptureUnavailableHint": "Couldn't start the capture helper (the Windows permission prompt may have been declined). Now detecting from the game's log file only. Please open Convene Records.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
   },
@@ -200,7 +200,7 @@
   "@progressCaptureUnavailableNoGameDirHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
   },
-  "progressNotDetectedLink": "Opened Convene History but nothing happens?",
+  "progressNotDetectedLink": "Opened Convene Records but nothing happens?",
   "@progressNotDetectedLink": {
     "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
   },
@@ -221,7 +221,7 @@
       }
     }
   },
-  "gameDirHelpReopen": "Game folder saved. Go back to the game and open Convene History once more.",
+  "gameDirHelpReopen": "Game folder saved. Go back to the game and open Convene Records once more.",
   "@gameDirHelpReopen": {
     "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
   },
@@ -628,7 +628,7 @@
   "@confirmRefetchItemImagesTitle": {
     "description": "Title of the AlertDialog confirming the refetch action."
   },
-  "confirmRefetchItemImagesBody": "This will clear all local item image cache and re-download character icons. Detail images will be downloaded on demand next time you open the item detail. Depending on item count, this may take a few minutes of bandwidth and time.",
+  "confirmRefetchItemImagesBody": "This will clear all local item image cache and re-download Resonator icons. Detail images will be downloaded on demand next time you open the item detail. Depending on item count, this may take a few minutes of bandwidth and time.",
   "@confirmRefetchItemImagesBody": {
     "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
   },
@@ -1087,7 +1087,7 @@
   "@progressManualInputLink": {
     "description": "Link on the waiting screen that opens the manual convene record input dialog"
   },
-  "manualCredentialTitle": "Enter Convene History Manually",
+  "manualCredentialTitle": "Enter Convene Records Manually",
   "@manualCredentialTitle": {
     "description": "Title of the manual convene record input dialog"
   },
@@ -1111,19 +1111,19 @@
   "@manualCredentialHowTo": {
     "description": "Expandable heading that shows how to get the convene history URL"
   },
-  "manualCredentialNotFound": "No convene history URL found",
+  "manualCredentialNotFound": "No Convene Records URL found",
   "@manualCredentialNotFound": {
     "description": "Error shown when the pasted text contains no valid convene history URL"
   },
-  "manualCredentialNotFoundInLog": "No convene history URL in this file. Open Convene History in the game first, then choose it again.",
+  "manualCredentialNotFoundInLog": "No Convene Records URL in this file. Open Convene Records in the game first, then choose it again.",
   "@manualCredentialNotFoundInLog": {
     "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
   },
-  "manualCredentialHelpAndroid": "Option 1: Airplane mode\n1. In the game, go to the Convene screen\n2. Turn on airplane mode, then tap Convene History\n3. The page fails to load: long-press → Select all → Copy\n4. Turn off airplane mode and paste the whole text here\n\nOption 2: You already have a Client.log file\nTap \"Choose Client.log file\" and the app finds the URL for you.",
+  "manualCredentialHelpAndroid": "Option 1: Airplane mode\n1. In the game, go to the Convene screen\n2. Turn on airplane mode, then tap Convene Records\n3. The page fails to load: long-press → Select all → Copy\n4. Turn off airplane mode and paste the whole text here\n\nOption 2: You already have a Client.log file\nTap \"Choose Client.log file\" and the app finds the URL for you.",
   "@manualCredentialHelpAndroid": {
     "description": "Help text in the manual input dialog on Android. Keep the line breaks."
   },
-  "manualCredentialHelpWindows": "Choose the Client.log file\n1. Open Convene History in the game\n2. Tap \"Choose Client.log file\". It is located at:\nGame folder\\Client\\Saved\\Logs\\Client.log\n\nURL from another tool\nA URL obtained with tools such as WuWa Tracker can be pasted directly.",
+  "manualCredentialHelpWindows": "Choose the Client.log file\n1. Open Convene Records in the game\n2. Tap \"Choose Client.log file\". It is located at:\nGame folder\\Client\\Saved\\Logs\\Client.log\n\nURL from another tool\nA URL obtained with tools such as WuWa Tracker can be pasted directly.",
   "@manualCredentialHelpWindows": {
     "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
   },

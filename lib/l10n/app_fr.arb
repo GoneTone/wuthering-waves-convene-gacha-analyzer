@@ -65,7 +65,7 @@
   "kindCharacter": "Personnage",
   "kindWeapon": "Arme",
   "kindItem": "Item",
-  "tableTime": "Date",
+  "tableTime": "Temps",
   "tableName": "Nom",
   "tableKind": "Type",
   "tableRarity": "Rareté",

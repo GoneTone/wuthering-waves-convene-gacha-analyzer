@@ -69,7 +69,7 @@ void main() {
   group('itemTypeKeyLabel', () {
     test('canonical key 轉在地化標籤；fallback 原樣（en）', () async {
       final l = await AppLocalizations.delegate.load(const Locale('en'));
-      expect(itemTypeKeyLabel(kItemKindCharacter, l), 'Character');
+      expect(itemTypeKeyLabel(kItemKindCharacter, l), 'Resonator');
       expect(itemTypeKeyLabel(kItemKindWeapon, l), 'Weapon');
       expect(itemTypeKeyLabel(kItemKindItem, l), l.kindItem);
       expect(itemTypeKeyLabel('', l), l.kindUnknown);

@@ -121,7 +121,7 @@
   "kindWeapon": "武器",
   "kindItem": "道具",
 
-  "tableTime": "時間",
+  "tableTime": "喚取時間",
   "tableName": "名稱",
   "tableKind": "類型",
   "tableRarity": "稀有度",
@@ -320,7 +320,7 @@
     "description": "Button that clears the manually set game folder"
   },
   "settingsCloudSync": "雲端同步",
-  "cloudSyncIntro": "連結 Google 帳號後，喚取紀錄會自動備份到你的 Google 雲端硬碟，並在多台裝置間同步。",
+  "cloudSyncIntro": "連結 Google 帳號後，喚取記錄會自動備份到你的 Google 雲端硬碟，並在多台裝置間同步。",
   "cloudSyncUnconfigured": "此建置未設定 Google OAuth 憑證，雲端同步無法使用。",
   "cloudSyncLink": "連結 Google 帳號",
   "cloudSyncAwaitingConsent": "已開啟瀏覽器，請在瀏覽器完成授權...",
@@ -498,7 +498,7 @@
   "@settingsRefetchItemImagesTitle": {
     "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
   },
-  "settingsRefetchItemImagesEmpty": "尚無喚取紀錄，無物品可重抓",
+  "settingsRefetchItemImagesEmpty": "尚無喚取記錄，無物品可重抓",
   "@settingsRefetchItemImagesEmpty": {
     "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
   },
@@ -526,7 +526,7 @@
   "@settingsRefreshItemDataTitle": {
     "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
   },
-  "settingsRefreshItemDataEmpty": "尚無喚取紀錄，無法更新物品資料",
+  "settingsRefreshItemDataEmpty": "尚無喚取記錄，無法更新物品資料",
   "@settingsRefreshItemDataEmpty": {
     "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
   },
@@ -665,11 +665,11 @@
   },
 
   "confirmTitle": "確認操作",
-  "confirmClearActiveBody": "這會永久刪除 UID {uid} 的所有喚取紀錄。輸入 UID 確認：",
+  "confirmClearActiveBody": "這會永久刪除 UID {uid} 的所有喚取記錄。輸入 UID 確認：",
   "@confirmClearActiveBody": {
     "placeholders": { "uid": { "type": "String" } }
   },
-  "confirmClearAllBody": "這會永久刪除所有帳號的喚取紀錄。輸入 DELETE 確認：",
+  "confirmClearAllBody": "這會永久刪除所有帳號的喚取記錄。輸入 DELETE 確認：",
   "confirmDelete": "刪除",
   "confirmImport": "匯入",
   "confirmExport": "匯出",

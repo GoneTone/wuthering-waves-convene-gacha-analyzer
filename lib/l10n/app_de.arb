@@ -65,7 +65,7 @@
   "kindCharacter": "Resonator",
   "kindWeapon": "Waffe",
   "kindItem": "Gegenstand",
-  "tableTime": "Zeit",
+  "tableTime": "Zusammenrufen-Zeit",
   "tableName": "Name",
   "tableKind": "Typ",
   "tableRarity": "Seltenheit",
