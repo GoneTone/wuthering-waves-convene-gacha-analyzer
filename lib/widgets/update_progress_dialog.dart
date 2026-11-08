@@ -38,34 +38,30 @@ class UpdateProgressDialog extends ConsumerWidget {
     final progress = ref.watch(
       gachaRepositoryProvider.select((s) => s.progress),
     );
-    // 流程很快結束時（例如轉換資料語言沒東西要轉），進度可能在 dialog 第一次建構前
-    // 就被清掉，上面的 listen 收不到這次變化，dialog 會留著空白內容。
-    if (progress == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) closeSelf();
-      });
-    }
     final notifier = ref.read(gachaRepositoryProvider.notifier);
     final l = AppLocalizations.of(context)!;
     final tokens = Theme.of(context).gacha;
     final android = ref.watch(isAndroidProvider);
 
-    return PopScope(
-      canPop: false,
-      child: AppDialog(
-        // size 預設 sm，符合短訊息 + LinearProgressIndicator 語意。
-        // 手機橫向高度只剩約 390，等待畫面放不下，要能捲動。
-        scrollable: true,
-        // 進行中的更新只能用下方按鈕取消（會一併收掉擷取流程），不給 ✕ 直接關窗。
-        showCloseButton: false,
-        title: _Title(
-          progress: progress,
-          l: l,
-          tokens: tokens,
-          android: android,
+    return _CloseIfIdleOnOpen(
+      close: closeSelf,
+      child: PopScope(
+        canPop: false,
+        child: AppDialog(
+          // size 預設 sm，符合短訊息 + LinearProgressIndicator 語意。
+          // 手機橫向高度只剩約 390，等待畫面放不下，要能捲動。
+          scrollable: true,
+          // 進行中的更新只能用下方按鈕取消（會一併收掉擷取流程），不給 ✕ 直接關窗。
+          showCloseButton: false,
+          title: _Title(
+            progress: progress,
+            l: l,
+            tokens: tokens,
+            android: android,
+          ),
+          content: _Body(progress: progress, l: l, android: android),
+          actions: _actions(context, progress, notifier, l),
         ),
-        content: _Body(progress: progress, l: l, android: android),
-        actions: _actions(context, progress, notifier, l),
       ),
     );
   }
@@ -106,6 +102,41 @@ class UpdateProgressDialog extends ConsumerWidget {
       null => const <Widget>[],
     };
   }
+}
+
+/// dialog 第一次建構後若進度已經是 null 就呼叫 [close]。
+///
+/// 流程很快結束時（例如轉換資料語言沒東西要轉），進度可能在 dialog 建構前就被清掉，
+/// [UpdateProgressDialog] 的 listen 收不到那次變化，dialog 會留著空白內容。
+/// 只在開啟時檢查一次：之後的清空由 listen 處理，避免在別的頁面推上來後誤關。
+class _CloseIfIdleOnOpen extends ConsumerStatefulWidget {
+  /// 建立 [_CloseIfIdleOnOpen]。
+  const _CloseIfIdleOnOpen({required this.close, required this.child});
+
+  /// 關閉 dialog 的動作。
+  final VoidCallback close;
+
+  /// dialog 內容。
+  final Widget child;
+
+  @override
+  ConsumerState<_CloseIfIdleOnOpen> createState() => _CloseIfIdleOnOpenState();
+}
+
+/// [_CloseIfIdleOnOpen] 的狀態：只在第一幀後檢查一次。
+class _CloseIfIdleOnOpenState extends ConsumerState<_CloseIfIdleOnOpen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && ref.read(gachaRepositoryProvider).progress == null) {
+        widget.close();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// Dialog 標題列：依 [progress] 狀態切換圖示、顏色與文字。
