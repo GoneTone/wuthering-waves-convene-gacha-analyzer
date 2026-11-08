@@ -113,4 +113,39 @@ void main() {
       findsOneWidget,
     );
   });
+
+  // 收合時只建構已選的那項：全部語言名稱都排版會讓打開設定頁卡一下（要載入多種文字的字型）。
+  testWidgets('collapsed language dropdown builds only the selected name', (
+    tester,
+  ) async {
+    late ProviderContainer container;
+    await tester.runAsync(() async {
+      container = await _setupContainer(
+        storage: GachaStorage(tempDir),
+        tempDir: tempDir,
+      );
+    });
+    addTearDown(container.dispose);
+    await tester.pumpWidget(_wrap(container));
+    await tester.pump();
+    final dropdown = find.byType(DropdownButtonFormField<LanguagePreference>);
+    expect(find.text('Deutsch', skipOffstage: false), findsNothing);
+
+    await tester.tap(dropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Deutsch').last);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(of: dropdown, matching: find.text('Deutsch')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: dropdown,
+        matching: find.text('Follow system', skipOffstage: false),
+      ),
+      findsNothing,
+    );
+  });
 }
