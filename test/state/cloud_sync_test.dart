@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
@@ -444,6 +445,29 @@ void main() {
 
     expect(remote.downloads, 1);
     expect(messages.any((m) => m.contains('trigger=rerun')), isFalse);
+  });
+
+  test('合併一份與本機相同的資料 → 不重寫記錄檔、不替換記憶體中的紀錄', () async {
+    remote.content = _cloudBundleJsonWithRecord('100000001');
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    await container.read(cloudSyncProvider.notifier).link();
+
+    final file = GachaStorage(tempDir).recordsFile('100000001');
+    final modifiedBefore = file.lastModifiedSync();
+    final byUidBefore = container.read(gachaRepositoryProvider).byUid;
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    await container
+        .read(gachaRepositoryProvider.notifier)
+        .importBundleForCloudSync(importAccounts(remote.content!));
+
+    expect(
+      identical(container.read(gachaRepositoryProvider).byUid, byUidBefore),
+      isTrue,
+    );
+    expect(file.lastModifiedSync(), modifiedBefore);
   });
 
   test('上傳內容同時含有記錄檔的帳號（背景讀檔）與只在記憶體的帳號', () async {
