@@ -385,6 +385,8 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **從來沒推出過任何版本的 App，API 只能建立 draft 狀態的版本**（錯誤訊息「Only releases with status draft may be created on draft app」）。第一版本來就要在 Play Console 手動上傳，手動上傳後在 Console 推出（內部測試也算），之後 CI 就固定送 `completed`，不提供 draft 選項：內部測試只有測試名單看得到，直接推出才能在升級正式版前，用手機從 Play 收到經 Play 簽署的版本，先確認 Google 登入等依賴簽章的功能。
 - secrets 一覽與每次發版步驟見本機的 `private/play-store/README.md`。
 - 修改 workflow 後用 actionlint 檢查（`go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/*.yml`）。
+- **actionlint 抓到 `ci.yml` 的既有問題**：自動提交 ARB 正規化的步驟把 `${{ github.head_ref }}` 直接拼進 shell，分支名稱裡的 `$(...)` 會被當成指令執行。改成 `env: HEAD_REF: ${{ github.head_ref }}`，指令裡用 `"$HEAD_REF"`。原神版的 `ci.yml` 是同一份底稿，要一起檢查。
+- **內部測試不用審核**：推出後通常幾分鐘內測試人員就能更新（第一次發布後的測試連結可能要等幾小時）；升級到正式版才進入審核。2023 年 11 月之後註冊的個人開發者帳號，發正式版前還要先跑 12 人、連續 14 天的封閉測試，本專案的帳號不受此限。
 
 ### 36. 簽章指紋：每把金鑰各建一筆 Android 用戶端（通用）
 
