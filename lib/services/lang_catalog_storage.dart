@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
@@ -105,8 +106,7 @@ class LangCatalogStorage {
     final f = _file(lang);
     if (!await f.exists()) return null;
     try {
-      final json = jsonDecode(await f.readAsString()) as Map<String, dynamic>;
-      return LangCatalog.fromJson(json);
+      return await _loadInBackground(f.path);
     } catch (e, st) {
       _log.warning(
         'lang catalog load failed lang=$lang, treat as missing',
@@ -129,3 +129,10 @@ class LangCatalogStorage {
     );
   }
 }
+
+/// 在背景 isolate 讀取並解析 [path] 的目錄檔（整份 JSON 解析在主 isolate 上約 10 ms 以上）；錯誤原樣拋回呼叫端。
+Future<LangCatalog> _loadInBackground(String path) => Isolate.run(
+  () async => LangCatalog.fromJson(
+    jsonDecode(await File(path).readAsString()) as Map<String, dynamic>,
+  ),
+);
