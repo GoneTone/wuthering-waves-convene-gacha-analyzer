@@ -526,7 +526,19 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - Android 12 以上中央沿用啟動器的自適應圖示；Android 11 以下讀 `assets/splash/icon.png`，由 `tool/generate_app_icons.dart` 從同一張原圖裁成圓形（640px＝160dp），兩邊看起來一致。
   - 品牌圖是英文 App 名稱（兩行），由 `tool/generate_splash_branding.py` 用 Flutter SDK 內附的 Roboto（Apache 2.0）畫成透明 PNG，淺色／深色各一張，顏色對應 `textSecondary`／`textMuted`。Dart 的 `image` 套件只能畫點陣字，所以改用 Python（PIL）。
 - **踩雷：啟動畫面讀不到 App 內的「深色／淺色」**。系統在 App 執行前就畫好，只看手機的深淺色。手機淺色、App 選深色的人，會先看到白底再跳成深藍（反之亦然），等於閃一下。
-  - 修法：Android 12（API 31）起用 `UiModeManager.setApplicationNightMode` 告訴系統這個 App 的深淺色，系統會記住，下次畫啟動畫面時就用對的顏色。Kotlin `AppThemeChannel` ＋ Dart `AppNightMode`；「跟隨系統」送 `MODE_NIGHT_AUTO`，對 App 層級來說就是不覆寫。Android 11 以下不支援，仍跟手機。
-  - **要等設定載入完才送**：設定是非同步載入的，載入前是預設的「跟隨系統」。一開機就送的話，選了深色／淺色的人會先被送一次「跟隨系統」再送正確值，多一次設定變更。`MainApp` 先 `await waitForLoad()`，再用 `listenManual(..., fireImmediately: true)` 同步並監聽之後的切換。
+  - 修法：Android 12（API 31）起用 `UiModeManager.setApplicationNightMode` 告訴系統這個 App 的深淺色，系統會記住，下次畫啟動畫面時就用對的顏色。Kotlin `AppPrefsChannel` ＋ Dart `AppPrefsPlatform`（與 #44 的語言同步共用同一個 channel）；「跟隨系統」送 `MODE_NIGHT_AUTO`，對 App 層級來說就是不覆寫。Android 11 以下不支援，仍跟手機。
+  - **要等設定載入完才送**：設定是非同步載入的，載入前是預設的「跟隨系統」。一開機就送的話，選了深色／淺色的人會先被送一次「跟隨系統」再送正確值，多一次設定變更。`AndroidAppPrefsSync.start()`（由 `MainApp` 在 Android 上呼叫）先 `await waitForLoad()`，再用 `listen(..., fireImmediately: true)` 同步並監聽之後的切換。
   - 這個 API 會觸發 `uiMode` 設定變更；`AndroidManifest.xml` 的 `configChanges` 已含 `uiMode`，Activity 不會重建。
   - 驗證方式：手機設深色、App 選淺色，`am force-stop` 後用 `screenrecord` 錄冷啟動，再用 ffmpeg 拆格看。
+
+### 44. 系統設定「應用程式語言」與 App 內語言雙向同步（通用，Android 13+）
+
+- **為什麼系統清單裡沒有這個 App**：Android 13 起，系統設定的「應用程式語言」只列出在 `<application>` 宣告 `android:localeConfig` 的 App。Flutter 範本沒有這個宣告。
+- **清單只列 App 已開放的語言**：`res/xml/locales_config.xml` 是寫死的，App 內則是翻譯釋出後才開放（`releasedLocalesProvider`）。全部 ARB 都列進去的話，系統清單會出現 App 自己不開放的語言。`test/l10n/android_locales_config_test.dart` 比對兩邊，新語言釋出時會失敗並印出該貼進 XML 的內容，CI 會擋下來。Android 14 起另有 `LocaleManager.setOverrideLocaleConfig` 可在執行時更新清單，目前沒用。
+- **繁中標籤要寫 `zh-Hant`**：App 內繁中是不帶字集的 `zh`（ARB 範本），但 XML 和送給 `LocaleManager.setApplicationLocales` 的都要用 `zh-Hant`，系統清單才會標成繁體、也才對得上目前選中的項目。反向對應（`zh-Hant-TW`、`zh-TW` → 繁中，`zh-Hans-*`、`zh-CN` → 簡中）沿用 `localeListResolution`，不另寫一張表。系統建議區會出現「繁體中文（台灣）」「English (United States)」這類地區版本，回到 App 一樣對得到。
+- **雙向同步**（`AndroidAppPrefsSync`）：
+  - App → 系統：監聽設定的語言，寫回 `LocaleManager`；「跟隨系統」送空清單。
+  - 系統 → App：`configChanges` 已含 `locale`，Activity 不會重建，要靠 `WidgetsBindingObserver.didChangeLocales` 重新讀 `getApplicationLocales()` 再更新 App 設定。漏了這步的話，App 內已指定語言時，在系統設定改了不會有反應。
+  - 防來回觸發：寫入前都先比對對方是否已是同一個語言。
+- **踩雷：開機時系統端是「預設」要分兩種情況**。可能是剛升級、App 內已指定語言的舊使用者（要把 App 的選擇推給系統），也可能是使用者在 App 關著時把系統設定改回預設（要跟著改成「跟隨系統」）。用一個只寫一次的旗標 `pref.localeSyncedToSystem` 區分：只有第一次才推給系統。系統端有值時一律以系統為準。
+- 驗證：`adb shell cmd locale get-app-locales <package>` 看系統端的值；`am start -a android.settings.APP_LOCALE_SETTINGS -d package:<package>` 直接開系統的語言頁。
