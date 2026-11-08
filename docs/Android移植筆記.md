@@ -498,6 +498,17 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **坑：流程太快結束，進度對話框留下空白框**。外層在進度出現時 `showDialog`，對話框要到下一幀才建構、才開始 `listen` 進度；流程若在那之前就把進度清空（轉換語言改成免寫檔後就會），對話框收不到清空事件，留下一個只有資訊圖示、沒有文字、關不掉的空白框。修法：對話框第一次建構後檢查一次，進度已是 null 就自己關。**只能檢查第一次**：若每次重建都檢查，Android 記錄存取流程（取消更新後推設定頁）會在設定頁推上來後被誤關，`android_log_wait_test` 有鎖。
 - **widget 測試**：背景 isolate 的結果要真實時間才回來，假時間的 `pumpAndSettle` 等不到。共用 `test/helpers/wait_until.dart` 的 `pumpUntil(tester, cond)`：每輪 `runAsync` 讓背景跑一下再 `pump`，條件成立或 5 秒為止。
 - **提交前的檢查要真的擋住失敗**：`flutter test | tail -1` 的結束碼永遠是 0，串在 `&&` 後面擋不住失敗的測試。要檢查輸出含 `All tests passed` 才提交（這次就因此誤提交過一次）。
+
+### 48. 更新紀錄（等待擷取、下載卡池）讓畫面停住（通用，桌面也適用）
+
+- **量法**：要人開遊戲，無法用 `adb` 腳本操作。先以分析模式開 App、清空緩衝區開始錄，由使用者按「更新紀錄」、開遊戲進喚取記錄頁；完成後**不必等固定錄製時間結束**，另外連上 VM Service、不清緩衝區直接抓 `getCpuSamples`／`getVMTimeline` 即可。
+- **實測（ROG Phone 9，profile 版，新增 0 筆）**：修正前，主 isolate 超過 8 ms 的停頓約 80 段，最長 72.8 ms；修正後剩 3 段，最長 14.2 ms（更新後重讀語言對照表 `LangCatalogStorage.load`，未處理）。
+  - **等待擷取**：每秒輪詢 Client.log 增量，解碼都在主 isolate。約六成時間花在 `Uint8List.fromList([...carry, ...decode])`：spread 逐位元組裝進可成長的 `List<int>`，非常慢。其餘是 XOR 解碼、UTF-8 解碼與網址比對。
+  - **下載卡池**：總覽頁、卡池頁 `ref.watch(gachaRepositoryProvider)` 訂閱整個狀態，每換一池更新一次 `progress`，就整頁重算統計與時間軸，約每秒一次、每次 10～25 ms。
+- **處理**
+  - `PollingClientLogWatch` 把「接上 carry、解碼、找最新憑證」整段移到背景 isolate（`_scanInBackground`），串接改用 `BytesBuilder`。背景 isolate 的 log 不會進 App log，被拒網址的原因由背景交回，在主 isolate 寫 warning。
+  - 兩頁改用 `select` 只訂閱 `activeData` 與 `isBootstrapping`。紀錄在全部卡池抓完才一次替換 `byUid`，所以整個更新只重算一次。**其他頁面要讀 repository 狀態時，也要用 `select`，不要訂閱整個狀態**。
+- **未量**：沒有實測新增大量紀錄的情況（需要實際抽卡）。抓完那一次的重算成本會隨紀錄數增加。
 ---
 
 ## 十二、手機版 UI/UX 調整
