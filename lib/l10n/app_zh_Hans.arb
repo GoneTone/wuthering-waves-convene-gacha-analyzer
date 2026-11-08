@@ -1,10 +1,10 @@
 {
   "@@locale": "zh_Hans",
   "localeNativeName": "简体中文",
-  "localeTranslatorLabel": "翻译者：{translator}",
   "@localeNativeName": {
     "description": "Native name of this locale, shown in language picker."
   },
+  "localeTranslatorLabel": "翻译者：{translator}",
   "@localeTranslatorLabel": {
     "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
     "placeholders": {
@@ -180,10 +180,10 @@
   "sortDirectionDesc": "降序",
   "sortDirectionAsc": "升序",
   "sortHintClickToSort": "点击排序",
-  "progressPreparing": "准备中…",
-  "progressPreparingHint": "正在准备数据源…",
-  "progressWaiting": "等待拦截…",
-  "progressFetching": "抓取中…",
+  "progressPreparing": "准备中...",
+  "progressPreparingHint": "正在准备数据源...",
+  "progressWaiting": "等待拦截...",
+  "progressFetching": "抓取中...",
   "progressDone": "更新完成",
   "progressFailed": "失败",
   "progressOpenGameHint": "请打开鸣潮 → 唤取 → 唤取记录",
@@ -328,6 +328,8 @@
   },
   "errorGachaFailed": "重新拦截后仍无法获取记录，服务器可能暂时异常，请稍后再试",
   "errorNoRecords": "此账号尚无任何卡池记录",
+  "errorNetwork": "网络连接失败，请检查网络后重试",
+  "errorUnexpected": "发生意外错误，请稍后再试",
   "pageOverviewTitle": "综合数据（全卡池合计）",
   "pageOverviewGachaSection": "唤取综合",
   "pageBannerRecordList": "记录列表",
@@ -596,7 +598,7 @@
     }
   },
   "filterKindAll": "全部类型",
-  "filterSearchHint": "搜索名称…",
+  "filterSearchHint": "搜索名称...",
   "filterClear": "清除筛选",
   "pagerFirst": "首页",
   "pagerLast": "末页",
@@ -698,7 +700,7 @@
   "@settingsImageCacheGallery": {
     "description": "Label for gallery cache size (large detail images shown in item dialog)."
   },
-  "settingsImageCacheCalculating": "计算中…",
+  "settingsImageCacheCalculating": "计算中...",
   "@settingsImageCacheCalculating": {
     "description": "Loading placeholder while scanning cache size."
   },
@@ -792,6 +794,7 @@
     }
   },
   "importReasonInvalidFormat": "文件格式不正确或已损坏",
+  "importReasonIncompatibleVersion": "此备份的数据版本与当前 App 不兼容，无法导入",
   "importReasonUnreadable": "无法读取文件",
   "importReasonForeignApp": "此文件不是由本软件导出的备份",
   "importReasonNotPlatformFile": "此文件不是有效的 {platform} 导出文件",
@@ -856,7 +859,7 @@
   "accountActionEditAlias": "编辑别名",
   "accountEditAliasTitle": "编辑别名",
   "accountDragHandleTooltip": "拖动排序",
-  "loadingBootstrap": "加载中…",
+  "loadingBootstrap": "加载中...",
   "timelineTopRarityTitle": "{star} 时间轴 ({n})",
   "@timelineTopRarityTitle": {
     "placeholders": {
@@ -906,7 +909,7 @@
   "updateButtonSkip": "跳过此版本",
   "updateButtonLater": "稍后再说",
   "updateCheckButton": "检查更新",
-  "updateChecking": "检查中…",
+  "updateChecking": "检查中...",
   "updateAlreadyLatest": "已是最新版本",
   "updateCheckFailed": "检查更新失败：{reason}",
   "@updateCheckFailed": {

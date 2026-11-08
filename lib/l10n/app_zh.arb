@@ -156,10 +156,10 @@
   "sortDirectionAsc": "升序",
   "sortHintClickToSort": "點擊排序",
 
-  "progressPreparing": "準備中…",
-  "progressPreparingHint": "正在準備資料來源…",
-  "progressWaiting": "等待攔截…",
-  "progressFetching": "抓取中…",
+  "progressPreparing": "準備中...",
+  "progressPreparingHint": "正在準備資料來源...",
+  "progressWaiting": "等待攔截...",
+  "progressFetching": "抓取中...",
   "progressDone": "更新完成",
   "progressFailed": "失敗",
   "progressOpenGameHint": "請開啟鳴潮 → 喚取 → 喚取記錄",
@@ -450,7 +450,7 @@
     "placeholders": { "star": { "type": "String" } }
   },
   "filterKindAll": "全部類型",
-  "filterSearchHint": "搜尋名稱…",
+  "filterSearchHint": "搜尋名稱...",
   "filterClear": "清除篩選",
 
   "pagerFirst": "首頁",
@@ -574,7 +574,7 @@
   "@settingsImageCacheGallery": {
     "description": "Label for gallery cache size (large detail images shown in item dialog)."
   },
-  "settingsImageCacheCalculating": "計算中…",
+  "settingsImageCacheCalculating": "計算中...",
   "@settingsImageCacheCalculating": {
     "description": "Loading placeholder while scanning cache size."
   },
@@ -691,7 +691,7 @@
   "accountEditAliasTitle": "編輯別名",
   "accountDragHandleTooltip": "拖曳排序",
 
-  "loadingBootstrap": "載入中…",
+  "loadingBootstrap": "載入中...",
 
   "timelineTopRarityTitle": "{star} 時間軸 ({n})",
   "@timelineTopRarityTitle": {
@@ -728,7 +728,7 @@
   "updateButtonSkip": "跳過此版本",
   "updateButtonLater": "稍後再說",
   "updateCheckButton": "檢查更新",
-  "updateChecking": "檢查中…",
+  "updateChecking": "檢查中...",
   "updateAlreadyLatest": "已是最新版本",
   "updateCheckFailed": "檢查更新失敗：{reason}",
   "@updateCheckFailed": {

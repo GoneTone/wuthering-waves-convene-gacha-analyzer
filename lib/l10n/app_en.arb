@@ -62,7 +62,7 @@
     }
   },
   "relativeNow": "Just now",
-  "relativeSecondsAgo": "{count} seconds ago",
+  "relativeSecondsAgo": "{count, plural, =1{1 second ago} other{{count} seconds ago}}",
   "@relativeSecondsAgo": {
     "placeholders": {
       "count": {
@@ -70,7 +70,7 @@
       }
     }
   },
-  "relativeMinutesAgo": "{count} minutes ago",
+  "relativeMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
   "@relativeMinutesAgo": {
     "placeholders": {
       "count": {
@@ -78,7 +78,7 @@
       }
     }
   },
-  "relativeHoursAgo": "{count} hours ago",
+  "relativeHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
   "@relativeHoursAgo": {
     "placeholders": {
       "count": {
@@ -86,7 +86,7 @@
       }
     }
   },
-  "relativeDaysAgo": "{count} days ago",
+  "relativeDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
   "@relativeDaysAgo": {
     "placeholders": {
       "count": {
@@ -94,7 +94,7 @@
       }
     }
   },
-  "relativeMonthsAgo": "{count} months ago",
+  "relativeMonthsAgo": "{count, plural, =1{1 month ago} other{{count} months ago}}",
   "@relativeMonthsAgo": {
     "placeholders": {
       "count": {
@@ -102,7 +102,7 @@
       }
     }
   },
-  "relativeYearsAgo": "{count} years ago",
+  "relativeYearsAgo": "{count, plural, =1{1 year ago} other{{count} years ago}}",
   "@relativeYearsAgo": {
     "placeholders": {
       "count": {
@@ -184,10 +184,10 @@
   "sortDirectionDesc": "Descending",
   "sortDirectionAsc": "Ascending",
   "sortHintClickToSort": "Click to sort",
-  "progressPreparing": "Preparing…",
-  "progressPreparingHint": "Preparing data source…",
-  "progressWaiting": "Waiting for capture…",
-  "progressFetching": "Fetching…",
+  "progressPreparing": "Preparing...",
+  "progressPreparingHint": "Preparing data source...",
+  "progressWaiting": "Waiting for capture...",
+  "progressFetching": "Fetching...",
   "progressDone": "Update complete",
   "progressFailed": "Failed",
   "progressOpenGameHint": "Open Wuthering Waves → Convene → Convene History",
@@ -259,7 +259,7 @@
       }
     }
   },
-  "progressDoneSummary": "Added {count} new records",
+  "progressDoneSummary": "{count, plural, =1{Added 1 new record} other{Added {count} new records}}",
   "@progressDoneSummary": {
     "placeholders": {
       "count": {
@@ -491,7 +491,7 @@
       }
     }
   },
-  "pityDistance": "{n} pulls until guaranteed",
+  "pityDistance": "{n, plural, =1{1 pull until guaranteed} other{{n} pulls until guaranteed}}",
   "@pityDistance": {
     "placeholders": {
       "n": {
@@ -499,7 +499,7 @@
       }
     }
   },
-  "pityClose": "Close to guaranteed! {n} pulls left",
+  "pityClose": "{n, plural, =1{Close to guaranteed! 1 pull left} other{Close to guaranteed! {n} pulls left}}",
   "@pityClose": {
     "placeholders": {
       "n": {
@@ -532,7 +532,7 @@
       }
     }
   },
-  "timelineSinceLast": "{n} pulls",
+  "timelineSinceLast": "{n, plural, =1{1 pull} other{{n} pulls}}",
   "@timelineSinceLast": {
     "placeholders": {
       "n": {
@@ -544,7 +544,7 @@
   "luckTierAverage": "Average",
   "luckTierUnlucky": "Unlucky",
   "timelineNowLabel": "Now",
-  "timelineNowPulls": "{n} pulls",
+  "timelineNowPulls": "{n, plural, =1{1 pull} other{{n} pulls}}",
   "@timelineNowPulls": {
     "placeholders": {
       "n": {
@@ -552,7 +552,7 @@
       }
     }
   },
-  "timelineNowSinceLast": "{n} pulls since last {star}",
+  "timelineNowSinceLast": "{n, plural, =1{1 pull since last {star}} other{{n} pulls since last {star}}}",
   "@timelineNowSinceLast": {
     "placeholders": {
       "star": {
@@ -563,7 +563,7 @@
       }
     }
   },
-  "timelineNowSinceCrossPool": "{n} pulls since last {star} across banners",
+  "timelineNowSinceCrossPool": "{n, plural, =1{1 pull since last {star} across banners} other{{n} pulls since last {star} across banners}}",
   "@timelineNowSinceCrossPool": {
     "placeholders": {
       "star": {
@@ -605,7 +605,7 @@
     }
   },
   "filterKindAll": "All kinds",
-  "filterSearchHint": "Search name…",
+  "filterSearchHint": "Search name...",
   "filterClear": "Clear filters",
   "pagerFirst": "First",
   "pagerLast": "Last",
@@ -707,7 +707,7 @@
   "@settingsImageCacheGallery": {
     "description": "Label for gallery cache size (large detail images shown in item dialog)."
   },
-  "settingsImageCacheCalculating": "Calculating…",
+  "settingsImageCacheCalculating": "Calculating...",
   "@settingsImageCacheCalculating": {
     "description": "Loading placeholder while scanning cache size."
   },
@@ -825,7 +825,7 @@
   "settingsImportSelectTitle": "Select accounts to import",
   "settingsImportMergeBadge": "Merge",
   "accountsPickerSelectAll": "Select all",
-  "accountRecordCount": "{n} records",
+  "accountRecordCount": "{n, plural, =1{1 record} other{{n} records}}",
   "@accountRecordCount": {
     "placeholders": {
       "n": {
@@ -866,7 +866,7 @@
   "accountActionEditAlias": "Edit alias",
   "accountEditAliasTitle": "Edit alias",
   "accountDragHandleTooltip": "Drag to reorder",
-  "loadingBootstrap": "Loading…",
+  "loadingBootstrap": "Loading...",
   "timelineTopRarityTitle": "{star} Timeline ({n})",
   "@timelineTopRarityTitle": {
     "placeholders": {
@@ -879,7 +879,7 @@
     }
   },
   "bannerTopRarityCountTitle": "Highest rarity count per banner",
-  "bannerTopRarityPullsSinceLast": "{n} pulls since last {star}",
+  "bannerTopRarityPullsSinceLast": "{n, plural, =1{1 pull since last {star}} other{{n} pulls since last {star}}}",
   "@bannerTopRarityPullsSinceLast": {
     "placeholders": {
       "star": {
@@ -916,7 +916,7 @@
   "updateButtonSkip": "Skip this version",
   "updateButtonLater": "Later",
   "updateCheckButton": "Check for updates",
-  "updateChecking": "Checking…",
+  "updateChecking": "Checking...",
   "updateAlreadyLatest": "You're on the latest version",
   "updateCheckFailed": "Update check failed: {reason}",
   "@updateCheckFailed": {

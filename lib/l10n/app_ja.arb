@@ -1,14 +1,14 @@
 {
   "@@locale": "ja",
   "localeNativeName": "日本語",
-  "localeTranslator": "<a href=\"https://home.gamer.com.tw/homeindex.php?owner=XMoiswnX\">世界へいわ</a>、<a href=\"https://claude.com/claude-code\">Claude Code</a>",
-  "localeTranslatorLabel": "翻訳者：{translator}",
   "@localeNativeName": {
     "description": "Native name of this locale, shown in language picker."
   },
+  "localeTranslator": "<a href=\"https://home.gamer.com.tw/homeindex.php?owner=XMoiswnX\">世界へいわ</a>、<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "@localeTranslator": {
     "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
   },
+  "localeTranslatorLabel": "翻訳者：{translator}",
   "@localeTranslatorLabel": {
     "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
     "placeholders": {
@@ -184,10 +184,10 @@
   "sortDirectionDesc": "降順",
   "sortDirectionAsc": "昇順",
   "sortHintClickToSort": "クリックで並べ替え",
-  "progressPreparing": "準備中…",
-  "progressPreparingHint": "データソースを準備しています…",
-  "progressWaiting": "リクエスト待機中…",
-  "progressFetching": "取得中…",
+  "progressPreparing": "準備中...",
+  "progressPreparingHint": "データソースを準備しています...",
+  "progressWaiting": "リクエスト待機中...",
+  "progressFetching": "取得中...",
   "progressDone": "更新完了",
   "progressFailed": "失敗",
   "progressOpenGameHint": "鳴潮 → 集音 → 集音履歴 を開いてください",
@@ -602,7 +602,7 @@
     }
   },
   "filterKindAll": "全タイプ",
-  "filterSearchHint": "名称を検索…",
+  "filterSearchHint": "名称を検索...",
   "filterClear": "フィルターをクリア",
   "pagerFirst": "最初のページ",
   "pagerLast": "最後のページ",
@@ -704,7 +704,7 @@
   "@settingsImageCacheGallery": {
     "description": "Label for gallery cache size (large detail images shown in item dialog)."
   },
-  "settingsImageCacheCalculating": "計算中…",
+  "settingsImageCacheCalculating": "計算中...",
   "@settingsImageCacheCalculating": {
     "description": "Loading placeholder while scanning cache size."
   },
@@ -798,6 +798,7 @@
     }
   },
   "importReasonInvalidFormat": "ファイル形式が正しくないか、ファイルが破損しています",
+  "importReasonIncompatibleVersion": "このバックアップのデータバージョンは現在のアプリと互換性がないため、インポートできません",
   "importReasonUnreadable": "ファイルを読み込めません",
   "importReasonForeignApp": "このファイルは本ツールでエクスポートされたバックアップではありません",
   "importReasonNotPlatformFile": "このファイルは有効な {platform} のエクスポートではありません",
@@ -862,7 +863,7 @@
   "accountActionEditAlias": "別名を編集",
   "accountEditAliasTitle": "別名を編集",
   "accountDragHandleTooltip": "ドラッグで並べ替え",
-  "loadingBootstrap": "読み込み中…",
+  "loadingBootstrap": "読み込み中...",
   "timelineTopRarityTitle": "{star} タイムライン（{n}）",
   "@timelineTopRarityTitle": {
     "placeholders": {
@@ -912,7 +913,7 @@
   "updateButtonSkip": "このバージョンをスキップ",
   "updateButtonLater": "後で",
   "updateCheckButton": "更新を確認",
-  "updateChecking": "確認中…",
+  "updateChecking": "確認中...",
   "updateAlreadyLatest": "すでに最新バージョンです",
   "updateCheckFailed": "更新の確認に失敗しました：{reason}",
   "@updateCheckFailed": {
