@@ -384,6 +384,14 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - Android job：缺任何一個金鑰或服務帳戶 secret 就失敗；建置後再用 `keytool -printcert -jarfile` 檢查 AAB，若是 debug 金鑰簽的就失敗。上傳用 `r0adkll/upload-google-play`，只上 internal 軌道、不填「新功能」。
 - **從來沒推出過任何版本的 App，API 只能建立 draft 狀態的版本**（錯誤訊息「Only releases with status draft may be created on draft app」）。第一版本來就要在 Play Console 手動上傳，手動上傳後在 Console 推出（內部測試也算），之後 CI 就固定送 `completed`，不提供 draft 選項：內部測試只有測試名單看得到，直接推出才能在升級正式版前，用手機從 Play 收到經 Play 簽署的版本，先確認 Google 登入等依賴簽章的功能。
 - secrets 一覽與每次發版步驟見本機的 `private/play-store/README.md`。
+- **首次上架實際走過的流程與坑**（2026-11-09）：
+  - 在 Play Console 建立 App 時**不填套件名稱**，第一次上傳 AAB 時才由檔案決定，之後不能改；「Play 應用程式簽署」也在第一次上傳時自動啟用。
+  - **預設語言選英文**：沒有翻譯的語言地區會看到預設語言的商店頁，鳴潮玩家遍及全球，英文比繁中合適；每次發版的「新功能」至少要填預設語言那份。之後可在「管理翻譯」更換。
+  - 第一版用 `-rc.1`（例如 `1.9.0-rc.1` → `1090001`）：只用掉這一版保留給內測的版本代碼，正式版尾碼 99 一定比所有 rc 大，測試人員之後會自動收到正式版更新。
+  - 推出後內部測試狀態是「提供給內部測試人員」「尚未審查」（內部測試本來就不審查）。**剛推出的幾分鐘內安裝會失敗**（logcat：`Delivery received non-OK response 2`、`statusCode:1010`），是伺服器還沒開始提供下載，等一下再裝即可。
+  - **`adb install` 會裝進手機上所有使用者空間**（私人空間、廠商的分身空間等）。只在主要空間解除安裝後，Play 會以「其他使用者已經在這裝置安裝不相容版本」拒絕安裝；要用 `adb shell pm uninstall --user <id> <套件>` 逐一清掉（`pm list users` 看有哪些空間）。之後本機測試版一律 `adb install --user 0`。
+  - 服務帳戶在 Play Console 只給「查看應用程式資訊（唯讀）」與「將應用程式發布至測試群組」，**不給「發布正式版」**：CI 就算出錯也發不到正式版。Cloud 端不給任何專案角色，只要啟用 Google Play Android Developer API。
+  - 2023 年 11 月之後註冊的個人開發者帳號，發正式版前要先跑 12 人、連續 14 天的封閉測試（本專案帳號不受此限）。
 - 修改 workflow 後用 actionlint 檢查（`go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/*.yml`）。
 - **actionlint 抓到 `ci.yml` 的既有問題**：自動提交 ARB 正規化的步驟把 `${{ github.head_ref }}` 直接拼進 shell，分支名稱裡的 `$(...)` 會被當成指令執行。改成 `env: HEAD_REF: ${{ github.head_ref }}`，指令裡用 `"$HEAD_REF"`。原神版的 `ci.yml` 是同一份底稿，要一起檢查。
 - **內部測試不用審核**：推出後通常幾分鐘內測試人員就能更新（第一次發布後的測試連結可能要等幾小時）；升級到正式版才進入審核。2023 年 11 月之後註冊的個人開發者帳號，發正式版前還要先跑 12 人、連續 14 天的封閉測試，本專案的帳號不受此限。
@@ -391,7 +399,10 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 ### 36. 簽章指紋：每把金鑰各建一筆 Android 用戶端（通用）
 
 - 接續 #32：Google Cloud 的 Android OAuth 用戶端一筆只能填一個 SHA-1，所以 debug、上傳金鑰、Play 應用程式簽署金鑰各建一筆（套件名稱相同、同一個專案）。
-- **玩家從 Play 下載的版本是用 Play 應用程式簽署金鑰簽的**，SHA-1 要到 Play Console「應用程式完整性」頁複製，不是上傳金鑰的。
+- **玩家從 Play 下載的版本是用 Play 應用程式簽署金鑰簽的**，SHA-1 要到 Play Console「應用程式完整性」頁複製，不是上傳金鑰的。沒登記時，Play 版的雲端同步會顯示授權失敗；登記後本專案幾分鐘內就生效。
+- **Play 簽署金鑰不只一張憑證**（2026-11 新建的 App 實測）：Play 版 APK 除了 v2／v3 簽章（API 24 以上），還有一組只給 Android 17（API 37）以上用的混合後量子簽章（v3.2，區塊 ID `0x70e1c89f`），裡面是**另外兩張憑證**。Play Console「應用程式簽署」頁把它列在「先前的應用程式簽署金鑰」並標「支援量子金鑰（Beta 版）」，按「複製所有憑證指紋」會一次給出三個 SHA-1。Android 17 手機回報哪一張還沒實測，三張都各建一筆 Android 用戶端（多登記沒有副作用）。
+- **JDK 21 的 `apksigner` 讀不了 Play 版 APK**：遇到 v3.2 會報 `ML-DSA KeyFactory not available`。加 `--min-sdk-version 32 --max-sdk-version 36` 只驗 Android 16 以下的簽章，就能讀出傳統那張。要看全部憑證用 `tool/apk_signer_certs.py`：直接解析 APK Signing Block、取出憑證算 SHA-1，不驗簽所以不需要新演算法；結果和 Play Console 的「複製所有憑證指紋」逐一相符。
+- Play Console 的選單位置常改版，找不到「應用程式簽署」頁時，先從手機上已安裝的 Play 版讀（`adb shell pm path --user 0 <套件>` → `adb pull` → `tool/apk_signer_certs.py`），兩邊的值一樣。
 
 ### 37. 應用程式內更新（通用）
 
