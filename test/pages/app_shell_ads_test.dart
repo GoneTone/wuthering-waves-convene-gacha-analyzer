@@ -297,14 +297,55 @@ void main() {
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   testWidgets('snack bars float above the ad', (tester) async {
+    // 貼著廣告的 SnackBar 按鈕容易誤觸廣告（AdMob 間距規定），要留出間距。
     await pump(tester, const Size(412, 915));
+    final messenger = ScaffoldMessenger.of(
+      tester.element(find.text('page:/banner/1')),
+    );
+    messenger.showSnackBar(const SnackBar(content: Text('hello')));
+    await tester.pumpAndSettle();
+    // floating 的外距包在 SnackBar 元件裡，要量看得到的 Material 本體。
+    expect(
+      tester.getRect(find.byKey(_banner)).top -
+          tester
+              .getRect(
+                find
+                    .descendant(
+                      of: find.byType(SnackBar),
+                      matching: find.byType(Material),
+                    )
+                    .first,
+              )
+              .bottom,
+      greaterThanOrEqualTo(AppSpacing.l),
+    );
+    messenger.hideCurrentSnackBar();
+    await tester.pumpAndSettle();
+    messenger.showSnackBar(
+      SnackBar(
+        content: const Text('restart?'),
+        action: SnackBarAction(label: 'restart', onPressed: () {}),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.byKey(_banner)).top -
+          tester.getRect(find.byType(SnackBarAction)).bottom,
+      greaterThanOrEqualTo(AppSpacing.l),
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('snack bars keep the default behavior without an ad', (
+    tester,
+  ) async {
+    await pump(tester, const Size(412, 915), canRequestAds: false);
     ScaffoldMessenger.of(
       tester.element(find.text('page:/banner/1')),
     ).showSnackBar(const SnackBar(content: Text('hello')));
     await tester.pumpAndSettle();
     expect(
-      tester.getRect(find.byType(SnackBar)).bottom,
-      lessThanOrEqualTo(tester.getRect(find.byKey(_banner)).top),
+      Theme.of(tester.element(find.text('hello'))).snackBarTheme.behavior,
+      isNot(SnackBarBehavior.floating),
     );
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 }

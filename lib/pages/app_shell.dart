@@ -482,6 +482,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     // 抽屜不是一個頁面：不先宣告由 App 處理返回，Android 的預測返回會直接關掉 App。
     // 側欄／抽屜切換的頁面是同一層：其他頁按返回先回綜合，在綜合才交給系統離開 App。
     final drawerOpen = compact && _drawerOpen;
+    final theme = Theme.of(context);
     return PopScope(
       canPop: !drawerOpen && location == '/',
       onPopInvokedWithResult: (didPop, _) {
@@ -492,23 +493,39 @@ class _AppShellState extends ConsumerState<AppShell> {
           context.go('/');
         }
       },
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(end: barHidden ? 0 : 1),
-        // 轉成直向時要立刻出現，不播展開動畫。
-        duration: phoneOrientation == PhoneOrientation.landscape
-            ? const Duration(milliseconds: 200)
-            : Duration.zero,
-        curve: Curves.easeOut,
-        builder: (context, barFactor, _) => Scaffold(
-          key: _scaffoldKey,
-          onDrawerChanged: (open) => setState(() => _drawerOpen = open),
-          drawer: drawer,
-          appBar: PreferredSize(
-            preferredSize: Size.fromHeight(kToolbarHeight * barFactor),
-            child: topBar,
+      // 預設 fixed SnackBar 會貼著廣告上緣，按鈕緊鄰廣告違反 AdMob 間距規定；有廣告時改浮動並隔開。
+      child: Theme(
+        data: showAd
+            ? theme.copyWith(
+                snackBarTheme: theme.snackBarTheme.copyWith(
+                  behavior: SnackBarBehavior.floating,
+                  insetPadding: const EdgeInsets.fromLTRB(
+                    AppSpacing.l,
+                    AppSpacing.xs,
+                    AppSpacing.l,
+                    AppSpacing.l,
+                  ),
+                ),
+              )
+            : theme,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(end: barHidden ? 0 : 1),
+          // 轉成直向時要立刻出現，不播展開動畫。
+          duration: phoneOrientation == PhoneOrientation.landscape
+              ? const Duration(milliseconds: 200)
+              : Duration.zero,
+          curve: Curves.easeOut,
+          builder: (context, barFactor, _) => Scaffold(
+            key: _scaffoldKey,
+            onDrawerChanged: (open) => setState(() => _drawerOpen = open),
+            drawer: drawer,
+            appBar: PreferredSize(
+              preferredSize: Size.fromHeight(kToolbarHeight * barFactor),
+              child: topBar,
+            ),
+            body: body,
+            bottomNavigationBar: bottomBar,
           ),
-          body: body,
-          bottomNavigationBar: bottomBar,
         ),
       ),
     );

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:logging/logging.dart';
 
-import '../../services/ads/ad_config.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/ads/ad_config.dart';
 
 /// 載入好的橫幅：可顯示的 [view] 與釋放原生廣告的 [dispose]。
 typedef LoadedBanner = ({Widget view, VoidCallback dispose});

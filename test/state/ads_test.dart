@@ -32,6 +32,12 @@ class _FakeAdsPlatform extends AdsPlatform {
   /// 非 null 時 [showPrivacyOptionsForm] 會等它完成。
   Completer<void>? formGate;
 
+  /// 非 null 時 [showPrivacyOptionsForm] 會丟出它。
+  Object? formError;
+
+  /// 非 null 時 [showPrivacyOptionsForm] 結束後把 [canRequest] 改成它。
+  bool? canRequestAfterForm;
+
   /// [requestConsentUpdate] 的呼叫次數。
   int consentUpdates = 0;
 
@@ -55,7 +61,11 @@ class _FakeAdsPlatform extends AdsPlatform {
   Future<bool> isPrivacyOptionsRequired() async => optionsRequired;
 
   @override
-  Future<void> showPrivacyOptionsForm() async => formGate?.future;
+  Future<void> showPrivacyOptionsForm() async {
+    await formGate?.future;
+    if (formError != null) throw formError!;
+    canRequest = canRequestAfterForm ?? canRequest;
+  }
 
   @override
   Future<void> initializeSdk() async {
@@ -145,5 +155,31 @@ void main() {
     await c.read(adsProvider.notifier).start();
     expect(c.read(adsProvider).canRequestAds, isFalse);
     expect(fake.initCalls, 0);
+  });
+
+  test('consent given in the privacy form initializes the SDK', () async {
+    // 啟動時表單失敗、之後才從設定頁同意：要補初始化，分級上限才會套用。
+    final fake = _FakeAdsPlatform()..canRequestAfterForm = true;
+    final c = _container(fake);
+    await c.read(adsProvider.notifier).start();
+    expect(fake.initCalls, 0);
+    await c.read(adsProvider.notifier).showPrivacyOptions();
+    expect(c.read(adsProvider).canRequestAds, isTrue);
+    expect(fake.initCalls, 1);
+  });
+
+  test('privacy form does not initialize the SDK twice', () async {
+    final fake = _FakeAdsPlatform(canRequest: true);
+    final c = _container(fake);
+    await c.read(adsProvider.notifier).start();
+    await c.read(adsProvider.notifier).showPrivacyOptions();
+    expect(fake.initCalls, 1);
+  });
+
+  test('unexpected privacy form error is contained', () async {
+    final fake = _FakeAdsPlatform()..formError = StateError('plugin');
+    final c = _container(fake);
+    await c.read(adsProvider.notifier).showPrivacyOptions();
+    expect(c.read(adsProvider).canRequestAds, isFalse);
   });
 }

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
-import '../services/ads/ads_platform.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/ads/ads_platform.dart';
 
 /// UMP／MobileAds 的平台包裝，測試以 override 換成假實作。
 final adsPlatformProvider = Provider<AdsPlatform>((ref) => AdsPlatform());
@@ -23,9 +23,14 @@ class AdsState {
 
 /// 負責同意流程與 SDK 初始化的控制器。
 class AdsController extends Notifier<AdsState> {
+  /// 廣告相關 log。
   static final _log = Logger('ads');
 
+  /// [start] 是否已執行過。
   bool _started = false;
+
+  /// MobileAds SDK 是否已初始化；同一個 session 只初始化一次。
+  bool _sdkInitialized = false;
 
   @override
   AdsState build() => const AdsState();
@@ -50,39 +55,46 @@ class AdsController extends Notifier<AdsState> {
       return;
     }
     try {
-      final canRequest = await platform.canRequestAds();
-      if (canRequest) await platform.initializeSdk();
-      final optionsRequired = await platform.isPrivacyOptionsRequired();
-      if (!ref.mounted) return;
-      state = AdsState(
-        canRequestAds: canRequest,
-        privacyOptionsRequired: optionsRequired,
-      );
-      _log.info(
-        'ads enabled canRequestAds=$canRequest privacyOptionsRequired=$optionsRequired',
-      );
+      await _enableIfAllowed(platform);
     } catch (e, st) {
       // 非同意例外（如 PlatformException）不能變成未處理錯誤；狀態維持預設＝廣告關閉。
       _log.severe('ads start failed: $e', e, st);
     }
   }
 
-  /// 顯示隱私權選項表單，關閉後重讀兩個旗標。
+  /// 顯示隱私權選項表單，關閉後重讀兩個旗標；表單中才同意時補初始化 SDK。
   Future<void> showPrivacyOptions() async {
     final platform = ref.read(adsPlatformProvider);
     try {
-      await platform.showPrivacyOptionsForm();
-    } on AdsConsentException catch (e) {
-      _log.warning(
-        'privacy options form error code=${e.code} message=${e.message}',
-      );
+      try {
+        await platform.showPrivacyOptionsForm();
+      } on AdsConsentException catch (e) {
+        _log.warning(
+          'privacy options form error code=${e.code} message=${e.message}',
+        );
+      }
+      await _enableIfAllowed(platform);
+    } catch (e, st) {
+      // 呼叫端是設定頁的按鈕，平台例外不能往上丟。
+      _log.severe('privacy options failed: $e', e, st);
     }
+  }
+
+  /// 讀取同意結果寫入狀態；可請求廣告時先初始化 SDK，內容分級上限才會在載入前套用。
+  Future<void> _enableIfAllowed(AdsPlatform platform) async {
     final canRequest = await platform.canRequestAds();
+    if (canRequest && !_sdkInitialized) {
+      await platform.initializeSdk();
+      _sdkInitialized = true;
+    }
     final optionsRequired = await platform.isPrivacyOptionsRequired();
     if (!ref.mounted) return;
     state = AdsState(
       canRequestAds: canRequest,
       privacyOptionsRequired: optionsRequired,
+    );
+    _log.info(
+      'ads consent resolved canRequestAds=$canRequest privacyOptionsRequired=$optionsRequired',
     );
   }
 }
