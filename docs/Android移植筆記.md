@@ -701,7 +701,8 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 橫幅預設會自動換廣告，原生 `AdListener` 每次都會再轉發 `onAdLoaded`／`onAdFailedToLoad`，外掛沒有只觸發一次的保護。把它們接成 `Completer` 時，第二次會丟 `Future already completed`；輪播失敗時若照範例 `ad.dispose()`，會釋放畫面上正在顯示的廣告。兩個回呼都要先檢查 `isCompleted`，載入後的釋放交給元件。
 
 **版面**
-- 底部狀態列和廣告一起放進 `Scaffold.bottomNavigationBar`，SnackBar 才會自動浮在廣告上方（放在 body 裡會被 SnackBar 蓋住）。代價是 body 不再收到底部 padding，捲到最底時少一段手勢列高度的空白。
+- 底部狀態列和廣告一起放進 `Scaffold.bottomNavigationBar`，SnackBar 才會自動浮在廣告上方（放在 body 裡會被 SnackBar 蓋住）。實測既有頁面沒有可見差異：各頁本來就自己留底部 padding，body 原本也是 `SafeArea(bottom: false)`。
+- 預設的 fixed SnackBar 會貼著廣告上緣，「重新啟動」等按鈕緊鄰廣告，違反 AdMob 的間距規定；顯示廣告時外殼用 `snackBarTheme` 把 SnackBar 改成 floating，與廣告至少隔 16dp。沒有廣告時維持原本行為。
 - 手機排版開鍵盤時，廣告和狀態列一起收起。
 
 **同意**

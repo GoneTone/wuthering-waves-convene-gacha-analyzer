@@ -43,7 +43,7 @@ Android 版會在有內容的頁面底部顯示一則 Google AdMob 橫幅廣告�
 
 - 依 Google 公布的說明，Google Mobile Ads SDK 會自動收集並傳送以下資料給 Google，用於廣告、分析與防止詐騙：裝置的 IP 位址（可能用來推估大致位置）、與廣告的互動（例如 App 啟動、點擊、影片觀看）、效能診斷資訊，以及 Android 廣告 ID、應用程式集 ID 等裝置識別碼。所有資料在傳輸時都經過 TLS 加密。
 - 這些資料由 Google 收集與處理，開發者收不到個人資料。詳見 [Google 如何使用合作夥伴網站或應用程式的資訊](https://policies.google.com/technologies/partner-sites)。
-- 歐洲經濟區、英國與瑞士，以及美國部分州的使用者，第一次開啟 App 時會看到 Google 的同意視窗；之後可以在設定頁的「廣告隱私權選項」變更選擇。拒絕個人化廣告時，仍會顯示非個人化廣告。
+- 歐洲經濟區、英國與瑞士的使用者，第一次開啟 App 時會看到 Google 的同意視窗，之後可以在設定頁的「廣告隱私權選項」變更選擇；美國部分州的使用者可以在設定頁的「廣告隱私權選項」選擇退出個人化廣告。拒絕個人化廣告時，仍會顯示非個人化廣告。
 - 你可以在 Android 系統設定重設或刪除廣告 ID。
 - 廣告內容分級上限為「青少年（T）」。
 
@@ -104,7 +104,7 @@ The Android version shows one Google AdMob banner ad at the bottom of pages that
 
 - According to Google's disclosure, the Google Mobile Ads SDK automatically collects and sends the following data to Google for advertising, analytics and fraud prevention: the device's IP address (which may be used to estimate its general location), interactions with ads (such as app launches, taps and video views), performance diagnostics, and device identifiers such as the Android advertising ID and app set ID. All of it is encrypted in transit with TLS.
 - This data is collected and processed by Google; the developer does not receive personal data. See [How Google uses information from sites or apps that use our services](https://policies.google.com/technologies/partner-sites).
-- Users in the European Economic Area, the UK and Switzerland, and in some US states, see Google's consent form the first time they open the app, and can change their choice later under "Ad privacy options" in Settings. If you decline personalized ads, non-personalized ads are still shown.
+- Users in the European Economic Area, the UK and Switzerland see Google's consent form the first time they open the app, and can change their choice later under "Ad privacy options" in Settings. Users in some US states can opt out of personalized ads under "Ad privacy options" in Settings. If you decline personalized ads, non-personalized ads are still shown.
 - You can reset or delete your advertising ID in Android's system settings.
 - Ad content is limited to the "Teen (T)" rating.
 
