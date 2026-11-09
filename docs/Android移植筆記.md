@@ -423,7 +423,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - **`adb install` 會裝進手機上所有使用者空間**（私人空間、廠商的分身空間等）。只在主要空間解除安裝後，Play 會以「其他使用者已經在這裝置安裝不相容版本」拒絕安裝；要用 `adb shell pm uninstall --user <id> <套件>` 逐一清掉（`pm list users` 看有哪些空間）。之後本機測試版一律 `adb install --user 0`。
   - 服務帳戶在 Play Console 只給「查看應用程式資訊（唯讀）」與「將應用程式發布至測試群組」，**不給「發布正式版」**：CI 就算出錯也發不到正式版。Cloud 端不給任何專案角色，只要啟用 Google Play Android Developer API。
   - 2023 年 11 月之後註冊的個人開發者帳號，發正式版前要先跑 12 人、連續 14 天的封閉測試（本專案帳號不受此限）。
-- **rc 版手動發、正式版走 CI**：rc 在本機建 AAB 後用 `tool/play_upload_internal.py <服務帳戶 JSON> <aab> <版本名稱> [--notes-en <英文版本資訊>]` 上傳並推出到內部測試（`--notes-en` 會填 `en-US` 的「新功能」）（只靠 `cryptography` 簽 JWT 換權杖，不需要 Google 的 API 套件；流程是建立編輯 → 上傳 → 設定 internal 版本為 completed → 提交，失敗會刪掉編輯）。手動上傳過的 rc 已用掉版本代碼，CI 的 `release.yml` 只拿來發正式版 tag，不會撞號。第一次用它上傳成功，也順便證明服務帳戶權限正確（CI 用同一個帳戶）。
+- **rc 版手動發、正式版走 CI**：rc 在本機建 AAB 後用 `tool/play_upload_internal.py <服務帳戶 JSON> <aab> <版本名稱> [--notes-en <英文版本資訊>]` 上傳並推出到內部測試（`--notes-en` 會填 `en-US` 的「新功能」；只靠 `cryptography` 簽 JWT 換權杖，不需要 Google 的 API 套件；流程是建立編輯 → 上傳 → 設定 internal 版本為 completed → 提交，失敗會刪掉編輯）。手動上傳過的 rc 已用掉版本代碼，CI 的 `release.yml` 只拿來發正式版 tag，不會撞號。第一次用它上傳成功，也順便證明服務帳戶權限正確（CI 用同一個帳戶）。
 - 修改 workflow 後用 actionlint 檢查（`go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/*.yml`）。
 - **actionlint 抓到 `ci.yml` 的既有問題**：自動提交 ARB 正規化的步驟把 `${{ github.head_ref }}` 直接拼進 shell，分支名稱裡的 `$(...)` 會被當成指令執行。改成 `env: HEAD_REF: ${{ github.head_ref }}`，指令裡用 `"$HEAD_REF"`。原神版的 `ci.yml` 是同一份底稿，要一起檢查。
 - **內部測試不用審核**：推出後通常幾分鐘內測試人員就能更新（第一次發布後的測試連結可能要等幾小時）；升級到正式版才進入審核。
@@ -591,7 +591,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 收起時，狀態列那一條仍維持標題列的底色，內容不會跑到狀態列底下。
   - **踩雷：不能只看捲動方向。** 手指離開螢幕時會多一筆 0.5～2.5dp 的反向拖曳，`UserScrollNotification` 的方向會跟著翻回來，標題列收起約半秒後又自己展開。改成同一方向累積拖曳超過 `kTouchSlop`（18dp）才切換。
   - 單元測試用的是直線拖曳，重現不了這個現象，是在模擬器上加暫時 log 才找到。
-  - **踩雷：** 收起時只用 `ClipRect` 裁掉繪製的話，按鈕仍在語意樹與焦點樹裡（讀屏和鍵盤還停得上去），要再包 `ExcludeSemantics`＋`ExcludeFocus`。
+  - **踩雷：** 收起時只用 `ClipRect` 裁掉繪製的話，按鈕仍在語意樹與焦點樹裡（螢幕閱讀器和鍵盤還停得上去），要再包 `ExcludeSemantics`＋`ExcludeFocus`。
   - **踩雷：** 頁面只比畫面高一點（不超過一個標題列高）時，收起後整頁剛好放得下，又被「內容已不需捲動就展開」的規則打開，每次拖動閃一下；只在 `maxScrollExtent > kToolbarHeight` 時才收起。
 - **紀錄列表**：
   - 篩選、排序同一個 `Wrap`。
