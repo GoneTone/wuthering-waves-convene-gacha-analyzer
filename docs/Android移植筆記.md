@@ -235,7 +235,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 **配對與輸入**
 - **注音輸入法會把組字中的注音一起送進 RemoteInput**：配對碼只保留數字（`filter { it.isDigit() }`）。
 - **橫幅通知幾秒就收起**：玩家來不及點「配對」時要從通知欄拉下來找；教學文字寫「從螢幕頂端往下拉」是對的。
-- **「點這裡回到 App」點了不會消失**（2026-11-09 發現）：配對成功的通知沒設 `setAutoCancel(true)`；而且成功後服務還要再跑 4 秒才 `stopForeground(DETACH)`，這段期間它仍是前景服務的通知，系統不會因為點擊就收起。改成成功時先 `stopForeground(STOP_FOREGROUND_DETACH)` 再排 4 秒後結束服務，通知本身加 `setAutoCancel(openApp)`。「配對失敗，請回到 App 再試一次」（App 已被系統關掉、收不到配對碼時）同樣問題而且更糟：服務沒結束，點了不消失，3 分鐘後還會再跳一則逾時；改成顯示後直接 `finish(keepNotification = true)`。原則：會點開 App 的通知都要 `setAutoCancel`，而且發出時不能還是前景服務的通知。
+- **配對結果通知：點了不消失、也不會彈出**（2026-11-09 發現）：成功通知原本是拿前景服務那則（同一個 ID）換內容，所以（1）它被系統標成前景服務通知，點擊不會自動收起；（2）對系統而言只是「同一則通知更新」，不會像新通知一樣跳出橫幅，玩家得自己拉開通知欄。第一次只加 `setAutoCancel` 並在發出後立刻 `stopForeground(DETACH)`，實機仍不消失：發通知與脫離前景在系統裡是非同步處理的，順序不可靠。最後改成和逾時通知一樣：**先結束服務（`stopForeground(REMOVE)`＋`stopSelf`），再用另一個 ID 發結果通知**（`setContentIntent`＋`setAutoCancel(true)`），成功、App 已關閉、逾時三種結果共用 `finishWith()`；前景服務的 ID 只給進行中的通知。原本成功後多等 4 秒才結束服務，文件沒有原因，拿掉了。模擬器（API 36）實際配對驗證：結果通知旗標只有 `AUTO_CANCEL`、服務已結束，點擊後 App 到前景、通知數歸零。原則：會點開 App 的通知不能和前景服務共用 ID。
 - **輸入法的自動校正會改網址**：手動輸入欄位要設 `keyboardType: TextInputType.url`、`autocorrect: false`、`enableSuggestions: false`，否則 `&lang=` 會被改成 `&Lang=`，網址就失效了。
 
 **版面**
