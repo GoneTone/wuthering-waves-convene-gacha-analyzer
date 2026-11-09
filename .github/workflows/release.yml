@@ -307,6 +307,21 @@ jobs:
             echo "::warning::CLOUD_SYNC_CLIENT_ID/SECRET secrets not set; cloud sync will be disabled in this release build"
           fi
 
+      # AdMob ID 不進 repo；缺 secrets 時只會顯示官方測試廣告，不影響建置。
+      - name: Write ads defines from secrets
+        env:
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+          ADMOB_BANNER_UNIT_ID: ${{ secrets.ADMOB_BANNER_UNIT_ID }}
+        run: |
+          if [ -n "$ADMOB_APP_ID" ] && [ -n "$ADMOB_BANNER_UNIT_ID" ]; then
+            mkdir -p secrets
+            jq -n --arg app "$ADMOB_APP_ID" --arg unit "$ADMOB_BANNER_UNIT_ID"               '{ADMOB_APP_ID: $app, ADMOB_BANNER_UNIT_ID: $unit}' > secrets/ads_defines.json
+            echo "DEFINES_ARG=${DEFINES_ARG:-} --dart-define-from-file=secrets/ads_defines.json" >> "$GITHUB_ENV"
+            echo "ads defines written"
+          else
+            echo "::warning::ADMOB_APP_ID/ADMOB_BANNER_UNIT_ID secrets not set; this release build will only show test ads"
+          fi
+
       # === E. Build =================================================
       - name: Build app bundle
         run: |
@@ -348,7 +363,7 @@ jobs:
 
       - name: Remove signing material
         if: always()
-        run: rm -f android/upload.jks android/key.properties secrets/cloud_sync_defines.json
+        run: rm -f android/upload.jks android/key.properties secrets/cloud_sync_defines.json secrets/ads_defines.json
 
       - name: Write step summary
         if: success()

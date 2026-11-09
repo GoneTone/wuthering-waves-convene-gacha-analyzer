@@ -136,6 +136,23 @@ flutter run -d windows
    flutter run -d <裝置 ID> --dart-define-from-file=secrets/cloud_sync_defines.json
    ```
 
+### 廣告 ID（選用，Android）
+
+Android 底部橫幅廣告的 AdMob ID 同樣在建置時注入，不寫進原始碼。要在自己的建置播正式廣告，在專案根目錄建立 `secrets/ads_defines.json`（已被 git 忽略），並和雲端同步設定檔一起帶入：
+
+```json
+{
+  "ADMOB_APP_ID": "ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy",
+  "ADMOB_BANNER_UNIT_ID": "ca-app-pub-xxxxxxxxxxxxxxxx/zzzzzzzzzz"
+}
+```
+
+```bash
+flutter run -d <device id> --dart-define-from-file=secrets/cloud_sync_defines.json --dart-define-from-file=secrets/ads_defines.json
+```
+
+沒有這個檔案、或非 release 建置時，一律使用 Google 官方測試廣告 ID，只會顯示測試廣告。
+
 ### Rust ↔ Dart 橋接程式碼產生
 
 修改 `rust/src/api/` 內的 Rust 函式後，重新產生橋接程式碼。第一次使用前先安裝 codegen 工具：

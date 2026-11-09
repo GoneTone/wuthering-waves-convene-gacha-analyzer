@@ -1,3 +1,4 @@
+import java.util.Base64
 import java.util.Properties
 
 plugins {
@@ -12,6 +13,16 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.exists()) keystorePropertiesFile.inputStream().use { load(it) }
 }
+
+// Flutter 把所有 --dart-define／--dart-define-from-file 展開成以逗號分隔、每段 base64 的 KEY=VALUE，放進 dart-defines 屬性。
+// 只有 release 建置會用到注入的 AdMob 應用程式 ID；缺少時沿用 defaultConfig 的官方測試 ID。
+val injectedAdmobAppId: String = (project.findProperty("dart-defines") as String? ?: "")
+    .split(",")
+    .filter { it.isNotEmpty() }
+    .map { String(Base64.getDecoder().decode(it), Charsets.UTF_8) }
+    .firstOrNull { it.startsWith("ADMOB_APP_ID=") }
+    ?.substringAfter("=")
+    .orEmpty()
 
 android {
     namespace = "tw.reh.wuwa.gacha"
@@ -35,6 +46,8 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // 官方測試應用程式 ID：debug／profile 與未注入的 release 都用它，SDK 不會因缺 ID 閃退。
+        manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
     }
 
     signingConfigs {
@@ -51,6 +64,9 @@ android {
 
     buildTypes {
         release {
+            if (injectedAdmobAppId.isNotEmpty()) {
+                manifestPlaceholders["admobAppId"] = injectedAdmobAppId
+            }
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
