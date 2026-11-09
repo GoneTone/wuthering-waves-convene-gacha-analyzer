@@ -315,7 +315,8 @@ jobs:
         run: |
           if [ -n "$ADMOB_APP_ID" ] && [ -n "$ADMOB_BANNER_UNIT_ID" ]; then
             mkdir -p secrets
-            jq -n --arg app "$ADMOB_APP_ID" --arg unit "$ADMOB_BANNER_UNIT_ID"               '{ADMOB_APP_ID: $app, ADMOB_BANNER_UNIT_ID: $unit}' > secrets/ads_defines.json
+            jq -n --arg app "$ADMOB_APP_ID" --arg unit "$ADMOB_BANNER_UNIT_ID" \
+              '{ADMOB_APP_ID: $app, ADMOB_BANNER_UNIT_ID: $unit}' > secrets/ads_defines.json
             echo "DEFINES_ARG=${DEFINES_ARG:-} --dart-define-from-file=secrets/ads_defines.json" >> "$GITHUB_ENV"
             echo "ads defines written"
           else
