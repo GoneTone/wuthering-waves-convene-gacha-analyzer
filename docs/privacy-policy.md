@@ -15,6 +15,7 @@
 - 喚取紀錄、帳號 UID 與你設定的別名。
 - 查詢喚取紀錄用的網址參數（從鳴潮的記錄檔或你手動輸入的網址取得）。
 - App 設定與執行紀錄（log）。
+- Android 版：你在 Google 廣告同意視窗的選擇。
 
 以上資料存在你的裝置上，在 App 內刪除帳號會一併刪除該帳號的資料。
 
@@ -76,6 +77,7 @@ This app is an unofficial fan-made tool and is not affiliated with Kuro Games. T
 - Convene history, account UIDs and the aliases you set.
 - The URL parameters used to query your convene history (taken from the game's log file or a URL you enter).
 - App settings and logs.
+- Android: your choices in Google's ad consent form.
 
 This data is stored on your device. Deleting an account in the app removes that account's data.
 

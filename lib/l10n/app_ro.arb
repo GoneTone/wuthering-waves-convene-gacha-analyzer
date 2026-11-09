@@ -165,7 +165,7 @@
   "settingsMaskUidInUi": "Ascunde UID-ul în interfață",
   "settingsMaskUidInUiHint": "Când este activată, UID-urile din interfață și din lista de conturi afișează primele 3 cifre, restul fiind ascuns (de ex. 123•••••). Util pentru streaming sau partajarea ecranului. Imaginile de partajat, fișierele exportate și dialogul de confirmare a ștergerii nu sunt afectate.",
   "settingsAdPrivacyOptions": "Opțiuni de confidențialitate pentru reclame",
-  "settingsAdPrivacyOptionsHint": "Modifică dacă ești de acord cu afișarea reclamelor personalizate.",
+  "settingsAdPrivacyOptionsHint": "Modificați dacă sunteți de acord cu afișarea reclamelor personalizate.",
   "settingsAbout": "Despre",
   "settingsOtherGamesTitle": "Versiuni pentru alte jocuri",
   "settingsOtherGamesGenshin": "Genshin Impact",

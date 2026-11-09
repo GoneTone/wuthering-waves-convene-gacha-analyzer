@@ -165,7 +165,7 @@
   "settingsMaskUidInUi": "UID elrejtése a felületen",
   "settingsMaskUidInUiHint": "Bekapcsolva a felületen és a fióklistában az UID-nek csak az első 3 számjegye látszik, a többi rejtve marad (pl. 123•••••). Streameléshez vagy képernyőmegosztáshoz hasznos. A megosztható képeket, az exportált fájlokat és a törlés megerősítő ablakát nem érinti.",
   "settingsAdPrivacyOptions": "Hirdetési adatvédelmi beállítások",
-  "settingsAdPrivacyOptionsHint": "Módosítsd, hogy hozzájárulsz-e a személyre szabott hirdetések megjelenítéséhez.",
+  "settingsAdPrivacyOptionsHint": "Módosítsa, hogy hozzájárul-e a személyre szabott hirdetések megjelenítéséhez.",
   "settingsAbout": "Névjegy",
   "settingsOtherGamesTitle": "Verziók más játékokhoz",
   "settingsOtherGamesGenshin": "Genshin Impact",
