@@ -45,6 +45,9 @@ class AdsController extends Notifier<AdsState> {
     } on AdsConsentException catch (e) {
       // 更新失敗仍沿用上次同意結果（UMP 官方建議），所以不 return。
       _log.warning('consent update failed code=${e.code} message=${e.message}');
+    } catch (e, st) {
+      _log.severe('ads consent failed: $e', e, st);
+      return;
     }
     try {
       final canRequest = await platform.canRequestAds();

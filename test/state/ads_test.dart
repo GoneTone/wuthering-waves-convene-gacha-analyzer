@@ -23,6 +23,9 @@ class _FakeAdsPlatform extends AdsPlatform {
   /// [isPrivacyOptionsRequired] 的回傳值。
   bool optionsRequired;
 
+  /// 非 null 時 [requestConsentUpdate] 會丟出它。
+  Object? consentError;
+
   /// 非 null 時 [initializeSdk] 會丟出它。
   Object? initError;
 
@@ -38,6 +41,7 @@ class _FakeAdsPlatform extends AdsPlatform {
   @override
   Future<void> requestConsentUpdate() async {
     consentUpdates++;
+    if (consentError != null) throw consentError!;
     if (consentFails) throw AdsConsentException('1', 'boom');
   }
 
@@ -132,5 +136,14 @@ void main() {
     c.dispose();
     fake.formGate!.complete();
     await pending;
+  });
+
+  test('unexpected consent error is contained and ads stay disabled', () async {
+    final fake = _FakeAdsPlatform(canRequest: true)
+      ..consentError = StateError('plugin');
+    final c = _container(fake);
+    await c.read(adsProvider.notifier).start();
+    expect(c.read(adsProvider).canRequestAds, isFalse);
+    expect(fake.initCalls, 0);
   });
 }
