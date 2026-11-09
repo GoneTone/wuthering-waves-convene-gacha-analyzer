@@ -158,8 +158,7 @@ class AdbPairingService : Service() {
         val ch = channel
         if (ch == null) {
             Log.w(TAG, "pairing code received but flutter engine is gone")
-            notifyMain(simple(getString(R.string.pairing_no_app_text), null, openApp = true))
-            stopDiscovery()
+            endWithNoApp()
             return
         }
         main.post {
@@ -185,10 +184,20 @@ class AdbPairingService : Service() {
                 }
 
                 override fun notImplemented() {
-                    notifyMain(simple(getString(R.string.pairing_no_app_text), null, openApp = true))
+                    Log.w(TAG, "pairing code received but no handler is registered")
+                    endWithNoApp()
                 }
             })
         }
+    }
+
+    /**
+     * App 已經關掉、收不到配對碼：留下「請回到 App 再試一次」並結束服務。
+     * 不結束的話這則仍是前景服務的通知，點了不會收起，3 分鐘後還會再跳一則逾時。
+     */
+    private fun endWithNoApp() {
+        notifyMain(simple(getString(R.string.pairing_no_app_text), null, openApp = true))
+        finish(keepNotification = true)
     }
 
     private fun onSelfTimeout() {
