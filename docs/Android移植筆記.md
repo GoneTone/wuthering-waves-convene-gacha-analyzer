@@ -422,7 +422,8 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **取消與失敗分開處理**：玩家在確認畫面按拒絕、或從通知列取消下載，都視為玩家的選擇，不顯示任何提示；真正的失敗（外掛錯誤、不允許彈性更新）才顯示「目前無法在 App 內更新，請到 Google Play 更新」並附「前往 Google Play」。
 - **測試方式**：Play Console 的「內部應用程式分享」可以上傳任意版本代碼，不會用掉正式的版本號。從舊版的分享連結安裝，再分享一個版本代碼較大的版本，舊版開啟時就會偵測到更新。要特別測：下載完成後滑掉提示再重開 App、下載途中關掉 App 再重開、從通知列取消下載。
 - 預覽版只放內部測試、不要升級正式版：App 查 GitHub 更新說明時會略過預覽版。
-- **下載中要有進度**（2026-11-09 rc.1 → rc.2 實機發現）：按下 Play 確認視窗的「更新」後回到 App，到「已下載完成」提示出現之前完全沒有畫面回饋（11 MB 約 5 秒，網路慢更久），看起來像沒反應。`in_app_update` 只轉出安裝狀態、沒有位元組數，所以另寫 `PlayUpdateProgressChannel`（EventChannel）自己向 `AppUpdateManager` 註冊 `InstallStateUpdatedListener`，送出 `bytesDownloaded`／`totalBytesToDownload`；app 模組要自己加 `com.google.android.play:app-update` 依賴（外掛的是 `implementation`，不會傳給 app）。進度是以廣播送給整個 App，不必是開始下載的那個 manager 也收得到。畫面是常駐 SnackBar：「正在下載新版本...」＋百分比＋進度條＋「已下載／總大小」，總大小未知時是不確定進度條；下載完成、失敗或拒絕時只關掉這一條（保存 `showSnackBar` 回傳的 controller，不用 `hideCurrentSnackBar`，以免關錯別的提示）。
+- **下載中要有進度**（2026-11-09 rc.1 → rc.2 實機發現）：按下 Play 確認視窗的「更新」後回到 App，到「已下載完成」提示出現之前完全沒有畫面回饋（11 MB 約 5 秒，網路慢更久），看起來像沒反應。`in_app_update` 只轉出安裝狀態、沒有位元組數，所以另寫 `PlayUpdateProgressChannel`（EventChannel）自己向 `AppUpdateManager` 註冊 `InstallStateUpdatedListener`，送出 `bytesDownloaded`／`totalBytesToDownload`；app 模組要自己加 `com.google.android.play:app-update` 依賴（外掛的是 `implementation`，不會傳給 app）。進度是以廣播送給整個 App，不必是開始下載的那個 manager 也收得到。畫面是常駐 SnackBar：「正在下載新版本...」＋百分比＋進度條＋「已下載／總大小」，總大小未知時是不確定進度條；下載完成、失敗或拒絕時只關掉這一條（保存 `showSnackBar` 回傳的 controller，不用 `hideCurrentSnackBar`，以免關錯別的提示）。實機（rc.4 → rc.5，10.6 MB）：Play 確認視窗關掉約 0.5 秒後先出現不確定進度條，接著 2% → 20% → 77% → 100%，再換成「重新啟動」。
+  - **要看到新的更新畫面得連發兩版**：畫面是由「目前裝著的版本」顯示的，所以先發含修正的版本讓手機更新上去，再發一版才測得到。Play 版本代碼不能往回退，錄影失敗只能再發下一個 rc。
 
 ### 38. 自適應圖示（通用）
 
