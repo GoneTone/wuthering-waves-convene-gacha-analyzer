@@ -395,6 +395,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - **`adb install` 會裝進手機上所有使用者空間**（私人空間、廠商的分身空間等）。只在主要空間解除安裝後，Play 會以「其他使用者已經在這裝置安裝不相容版本」拒絕安裝；要用 `adb shell pm uninstall --user <id> <套件>` 逐一清掉（`pm list users` 看有哪些空間）。之後本機測試版一律 `adb install --user 0`。
   - 服務帳戶在 Play Console 只給「查看應用程式資訊（唯讀）」與「將應用程式發布至測試群組」，**不給「發布正式版」**：CI 就算出錯也發不到正式版。Cloud 端不給任何專案角色，只要啟用 Google Play Android Developer API。
   - 2023 年 11 月之後註冊的個人開發者帳號，發正式版前要先跑 12 人、連續 14 天的封閉測試（本專案帳號不受此限）。
+- **rc 版手動發、正式版走 CI**：rc 在本機建 AAB 後用 `tool/play_upload_internal.py <服務帳戶 JSON> <aab> <版本名稱>` 上傳並推出到內部測試（只靠 `cryptography` 簽 JWT 換權杖，不需要 Google 的 API 套件；流程是建立編輯 → 上傳 → 設定 internal 版本為 completed → 提交，失敗會刪掉編輯）。手動上傳過的 rc 已用掉版本代碼，CI 的 `release.yml` 只拿來發正式版 tag，不會撞號。第一次用它上傳成功，也順便證明服務帳戶權限正確（CI 用同一個帳戶）。
 - 修改 workflow 後用 actionlint 檢查（`go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/*.yml`）。
 - **actionlint 抓到 `ci.yml` 的既有問題**：自動提交 ARB 正規化的步驟把 `${{ github.head_ref }}` 直接拼進 shell，分支名稱裡的 `$(...)` 會被當成指令執行。改成 `env: HEAD_REF: ${{ github.head_ref }}`，指令裡用 `"$HEAD_REF"`。原神版的 `ci.yml` 是同一份底稿，要一起檢查。
 - **內部測試不用審核**：推出後通常幾分鐘內測試人員就能更新（第一次發布後的測試連結可能要等幾小時）；升級到正式版才進入審核。2023 年 11 月之後註冊的個人開發者帳號，發正式版前還要先跑 12 人、連續 14 天的封閉測試，本專案的帳號不受此限。
