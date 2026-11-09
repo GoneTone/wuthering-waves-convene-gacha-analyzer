@@ -29,6 +29,9 @@ class _FakeAdsPlatform extends AdsPlatform {
   /// 非 null 時 [initializeSdk] 會丟出它。
   Object? initError;
 
+  /// 非 null 時 [initializeSdk] 會等它完成。
+  Completer<void>? initGate;
+
   /// 非 null 時 [showPrivacyOptionsForm] 會等它完成。
   Completer<void>? formGate;
 
@@ -41,8 +44,14 @@ class _FakeAdsPlatform extends AdsPlatform {
   /// [requestConsentUpdate] 的呼叫次數。
   int consentUpdates = 0;
 
+  /// 非 null 時 [loadAndShowConsentFormIfRequired] 會丟出它。
+  Object? loadFormError;
+
   /// [initializeSdk] 的呼叫次數。
   int initCalls = 0;
+
+  /// [showPrivacyOptionsForm] 的呼叫次數。
+  int formCalls = 0;
 
   @override
   Future<void> requestConsentUpdate() async {
@@ -52,7 +61,9 @@ class _FakeAdsPlatform extends AdsPlatform {
   }
 
   @override
-  Future<void> loadAndShowConsentFormIfRequired() async {}
+  Future<void> loadAndShowConsentFormIfRequired() async {
+    if (loadFormError != null) throw loadFormError!;
+  }
 
   @override
   Future<bool> canRequestAds() async => canRequest;
@@ -62,6 +73,7 @@ class _FakeAdsPlatform extends AdsPlatform {
 
   @override
   Future<void> showPrivacyOptionsForm() async {
+    formCalls++;
     await formGate?.future;
     if (formError != null) throw formError!;
     canRequest = canRequestAfterForm ?? canRequest;
@@ -70,6 +82,7 @@ class _FakeAdsPlatform extends AdsPlatform {
   @override
   Future<void> initializeSdk() async {
     initCalls++;
+    await initGate?.future;
     if (initError != null) throw initError!;
   }
 }
@@ -148,13 +161,74 @@ void main() {
     await pending;
   });
 
-  test('unexpected consent error is contained and ads stay disabled', () async {
+  test('unexpected consent error still uses previous consent', () async {
     final fake = _FakeAdsPlatform(canRequest: true)
       ..consentError = StateError('plugin');
     final c = _container(fake);
     await c.read(adsProvider.notifier).start();
-    expect(c.read(adsProvider).canRequestAds, isFalse);
-    expect(fake.initCalls, 0);
+    expect(c.read(adsProvider).canRequestAds, isTrue);
+    expect(fake.initCalls, 1);
+  });
+
+  test(
+    'unexpected consent error without prior consent stays disabled',
+    () async {
+      final fake = _FakeAdsPlatform()..consentError = StateError('plugin');
+      final c = _container(fake);
+      await c.read(adsProvider.notifier).start();
+      expect(c.read(adsProvider).canRequestAds, isFalse);
+      expect(fake.initCalls, 0);
+    },
+  );
+
+  for (final error in <Object>[
+    AdsConsentException('2', 'form'),
+    StateError('plugin'),
+  ]) {
+    test(
+      'consent form ${error.runtimeType} follows the platform flag',
+      () async {
+        for (final canRequest in [true, false]) {
+          final fake = _FakeAdsPlatform(canRequest: canRequest)
+            ..loadFormError = error;
+          final c = _container(fake);
+          await c.read(adsProvider.notifier).start();
+          expect(c.read(adsProvider).canRequestAds, canRequest);
+        }
+      },
+    );
+  }
+
+  test('showPrivacyOptions shows the form once', () async {
+    final fake = _FakeAdsPlatform();
+    final c = _container(fake);
+    await c.read(adsProvider.notifier).showPrivacyOptions();
+    expect(fake.formCalls, 1);
+  });
+
+  test('concurrent start and privacy form initialize the SDK once', () async {
+    final fake = _FakeAdsPlatform(canRequest: true)
+      ..initGate = Completer<void>();
+    final c = _container(fake);
+    final ctrl = c.read(adsProvider.notifier);
+    final both = Future.wait([ctrl.start(), ctrl.showPrivacyOptions()]);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    fake.initGate!.complete();
+    await both;
+    expect(fake.initCalls, 1);
+  });
+
+  test('failed SDK init can be retried', () async {
+    final fake = _FakeAdsPlatform(canRequest: true)
+      ..initError = StateError('plugin');
+    final c = _container(fake);
+    final ctrl = c.read(adsProvider.notifier);
+    await ctrl.start();
+    fake.initError = null;
+    await ctrl.showPrivacyOptions();
+    expect(fake.initCalls, 2);
+    expect(c.read(adsProvider).canRequestAds, isTrue);
   });
 
   test('consent given in the privacy form initializes the SDK', () async {

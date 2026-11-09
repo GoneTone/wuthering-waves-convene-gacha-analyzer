@@ -29,8 +29,8 @@ class AdsController extends Notifier<AdsState> {
   /// [start] 是否已執行過。
   bool _started = false;
 
-  /// MobileAds SDK 是否已初始化；同一個 session 只初始化一次。
-  bool _sdkInitialized = false;
+  /// MobileAds SDK 的初始化；同一個 session 只初始化一次，失敗時清空以便重試。
+  Future<void>? _sdkInit;
 
   @override
   AdsState build() => const AdsState();
@@ -51,8 +51,8 @@ class AdsController extends Notifier<AdsState> {
       // 更新失敗仍沿用上次同意結果（UMP 官方建議），所以不 return。
       _log.warning('consent update failed code=${e.code} message=${e.message}');
     } catch (e, st) {
+      // 同樣沿用上次同意結果，交給 _enableIfAllowed 判斷。
       _log.severe('ads consent failed: $e', e, st);
-      return;
     }
     try {
       await _enableIfAllowed(platform);
@@ -80,13 +80,18 @@ class AdsController extends Notifier<AdsState> {
     }
   }
 
+  /// 初始化 SDK 並讓併發呼叫共用同一次初始化；失敗時清空以便下次重試。
+  Future<void> _initSdkOnce(AdsPlatform platform) {
+    return _sdkInit ??= platform.initializeSdk().catchError((Object e) {
+      _sdkInit = null;
+      throw e;
+    });
+  }
+
   /// 讀取同意結果寫入狀態；可請求廣告時先初始化 SDK，內容分級上限才會在載入前套用。
   Future<void> _enableIfAllowed(AdsPlatform platform) async {
     final canRequest = await platform.canRequestAds();
-    if (canRequest && !_sdkInitialized) {
-      await platform.initializeSdk();
-      _sdkInitialized = true;
-    }
+    if (canRequest) await _initSdkOnce(platform);
     final optionsRequired = await platform.isPrivacyOptionsRequired();
     if (!ref.mounted) return;
     state = AdsState(
