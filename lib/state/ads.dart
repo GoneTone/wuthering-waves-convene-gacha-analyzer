@@ -82,9 +82,12 @@ class AdsController extends Notifier<AdsState> {
 
   /// 初始化 SDK 並讓併發呼叫共用同一次初始化；失敗時清空以便下次重試。
   Future<void> _initSdkOnce(AdsPlatform platform) {
-    return _sdkInit ??= platform.initializeSdk().catchError((Object e) {
+    return _sdkInit ??= platform.initializeSdk().catchError((
+      Object e,
+      StackTrace st,
+    ) {
       _sdkInit = null;
-      throw e;
+      Error.throwWithStackTrace(e, st);
     });
   }
 
