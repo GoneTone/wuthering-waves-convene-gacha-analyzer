@@ -19,6 +19,7 @@ class WaitingForCapture extends UpdateProgress {
   /// 建立 [WaitingForCapture]；[isFallback] 表示 recordId 全池失效後的二次（fallback）捕獲。
   const WaitingForCapture({
     this.isFallback = false,
+    this.checkingLogAccess = false,
     this.captureUnavailable = false,
     this.gameDirMissing = false,
     this.logAccessUnavailable,
@@ -29,6 +30,9 @@ class WaitingForCapture extends UpdateProgress {
 
   /// true 表示 recordId 全池失效後的二次捕獲（UI 顯示重新攔取提示）。
   final bool isFallback;
+
+  /// Android 正在判斷能不能自動讀取遊戲記錄；判斷完成前不引導玩家開遊戲，免得進遊戲後才發現要回來設定。
+  final bool checkingLogAccess;
 
   /// true 表示攔截程式沒能運作（例如 UAC 被拒），目前只靠遊戲 Client.log 偵測。
   final bool captureUnavailable;

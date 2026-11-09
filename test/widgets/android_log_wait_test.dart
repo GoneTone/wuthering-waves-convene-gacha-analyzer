@@ -121,6 +121,19 @@ void main() {
     },
   );
 
+  testWidgets('checking log access offers only cancel', (tester) async {
+    // 判斷完成前給「開啟鳴潮」，玩家進遊戲後才看到「無法自動讀取」，要來回切換兩次。
+    final l = await pump(
+      tester,
+      const WaitingForCapture(checkingLogAccess: true),
+    );
+    expect(find.text(l.progressCheckingLogAccess), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.text(l.actionOpenGame), findsNothing);
+    expect(find.text(l.progressManualInputLink), findsNothing);
+    expect(find.text(l.actionCancel), findsOneWidget);
+  });
+
   testWidgets('open game hidden when the game is not installed', (
     tester,
   ) async {
@@ -287,6 +300,7 @@ void main() {
   });
 
   for (final (label, progress) in [
+    ('checking', const WaitingForCapture(checkingLogAccess: true)),
     ('waiting', const WaitingForCapture()),
     ('connection lost', const WaitingForCapture(logConnectionLost: true)),
     (

@@ -392,6 +392,38 @@ void main() {
     },
   );
 
+  test('checking state lasts until the resolver answers', () async {
+    // 判斷完成前不能引導玩家開遊戲，否則進遊戲後才發現不能自動讀取。
+    bool checking() => (progress()! as WaitingForCapture).checkingLogAccess;
+    final first = Completer<LogAccessOutcome>();
+    final second = Completer<LogAccessOutcome>();
+    final ready = _Ready();
+    resolver.results
+      ..add(() => first.future)
+      ..add(() => second.future);
+    final r = await repo();
+    final done = r.update();
+    await waitUntil(() => resolver.calls.isNotEmpty);
+    expect(checking(), isTrue);
+
+    first.complete(const LogAccessBlocked(LogAccessUnavailable.notPaired));
+    await waitUntil(
+      () => (progress() as WaitingForCapture?)?.logAccessUnavailable != null,
+    );
+    expect(checking(), isFalse);
+
+    await r.retryLogAccess();
+    await waitUntil(() => resolver.calls.length == 2);
+    expect(checking(), isTrue);
+    expect((progress()! as WaitingForCapture).logAccessUnavailable, isNull);
+
+    second.complete(ready.outcome());
+    await waitUntil(() => watch.hits.isNotEmpty);
+    expect(checking(), isFalse);
+    watch.hits[0].complete(_cred());
+    await done;
+  });
+
   test('manual input while resolving is used at once', () async {
     final gate = Completer<LogAccessOutcome>();
     resolver.results.add(() => gate.future);

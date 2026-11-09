@@ -508,7 +508,12 @@ class GachaRepository extends Notifier<GachaState> {
   /// 沒有自動讀取方式時改顯示原因並只等手動輸入，[retryLogAccess] 可以重新判斷。
   /// 結束時一律停監看並 release（中斷連線、依規則關閉無線偵錯）。
   Future<GachaCredential?> _runAndroidWait({required bool isFallback}) async {
-    state = state.copyWith(progress: WaitingForCapture(isFallback: isFallback));
+    state = state.copyWith(
+      progress: WaitingForCapture(
+        isFallback: isFallback,
+        checkingLogAccess: true,
+      ),
+    );
     final logHit = Completer<GachaCredential>();
     _logHit = logHit;
     final cancelled = Completer<void>();
@@ -554,6 +559,9 @@ class GachaRepository extends Notifier<GachaState> {
         if (outcome is LogAccessReady) {
           ready = outcome;
           if (_captureCancelRequested || !ref.mounted) return null;
+          state = state.copyWith(
+            progress: WaitingForCapture(isFallback: isFallback),
+          );
           break;
         }
         if (_captureCancelRequested || !ref.mounted) return null;
@@ -579,7 +587,10 @@ class GachaRepository extends Notifier<GachaState> {
         if (next is GachaCredential) return next;
         if (next == null || !ref.mounted) return null;
         state = state.copyWith(
-          progress: WaitingForCapture(isFallback: isFallback),
+          progress: WaitingForCapture(
+            isFallback: isFallback,
+            checkingLogAccess: true,
+          ),
         );
       }
       await ref

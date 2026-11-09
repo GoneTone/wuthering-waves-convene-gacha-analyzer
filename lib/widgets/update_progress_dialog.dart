@@ -169,15 +169,23 @@ class _Title extends StatelessWidget {
         tokens.textPrimary,
         l.progressPreparing,
       ),
-      WaitingForCapture(:final logAccessUnavailable) => (
-        logAccessUnavailable == null ? Icons.hourglass_top : Icons.info_outline,
-        tokens.textPrimary,
-        !android
-            ? l.progressWaiting
-            : logAccessUnavailable == null
-            ? l.progressWaitingLog
-            : l.progressLogUnavailableTitle,
-      ),
+      WaitingForCapture(
+        :final logAccessUnavailable,
+        :final checkingLogAccess,
+      ) =>
+        (
+          logAccessUnavailable == null
+              ? Icons.hourglass_top
+              : Icons.info_outline,
+          tokens.textPrimary,
+          !android
+              ? l.progressWaiting
+              : checkingLogAccess
+              ? l.progressCheckingLogAccess
+              : logAccessUnavailable == null
+              ? l.progressWaitingLog
+              : l.progressLogUnavailableTitle,
+        ),
       FetchingBanner() => (
         Icons.cloud_download_outlined,
         tokens.textPrimary,

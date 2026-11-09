@@ -169,6 +169,9 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
       );
     }
 
+    // 還不知道能不能自動讀取：不給「開啟鳴潮」與手動輸入，判斷完會換成其中一種畫面。
+    if (p.checkingLogAccess) return const LinearProgressIndicator();
+
     if (p.credentialReady) {
       return Column(
         mainAxisSize: MainAxisSize.min,
