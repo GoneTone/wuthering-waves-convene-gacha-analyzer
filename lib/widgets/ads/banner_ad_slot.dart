@@ -16,10 +16,45 @@ typedef BannerLoader = Future<LoadedBanner?> Function(int width);
 /// 廣告相關 log。
 final _log = Logger('ads');
 
+/// 第一次載入結果寫進 [result] 的橫幅 listener；之後自動 refresh 的回呼一律不理。
+///
+/// AdMob 橫幅預設會自動 refresh，外掛每次都會再轉發 onAdLoaded／onAdFailedToLoad：
+/// 不擋的話第二次 complete 會丟 StateError，refresh 失敗還會釋放正在顯示的廣告。
+/// 已載入的廣告由 [BannerAdSlot] 負責釋放；refresh 失敗時 AdView 會繼續顯示上一則。
+@visibleForTesting
+BannerAdListener bannerAdListener(
+  Completer<LoadedBanner?> result,
+  AdSize size,
+) => BannerAdListener(
+  onAdLoaded: (ad) {
+    if (result.isCompleted) return;
+    _log.info('banner loaded width=${size.width} height=${size.height}');
+    result.complete((
+      view: SizedBox(
+        width: size.width.toDouble(),
+        height: size.height.toDouble(),
+        child: AdWidget(ad: ad as AdWithView),
+      ),
+      dispose: ad.dispose,
+    ));
+  },
+  onAdFailedToLoad: (ad, error) {
+    if (result.isCompleted) return;
+    _log.warning('banner failed code=${error.code} message=${error.message}');
+    ad.dispose();
+    result.complete(null);
+  },
+);
+
 /// 正式的橫幅載入器：以 AdMob 自適應尺寸載入，測試以 override 換成假實作。
 final bannerLoaderProvider = Provider<BannerLoader>(
   (ref) => (width) async {
-    final size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
+    // 刻意用標準錨定自適應（約 50–90dp）：官方說明大型自適應可達螢幕高 20%（50–150dp、為影片最佳化），違反「不打擾使用者」；
+    // 之後外掛大版本若移除此方法，改用 getInlineAdaptiveBannerAdSize(width, maxHeight)。
+    // ignore: deprecated_member_use
+    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+      width,
+    );
     if (size == null) {
       _log.warning('banner size unavailable width=$width');
       return null;
@@ -29,28 +64,14 @@ final bannerLoaderProvider = Provider<BannerLoader>(
       adUnitId: admobBannerUnitId,
       size: size,
       request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          _log.info('banner loaded width=${size.width} height=${size.height}');
-          result.complete((
-            view: SizedBox(
-              width: size.width.toDouble(),
-              height: size.height.toDouble(),
-              child: AdWidget(ad: ad as AdWithView),
-            ),
-            dispose: ad.dispose,
-          ));
-        },
-        onAdFailedToLoad: (ad, error) {
-          _log.warning(
-            'banner failed code=${error.code} message=${error.message}',
-          );
-          ad.dispose();
-          result.complete(null);
-        },
-      ),
+      listener: bannerAdListener(result, size),
     );
-    await ad.load();
+    try {
+      await ad.load();
+    } catch (_) {
+      unawaited(ad.dispose());
+      rethrow;
+    }
     return result.future;
   },
 );

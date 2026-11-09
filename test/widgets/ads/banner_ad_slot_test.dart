@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/ads/banner_ad_slot.dart';
 
 /// 記錄請求寬度與 dispose 次數的假載入器。
@@ -34,7 +35,58 @@ class _FakeLoader {
   }
 }
 
+/// 不碰原生 SDK、記錄 dispose 次數的假橫幅。
+class _CountingAd extends BannerAd {
+  /// 建立 320×50 的假橫幅。
+  _CountingAd()
+    : super(
+        adUnitId: 'test',
+        size: AdSize.banner,
+        request: const AdRequest(),
+        listener: const BannerAdListener(),
+      );
+
+  /// [dispose] 的呼叫次數。
+  int disposes = 0;
+
+  @override
+  Future<void> dispose() async => disposes++;
+}
+
 void main() {
+  group('bannerAdListener ignores auto-refresh callbacks', () {
+    test('a second load does not complete twice', () async {
+      final result = Completer<LoadedBanner?>();
+      final listener = bannerAdListener(result, AdSize.banner);
+      final ad = _CountingAd();
+      listener.onAdLoaded!(ad);
+      expect(() => listener.onAdLoaded!(ad), returnsNormally);
+      expect(await result.future, isNotNull);
+    });
+
+    test('a failed refresh keeps the shown banner', () async {
+      // refresh 失敗時 AdView 會繼續顯示上一則；釋放它會留下空白的 platform view。
+      final result = Completer<LoadedBanner?>();
+      final listener = bannerAdListener(result, AdSize.banner);
+      final ad = _CountingAd();
+      listener.onAdLoaded!(ad);
+      listener.onAdFailedToLoad!(ad, LoadAdError(3, 'test', 'no fill', null));
+      expect(ad.disposes, 0);
+      expect(await result.future, isNotNull);
+    });
+
+    test('a failed first load releases the ad', () async {
+      final result = Completer<LoadedBanner?>();
+      final ad = _CountingAd();
+      bannerAdListener(result, AdSize.banner).onAdFailedToLoad!(
+        ad,
+        LoadAdError(3, 'test', 'no fill', null),
+      );
+      expect(ad.disposes, 1);
+      expect(await result.future, isNull);
+    });
+  });
+
   /// 以 [width] 寬的畫面呈現底部的 [BannerAdSlot]，[frame] 照傳給它。
   Future<void> pump(
     WidgetTester tester,
