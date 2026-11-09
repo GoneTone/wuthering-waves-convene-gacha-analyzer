@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/ads/ad_placement.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/ads.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
@@ -16,6 +17,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_downloa
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/ads/banner_ad_slot.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/new_version_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_type_icons.dart';
@@ -218,6 +220,8 @@ class _AppShellState extends ConsumerState<AppShell> {
     final width = MediaQuery.of(context).size.width;
     final compact = isCompactLayout(context);
     final extendedRail = width >= 1180;
+    // 對齊 NavigationRail 預設寬度：collapsed 72dp，extended 256dp。
+    final railWidth = extendedRail ? 256.0 : 72.0;
     // 橫向開著鍵盤時高度所剩無幾，標題列一併收起；收起狀態不帶到直向或鍵盤收起後。
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     if (phoneOrientation != PhoneOrientation.landscape ||
@@ -359,69 +363,121 @@ class _AppShellState extends ConsumerState<AppShell> {
     final body = NotificationListener<Notification>(
       // 不能收起時不聽捲動：否則拖動中每幀都把旗標設起來、又被上面重設，外殼跟著每幀重建。
       onNotification: collapsible ? _onScroll : null,
-      child: Column(
-        children: [
-          // 標題列由 AppBar 自己避開安全區；內容區要自己避開橫向的開孔鏡頭，
-          // 底部交給狀態列處理。背景色仍延伸到螢幕邊緣。
-          Expanded(
-            child: SafeArea(
-              top: false,
-              bottom: false,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (!compact) ...[
-                    _Rail(
-                      selection: selection,
-                      isSettingsActive: isSettingsActive,
-                      isContributorsActive: isContributorsActive,
-                      extended: extendedRail,
-                      collapsedNoLabel: collapsedNoLabel,
-                      l: l,
-                    ),
-                    const VerticalDivider(thickness: 1, width: 1),
-                  ],
-                  Expanded(child: widget.child),
-                ],
+      // 標題列由 AppBar 自己避開安全區；內容區要自己避開橫向的開孔鏡頭，
+      // 底部交給狀態列處理。背景色仍延伸到螢幕邊緣。
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!compact) ...[
+              _Rail(
+                selection: selection,
+                isSettingsActive: isSettingsActive,
+                isContributorsActive: isContributorsActive,
+                extended: extendedRail,
+                collapsedNoLabel: collapsedNoLabel,
+                width: railWidth,
+                l: l,
               ),
-            ),
-          ),
-          // 手機橫向高度寶貴，不放狀態列；compact 排版開著鍵盤時高度更少，也先收起。
-          if (phoneOrientation != PhoneOrientation.landscape &&
-              !(compact && MediaQuery.viewInsetsOf(context).bottom > 0))
-            Container(
-              key: const Key('shell-bottom-bar'),
-              width: double.infinity,
-              color: tokens.surfaceCardHigh,
-              // 背景延伸到螢幕底與兩側，文字和連結避開手勢列與開孔鏡頭。
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  // 手機直向沒有連結圖示撐高，改用最小高度 48dp 維持觸控尺寸的狀態列。
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSpacing.l,
-                    vertical: compact ? 0 : AppSpacing.xs * 1.5,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: phoneOrientation == null ? 0 : 48,
-                    ),
-                    child: Row(
-                      children: [
-                        const Expanded(child: LastUpdatedLabel()),
-                        if (phoneOrientation == null) ...[
-                          const SizedBox(width: AppSpacing.s),
-                          TeamLinksBar(compact: compact),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
+              const VerticalDivider(thickness: 1, width: 1),
+            ],
+            Expanded(child: widget.child),
+          ],
+        ),
       ),
     );
+
+    // 手機橫向高度寶貴，不放狀態列；compact 排版開著鍵盤時高度更少，也先收起。
+    final showStatusBar =
+        phoneOrientation != PhoneOrientation.landscape &&
+        !(compact && keyboardOpen);
+    final showAd =
+        ref.watch(isAndroidProvider) &&
+        ref.watch(adsProvider.select((s) => s.canRequestAds)) &&
+        !(compact && keyboardOpen) &&
+        ref.watch(
+          gachaRepositoryProvider.select(
+            (g) => pageHasAdContent(path: location, gacha: g),
+          ),
+        );
+    final bottomBar = showStatusBar || showAd
+        ? Padding(
+            // 放在 bottomNavigationBar 時 Scaffold 不會把它推到鍵盤上方，補回鍵盤高度維持原本位置。
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showAd)
+                  SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: Padding(
+                      // 平板的狀態列右側有連結按鈕，廣告只放在內容欄、不延伸到側欄下方。
+                      padding: EdgeInsetsDirectional.only(
+                        start: compact ? 0 : railWidth + 1,
+                      ),
+                      child: BannerAdSlot(
+                        load: ref.watch(bannerLoaderProvider),
+                        frame: (banner) => Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Divider(height: 1),
+                            SafeArea(
+                              top: false,
+                              left: false,
+                              right: false,
+                              bottom: !showStatusBar,
+                              child: banner,
+                            ),
+                            if (showStatusBar) ...[
+                              if (!compact)
+                                const SizedBox(height: AppSpacing.l),
+                              const Divider(height: 1),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                if (showStatusBar)
+                  Container(
+                    key: const Key('shell-bottom-bar'),
+                    width: double.infinity,
+                    color: tokens.surfaceCardHigh,
+                    // 背景延伸到螢幕底與兩側，文字和連結避開手勢列與開孔鏡頭。
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        // 手機直向沒有連結圖示撐高，改用最小高度 48dp 維持觸控尺寸的狀態列。
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.l,
+                          vertical: compact ? 0 : AppSpacing.xs * 1.5,
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: phoneOrientation == null ? 0 : 48,
+                          ),
+                          child: Row(
+                            children: [
+                              const Expanded(child: LastUpdatedLabel()),
+                              if (phoneOrientation == null) ...[
+                                const SizedBox(width: AppSpacing.s),
+                                TeamLinksBar(compact: compact),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          )
+        : null;
 
     // 抽屜不是一個頁面：不先宣告由 App 處理返回，Android 的預測返回會直接關掉 App。
     // 側欄／抽屜切換的頁面是同一層：其他頁按返回先回綜合，在綜合才交給系統離開 App。
@@ -452,6 +508,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             child: topBar,
           ),
           body: body,
+          bottomNavigationBar: bottomBar,
         ),
       ),
     );
@@ -494,7 +551,7 @@ class _RailSelection {
 
 /// 左側導覽 rail，包含所有喚取卡池及底部設定、貢獻者入口；手機排版時放在抽屜裡。
 class _Rail extends StatelessWidget {
-  /// 建立 rail；[width] 為 null 時依 [extended] 用 256／72，[onNavigate] 在切換頁面前呼叫（抽屜用來關閉自己）。
+  /// 建立 rail；[width] 為固定寬度，[onNavigate] 在切換頁面前呼叫（抽屜用來關閉自己）。
   const _Rail({
     required this.selection,
     required this.isSettingsActive,
@@ -502,7 +559,7 @@ class _Rail extends StatelessWidget {
     required this.extended,
     required this.collapsedNoLabel,
     required this.l,
-    this.width,
+    required this.width,
     this.onNavigate,
     this.header,
     this.footer,
@@ -514,8 +571,8 @@ class _Rail extends StatelessWidget {
   /// 抽屜頂部（App 資訊）；跟著清單一起捲動。桌面 rail 沒有。
   final Widget? header;
 
-  /// 固定寬度；null 時依 [extended] 決定。
-  final double? width;
+  /// 固定寬度。
+  final double width;
 
   /// 切換頁面前呼叫。
   final VoidCallback? onNavigate;
@@ -540,9 +597,6 @@ class _Rail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 對齊 NavigationRail 預設寬度：collapsed 72dp，extended 256dp。
-    final railWidth = width ?? (extended ? 256.0 : 72.0);
-
     void go(String path) {
       onNavigate?.call();
       context.go(path);
@@ -573,7 +627,7 @@ class _Rail extends StatelessWidget {
     ];
 
     return SizedBox(
-      width: railWidth,
+      width: width,
       child: LayoutBuilder(
         builder: (context, constraints) {
           // 抽屜太矮（手機橫向、分割畫面）時，固定在底部會壓縮清單，改成跟著一起捲。
