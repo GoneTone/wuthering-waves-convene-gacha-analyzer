@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "פרטיות",
   "settingsMaskUidInUi": "הסתרת UID בממשק",
   "settingsMaskUidInUiHint": "כשהאפשרות מופעלת, מזהי UID בממשק וברשימת החשבונות מציגים רק את 3 הספרות הראשונות והשאר מוסתר (למשל 123•••••). שימושי בזמן שידור או שיתוף מסך. תמונות לשיתוף, קבצים מיוצאים וחלון אישור המחיקה אינם מושפעים.",
+  "settingsAdPrivacyOptions": "אפשרויות פרטיות למודעות",
+  "settingsAdPrivacyOptionsHint": "שנו אם אתם מסכימים להצגת מודעות מותאמות אישית.",
   "settingsAbout": "אודות",
   "settingsOtherGamesTitle": "גרסאות למשחקים אחרים",
   "settingsOtherGamesGenshin": "Genshin Impact",

@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "Απόρρητο",
   "settingsMaskUidInUi": "Απόκρυψη UID στη διεπαφή",
   "settingsMaskUidInUiHint": "Όταν είναι ενεργό, τα UID στη διεπαφή και στη λίστα λογαριασμών εμφανίζουν μόνο τα 3 πρώτα ψηφία και τα υπόλοιπα κρύβονται (π.χ. 123•••••). Χρήσιμο σε streaming ή κοινή χρήση οθόνης. Δεν επηρεάζει τις εικόνες κοινοποίησης, τα αρχεία εξαγωγής και το παράθυρο επιβεβαίωσης διαγραφής.",
+  "settingsAdPrivacyOptions": "Επιλογές απορρήτου διαφημίσεων",
+  "settingsAdPrivacyOptionsHint": "Αλλάξτε εάν συναινείτε στην εμφάνιση εξατομικευμένων διαφημίσεων.",
   "settingsAbout": "Σχετικά",
   "settingsOtherGamesTitle": "Εκδόσεις για άλλα παιχνίδια",
   "settingsOtherGamesGenshin": "Genshin Impact",

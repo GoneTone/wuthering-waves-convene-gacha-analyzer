@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "ความเป็นส่วนตัว",
   "settingsMaskUidInUi": "ซ่อน UID ในหน้าแอป",
   "settingsMaskUidInUiHint": "เมื่อเปิดใช้ UID ในหน้าแอปและรายการบัญชีจะแสดงเฉพาะ 3 หลักแรก ส่วนที่เหลือถูกซ่อน (เช่น 123•••••) เหมาะสำหรับสตรีมหรือแชร์หน้าจอ รูปที่แชร์ ไฟล์ที่ส่งออก และหน้าต่างยืนยันการลบจะไม่ได้รับผลกระทบ",
+  "settingsAdPrivacyOptions": "ตัวเลือกความเป็นส่วนตัวของโฆษณา",
+  "settingsAdPrivacyOptionsHint": "เปลี่ยนการยินยอมให้แสดงโฆษณาที่ปรับให้เหมาะกับคุณ",
   "settingsAbout": "เกี่ยวกับ",
   "settingsOtherGamesTitle": "เวอร์ชันสำหรับเกมอื่น",
   "settingsOtherGamesGenshin": "Genshin Impact",

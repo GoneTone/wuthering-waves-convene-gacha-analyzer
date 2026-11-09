@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "Privaatheid",
   "settingsMaskUidInUi": "Verberg UID in koppelvlak",
   "settingsMaskUidInUiHint": "Wanneer dit aan is, wys UID's in die koppelvlak en rekeninglys die eerste 3 syfers en word die res verberg (bv. 123•••••). Handig vir stroming of skermdeling. Deelbeelde, uitgevoerde lêers en die skrapbevestigingsdialoog word nie geraak nie.",
+  "settingsAdPrivacyOptions": "Advertensie-privaatheidopsies",
+  "settingsAdPrivacyOptionsHint": "Verander of jy toestem om gepersonaliseerde advertensies te sien.",
   "settingsAbout": "Meer oor",
   "settingsOtherGamesTitle": "Weergawes vir ander speletjies",
   "settingsOtherGamesGenshin": "Genshin Impact",

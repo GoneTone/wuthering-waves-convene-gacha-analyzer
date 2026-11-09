@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "개인정보 보호",
   "settingsMaskUidInUi": "화면에서 UID 가리기",
   "settingsMaskUidInUiHint": "켜면 화면과 계정 목록의 UID가 앞 3자리만 표시되고 나머지는 가려집니다(예: 123•••••). 방송이나 화면 공유 시 유용합니다. 공유 이미지, 내보낸 파일, 삭제 확인 창에는 적용되지 않습니다.",
+  "settingsAdPrivacyOptions": "광고 개인정보 보호 옵션",
+  "settingsAdPrivacyOptionsHint": "맞춤 광고 표시에 대한 동의 여부를 변경합니다.",
   "settingsAbout": "정보",
   "settingsOtherGamesTitle": "다른 게임용 버전",
   "settingsOtherGamesGenshin": "원신",

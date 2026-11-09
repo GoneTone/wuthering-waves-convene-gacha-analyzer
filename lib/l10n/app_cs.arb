@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "Soukromí",
   "settingsMaskUidInUi": "Maskovat UID v rozhraní",
   "settingsMaskUidInUiHint": "Po zapnutí se UID v rozhraní a v seznamu účtů zobrazí jen s prvními 3 číslicemi a zbytek bude skrytý (např. 123•••••). Hodí se při streamování nebo sdílení obrazovky. Netýká se obrázků ke sdílení, exportovaných souborů ani dialogu pro potvrzení smazání.",
+  "settingsAdPrivacyOptions": "Možnosti soukromí reklam",
+  "settingsAdPrivacyOptionsHint": "Změňte, zda souhlasíte se zobrazováním personalizovaných reklam.",
   "settingsAbout": "O aplikaci",
   "settingsOtherGamesTitle": "Verze pro další hry",
   "settingsOtherGamesGenshin": "Genshin Impact",

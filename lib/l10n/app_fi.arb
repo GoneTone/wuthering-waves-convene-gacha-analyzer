@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "Yksityisyys",
   "settingsMaskUidInUi": "Peitä UID käyttöliittymässä",
   "settingsMaskUidInUiHint": "Kun asetus on päällä, käyttöliittymän ja tililuettelon UID-tunnuksista näytetään vain kolme ensimmäistä numeroa ja loput peitetään (esim. 123•••••). Hyödyllinen striimatessa tai näyttöä jaettaessa. Ei vaikuta jakokuviin, vietyihin tiedostoihin eikä poiston vahvistusikkunaan.",
+  "settingsAdPrivacyOptions": "Mainosten yksityisyysasetukset",
+  "settingsAdPrivacyOptionsHint": "Muuta, suostutko henkilökohtaisten mainosten näyttämiseen.",
   "settingsAbout": "Tietoja",
   "settingsOtherGamesTitle": "Versiot muille peleille",
   "settingsOtherGamesGenshin": "Genshin Impact",

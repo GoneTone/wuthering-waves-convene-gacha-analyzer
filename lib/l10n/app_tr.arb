@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "Gizlilik",
   "settingsMaskUidInUi": "Arayüzde UID'yi gizle",
   "settingsMaskUidInUiHint": "Açıkken arayüzdeki ve hesap listesindeki UID'lerin yalnızca ilk 3 hanesi gösterilir, kalanı gizlenir (ör. 123•••••). Yayın veya ekran paylaşımı sırasında işe yarar. Paylaşım görselleri, dışa aktarılan dosyalar ve silme onay penceresi bundan etkilenmez.",
+  "settingsAdPrivacyOptions": "Reklam gizlilik seçenekleri",
+  "settingsAdPrivacyOptionsHint": "Kişiselleştirilmiş reklamlar görmeye onay verip vermediğinizi değiştirin.",
   "settingsAbout": "Hakkında",
   "settingsOtherGamesTitle": "Diğer Oyunlar İçin Sürümler",
   "settingsOtherGamesGenshin": "Genshin Impact",

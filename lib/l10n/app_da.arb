@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "Privatliv",
   "settingsMaskUidInUi": "Skjul UID i brugerfladen",
   "settingsMaskUidInUiHint": "Når dette er slået til, viser brugerfladen og kontolisten kun de første 3 cifre af UID'et, og resten skjules (fx 123•••••). Praktisk ved streaming eller skærmdeling. Delingsbilleder, eksporterede filer og bekræftelsesdialogen ved sletning påvirkes ikke.",
+  "settingsAdPrivacyOptions": "Indstillinger for privatliv i annoncer",
+  "settingsAdPrivacyOptionsHint": "Skift, om du samtykker til at se personlige annoncer.",
   "settingsAbout": "Om",
   "settingsOtherGamesTitle": "Versioner til andre spil",
   "settingsOtherGamesGenshin": "Genshin Impact",

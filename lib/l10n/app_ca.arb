@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "Privadesa",
   "settingsMaskUidInUi": "Amaga l'UID a la interfície",
   "settingsMaskUidInUiHint": "Si està activat, els UID de la interfície i de la llista de comptes mostren els 3 primers dígits i amaguen la resta (p. ex. 123•••••). Útil per fer streaming o compartir la pantalla. No afecta les imatges per compartir, els fitxers exportats ni el diàleg de confirmació de supressió.",
+  "settingsAdPrivacyOptions": "Opcions de privadesa dels anuncis",
+  "settingsAdPrivacyOptionsHint": "Canvia si consents a veure anuncis personalitzats.",
   "settingsAbout": "Quant a",
   "settingsOtherGamesTitle": "Versions per a altres jocs",
   "settingsOtherGamesGenshin": "Genshin Impact",

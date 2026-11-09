@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "Конфиденциальность",
   "settingsMaskUidInUi": "Скрывать UID в интерфейсе",
   "settingsMaskUidInUiHint": "Если включено, UID в интерфейсе и списке аккаунтов показывается только первыми 3 цифрами, остальные скрыты (например, 123•••••). Удобно для стримов и демонстрации экрана. Не влияет на изображения для публикации, экспортированные файлы и окно подтверждения удаления.",
+  "settingsAdPrivacyOptions": "Параметры конфиденциальности рекламы",
+  "settingsAdPrivacyOptionsHint": "Измените согласие на показ персонализированной рекламы.",
   "settingsAbout": "О приложении",
   "settingsOtherGamesTitle": "Версии для других игр",
   "settingsOtherGamesGenshin": "Genshin Impact",

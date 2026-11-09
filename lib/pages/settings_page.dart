@@ -22,6 +22,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/game_dir_locator
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/platform_import.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/ads.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/localization_metadata.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
@@ -1373,7 +1374,7 @@ class _PrivacySection extends ConsumerWidget {
     final maskUid = ref.watch(settingsProvider.select((s) => s.maskUidInUi));
     final notifier = ref.read(settingsProvider.notifier);
 
-    return SwitchListTile(
+    final maskSwitch = SwitchListTile(
       key: const ValueKey('settings.maskUidInUiSwitch'),
       value: maskUid,
       title: Text(l.settingsMaskUidInUi),
@@ -1388,6 +1389,34 @@ class _PrivacySection extends ConsumerWidget {
       ),
       contentPadding: EdgeInsets.zero,
       onChanged: notifier.setMaskUidInUi,
+    );
+
+    final showAdPrivacy =
+        ref.watch(isAndroidProvider) &&
+        ref.watch(adsProvider.select((s) => s.privacyOptionsRequired));
+    if (!showAdPrivacy) return maskSwitch;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        maskSwitch,
+        const SizedBox(height: AppSpacing.s),
+        Text(
+          l.settingsAdPrivacyOptionsHint,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: tokens.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: OutlinedButton(
+            key: const ValueKey('settings.adPrivacyOptionsButton'),
+            onPressed: ref.read(adsProvider.notifier).showPrivacyOptions,
+            child: Text(l.settingsAdPrivacyOptions),
+          ),
+        ),
+      ],
     );
   }
 }

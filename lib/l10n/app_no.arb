@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "Personvern",
   "settingsMaskUidInUi": "Skjul UID i grensesnittet",
   "settingsMaskUidInUiHint": "Når dette er på, viser UID-er i grensesnittet og kontolisten bare de tre første sifrene, resten skjules (f.eks. 123•••••). Nyttig ved strømming eller skjermdeling. Delingsbilder, eksporterte filer og bekreftelsesdialogen for sletting påvirkes ikke.",
+  "settingsAdPrivacyOptions": "Personverninnstillinger for annonser",
+  "settingsAdPrivacyOptionsHint": "Endre om du samtykker til å se personlig tilpassede annonser.",
   "settingsAbout": "Om",
   "settingsOtherGamesTitle": "Versjoner for andre spill",
   "settingsOtherGamesGenshin": "Genshin Impact",

@@ -164,6 +164,8 @@
   "settingsPrivacySectionTitle": "Quyền riêng tư",
   "settingsMaskUidInUi": "Ẩn UID trên giao diện",
   "settingsMaskUidInUiHint": "Khi bật, UID trên giao diện và trong danh sách tài khoản chỉ hiện 3 chữ số đầu, phần còn lại bị ẩn (ví dụ: 123•••••). Hữu ích khi livestream hoặc chia sẻ màn hình. Ảnh chia sẻ, tệp đã xuất và hộp thoại xác nhận xóa không bị ảnh hưởng.",
+  "settingsAdPrivacyOptions": "Tùy chọn quyền riêng tư quảng cáo",
+  "settingsAdPrivacyOptionsHint": "Thay đổi việc bạn có đồng ý xem quảng cáo được cá nhân hóa hay không.",
   "settingsAbout": "Giới thiệu",
   "settingsOtherGamesTitle": "Phiên bản cho game khác",
   "settingsOtherGamesGenshin": "Genshin Impact",
