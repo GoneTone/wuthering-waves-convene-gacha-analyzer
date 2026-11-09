@@ -33,7 +33,12 @@ class PlayDownloadProgressBar extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.s),
-        LinearProgressIndicator(value: fraction, color: accent),
+        // 預設底色在反色的 SnackBar 上和進度色太接近（實機上金色對深咖啡），改用同色淡化。
+        LinearProgressIndicator(
+          value: fraction,
+          color: accent,
+          backgroundColor: accent.withValues(alpha: 0.25),
+        ),
         if (fraction != null) ...[
           const SizedBox(height: AppSpacing.xs),
           Text(
