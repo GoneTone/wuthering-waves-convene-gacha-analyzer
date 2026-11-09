@@ -33,7 +33,7 @@
 
 Android 不允許 App 直接讀取其他 App 的檔案。本 App 會在你按下「更新資料」時，透過系統內建的「無線偵錯」（或你授權的 root）讀取鳴潮的記錄檔，從中找出喚取紀錄網址。
 
-- 只讀取鳴潮的記錄檔，讀完立刻中斷連線並關閉無線偵錯。
+- 只讀取鳴潮的記錄檔，讀完立刻中斷連線；無線偵錯若是本 App 打開的，會一併關閉（你原本就開著的會維持開啟）。
 - `WRITE_SECURE_SETTINGS` 權限只用來開關無線偵錯，讓你不用每次手動設定。你可以隨時在設定頁解除。
 
 ### Windows 版取得查詢參數的方式
@@ -83,7 +83,7 @@ This data is stored on your device. Deleting an account in the app removes that 
 
 Android doesn't let apps read other apps' files. When you tap "Update", the app reads the game's log file through Android's built-in Wireless debugging (or root, if you grant it) to find the convene history URL.
 
-- It reads only the game's log file, then disconnects and turns wireless debugging off right away.
+- It reads only the game's log file, then disconnects right away and turns wireless debugging off again if the app turned it on (if you already had it on, it stays on).
 - The `WRITE_SECURE_SETTINGS` permission is used only to turn wireless debugging on and off, so you don't have to set it up each time. You can remove it at any time in Settings.
 
 ### How the Windows version gets the query parameters
