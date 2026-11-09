@@ -32,7 +32,8 @@ class AdbPairingService : Service() {
         private const val TAG = "capture.pairing"
         private const val CHANNEL_ID = "adb_pairing"
         private const val NOTIFICATION_ID = 4201
-        private const val TIMEOUT_NOTIFICATION_ID = 4202
+        /** 結果通知（成功、App 已關閉、逾時）；和前景服務的 [NOTIFICATION_ID] 分開，點了才會自動收起。 */
+        private const val RESULT_NOTIFICATION_ID = 4202
         private const val KEY_CODE = "pairing_code"
         private const val ACTION_START = "start"
         private const val ACTION_REPLY = "reply"
@@ -79,8 +80,8 @@ class AdbPairingService : Service() {
                     ?.getCharSequence(KEY_CODE)?.toString().orEmpty().filter { it.isDigit() }
                 onCode(intent.getIntExtra(EXTRA_PORT, port), code)
             }
-            ACTION_STOP -> finish(keepNotification = false)
-            else -> finish(keepNotification = false)
+            ACTION_STOP -> finish()
+            else -> finish()
         }
         return START_NOT_STICKY
     }
@@ -91,7 +92,7 @@ class AdbPairingService : Service() {
         nm.createNotificationChannel(
             NotificationChannel(CHANNEL_ID, getString(R.string.pairing_channel), NotificationManager.IMPORTANCE_HIGH)
         )
-        nm.cancel(TIMEOUT_NOTIFICATION_ID)
+        nm.cancel(RESULT_NOTIFICATION_ID)
         goForeground(searching())
         main.removeCallbacks(timeout)
         main.postDelayed(timeout, TIMEOUT_MS)
@@ -158,7 +159,7 @@ class AdbPairingService : Service() {
         val ch = channel
         if (ch == null) {
             Log.w(TAG, "pairing code received but flutter engine is gone")
-            endWithNoApp()
+            finishWith(getString(R.string.pairing_no_app_text), null)
             return
         }
         main.post {
@@ -167,12 +168,7 @@ class AdbPairingService : Service() {
                     val ok = (result as? Map<*, *>)?.get("ok") == true
                     Log.i(TAG, "pairing result ok=$ok")
                     if (ok) {
-                        notifyMain(
-                            simple(getString(R.string.pairing_success_title), getString(R.string.pairing_success_text), openApp = true)
-                        )
-                        // 前景服務的通知點了不會自動收起；先脫離前景，「點這裡回到 App」點一下就消失。
-                        stopForeground(STOP_FOREGROUND_DETACH)
-                        main.postDelayed({ finish(keepNotification = true) }, 4000)
+                        finishWith(getString(R.string.pairing_success_title), getString(R.string.pairing_success_text))
                     } else {
                         notifyMain(codeInput(getString(R.string.pairing_failed_text)))
                     }
@@ -185,32 +181,33 @@ class AdbPairingService : Service() {
 
                 override fun notImplemented() {
                     Log.w(TAG, "pairing code received but no handler is registered")
-                    endWithNoApp()
+                    finishWith(getString(R.string.pairing_no_app_text), null)
                 }
             })
         }
     }
 
-    /**
-     * App 已經關掉、收不到配對碼：留下「請回到 App 再試一次」並結束服務。
-     * 不結束的話這則仍是前景服務的通知，點了不會收起，3 分鐘後還會再跳一則逾時。
-     */
-    private fun endWithNoApp() {
-        notifyMain(simple(getString(R.string.pairing_no_app_text), null, openApp = true))
-        finish(keepNotification = true)
-    }
-
     private fun onSelfTimeout() {
         Log.i(TAG, "pairing service timed out")
+        finishWith(getString(R.string.pairing_timeout_title), getString(R.string.pairing_timeout_text))
+    }
+
+    /**
+     * 結束服務，再留下一則點了會開 App、也會自動收起的結果通知（成功、App 已關閉、逾時）。
+     *
+     * 結果通知用另一個 ID、在服務結束後才發：和前景服務共用 ID 的通知會被系統標成前景服務通知，
+     * 點擊不會自動收起；先發再 `stopForeground(DETACH)` 也不可靠，兩者在系統裡是非同步處理的。
+     */
+    private fun finishWith(title: String, text: String?) {
+        finish()
         val n = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(getString(R.string.pairing_timeout_title))
-            .setContentText(getString(R.string.pairing_timeout_text))
+            .setContentTitle(title)
+            .apply { if (text != null) setContentText(text) }
             .setContentIntent(openAppIntent())
             .setAutoCancel(true)
             .build()
-        getSystemService(NotificationManager::class.java).notify(TIMEOUT_NOTIFICATION_ID, n)
-        finish(keepNotification = false)
+        getSystemService(NotificationManager::class.java).notify(RESULT_NOTIFICATION_ID, n)
     }
 
     override fun onTimeout(startId: Int, fgsType: Int) {
@@ -263,14 +260,12 @@ class AdbPairingService : Service() {
             .build()
     }
 
-    private fun simple(title: String, text: String?, openApp: Boolean = false): Notification =
+    private fun simple(title: String, text: String?): Notification =
         Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .apply { if (text != null) setContentText(text) }
-            .apply { if (openApp) setContentIntent(openAppIntent()) }
-            .setOngoing(!openApp)
-            .setAutoCancel(openApp)
+            .setOngoing(true)
             .build()
 
     private fun notifyMain(n: Notification) {
@@ -282,12 +277,12 @@ class AdbPairingService : Service() {
         listener = null
     }
 
-    /** 停止服務；[keepNotification] 為 true 時留下最後的通知（例如「配對成功，點這裡回到 App」）。 */
-    private fun finish(keepNotification: Boolean) {
+    /** 停止服務並移除前景服務的通知；要留結果給玩家看時用 [finishWith]。 */
+    private fun finish() {
         main.removeCallbacks(timeout)
         stopDiscovery()
         running = false
-        stopForeground(if (keepNotification) STOP_FOREGROUND_DETACH else STOP_FOREGROUND_REMOVE)
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
