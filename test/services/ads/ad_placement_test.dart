@@ -105,6 +105,22 @@ void main() {
     expect(pageHasAdContent(path: '/banner/1', gacha: noActive), isFalse);
   });
 
+  test('格式不符的 banner 路徑沒有廣告內容', () {
+    for (final path in ['/banner/', '/bannerx', '/banner/1/extra']) {
+      expect(
+        pageHasAdContent(path: path, gacha: withRecords),
+        isFalse,
+        reason: path,
+      );
+    }
+  });
+
+  test('banners 為空時 / 與 /banner/1 沒有廣告內容', () {
+    final noBanners = _state();
+    expect(pageHasAdContent(path: '/', gacha: noBanners), isFalse);
+    expect(pageHasAdContent(path: '/banner/1', gacha: noBanners), isFalse);
+  });
+
   test('未知路徑沒有廣告內容', () {
     expect(pageHasAdContent(path: '/foo', gacha: withRecords), isFalse);
   });

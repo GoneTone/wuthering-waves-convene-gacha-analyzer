@@ -1412,7 +1412,8 @@ class _PrivacySection extends ConsumerWidget {
           alignment: AlignmentDirectional.centerStart,
           child: OutlinedButton(
             key: const ValueKey('settings.adPrivacyOptionsButton'),
-            onPressed: ref.read(adsProvider.notifier).showPrivacyOptions,
+            onPressed: () =>
+                ref.read(adsProvider.notifier).showPrivacyOptions(),
             child: Text(l.settingsAdPrivacyOptions),
           ),
         ),

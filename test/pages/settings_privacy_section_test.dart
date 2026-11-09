@@ -189,7 +189,30 @@ void main() {
       await pumpWithAds(tester, android: true, required: true);
       expect(find.byKey(buttonKey), findsOneWidget);
       expect(find.text('Ad privacy options'), findsOneWidget);
+      expect(
+        find.text('Change whether you consent to seeing personalized ads.'),
+        findsOneWidget,
+      );
     });
+
+    for (final (name, size) in [
+      ('phone landscape', const Size(915, 412)),
+      ('desktop', const Size(1280, 800)),
+    ]) {
+      testWidgets('lays out without overflow on $name', (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await pumpWithAds(tester, android: true, required: true);
+        await tester.ensureVisible(find.byKey(buttonKey));
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(buttonKey), findsOneWidget);
+        final rect = tester.getRect(find.byKey(buttonKey));
+        expect(rect.right, lessThanOrEqualTo(size.width));
+        expect(rect.bottom, lessThanOrEqualTo(size.height));
+      });
+    }
 
     testWidgets('hidden when not required', (tester) async {
       await pumpWithAds(tester, android: true, required: false);

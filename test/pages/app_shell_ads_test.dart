@@ -74,11 +74,14 @@ class _Ads extends AdsController {
   /// 固定的「可請求廣告」旗標。
   final bool canRequestAds;
 
+  /// [start] 被呼叫的次數。
+  int starts = 0;
+
   @override
   AdsState build() => AdsState(canRequestAds: canRequestAds);
 
   @override
-  Future<void> start() async {}
+  Future<void> start() async => starts++;
 }
 
 /// 不發請求的版本檢查替身。
@@ -99,6 +102,7 @@ const _banner = Key('fake-banner');
 void main() {
   late _Repo repo;
   late int loads;
+  late _Ads ads;
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -118,6 +122,7 @@ void main() {
     addTearDown(tester.view.reset);
     repo = _Repo();
     loads = 0;
+    ads = _Ads(canRequestAds: canRequestAds);
     final container = ProviderContainer(
       overrides: [
         appVersionProvider.overrideWithValue('1.8.1'),
@@ -125,7 +130,7 @@ void main() {
         appReleaseProvider.overrideWith(_Release.new),
         cloudSyncProvider.overrideWith(_Sync.new),
         isAndroidProvider.overrideWithValue(android),
-        adsProvider.overrideWith(() => _Ads(canRequestAds: canRequestAds)),
+        adsProvider.overrideWith(() => ads),
         bannerLoaderProvider.overrideWithValue((width) async {
           loads++;
           return (
@@ -288,6 +293,16 @@ void main() {
     await pump(tester, const Size(1280, 800), android: false);
     expect(find.byKey(_banner), findsNothing);
     expect(loads, 0);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+  testWidgets('starts the ads flow on Android only', (tester) async {
+    await pump(tester, const Size(412, 915));
+    expect(ads.starts, 1);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('never starts the ads flow off Android', (tester) async {
+    await pump(tester, const Size(1280, 800), android: false);
+    expect(ads.starts, 0);
   }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
   testWidgets('hides the ad while the keyboard is open', (tester) async {
