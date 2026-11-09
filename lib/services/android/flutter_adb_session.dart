@@ -103,7 +103,10 @@ class AdbKeyStore {
   static const _key = 'adb.keypair.v1';
 
   /// 金鑰在裝置「已配對的裝置」清單顯示的名稱。
-  static const _keyName = 'wuwa-gacha';
+  ///
+  /// 系統讀名稱時遇到空白就截斷，所以不能有空格。只影響之後的新配對；改名前配對的仍顯示舊名（`wuwa-gacha`），
+  /// 連線靠金鑰本身，舊配對照樣能用。
+  static const keyName = 'wuwa-convene-analyzer';
 
   /// 底層 secure storage。
   final FlutterSecureStorage _storage;
@@ -129,7 +132,7 @@ class AdbKeyStore {
       final map = jsonDecode(stored) as Map<String, dynamic>;
       return AdbCrypto(
         keyPair: AdbCrypto.keyPairFromStorageMap(map),
-        adbKeyName: _keyName,
+        adbKeyName: keyName,
       );
     } catch (e) {
       _log.warning('adb key corrupt error=${e.runtimeType}');
@@ -142,7 +145,7 @@ class AdbKeyStore {
     final existing = await load();
     if (existing != null) return existing;
     final keyPair = await Isolate.run(AdbCrypto.generateAdbKeyPair);
-    final crypto = AdbCrypto(keyPair: keyPair, adbKeyName: _keyName);
+    final crypto = AdbCrypto(keyPair: keyPair, adbKeyName: keyName);
     await _storage.write(
       key: _key,
       value: jsonEncode(crypto.exportKeyPairForStorage()),
