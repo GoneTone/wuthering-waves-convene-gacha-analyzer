@@ -43,6 +43,18 @@ class AdbPairingService : Service() {
         /** 自我計時的上限：所有 Android 版本行為一致（`shortService` 只在 14 以上有系統上限）。 */
         private const val TIMEOUT_MS = 3 * 60 * 1000L
 
+        /**
+         * 從通知欄送出配對碼後的結果延後發出：當下通知欄還開著，系統不會彈出新通知，
+         * 多等一下讓玩家收起通知欄後，結果才會以橫幅跳出（實機上成功通知比通知欄收起早 0.2 秒發出）。
+         */
+        private const val RESULT_AFTER_REPLY_DELAY_MS = 1500L
+
+        /** 延後發出結果用的 handler；放在 companion，服務結束、下次重新配對換了實例也能取消。 */
+        private val resultHandler = Handler(Looper.getMainLooper())
+
+        /** 尚未發出的結果通知；重新開始配對時取消。 */
+        private var pendingResult: Runnable? = null
+
         /** 目前的 Flutter channel；engine 被回收時為 null。由 [LogAccessChannel] 設定。 */
         @Volatile var channel: MethodChannel? = null
 
@@ -66,6 +78,7 @@ class AdbPairingService : Service() {
     private var listener: NsdManager.DiscoveryListener? = null
     private var port = -1
     private val timeout = Runnable { onSelfTimeout() }
+
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -92,6 +105,8 @@ class AdbPairingService : Service() {
         nm.createNotificationChannel(
             NotificationChannel(CHANNEL_ID, getString(R.string.pairing_channel), NotificationManager.IMPORTANCE_HIGH)
         )
+        pendingResult?.let(resultHandler::removeCallbacks)
+        pendingResult = null
         nm.cancel(RESULT_NOTIFICATION_ID)
         goForeground(searching())
         main.removeCallbacks(timeout)
@@ -159,7 +174,7 @@ class AdbPairingService : Service() {
         val ch = channel
         if (ch == null) {
             Log.w(TAG, "pairing code received but flutter engine is gone")
-            finishWith(getString(R.string.pairing_no_app_text), null)
+            finishWith(getString(R.string.pairing_no_app_text), null, RESULT_AFTER_REPLY_DELAY_MS)
             return
         }
         main.post {
@@ -168,7 +183,11 @@ class AdbPairingService : Service() {
                     val ok = (result as? Map<*, *>)?.get("ok") == true
                     Log.i(TAG, "pairing result ok=$ok")
                     if (ok) {
-                        finishWith(getString(R.string.pairing_success_title), getString(R.string.pairing_success_text))
+                        finishWith(
+                            getString(R.string.pairing_success_title),
+                            getString(R.string.pairing_success_text),
+                            RESULT_AFTER_REPLY_DELAY_MS,
+                        )
                     } else {
                         notifyMain(codeInput(getString(R.string.pairing_failed_text)))
                     }
@@ -181,7 +200,7 @@ class AdbPairingService : Service() {
 
                 override fun notImplemented() {
                     Log.w(TAG, "pairing code received but no handler is registered")
-                    finishWith(getString(R.string.pairing_no_app_text), null)
+                    finishWith(getString(R.string.pairing_no_app_text), null, RESULT_AFTER_REPLY_DELAY_MS)
                 }
             })
         }
@@ -198,7 +217,7 @@ class AdbPairingService : Service() {
      * 結果通知用另一個 ID、在服務結束後才發：和前景服務共用 ID 的通知會被系統標成前景服務通知，
      * 點擊不會自動收起；先發再 `stopForeground(DETACH)` 也不可靠，兩者在系統裡是非同步處理的。
      */
-    private fun finishWith(title: String, text: String?) {
+    private fun finishWith(title: String, text: String?, delayMs: Long = 0) {
         finish()
         val n = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -207,7 +226,13 @@ class AdbPairingService : Service() {
             .setContentIntent(openAppIntent())
             .setAutoCancel(true)
             .build()
-        getSystemService(NotificationManager::class.java).notify(RESULT_NOTIFICATION_ID, n)
+        val nm = getSystemService(NotificationManager::class.java)
+        val post = Runnable {
+            pendingResult = null
+            nm.notify(RESULT_NOTIFICATION_ID, n)
+        }
+        pendingResult = post
+        resultHandler.postDelayed(post, delayMs)
     }
 
     override fun onTimeout(startId: Int, fgsType: Int) {
