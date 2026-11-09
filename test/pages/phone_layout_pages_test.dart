@@ -32,6 +32,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/item_type_pie.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rarity_pie.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/stat_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/five_star_overview.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/empty_state.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/last_updated_label.dart';
@@ -282,6 +283,35 @@ void main() {
       expect(find.byType(EmptyState), findsOneWidget);
       expectNoException(tester);
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
+
+  for (final (name, size) in [
+    ('phone portrait', const Size(360, 800)),
+    ('phone landscape', const Size(800, 360)),
+    ('desktop', const Size(1280, 800)),
+  ]) {
+    testWidgets('empty pool message is centered below the header ($name)', (
+      tester,
+    ) async {
+      // 原本放在固定 320 高的框裡，只在那一段置中，畫面下方空一大塊。
+      await pump(tester, size, const BannerPage(cardPoolType: '2'));
+      expectNoException(tester);
+      final header = tester.getRect(find.byType(PageHeader));
+      final content = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(EmptyState),
+              matching: find.byType(Column),
+            )
+            .first,
+      );
+      final padding = size.shortestSide < 600 ? AppSpacing.m : AppSpacing.l;
+      expect(content.center.dx, closeTo(size.width / 2, 1));
+      expect(
+        content.center.dy,
+        closeTo((header.bottom + size.height - padding) / 2, 1),
+      );
+    });
   }
 
   testWidgets('banner page padding is 12 on phones', (tester) async {
