@@ -171,6 +171,8 @@ class AdbPairingService : Service() {
                         notifyMain(
                             simple(getString(R.string.pairing_success_title), getString(R.string.pairing_success_text), openApp = true)
                         )
+                        // 前景服務的通知點了不會自動收起；先脫離前景，「點這裡回到 App」點一下就消失。
+                        stopForeground(STOP_FOREGROUND_DETACH)
                         main.postDelayed({ finish(keepNotification = true) }, 4000)
                     } else {
                         notifyMain(codeInput(getString(R.string.pairing_failed_text)))
@@ -259,6 +261,7 @@ class AdbPairingService : Service() {
             .apply { if (text != null) setContentText(text) }
             .apply { if (openApp) setContentIntent(openAppIntent()) }
             .setOngoing(!openApp)
+            .setAutoCancel(openApp)
             .build()
 
     private fun notifyMain(n: Notification) {
