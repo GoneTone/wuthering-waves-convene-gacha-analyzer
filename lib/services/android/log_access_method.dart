@@ -1,6 +1,6 @@
 /// Android 讀取遊戲 Client.log 的方式。
 enum LogAccessMethod {
-  /// 透過 `su -c` 以 root 讀取。
+  /// 以 root 讀取：整次更新只開一個常駐 `su`，指令從 stdin 送入（見 `RootShell`）。
   root,
 
   /// Android 10 以下取得儲存權限後直接讀檔。
