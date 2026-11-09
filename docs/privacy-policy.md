@@ -2,7 +2,7 @@
 
 適用於「喚取卡池分析 for 鳴潮」（套件名稱 `tw.reh.wuwa.gacha`）的 Android 版與 Windows 版。
 
-最後更新：2026-11-07
+最後更新：2026-11-09
 
 [繁體中文](#繁體中文) | [English](#english)
 
@@ -27,6 +27,7 @@
 - **encore.moe**：下載物品名稱、圖示與角色、武器資料。只傳送物品 ID 與語言，不包含你的帳號資料。
 - **GitHub**：檢查有沒有新版本、取得更新說明。
 - **Google Play**（只限 Android 版）：檢查有沒有新版本、下載更新。
+- **Google AdMob**（只限 Android 版）：顯示頁面底部的橫幅廣告，見下方「廣告」。
 - **Google 雲端硬碟**（只在你自己開啟雲端同步時）：把喚取紀錄寫入你自己的 Google 雲端硬碟中、只有本 App 能存取的隱藏資料夾（appDataFolder）。App 只會取得你的 Google 帳號 email 用來顯示「已連結哪個帳號」，以及存取這個資料夾的權限。你可以隨時在設定頁中斷連結，並到 Google 帳號的安全性設定移除授權。
 
 ### Android 版讀取記錄檔的方式
@@ -35,6 +36,16 @@ Android 不允許 App 直接讀取其他 App 的檔案。本 App 會在你按下
 
 - 只讀取鳴潮的記錄檔，讀完立刻中斷連線；無線偵錯若是本 App 打開的，會一併關閉（你原本就開著的會維持開啟）。
 - `WRITE_SECURE_SETTINGS` 權限只用來開關無線偵錯，讓你不用每次手動設定。你可以隨時在設定頁解除。
+
+### 廣告（只限 Android 版）
+
+Android 版會在有內容的頁面底部顯示一則 Google AdMob 橫幅廣告。Windows 版沒有廣告。
+
+- 依 Google 公布的說明，Google Mobile Ads SDK 會自動收集並傳送以下資料給 Google，用於廣告、分析與防止詐騙：裝置的 IP 位址（可能用來推估大致位置）、與廣告的互動（例如 App 啟動、點擊、影片觀看）、效能診斷資訊，以及 Android 廣告 ID、應用程式集 ID 等裝置識別碼。所有資料在傳輸時都經過 TLS 加密。
+- 這些資料由 Google 收集與處理，開發者收不到個人資料。詳見 [Google 如何使用合作夥伴網站或應用程式的資訊](https://policies.google.com/technologies/partner-sites)。
+- 歐洲經濟區、英國與瑞士，以及美國部分州的使用者，第一次開啟 App 時會看到 Google 的同意視窗；之後可以在設定頁的「廣告隱私權選項」變更選擇。拒絕個人化廣告時，仍會顯示非個人化廣告。
+- 你可以在 Android 系統設定重設或刪除廣告 ID。
+- 廣告內容分級上限為「青少年（T）」。
 
 ### Windows 版取得查詢參數的方式
 
@@ -45,7 +56,7 @@ Android 不允許 App 直接讀取其他 App 的檔案。本 App 會在你按下
 
 ### 不會做的事
 
-- 沒有廣告，沒有分析或追蹤工具，不會販售或分享你的資料。
+- 除了 Android 版的廣告（見上方「廣告」），沒有其他分析或追蹤工具；開發者不會販售你的資料。
 - 執行紀錄（log）只有在你自己匯出或分享時才會離開裝置。
 
 ### 兒童
@@ -77,6 +88,7 @@ This data is stored on your device. Deleting an account in the app removes that 
 - **encore.moe**: to download item names, icons, and character and weapon data. Only item IDs and the language are sent, never your account data.
 - **GitHub**: to check for new versions and fetch release notes.
 - **Google Play** (Android only): to check for and download updates.
+- **Google AdMob** (Android only): to show the banner ad at the bottom of the screen; see "Ads" below.
 - **Google Drive** (only if you turn on cloud sync yourself): the app writes your convene history to a hidden folder in your own Google Drive that only this app can access (appDataFolder). The app only gets your Google account email, to show which account is linked, and access to that folder. You can unlink at any time in Settings and remove the access in your Google Account security settings.
 
 ### How the Android version reads the game's log
@@ -85,6 +97,16 @@ Android doesn't let apps read other apps' files. When you tap "Update", the app 
 
 - It reads only the game's log file, then disconnects right away and turns wireless debugging off again if the app turned it on (if you already had it on, it stays on).
 - The `WRITE_SECURE_SETTINGS` permission is used only to turn wireless debugging on and off, so you don't have to set it up each time. You can remove it at any time in Settings.
+
+### Ads (Android only)
+
+The Android version shows one Google AdMob banner ad at the bottom of pages that have content. The Windows version has no ads.
+
+- According to Google's disclosure, the Google Mobile Ads SDK automatically collects and sends the following data to Google for advertising, analytics and fraud prevention: the device's IP address (which may be used to estimate its general location), interactions with ads (such as app launches, taps and video views), performance diagnostics, and device identifiers such as the Android advertising ID and app set ID. All of it is encrypted in transit with TLS.
+- This data is collected and processed by Google; the developer does not receive personal data. See [How Google uses information from sites or apps that use our services](https://policies.google.com/technologies/partner-sites).
+- Users in the European Economic Area, the UK and Switzerland, and in some US states, see Google's consent form the first time they open the app, and can change their choice later under "Ad privacy options" in Settings. If you decline personalized ads, non-personalized ads are still shown.
+- You can reset or delete your advertising ID in Android's system settings.
+- Ad content is limited to the "Teen (T)" rating.
 
 ### How the Windows version gets the query parameters
 
@@ -95,7 +117,7 @@ When you click "Update", the app starts a local interception helper on your comp
 
 ### What the app does not do
 
-- No ads, no analytics or tracking, and no selling or sharing of your data.
+- Apart from the ads in the Android version (see "Ads" above), no analytics or tracking tools; the developer never sells your data.
 - Logs leave your device only when you export or share them yourself.
 
 ### Children

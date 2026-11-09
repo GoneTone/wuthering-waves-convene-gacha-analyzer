@@ -676,3 +676,39 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 遊戲資料文字（encore 的簡介、造型說明，只有由左往右的語言）在由右往左的介面裡，句末標點會跑到行首，固定用 `Directionality(ltr)` 包住。
   - `test/widgets/rtl_layout_test.dart` 以阿拉伯文鎖住以上行為。
 - **驗收**：手機用模擬器 `adb shell cmd locale set-app-locales <package> --locales ar` 切語言；Windows 不必操作滑鼠，直接把 `%APPDATA%\tw.reh\<app>\shared_preferences.json` 的 `flutter.pref.locale` 改成 `ar` 再啟動（改之前先備份，驗完還原）。值是 BCP-47 代號，繁中是 `zh`、簡中是 `zh-Hans`；寫成 `zh_Hant` 之類無效的值會被當成不支援的語言。
+
+## 十四、廣告（Android）
+
+### 50. 只放底部橫幅，以及踩到的坑（通用，2026-11-09）
+
+設計見 `docs/superpowers/specs/2026-11-09-android-banner-ads-design.md`。
+
+**為什麼只放底部橫幅**
+- 目的是「有一點收入、不打擾使用者」。插頁、獎勵廣告要強制觀看，不做。
+- 「看一則廣告支持開發者」的按鈕不能做：AdMob 獎勵廣告政策原文舉的違規例子就是 `"watch this ad to support our business"`；沒有獎勵也不適合用獎勵廣告。
+- 原生廣告（混在卡片中）政策允許，官方 Flutter 有現成模板（小型最小 320×90dp），但和橫幅同畫面時廣告比例偏高，先不做，上線後看收入再評估。
+- AdMob／發布商政策：沒有內容的畫面不能放廣告（空卡池頁、尚未同步都不放）；橫幅不能緊鄰可點元素，底部要有分隔或間隔，所以平板（狀態列右側有團隊連結按鈕）只佔內容欄並多留間隔。
+
+**廣告 ID 不寫進原始碼**
+- 專案開源，寫死的話任何人自己編譯都會用開發者帳號播正式廣告，測試時的點擊會算成無效流量，可能被扣款或停權。
+- 比照雲端同步憑證，`secrets/ads_defines.json`（`ADMOB_APP_ID`、`ADMOB_BANNER_UNIT_ID`）以 `--dart-define-from-file` 注入；CI 從 secrets 產生。可以同時給兩個 `--dart-define-from-file`。
+- 應用程式 ID 要寫在 Manifest（缺少時 SDK 一啟動就閃退）。Gradle 從 `dart-defines` 屬性解出 `ADMOB_APP_ID`（`--dart-define-from-file` 的值也會展開進這個屬性），只在 release buildType 覆寫 manifest placeholder；其餘一律官方測試 App ID。Dart 端非 `kReleaseMode` 也一律用測試單元 ID。
+
+**橫幅尺寸**
+- `google_mobile_ads` 9.2.0 把標準尺寸的 `getCurrentOrientationAnchoredAdaptiveBannerAdSize` 標成棄用，只推 `getLargeAnchoredAdaptiveBannerAdSize`。但官方文件寫大型橫幅最高可達螢幕高度 20%（50～150dp、為影片最佳化），違反「不打擾」，所以仍用標準尺寸並 `// ignore: deprecated_member_use`。外掛之後若移除，改用 `getInlineAdaptiveBannerAdSize(width, maxHeight)` 設上限。
+
+**自動輪播會重複觸發回呼**
+- 橫幅預設會自動換廣告，原生 `AdListener` 每次都會再轉發 `onAdLoaded`／`onAdFailedToLoad`，外掛沒有只觸發一次的保護。把它們接成 `Completer` 時，第二次會丟 `Future already completed`；輪播失敗時若照範例 `ad.dispose()`，會釋放畫面上正在顯示的廣告。兩個回呼都要先檢查 `isCompleted`，載入後的釋放交給元件。
+
+**版面**
+- 底部狀態列和廣告一起放進 `Scaffold.bottomNavigationBar`，SnackBar 才會自動浮在廣告上方（放在 body 裡會被 SnackBar 蓋住）。代價是 body 不再收到底部 padding，捲到最底時少一段手勢列高度的空白。
+- 手機排版開鍵盤時，廣告和狀態列一起收起。
+
+**同意**
+- UMP 以 `canRequestAds()` 為準；拒絕個人化時仍可請求（Google 投非個人化廣告）。查詢同意失敗但先前已同意時，照官方建議沿用。
+- 需要的地區（歐盟／英國等、美國部分州），設定頁「隱私權」區塊顯示「廣告隱私權選項」。
+
+**上架與 AdMob 後台待辦**
+- Play Console：「廣告」聲明改成「含廣告」；資料安全依 `private/play-store/data-safety.md` 補廣告列；`AD_ID` 權限用途填「廣告或行銷」；商店頁「開發人員網站」填 `https://reh.tw`（`app-ads.txt` 已在該網域）。
+- AdMob 後台：建立 App 與橫幅廣告單元；「隱私權與訊息」建立歐盟（GDPR）與美國各州的訊息；封鎖控制封鎖博弈、賭博類別。
+- AdMob 新 App 要等 Play 商店頁公開、在 AdMob 連結商店頁並通過審查後才會正常投放。**內部測試版看不到正式廣告是正常的**；開發版用測試廣告不受影響。正式上架後要回 AdMob 連結商店頁。
