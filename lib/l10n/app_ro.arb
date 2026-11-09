@@ -306,6 +306,7 @@
   "updateButtonDownload": "Descarcă",
   "updateButtonUpdate": "Actualizează",
   "updateNotesUnavailable": "Notele de lansare nu sunt disponibile momentan. Consultați Google Play pentru detalii.",
+  "updateDownloadingMessage": "Se descarcă actualizarea...",
   "updateDownloadedMessage": "Actualizarea a fost descărcată",
   "updateRestartAction": "Repornește",
   "updateInAppUnavailable": "Actualizarea din aplicație nu este posibilă momentan. Actualizați din Google Play.",

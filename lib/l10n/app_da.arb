@@ -306,6 +306,7 @@
   "updateButtonDownload": "Download",
   "updateButtonUpdate": "Opdater",
   "updateNotesUnavailable": "Udgivelsesnoterne er ikke tilgængelige lige nu. Se Google Play for detaljer.",
+  "updateDownloadingMessage": "Downloader opdateringen...",
   "updateDownloadedMessage": "Opdateringen er downloadet",
   "updateRestartAction": "Genstart",
   "updateInAppUnavailable": "Appen kan ikke opdateres herfra lige nu. Opdater via Google Play.",

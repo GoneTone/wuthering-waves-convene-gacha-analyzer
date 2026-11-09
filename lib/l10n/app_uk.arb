@@ -306,6 +306,7 @@
   "updateButtonDownload": "Завантажити",
   "updateButtonUpdate": "Оновити",
   "updateNotesUnavailable": "Список змін зараз недоступний. Докладніше — у Google Play.",
+  "updateDownloadingMessage": "Завантаження оновлення...",
   "updateDownloadedMessage": "Оновлення завантажено",
   "updateRestartAction": "Перезапустити",
   "updateInAppUnavailable": "Зараз неможливо оновитися в застосунку. Оновіть його через Google Play.",

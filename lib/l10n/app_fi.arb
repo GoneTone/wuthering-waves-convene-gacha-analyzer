@@ -306,6 +306,7 @@
   "updateButtonDownload": "Lataa",
   "updateButtonUpdate": "Päivitä",
   "updateNotesUnavailable": "Julkaisutiedot eivät ole juuri nyt saatavilla. Katso lisätiedot Google Playsta.",
+  "updateDownloadingMessage": "Ladataan päivitystä...",
   "updateDownloadedMessage": "Päivitys on ladattu",
   "updateRestartAction": "Käynnistä uudelleen",
   "updateInAppUnavailable": "Sovelluksen sisäinen päivitys ei ole juuri nyt mahdollinen. Päivitä Google Playn kautta.",

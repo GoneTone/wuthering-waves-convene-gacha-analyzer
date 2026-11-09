@@ -306,6 +306,7 @@
   "updateButtonDownload": "Преузми",
   "updateButtonUpdate": "Ажурирај",
   "updateNotesUnavailable": "Белешке о издању тренутно нису доступне. Детаље потражите на Google Play-у.",
+  "updateDownloadingMessage": "Преузимање ажурирања...",
   "updateDownloadedMessage": "Ажурирање је преузето",
   "updateRestartAction": "Поново покрени",
   "updateInAppUnavailable": "Ажурирање у апликацији тренутно није могуће. Ажурирајте преко Google Play-а.",

@@ -306,6 +306,7 @@
   "updateButtonDownload": "ดาวน์โหลด",
   "updateButtonUpdate": "อัปเดต",
   "updateNotesUnavailable": "ไม่สามารถแสดงบันทึกประจำรุ่นได้ในขณะนี้ ดูรายละเอียดได้ที่ Google Play",
+  "updateDownloadingMessage": "กำลังดาวน์โหลดอัปเดต...",
   "updateDownloadedMessage": "ดาวน์โหลดอัปเดตแล้ว",
   "updateRestartAction": "รีสตาร์ท",
   "updateInAppUnavailable": "อัปเดตในแอปไม่ได้ในขณะนี้ โปรดอัปเดตจาก Google Play",

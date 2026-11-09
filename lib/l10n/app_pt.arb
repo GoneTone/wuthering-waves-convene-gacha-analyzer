@@ -306,6 +306,7 @@
   "updateButtonDownload": "Transferir",
   "updateButtonUpdate": "Atualizar",
   "updateNotesUnavailable": "As notas de versão não estão disponíveis de momento. Consulte o Google Play para mais detalhes.",
+  "updateDownloadingMessage": "A transferir a atualização...",
   "updateDownloadedMessage": "A atualização foi transferida",
   "updateRestartAction": "Reiniciar",
   "updateInAppUnavailable": "De momento não é possível atualizar na aplicação. Atualize através do Google Play.",

@@ -306,6 +306,7 @@
   "updateButtonDownload": "Télécharger",
   "updateButtonUpdate": "Mettre à jour",
   "updateNotesUnavailable": "Les notes de version sont indisponibles pour le moment. Consultez Google Play pour plus de détails.",
+  "updateDownloadingMessage": "Téléchargement de la mise à jour...",
   "updateDownloadedMessage": "La mise à jour a été téléchargée",
   "updateRestartAction": "Redémarrer",
   "updateInAppUnavailable": "Impossible de mettre à jour depuis l'application pour le moment. Veuillez passer par Google Play.",

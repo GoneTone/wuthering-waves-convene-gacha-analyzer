@@ -306,6 +306,7 @@
   "updateButtonDownload": "Λήψη",
   "updateButtonUpdate": "Ενημέρωση",
   "updateNotesUnavailable": "Οι σημειώσεις έκδοσης δεν είναι διαθέσιμες αυτή τη στιγμή. Δείτε λεπτομέρειες στο Google Play.",
+  "updateDownloadingMessage": "Λήψη ενημέρωσης...",
   "updateDownloadedMessage": "Η ενημέρωση λήφθηκε",
   "updateRestartAction": "Επανεκκίνηση",
   "updateInAppUnavailable": "Δεν είναι δυνατή η ενημέρωση μέσα από την εφαρμογή αυτή τη στιγμή. Ενημερώστε από το Google Play.",

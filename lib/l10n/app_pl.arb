@@ -306,6 +306,7 @@
   "updateButtonDownload": "Pobierz",
   "updateButtonUpdate": "Aktualizuj",
   "updateNotesUnavailable": "Informacje o wersji są obecnie niedostępne. Szczegóły znajdziesz w Google Play.",
+  "updateDownloadingMessage": "Pobieranie aktualizacji...",
   "updateDownloadedMessage": "Aktualizacja została pobrana",
   "updateRestartAction": "Uruchom ponownie",
   "updateInAppUnavailable": "Nie można teraz zaktualizować w aplikacji. Zaktualizuj ją w Google Play.",

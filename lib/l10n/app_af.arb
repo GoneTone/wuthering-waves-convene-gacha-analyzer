@@ -306,6 +306,7 @@
   "updateButtonDownload": "Laai af",
   "updateButtonUpdate": "Werk by",
   "updateNotesUnavailable": "Vrystellingsnotas is tans nie beskikbaar nie. Sien Google Play vir besonderhede.",
+  "updateDownloadingMessage": "Laai die bywerking af...",
   "updateDownloadedMessage": "Die bywerking is afgelaai",
   "updateRestartAction": "Herbegin",
   "updateInAppUnavailable": "Kan nie nou in die app bywerk nie. Werk asseblief deur Google Play by.",

@@ -306,6 +306,7 @@
   "updateButtonDownload": "تنزيل",
   "updateButtonUpdate": "تحديث",
   "updateNotesUnavailable": "ملاحظات الإصدار غير متاحة حاليًا. راجع Google Play للتفاصيل.",
+  "updateDownloadingMessage": "جارٍ تنزيل التحديث...",
   "updateDownloadedMessage": "تم تنزيل التحديث",
   "updateRestartAction": "إعادة التشغيل",
   "updateInAppUnavailable": "لا يمكن التحديث من داخل التطبيق حاليًا. يُرجى التحديث من Google Play.",

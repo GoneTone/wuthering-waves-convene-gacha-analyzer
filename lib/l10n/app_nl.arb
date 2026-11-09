@@ -306,6 +306,7 @@
   "updateButtonDownload": "Downloaden",
   "updateButtonUpdate": "Bijwerken",
   "updateNotesUnavailable": "Release-opmerkingen zijn nu niet beschikbaar. Zie Google Play voor details.",
+  "updateDownloadingMessage": "Update downloaden...",
   "updateDownloadedMessage": "De update is gedownload",
   "updateRestartAction": "Opnieuw starten",
   "updateInAppUnavailable": "Bijwerken in de app is nu niet mogelijk. Werk bij via Google Play.",

@@ -306,6 +306,7 @@
   "updateButtonDownload": "Stáhnout",
   "updateButtonUpdate": "Aktualizovat",
   "updateNotesUnavailable": "Poznámky k verzi teď nejsou k dispozici. Podrobnosti najdete na Google Play.",
+  "updateDownloadingMessage": "Stahuje se aktualizace...",
   "updateDownloadedMessage": "Aktualizace byla stažena",
   "updateRestartAction": "Restartovat",
   "updateInAppUnavailable": "Aktualizace v aplikaci teď není možná. Aktualizujte prosím přes Google Play.",

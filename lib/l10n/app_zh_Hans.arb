@@ -902,6 +902,10 @@
   "updateButtonDownload": "前往下载",
   "updateButtonUpdate": "更新",
   "updateNotesUnavailable": "目前无法获取更新内容，详情请见 Google Play。",
+  "updateDownloadingMessage": "正在下载新版本...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "新版本已下载完成",
   "updateRestartAction": "重新启动",
   "updateInAppUnavailable": "目前无法在 App 内更新，请到 Google Play 更新。",

@@ -306,6 +306,7 @@
   "updateButtonDownload": "Letöltés",
   "updateButtonUpdate": "Frissítés",
   "updateNotesUnavailable": "A kiadási megjegyzések jelenleg nem érhetők el. A részletekért lásd a Google Playt.",
+  "updateDownloadingMessage": "A frissítés letöltése...",
   "updateDownloadedMessage": "A frissítés letöltődött",
   "updateRestartAction": "Újraindítás",
   "updateInAppUnavailable": "Az alkalmazáson belüli frissítés most nem lehetséges. Frissítsen a Google Playen keresztül.",

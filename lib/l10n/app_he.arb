@@ -306,6 +306,7 @@
   "updateButtonDownload": "הורדה",
   "updateButtonUpdate": "עדכון",
   "updateNotesUnavailable": "הערות הגרסה אינן זמינות כרגע. לפרטים ראו ב-Google Play.",
+  "updateDownloadingMessage": "מוריד את העדכון...",
   "updateDownloadedMessage": "העדכון הורד",
   "updateRestartAction": "הפעלה מחדש",
   "updateInAppUnavailable": "לא ניתן לעדכן מתוך האפליקציה כרגע. עדכנו דרך Google Play.",

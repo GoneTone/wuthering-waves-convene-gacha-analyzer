@@ -306,6 +306,7 @@
   "updateButtonDownload": "Baixa",
   "updateButtonUpdate": "Actualitza",
   "updateNotesUnavailable": "Les notes de la versió no estan disponibles ara mateix. Consulta Google Play per a més detalls.",
+  "updateDownloadingMessage": "S'està baixant l'actualització...",
   "updateDownloadedMessage": "S'ha baixat l'actualització",
   "updateRestartAction": "Reinicia",
   "updateInAppUnavailable": "Ara mateix no es pot actualitzar des de l'aplicació. Actualitza-la des de Google Play.",

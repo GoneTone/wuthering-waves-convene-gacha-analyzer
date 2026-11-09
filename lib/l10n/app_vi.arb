@@ -306,6 +306,7 @@
   "updateButtonDownload": "Tải xuống",
   "updateButtonUpdate": "Cập nhật",
   "updateNotesUnavailable": "Hiện không thể hiển thị ghi chú phát hành. Xem chi tiết trên Google Play.",
+  "updateDownloadingMessage": "Đang tải bản cập nhật...",
   "updateDownloadedMessage": "Đã tải xong bản cập nhật",
   "updateRestartAction": "Khởi động lại",
   "updateInAppUnavailable": "Hiện không thể cập nhật trong ứng dụng. Vui lòng cập nhật từ Google Play.",

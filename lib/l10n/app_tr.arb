@@ -306,6 +306,7 @@
   "updateButtonDownload": "İndir",
   "updateButtonUpdate": "Güncelle",
   "updateNotesUnavailable": "Sürüm notları şu anda kullanılamıyor. Ayrıntılar için Google Play'e bakın.",
+  "updateDownloadingMessage": "Güncelleme indiriliyor...",
   "updateDownloadedMessage": "Güncelleme indirildi",
   "updateRestartAction": "Yeniden başlat",
   "updateInAppUnavailable": "Şu anda uygulama içinden güncellenemiyor. Lütfen Google Play üzerinden güncelleyin.",

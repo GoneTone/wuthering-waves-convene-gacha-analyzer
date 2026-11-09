@@ -306,6 +306,7 @@
   "updateButtonDownload": "Скачать",
   "updateButtonUpdate": "Обновить",
   "updateNotesUnavailable": "Список изменений сейчас недоступен. Подробности смотрите в Google Play.",
+  "updateDownloadingMessage": "Загрузка обновления...",
   "updateDownloadedMessage": "Обновление загружено",
   "updateRestartAction": "Перезапустить",
   "updateInAppUnavailable": "Сейчас нельзя обновиться внутри приложения. Обновите его через Google Play.",
