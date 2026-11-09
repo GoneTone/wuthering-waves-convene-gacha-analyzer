@@ -235,6 +235,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 **配對與輸入**
 - **注音輸入法會把組字中的注音一起送進 RemoteInput**：配對碼只保留數字（`filter { it.isDigit() }`）。
 - **橫幅通知幾秒就收起**：玩家來不及點「配對」時要從通知欄拉下來找；教學文字寫「從螢幕頂端往下拉」是對的。
+- **「點這裡回到 App」點了不會消失**（2026-11-09 發現）：配對成功的通知沒設 `setAutoCancel(true)`；而且成功後服務還要再跑 4 秒才 `stopForeground(DETACH)`，這段期間它仍是前景服務的通知，系統不會因為點擊就收起。改成成功時先 `stopForeground(STOP_FOREGROUND_DETACH)` 再排 4 秒後結束服務，通知本身加 `setAutoCancel(openApp)`。
 - **輸入法的自動校正會改網址**：手動輸入欄位要設 `keyboardType: TextInputType.url`、`autocorrect: false`、`enableSuggestions: false`，否則 `&lang=` 會被改成 `&Lang=`，網址就失效了。
 
 **版面**
@@ -603,6 +604,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 精簡圖例的件數欄、百分比欄若照字寬抓得太剛好，「100.00%」在預設字級就會斷成兩行（Roboto 14px 寬 55dp，欄寬 54）。只有一種稀有度或類型的小卡池最常遇到。現在件數欄 44、百分比欄 58，並隨字級縮放。
   - 精簡圖例空間不夠時，件數和百分比移到第二行並靠右。Flutter 現成元件做不到「名稱靠左、數字靠右」：`OverflowBar` 會整列一起對齊；`LayoutBuilder` 放在 `IntrinsicHeight` 裡會丟例外。所以另寫一個兩個子元件的 `RenderBox`，固有尺寸、乾排版、實際排版共用同一條「放不放得下」的規則，並支援由右至左。
   - 「各卡池最高稀有度件數」的上下兩行版面若用 `Row[Flexible(名稱), Expanded(件數)]`，兩者各分一半寬度。名稱短時，用不完的那一半不會讓給件數，而是留在最右邊，於是右緣參差不齊。改用 `MainAxisAlignment.spaceBetween` 搭配兩個 `Flexible`。寬版的件數欄也改成靠右。
+  - **整頁的空狀態要填滿剩下的高度再置中**（2026-11-09）：卡池頁的「此卡池無紀錄」原本放在標題下的 `SizedBox(height: 320)` 裡，只在那 320 裡置中，下方空一大塊，手機橫向（800×360）還溢出 29 像素。改成 `Expanded(child: EmptyState.noRecords(...))`，和「尚未同步」的 `noSyncPageBody` 同一種寫法；`phone_layout_pages_test` 在直向、橫向、電腦三種尺寸檢查內容中心落在標題以下區域的正中央。卡片裡的空訊息（篩選無結果、時間軸無某稀有度、圓餅無資料）本來就各自包 `Center`，總覽頁的區塊空狀態是跟著捲動的小框，都不用改。
 - **滑動流暢度**（ROG Phone 9，165Hz，profile 版，慣性滑動準時率，量測時同時開著無障礙服務）：
 
   | 頁面 | 第 41 條優化後（直向） | 本次改版後（直向） | 本次改版後（橫向） | 追加項目後（直向） | 追加項目後（橫向） |
