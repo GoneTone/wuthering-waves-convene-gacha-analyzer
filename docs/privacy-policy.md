@@ -60,6 +60,17 @@ Android 版會在有內容的頁面底部顯示一則 Google AdMob 橫幅廣告�
 - 除了 Android 版的廣告（見上方「廣告」），沒有其他分析或追蹤工具；開發者不會販售你的資料。
 - 執行紀錄（log）只有在你自己匯出或分享時才會離開裝置。
 
+### 刪除你的資料
+
+「喚取卡池分析 for 鳴潮」（Convene Analyzer for WuWa）的開發者沒有伺服器，不保存你的任何資料；你的資料只在你的裝置與你自己的 Google 雲端硬碟裡，可以照以下步驟自行刪除：
+
+1. **刪除單一帳號的資料**：在 App 的「設定」→「帳號管理」，點該 UID 右邊的 ⋮ →「移除」，輸入 UID 確認後按「刪除」。有開雲端同步的話，勾選「同時從雲端同步資料移除此帳號」會在下次同步時一併刪除雲端硬碟中這個帳號的資料。
+2. **刪除裝置上的所有資料**：解除安裝 App（Windows 版解除安裝時選擇一併刪除資料）。
+3. **刪除雲端硬碟上的所有同步資料**：在電腦上開啟 Google 雲端硬碟網頁版 →「設定」→「管理應用程式」，找到本 App →「選項」→「刪除隱藏的應用程式資料」。之後可以到 Google 帳號的「安全性」→「第三方應用程式和服務」移除本 App 的存取權。
+4. **廣告資料（只限 Android 版）**：AdMob 收集的資料由 Google 依其隱私權政策處理與保留，開發者無法刪除；你可以在 Android 系統設定重設或刪除廣告 ID。
+
+以上步驟會刪除對應資料，開發者沒有另外保留任何副本。Android 系統備份到你 Google 帳號中的副本，由你在 Google 帳號中自行管理。
+
 ### 兒童
 
 本 App 不以兒童為對象。
@@ -121,6 +132,17 @@ When you click "Update", the app starts a local interception helper on your comp
 
 - Apart from the ads in the Android version (see "Ads" above), no analytics or tracking tools; the developer never sells your data.
 - Logs leave your device only when you export or share them yourself.
+
+### Deleting your data
+
+The developer of Convene Analyzer for WuWa (喚取卡池分析 for 鳴潮) runs no server and keeps none of your data. Your data is only on your device and in your own Google Drive, and you can delete it yourself:
+
+1. **Delete one account's data**: in the app, go to Settings → Account management, tap ⋮ next to the UID → Remove, type the UID to confirm and tap Delete. If cloud sync is on, checking "Also remove this account from cloud sync data" also deletes that account's data from your Google Drive at the next sync.
+2. **Delete all data on the device**: uninstall the app (on Windows, choose to delete the data when uninstalling).
+3. **Delete all synced data in Google Drive**: open Google Drive on the web on a computer → Settings → Manage apps, find this app → Options → Delete hidden app data. You can then remove the app's access under Security → Third-party apps & services in your Google Account.
+4. **Ad data (Android only)**: data collected by AdMob is processed and retained by Google under its own privacy policy; the developer cannot delete it. You can reset or delete your advertising ID in Android's system settings.
+
+These steps delete the data; the developer keeps no other copy. Copies backed up to your Google account by Android's system backup are managed by you in your Google account.
 
 ### Children
 
