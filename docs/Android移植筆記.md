@@ -20,10 +20,12 @@ Android 11 起，一般 App 不能讀其他 App 的 `Android/data`；Android 13 
 
 | 方式 | 適用情境 | 實作 |
 |---|---|---|
-| root | 有 root 的手機 | `Process.run('su', ['-c', 'cat <路徑>'])`，不用 Wi-Fi、不用配對 |
+| root | 有 root 的手機 | 整次更新只開一個常駐 `su`（`Process.start('su')`），指令從 stdin 送進去，用隨機結束標記切出輸出；**不要每條指令都 `su -c`**（見第 20 節「root」）。不用 Wi-Fi、不用配對 |
 | 無線偵錯自我配對 | Android 11 以上、有 Wi-Fi | `flutter_adb`（純 Dart、BSD-3）配對 `127.0.0.1` 後取得 `uid=2000(shell)` |
-| 直接讀 | Android 10 以下（尚未驗證） | 取得儲存權限，加上 `requestLegacyExternalStorage` |
-| 手動輸入 | 都不行的時候 | 兩個平台共用：貼上網址（可整段貼上，例如飛航模式複製的錯誤訊息）或選擇 `Client.log` 檔案（見第 19 節） |
+| 直接讀 | Android 10 以下（權限流程已在 API 28／29 模擬器驗證；實際讀到遊戲 log 尚未驗證） | 宣告 `READ_EXTERNAL_STORAGE`（`maxSdkVersion="29"`）並加上 `requestLegacyExternalStorage`；永久拒絕的處理見第 20 節 |
+| 手動輸入 | 都不行的時候 | 兩個平台共用：貼上網址（可整段貼上，例如飛航模式複製的錯誤訊息）或選擇 `Client.log` 檔案（見第 19、20 節） |
+
+實作上依序嘗試：上次成功的方式 → root → 直接讀（API ≤ 29）→ 無線偵錯（API ≥ 30），成功的方式記在設定（`logAccessMethod`）。讀檔統一透過 `ClientLogSource`（`LocalFileLogSource`／`ShellLogSource`），輪詢、解碼和比對網址的程式在電腦版、root、無線偵錯共用。
 
 **無線偵錯的實測重點（ASUS、Android 16）：**
 - 配對碼的視窗一離開設定頁就會關閉。第一次配對要用分割畫面，或做一個類似 Shizuku 的「在通知欄輸入配對碼」。**通知欄輸入已實測可行**，做法見第 19 節。
@@ -42,10 +44,14 @@ Android 11 起，一般 App 不能讀其他 App 的 `Android/data`；Android 13 
 - XOR 混淆**和 PC 版完全相同**（`b ^ ((b & 1) != 0 ? 0xA5 : 0xEF)`），解碼和解析的程式碼可以直接共用。
 - 喚取 URL 也會出現在 logcat（tag `KUROSDK`），格式和 PC 版一樣，只差 `platform=Android`。
 - **原神要另外查**：原神 Android 版的 log 或 WebView 快取位置、是否有混淆。
+- 要在 manifest 的 `<queries>` 宣告遊戲套件（`com.kurogame.wutheringwaves.global`），Android 11 以上才查得到它是否已安裝、才能從 App 開啟遊戲。原神版要換成原神的套件名稱。
+- 解析 log 的正規表示式若需要非 ASCII 或控制字元，一律寫成跳脫序列（例如 `[^\x00-\x7F]`），不要直接放原始位元組，否則 git 會把整個檔案當成二進位，無法 diff。原神版共用這段解碼程式時也要注意。
 
 ---
 
 ## 二、建置與專案設定
+
+設計：`docs/superpowers/specs/2026-11-05-android-platform-foundation-design.md`。
 
 ### 4. `flutter create` 加平台時，會順手改到不該改的檔案（通用）
 
@@ -56,10 +62,11 @@ Android 11 起，一般 App 不能讀其他 App 的 `Android/data`；Android 13 
 
 **處理**：執行完先看 `git status`，還原 `pubspec.lock`，刪掉 `test/widget_test.dart`，手動合併 `.metadata`（保留 windows，新增 android）。`analysis_options.yaml` 自動加上的 `android/**` 排除可以保留。
 
-### 5. Android 不需要編 Rust（通用）
+### 5. App 自己的 Rust 不用在 Android 編（通用）
 
-App 自己的 Rust 只負責 Windows 的攔截。`main.dart` 用 `if (Platform.isWindows)` 包住 `RustLib.init()` 和 Rust log stream 就好，**不需要**把 `rust_builder` 接進 Gradle，也不用裝 NDK。
-- 注意：沒有初始化 Rust 時，呼叫 FRB 的 API 會**同步**丟 `StateError`。要確認呼叫點都有既有的錯誤處理接住（鳴潮版在 `update()` 外層的 catch 接住，會顯示「失敗」對話框）。
+App 自己的 Rust 只負責 Windows 的攔截。`main.dart` 用 `if (Platform.isWindows)` 包住 `RustLib.init()` 和 Rust log stream 就好，**不需要**把 `rust_builder` 接進 Gradle。
+- **但 `super_clipboard` 的依賴仍會在 Android 編 Rust**：cargokit 只有在沒裝 rustup 時才下載預編譯檔，開發機為了 Windows 一定裝了 rustup，所以會從原始碼編，需要 Rust toolchain（rustup 會自動加 Android target）與 NDK（`android/app/build.gradle.kts` 的 `ndkVersion = flutter.ndkVersion`，沒設 cargokit 會直接報錯）。CI 的 Android job 也要裝 Rust（`release.yml` 的 Setup Rust）。
+- 注意：沒有初始化 Rust 時，呼叫 FRB 的 API 會**同步**丟 `StateError`。子專案 1 時是靠 `update()` 外層的 catch 接住；子專案 2 之後，`_acquireCredential` 依 `isAndroidProvider` 把 Android 分到讀 log 的流程，根本不會呼叫 FRB。之後新增 Rust 呼叫點時，也要在進入前就依平台分流。
 
 ### 6. Kotlin 增量編譯「different roots」（通用，看磁碟配置）
 
@@ -88,11 +95,11 @@ pub cache 在 C 槽、專案在 E 槽時，Kotlin 增量編譯會失敗（`this 
 
 ### 10. App 圖示（通用）
 
-沿用既有的 `tool/generate_app_icons.dart`，從同一張主圖多輸出 `mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}/ic_launcher.png`（48／72／96／144／192）。不需要另外引入圖示產生套件。
+沿用既有的 `tool/generate_app_icons.dart`，從同一張主圖多輸出 `mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}/ic_launcher.png`（48／72／96／144／192）。不需要另外引入圖示產生套件。之後換新圖示時，同一支工具也會產生自適應圖示前景層與 Play 商店圖示，見第 38 節。
 
 ### 11. App 名稱多語系（通用）
 
-`android:label` 不能讀 ARB，要用 `res/values*/strings.xml`（`values`、`values-zh-rTW`、`values-zh-rCN`、`values-ja`），內容和各 ARB 的 `appName` 一致。英文名稱太長的話，桌面上會被截斷。
+`android:label` 不能讀 ARB，要用 `res/values*/strings.xml`，內容和各 ARB 的 `appName` 一致。最初只做了 `values`、`values-zh-rTW`、`values-zh-rCN`、`values-ja`；補齊所有語言、資料夾代碼（`values-iw`、`values-nb`）與 Crowdin 設定見第 49 節。英文名稱太長的話，桌面上會被截斷。
 
 ---
 
@@ -101,7 +108,7 @@ pub cache 在 C 槽、專案在 E 槽時，Kotlin 增量編譯會失敗（`this 
 ### 12. 系統語言是繁中，App 卻顯示簡中（通用）
 
 Android 回報的語言帶 script code，格式是 `zh-Hant-TW`（Windows 是 `zh_TW`）。專案沒有 `zh_Hant` 這個語系時，Flutter 預設的判斷只會把它記成「語言相符」並繼續往下找，結果被系統語言清單裡排在後面的 `zh-Hans-CN` 搶走。
-**處理**：在 `localeListResolutionCallback` 把 `zh-Hant-*` 明確對應到裸 `zh`。
+**處理**：在 `localeListResolutionCallback` 把 `zh-Hant-*` 明確對應到裸 `zh`。這個函式後來還加了不支援的語言改回英文、挪威文 `nb`／`nn` 對到 `no`，見第 49 節。
 
 ### 13. Flutter 內建元件文字在裸 `zh` 時是簡中（通用，Windows 也有）
 
@@ -112,6 +119,7 @@ Android 回報的語言帶 script code，格式是 `zh-Hant-TW`（Windows 是 `z
 
 `file_selector` 在 Android 回傳的是 `XFile.fromData`（記憶體中的 bytes）。`cross_file` 0.3.5+2 的 `readAsString` 會忽略編碼，直接用 `String.fromCharCodes`，中文就變亂碼（Windows 回傳的是檔案路徑，所以不受影響）。
 **處理**：把 `cross_file` 升到 0.3.5+5 以上，並加一個回歸測試防止日後降版。
+**後續**：子專案 4 改用 `file_picker` 並移除 `file_selector`，讀檔改成自己 `utf8.decode`（見第 26 節），不再依賴 `cross_file` 的字串讀取，原本的回歸測試也一起移除。原神版若仍用 `file_selector`，升級 `cross_file` 的做法仍然適用。
 
 ### 15. 手機版面會溢出（通用）
 
@@ -120,6 +128,8 @@ Android 回報的語言帶 script code，格式是 `zh-Hant-TW`（Windows 是 `z
 ---
 
 ## 四、喚取立繪（離屏 WebView 擷取 Spine canvas）
+
+設計：`docs/superpowers/specs/2026-11-05-android-luckdraw-capture-design.md`（計畫：`docs/superpowers/plans/2026-11-05-android-luckdraw-capture.md`）。
 
 ### 16. `flutter_inappwebview` 可以讓兩個平台共用（通用）
 
@@ -156,7 +166,7 @@ Android 回報的語言帶 script code，格式是 `zh-Hant-TW`（Windows 是 `z
 - **Windows 建置**：
   - `flutter_inappwebview_windows` 在建置時會用 **NuGet** 下載 WIL 和 CppWinRT。開發機要先安裝（`winget install Microsoft.NuGet`）；GitHub Actions 的 `windows-latest` 已經內建。
   - 它的 CMakeLists 同樣會觸發 CMP0175 警告，`windows/CMakeLists.txt` 裡的 `set(CMAKE_POLICY_DEFAULT_CMP0175 OLD)` 要保留。
-  - 原本為了 `webview_windows` 在 `build_release.ps1` 用 `CL` 注入 `_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS`，現在可以拿掉，因為新套件沒有用到 `<experimental/coroutine>`，release 建置已驗證通過。
+  - 原本為了 `webview_windows` 在 `scripts/build_installer/build_release.ps1` 用 `CL` 注入 `_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS`，現在可以拿掉，因為新套件沒有用到 `<experimental/coroutine>`，release 建置已驗證通過。
 - 延遲初始化已驗證：Windows App 啟動後閒置時，沒有任何屬於本 App 的 `msedgewebview2.exe`。
 - **WebView2 資料資料夾一定要自己指定（Windows）**：`flutter_inappwebview_windows` 沒有傳 `WebViewEnvironment` 時，會用 `userDataFolder = nullptr`，WebView2 就把資料寫在**執行檔旁邊**（`<exe>.WebView2`）。安裝在 `Program Files` 的版本沒有寫入權限，WebView2 啟動會失敗，功能就靜靜地消失了。開發時從 `build` 資料夾執行一切正常，所以測不出來。**處理**：用 `WebViewEnvironment.create(settings: WebViewEnvironmentSettings(userDataFolder: <getApplicationCacheDirectory()>/webview2))` 建立環境，傳給 `HeadlessInAppWebView(webViewEnvironment: ...)`，dispose 時一起釋放。舊的 `webview_windows` 預設就放在使用者可寫的位置，所以以前沒遇過這個問題。
 
@@ -197,13 +207,15 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 服務類型用 `shortService`（Android 14 起）：不需要額外的類型權限，上限約 3 分鐘。比 `connectedDevice` 單純，後者在 Android 14 還要另外宣告前置權限。
 - 通知的 RemoteInput 回覆要用 `PendingIntent.getForegroundService`（`FLAG_MUTABLE`）送回服務；服務每次收到指令都要再呼叫一次 `startForeground`。
 - 服務用 NsdManager 找 `_adb-tls-pairing._tcp` 取得配對連接埠，玩家只要輸入 6 位數。配對碼經 MethodChannel 交給 Dart，由 `flutter_adb` 的 `AdbPairing.pair` 完成。實測找到連接埠後約 2 秒配對成功。
-- **Shizuku 沒有處理 3 分鐘逾時**（沒覆寫 `onTimeout`，「重試」按鈕的程式碼被註解掉了）。我們的做法：確認開發人員選項已開啟後才啟動服務；逾時就停止服務並發通知讓玩家重新開始。
+- **Shizuku 沒有處理 3 分鐘逾時**（沒覆寫 `onTimeout`，「重試」按鈕的程式碼被註解掉了）。我們的做法：確認開發人員選項已開啟、通知也已允許後才啟動服務（Android 13 起通知要另外要求權限，沒允許的話玩家看不到輸入配對碼的通知）；服務自己計時 3 分鐘（`TIMEOUT_MS`），逾時就停止服務並發通知讓玩家重新開始。各版本行為一致：`shortService` 的系統上限只在 Android 14 以上才有，Android 11～13 沒有系統逾時。
+- NSD 找到的配對服務只採用本機位址（loopback 或本機網卡位址），區網內其他裝置也可能正在配對。啟動服務時先清掉上一次的結果通知。
 
 **一鍵恢復與重開機**
 - 首次連上 shell 後執行 `pm grant <套件> android.permission.WRITE_SECURE_SETTINGS`。**重開機後授權仍在**；無線偵錯會被系統關掉，但 App 可以自己再打開，約 2.2 秒拿到 shell。
 - **NSD 會回傳已關閉的舊連接埠**：無線偵錯重新開啟後連接埠會換，NSD 結果裡舊的記錄還在，而且常排在前面，連過去會 `Connection refused`。要收集約 2 秒內的所有結果，逐一嘗試連線。
 - **緊接著開下一個 shell 串流會失敗**：前一個串流剛結束就立刻開下一個，`flutter_adb` 偶爾回 `Stream open failed or refused by remote peer`，稍等再開就正常。指令要排隊執行，失敗時延遲重試一次。實機上連上後的第一條指令常卡滿 10 秒才失敗，所以每條指令前都補足 250 ms 間隔，比事後重試快得多。
 - 鳴潮的 `Client.log` 實測將近 10 MB，透過 shell 讀時要只讀新增的部分（`stat -c %s` 取長度，`tail -c +N | head -c M` 取範圍）。
+- **讀不到長度不能當成 0**：長度指令寫成 `stat -c %s '<路徑>' 2>/dev/null || echo 0`，檔案不存在時由指令自己印 0；輸出是空的或看不懂時要當成這次輪詢失敗（`ShellLogSource.length` 直接 `int.parse`）。若一律當成 0，會被判斷成 log 輪替，從頭重讀整個近 10 MB 的檔案。
 
 **飛航模式取得網址（鳴潮限定，原神要另外驗證）**
 - 這是 WuWa Tracker 教學提供的 Android 手動方式。開飛航模式後進「喚取記錄」，頁面只顯示載入失敗，但長按可以全選複製出看不見的文字，內容是整段錯誤訊息（「網頁無法使用...無法載入位於 <網址> 的網頁...」），裡面有完整網址。
@@ -220,12 +232,13 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **背景 App 的網路會被擋（`APP_BACKGROUND`）**：玩家還在遊戲裡時 App 就讀到網址，此時立刻抓資料會直接 `Failed host lookup`。要等玩家切回本 App（`AppLifecycleListener` 的 resume）才開始抓，等待時畫面提示「請回到本 App」。
 - **儲存權限被「不要再詢問」後，再要求也不會跳視窗**（Android 10 以下的直接讀檔）：玩家按「重新授權」時被拒、且 `shouldShowRequestPermissionRationale` 為 false，就改開本 App 的系統設定頁（`ACTION_APPLICATION_DETAILS_SETTINGS`）。**回到 App 時的自動重試只能檢查權限、不能再要求**，否則永久拒絕時每次回來都會再被送去設定頁，玩家連「取消」都按不到。
 - **能自動開關的裝置被收回 `WRITE_SECURE_SETTINGS` 後，下次連上會自動補回**（連上 shell 時順便 `pm grant`）。設定頁的配對狀態要在每次讀取結束後重讀，否則開著的設定頁會一直顯示「需手動開啟」。
-- **解除配對只能刪掉本機金鑰**：系統「已配對的裝置」清單裡的紀錄 shell 刪不掉，會留著（不影響使用，重新配對也正常）。沒有公開的指令或 API 能刪；`service call adb <編號>` 依交易編號呼叫隱藏介面，編號會隨系統版本變，**不採用**。所以解除配對後改用對話框說明（保留原本「已收回權限／連不上、權限還沒收回」的訊息，再補一段「清單裡還留著這筆、點它即可刪除」），附「前往無線偵錯」按鈕，讓玩家自己刪（2026-11-09）。
+- **解除配對只能刪掉本機金鑰**：系統「已配對的裝置」清單裡的紀錄 shell 刪不掉，會留著（不影響使用，重新配對也正常）。沒有公開的指令或 API 能刪；`service call adb <編號>` 依交易編號呼叫隱藏介面，編號會隨系統版本變，**不採用**。所以解除配對後改用對話框說明（保留原本「已收回權限／連不上、權限還沒收回」的訊息，再補一段「清單裡還留著這筆、點它即可刪除」），附「前往無線偵錯」按鈕，讓玩家自己刪（2026-11-09）。解除配對連不上時，權限還在，App 仍要把剛為了解除配對打開的無線偵錯關回去。
 - **開始設定前就開著的無線偵錯，設定完不要關**（2026-11-09 實機發現）：設定完成會自動跑一次更新，原本一律當成「App 打開的」用完就關，連玩家本來就開著的也被關掉。改成按「開始設定」（或「重試授權」）時先讀一次開關記下來，本來就開著的維持開啟，照引導才打開的照舊關掉。設定完自動進入「等待喚取記錄」是設計如此（完成後直接更新一次）。
 - **配對名稱不能有空格**：顯示在「已配對的裝置」的名稱，系統讀到空白就截斷。2026-11-09 從 `wuwa-gacha` 改成 `wuwa-convene-analyzer`；只影響之後的新配對（金鑰的儲存位置沒變，舊配對照樣能用，但清單裡仍顯示舊名，對話框寫的是新名，只有改名前配對過的內測機會對不上）。
 - **換到沒允許過的 Wi‑Fi，無線偵錯會被系統擋下**：App 寫入 `adb_wifi_enabled=1` 後，系統立刻改回 0，並跳出「要允許透過這個網路執行無線偵錯嗎？」。玩家按允許前什麼都連不上，所以打開後要約 0.5 秒讀回開關：變回 0 就是這個情況，要提示玩家按允許，而不是說「配對失效、請重新配對」。按允許後是**系統**把開關打開的，重試時不能當成玩家原本就開著，用完要關回去，否則之後每次都會留著。玩家按「取消」也會回到本 App；這時若自動重試，系統視窗會馬上再跳出來，變成關不掉的迴圈。所以只有在開關已經被打開（玩家按了允許）時才自動重試，另外提供「重試」按鈕。
 - **重開機後系統會自己恢復無線偵錯（ASUS Android 16 實測）**：重開機前是開的，開機完成時讀到 0，解鎖後幾秒內就自動變回 1，不必開 App。所以開機後第一次更新時 App 看到它已經開著，照「原本開著就保留」的規則處理是對的。
 - **沒有 Wi‑Fi 時從通知欄打開 Wi‑Fi 也會自動繼續**：收起通知欄會觸發 Flutter 的 resume，自動重試就會接上，不一定要切出 App 再回來。
+- **取消後要等進行中的輪詢停下來才釋放**：先收掉監看再釋放的話，還在讀的輪詢失敗後會自己重連，把剛關掉的無線偵錯又打開，或在 root 時再開一個 `su`、再跳一次授權。改成等監看結束再釋放，已關閉的 shell 連線與 `su` session 也一律拒絕重連、重開（只有 `verify()` 可以開新的 `su`）。
 
 **root**
 - **root 時每條指令都 `su -c` 會讓 root 工具每秒跳一次授權提示**：改成整次更新只開一個常駐 `su`，指令從 stdin 送進去，以隨機結束標記切出每條指令的輸出。
@@ -236,8 +249,9 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 **配對與輸入**
 - **注音輸入法會把組字中的注音一起送進 RemoteInput**：配對碼只保留數字（`filter { it.isDigit() }`）。
+- **連線只讀配對金鑰，不產生**：加密儲存區讀不到時，若當場產生新金鑰並寫回，會把已配對的金鑰蓋掉，等於靜悄悄地解除配對。只有配對流程可以產生金鑰，連線時讀不到就當成未配對。adb shell 指令逾時時要送 `CLSE`，把裝置端的串流關掉。
 - **橫幅通知幾秒就收起**：玩家來不及點「配對」時要從通知欄拉下來找；教學文字寫「從螢幕頂端往下拉」是對的。
-- **配對結果通知：點了不消失、也不會彈出**（2026-11-09 發現）：成功通知原本是拿前景服務那則（同一個 ID）換內容，所以（1）它被系統標成前景服務通知，點擊不會自動收起；（2）對系統而言只是「同一則通知更新」，不會像新通知一樣跳出橫幅，玩家得自己拉開通知欄。第一次只加 `setAutoCancel` 並在發出後立刻 `stopForeground(DETACH)`，實機仍不消失：發通知與脫離前景在系統裡是非同步處理的，順序不可靠。最後改成和逾時通知一樣：**先結束服務（`stopForeground(REMOVE)`＋`stopSelf`），再用另一個 ID 發結果通知**（`setContentIntent`＋`setAutoCancel(true)`），成功、App 已關閉、逾時三種結果共用 `finishWith()`；前景服務的 ID 只給進行中的通知。原本成功後多等 4 秒才結束服務，文件沒有原因，拿掉了。模擬器（API 36）實際配對驗證：結果通知旗標只有 `AUTO_CANCEL`、服務已結束，點擊後 App 到前景、通知數歸零。原則：會點開 App 的通知不能和前景服務共用 ID。
+- **配對結果通知：點了不消失、也不會彈出**（2026-11-09 發現）：成功通知原本是拿前景服務那則（同一個 ID）換內容，所以（1）它被系統標成前景服務通知，點擊不會自動收起；（2）實機上也沒有跳出橫幅（真正原因後來查明是勿擾，見下一點）。第一次只加 `setAutoCancel` 並在發出後立刻 `stopForeground(DETACH)`，實機仍不消失：發通知與脫離前景在系統裡是非同步處理的，順序不可靠。最後改成和逾時通知一樣：**先結束服務（`stopForeground(REMOVE)`＋`stopSelf`），再用另一個 ID 發結果通知**（`setContentIntent`＋`setAutoCancel(true)`），成功、App 已關閉、逾時三種結果共用 `finishWith()`；前景服務的 ID 只給進行中的通知。原本成功後多等 4 秒才結束服務，文件沒有原因，拿掉了。模擬器（API 36）實際配對驗證：結果通知旗標只有 `AUTO_CANCEL`、服務已結束，點擊後 App 到前景、通知數歸零。原則：會點開 App 的通知不能和前景服務共用 ID。
   - **改了 ID 之後成功通知還是不彈出：是勿擾模式，不是通知欄**（rc.7、rc.8 實機）。手機一直開著勿擾（只允許重要的打擾，政策含 `SUPPRESSED_EFFECT_PEEK`），`dumpsys notification` 的勿擾紀錄顯示配對碼（4201）與成功（4202）**兩則都被攔下**（`intercepted ... !priority`）。配對碼照樣跳出，是因為 SystemUI 的 `NotificationEntry.isExemptFromDndVisualSuppression()` 讓前景服務的通知（`isFgsOrUij()`）不受勿擾「不跳出」限制；成功通知不是前景服務，就只進清單。這是玩家自己選的勿擾行為，不改（掛回前景服務又會變回點了不消失）。中間曾誤判成「發出時通知欄還開著」而加了 1.5 秒延遲（rc.8），查明後已還原；判斷前要先看 `settings get global zen_mode` 與勿擾紀錄，別只看時間線。模擬器（API 36，沒開勿擾）錄影：送出配對碼後收起通知欄，成功通知會以橫幅跳出，約 2 秒後被系統「無線偵錯已連線」蓋掉；模擬器送出後通知欄**不會自己收起**，開著時結果只進清單，要用 `cmd statusbar collapse` 收起。
 - **輸入法的自動校正會改網址**：手動輸入欄位要設 `keyboardType: TextInputType.url`、`autocorrect: false`、`enableSuggestions: false`，否則 `&lang=` 會被改成 `&Lang=`，網址就失效了。
 
@@ -267,17 +281,17 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 - 判斷集中在 `isCompactLayout()`（`lib/theme/layout.dart`），門檻 600 dp。**手機作業系統看短邊**，轉向時不會在兩種排版間跳來跳去，橫向仍是手機排版；**電腦作業系統只看寬度**，寬而矮的筆電視窗維持側欄，只有把視窗拉窄才切換（Windows 縮小視窗也能用手機排版，算是附帶好處）。
 - Windows 最小視窗寬度從 800 降到 360，才拉得到手機排版。
-- 個別元件依「自己拿到的寬度」切換（`LayoutBuilder`，例如紀錄表格在 600 dp 以下改成卡片、搜尋框獨占一行），不是看整個畫面。
+- 個別元件依「自己拿到的寬度」切換（`LayoutBuilder`，例如搜尋框獨占一行），不是看整個畫面。紀錄表格例外：手機排版（含橫向）一律用卡片，其餘在自身寬度 600 dp 以下才改卡片（`recordListUsesCards`）。
 
 ### 23. 各元件的手機版做法（通用）
 
-- **導覽**：側欄改成抽屜（漢堡選單），項目高 48 dp。標題列只留 ☰、帳號選單和更新鈕（改成圓形圖示鈕）；App 圖示、名稱和版本號移到抽屜頂部，跟著清單捲動。抽屜高度不到 600 dp（手機橫向、分割畫面）時，「貢獻者／設定」不固定在底部，跟著清單一起捲，否則會壓縮中間的清單。底部狀態列直向橫向都顯示，只隱藏團隊名稱和分隔線，按鈕 48 dp。
+- **導覽**：側欄改成抽屜（漢堡選單），項目高 48 dp。標題列只留 ☰、帳號選單和更新鈕（改成圓形圖示鈕）；App 圖示、名稱和版本號移到抽屜頂部，跟著清單捲動。抽屜高度不到 600 dp（手機橫向、分割畫面）時，「貢獻者／設定」不固定在底部，跟著清單一起捲，否則會壓縮中間的清單。底部狀態列：手機直向只留「最後更新」，社群連結移到抽屜最下方；手機橫向不建底部列（細節見 #46）。按鈕 48 dp。
 - **返回鍵**：側欄／抽屜切換的頁面是同一層，原本每一頁按返回都直接關掉 App。改成：抽屜開著先關抽屜；不在綜合頁就回綜合；在綜合頁才交給系統離開。外殼 `PopScope` 的 `canPop` 只在「綜合頁且抽屜關著」時為 true，其餘在 `onPopInvokedWithResult` 處理，Android 13 起的預測返回動畫只在真的要離開時出現。不照瀏覽紀錄倒退（同層頁面來回切幾次就要按很多下才離得開），也不跳「確定離開？」對話框（Android 不建議攔截返回，也會破壞預測返回）。不限手機排版，Android 平板的側欄排版一樣適用；電腦版沒有系統返回鍵，不受影響。`app_shell_test` 用手機與平板寬度鎖住。
-- **紀錄表格**：窄寬度改成卡片列表，每張卡顯示名稱、類型、稀有度、時間（相對時間）、總抽數、保底內；排序改成「排序：xxx」按鈕叫出底部面板。
+- **紀錄表格**：窄寬度或手機排版改成卡片列表，每張卡顯示名稱、類型、稀有度、時間（相對時間）、總抽數、保底內；排序改成「排序：xxx」按鈕叫出底部面板。
 - **對話框**：`AppDialog` 在手機上邊距 12 dp。物品詳情在手機橫向改成左右兩欄（左：說明與造型說明，右：立繪），避免立繪被壓扁。
 - **看圖**：觸控單擊不做事（避免誤觸），雙擊放大／還原，雙指縮放，長按叫出選單（取代右鍵），未放大時往下滑關閉。滑鼠行為維持桌面版（單擊縮放、右鍵選單）。
 - **觸控目標**：所有可點的東西至少 48 dp（捲動箭頭、拖曳把手、底部狀態列按鈕等），畫面上可以畫得比較小，但點擊範圍要夠。
-- **提示框**：Flutter 的 `Tooltip` 在觸控下預設是長按。點了沒有其他動作的（相對時間、時間軸節點與日期）在手機上改成點一下顯示（`tapTooltipTrigger()`）；外層本身可點的（例如勾選列裡的時間、會開詳情的紀錄卡片）維持長按，否則提示框會搶走那個點擊。
+- **提示框**：Flutter 的 `Tooltip` 在觸控下預設是長按。點了沒有其他動作的（相對時間、時間軸節點與日期）在手機上改成點一下顯示（`triggerMode: tapTooltipTrigger(context)`）；外層本身可點的（例如勾選列裡的時間、會開詳情的紀錄卡片）維持長按，否則提示框會搶走那個點擊。
 - **安全區（開孔鏡頭、手勢列）**：Android 15 起 App 一律延伸到全螢幕（edge-to-edge），`Scaffold` 只幫 `AppBar` 避開安全區，`body` 不會。原則是**內容全部避開安全區，只有背景色延伸到螢幕邊緣**：內容區包 `SafeArea(top: false, bottom: false)` 避開橫向的開孔鏡頭；底部狀態列的背景色延伸到底，裡面的文字和連結包 `SafeArea(top: false)` 避開手勢列。抽屜、底部面板、浮動提示要自己包 `SafeArea`；`showDialog` 預設 `useSafeArea: true`（看圖、詳情都在內），SnackBar 和彈出選單 Flutter 會自己處理。實測 ROG Phone 的開孔在橫向時位於左或右側，兩個方向都要看。
 - **抽屜開著時把視窗拉寬再縮回，抽屜會自己開著出現**：抽屜被拿掉時 Scaffold 仍記得「開著」。拉寬時先保留抽屜、關好再拿掉。
 - **文字會變長**：日文、英文和放大字級（1.3 倍）下都要測，單行資訊用一段 `Text.rich` 加省略號，不要用多個 `Text` 排一列。
@@ -286,7 +300,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 - **抽屜開著按返回會直接離開 App**：Android 16 的預測返回只看頁面堆疊，抽屜不是一個頁面，所以系統以為可以直接結束。要用 `PopScope` 在抽屜開著時宣告「由 App 處理返回」，收到後關抽屜。
 - **底部面板跑到標題列和狀態列下面**：頁面放在 go_router `ShellRoute` 的巢狀 Navigator 裡，`showModalBottomSheet` 要加 `useRootNavigator: true` 才會蓋住整個 App。
-- **橫向開鍵盤後內容幾乎看不到**：橫向高度只剩約 390 dp，鍵盤再占掉一半，底部狀態列也還在。鍵盤開著（`viewInsets.bottom > 0`）時隱藏底部狀態列。
+- **橫向開鍵盤後內容幾乎看不到**：橫向高度只剩約 390 dp，鍵盤再占掉一半。鍵盤開著（`viewInsets.bottom > 0`）時，橫向收起標題列；直向則隱藏底部狀態列（橫向本來就沒有底部列，見 #46）。
 - **關掉對話框後鍵盤又跳出來**：Flutter 在手機上點文字欄位外部**不會**收焦點（桌面會）。按返回收起鍵盤後欄位仍有焦點，之後開任何對話框再關掉，焦點回到欄位、鍵盤就跳出來；「失焦才儲存」的帳號別名欄位也因此一直沒存。處理：在 `MaterialApp.actions` 覆寫 `EditableTextTapOutsideIntent`，任何裝置點外部都收焦點（`appActions`）。
 - **滑鼠按久一點會叫出長按選單**：長按只給觸控與觸控筆（`GestureDetector(supportedDevices: ...)`），否則桌面上按住再放開會跳選單而不是縮放。
 - **`InteractiveViewer` 開了雙指縮放，滑鼠滾輪也會一起縮放**，而且每一格疊加到約 1.8 倍：設 `scaleFactor: double.infinity` 關掉它自己的滾輪縮放，保留我們原本的滾輪處理。
@@ -328,6 +342,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **`file_picker` 在 Windows 的 isolate 遇到檔名含 `<>:"/\|?*` 會丟例外，而且 `await` 永遠不會完成**（存檔看起來像卡死），所以建議檔名一定要先把這些字元換成 `_`。
 - **暫存檔殘留**：`share_plus` 的 `XFile.fromData` 會在暫存目錄留下 `<uuid>/<檔名>` 的副本，不會被刪除，所以改成自己把 bytes 寫到 `getTemporaryDirectory()/share_out/<檔名>`（寫前先刪掉上一次的 `share_out`），再用 `XFile(path)` 分享，暫存目錄最多只殘留一個分享檔；`file_picker` 在 Android 即使 `withData: true` 也會把選到的檔案複製到 `cache/file_picker/...`，現在讀完 bytes 後會呼叫 `FilePicker.clearTemporaryFiles()` 清掉（只限 Android，Windows 的預設實作會丟 `UnimplementedError`）。
 
+---
 
 ## 九、雲端同步登入（子專案 5）
 
@@ -349,6 +364,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 ### 31. Play 服務會快取已失效的通行證（通用）
 
 - 撤銷授權後重新授權，Play 服務把**舊的、已撤銷的通行證**交回來，API 回 401（`Request had invalid authentication credentials`）。必須 `clearAuthorizationToken(accessToken:)` 清掉快取再要一次才會拿到新的。
+- 判斷「通行證被拒」要同時認兩種：googleapis 的 `DetailedApiRequestError`（401），以及 `AuthenticatedClient` 看到 `www-authenticate` 帶 `error="invalid_token"` 時直接丟的 `AccessDeniedException`（`isInvalidToken`）。只認 401 會漏掉後者，清快取重取的流程就不會觸發。
 - 處理：Android 拿到通行證後先用 userinfo 驗證，遇到 401 就清快取、重取一次；靜默還原重取不到就進「需要重新連結」。
 - 通行證約 1 小時過期、App 無法自己續期，所以 Android 每輪同步都重新靜默取得通行證，不沿用上一輪的 client。
 - **使用者取消不是 `canceled`**（2026-11-06 實測）：在帳號選擇畫面按返回，`google_sign_in_android` 7.2.18 不看 Activity 的 resultCode，回報的是 `GoogleSignInException(unknownError, "SDK reported an exception: 16: [16] Cancelled by user.")`（Play 服務狀態碼 16 = `CANCELED`）。所以判斷取消要同時認 `canceled` 與「`unknownError` 且狀態碼 16」，否則畫面會顯示「授權失敗」。log 會記下完整的 code 與 description，方便分辨是取消還是設定錯誤。
@@ -358,7 +374,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 - Android 用戶端以「套件名稱＋SHA-1」辨識 App，同一個 App 可能有三把金鑰，每把都要在 Android 用戶端登記一筆：
   - 開發用 debug 金鑰：`F8:09:DC:34:0C:1C:D5:92:C5:0A:44:8E:0B:DB:1C:96:8D:30:08:1B`（`~/.android/debug.keystore`，已登記）。
-  - **上傳金鑰、Play 應用程式簽署金鑰：子專案 7 必須回來補登記**（Play 簽署金鑰的 SHA-1 在 Play Console 查）。只登記 debug 金鑰時實機測試一切正常，但從 Play 下載的版本授權會失敗。依套件原始碼推論（未實測），會回報成 `GoogleSignInException(unknownError, "SDK reported an exception: 10: ...")`（Play 服務狀態碼 10 = `DEVELOPER_ERROR`），畫面顯示「授權失敗」。
+  - **上傳金鑰、Play 應用程式簽署金鑰：已在子專案 7 補登記**（見 #36；Play 簽署金鑰的 SHA-1 在 Play Console 查）。只登記 debug 金鑰時實機測試一切正常，但從 Play 下載的版本授權會失敗（Play 版實測顯示「授權失敗」）。依套件原始碼推論，錯誤會是 `GoogleSignInException(unknownError, "SDK reported an exception: 10: ...")`（Play 服務狀態碼 10 = `DEVELOPER_ERROR`），狀態碼本身未從 log 確認。
 
 ### 33. 實機驗收結果（2026-11-06）
 
@@ -373,6 +389,8 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 ## 十、Play 上架與更新（子專案 7）
 
+設計：`docs/superpowers/specs/2026-11-06-play-release-design.md`。
+
 上架步驟、商店頁文字、資料安全表單與審查說明不公開，放在本機不進版控的 `private/play-store/`；隱私權政策要給 Play 公開網址，留在 `docs/privacy-policy.md`。這一節只記技術決定與踩雷。
 
 填「應用程式內容」表單時的踩雷（2026-11-09）：
@@ -385,7 +403,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 - Play 的版本代碼必須遞增且不能重複；預覽版也要排在正式版前面。公式：`MAJOR × 1,000,000 ＋ MINOR × 10,000 ＋ PATCH × 100 ＋ 尾碼`，正式版尾碼 99、`-rc.N` 尾碼 N（1–98）。例：`1.9.0-rc.2` → `1090002`，`1.9.0` → `1090099`。
 - 換算寫成 `lib/services/android_version_code.dart`，App（反推 Play 回報的版本）與 CI（`tool/android_version_code.dart`）共用同一份規則。
-- tag 的每一段數字都不接受前導零（`v01.9.0` 會和 `v1.9.0` 算出同一個代碼），MAJOR 最大 2099（Play 版本代碼上限是 2,100,000,000）；不合法一律失敗。
+- tag 的每一段數字都不接受前導零（`v01.9.0` 會和 `v1.9.0` 算出同一個代碼），MAJOR 最大 2099（Play 版本代碼上限是 2,100,000,000），MINOR、PATCH 最大 99（否則會和上一位重疊）；不合法一律失敗。
 - **Windows 照舊用 workflow 的執行序號**：Windows 版本資源的每一欄上限是 65535，放不下這個公式的數字。所以版本代碼只在 Android 建置時用 `--build-number` 傳入，不寫回 `pubspec.yaml`。
 - `dart run` 的「Running build hooks...」提示走 stderr，CI 解析 stdout 不受影響；保險起見 workflow 仍只擷取 `VERSION_CODE=`／`BUILD_NAME=` 兩行。
 
@@ -405,10 +423,10 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - **`adb install` 會裝進手機上所有使用者空間**（私人空間、廠商的分身空間等）。只在主要空間解除安裝後，Play 會以「其他使用者已經在這裝置安裝不相容版本」拒絕安裝；要用 `adb shell pm uninstall --user <id> <套件>` 逐一清掉（`pm list users` 看有哪些空間）。之後本機測試版一律 `adb install --user 0`。
   - 服務帳戶在 Play Console 只給「查看應用程式資訊（唯讀）」與「將應用程式發布至測試群組」，**不給「發布正式版」**：CI 就算出錯也發不到正式版。Cloud 端不給任何專案角色，只要啟用 Google Play Android Developer API。
   - 2023 年 11 月之後註冊的個人開發者帳號，發正式版前要先跑 12 人、連續 14 天的封閉測試（本專案帳號不受此限）。
-- **rc 版手動發、正式版走 CI**：rc 在本機建 AAB 後用 `tool/play_upload_internal.py <服務帳戶 JSON> <aab> <版本名稱>` 上傳並推出到內部測試（只靠 `cryptography` 簽 JWT 換權杖，不需要 Google 的 API 套件；流程是建立編輯 → 上傳 → 設定 internal 版本為 completed → 提交，失敗會刪掉編輯）。手動上傳過的 rc 已用掉版本代碼，CI 的 `release.yml` 只拿來發正式版 tag，不會撞號。第一次用它上傳成功，也順便證明服務帳戶權限正確（CI 用同一個帳戶）。
+- **rc 版手動發、正式版走 CI**：rc 在本機建 AAB 後用 `tool/play_upload_internal.py <服務帳戶 JSON> <aab> <版本名稱> [--notes-en <英文版本資訊>]` 上傳並推出到內部測試（`--notes-en` 會填 `en-US` 的「新功能」）（只靠 `cryptography` 簽 JWT 換權杖，不需要 Google 的 API 套件；流程是建立編輯 → 上傳 → 設定 internal 版本為 completed → 提交，失敗會刪掉編輯）。手動上傳過的 rc 已用掉版本代碼，CI 的 `release.yml` 只拿來發正式版 tag，不會撞號。第一次用它上傳成功，也順便證明服務帳戶權限正確（CI 用同一個帳戶）。
 - 修改 workflow 後用 actionlint 檢查（`go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/*.yml`）。
 - **actionlint 抓到 `ci.yml` 的既有問題**：自動提交 ARB 正規化的步驟把 `${{ github.head_ref }}` 直接拼進 shell，分支名稱裡的 `$(...)` 會被當成指令執行。改成 `env: HEAD_REF: ${{ github.head_ref }}`，指令裡用 `"$HEAD_REF"`。原神版的 `ci.yml` 是同一份底稿，要一起檢查。
-- **內部測試不用審核**：推出後通常幾分鐘內測試人員就能更新（第一次發布後的測試連結可能要等幾小時）；升級到正式版才進入審核。2023 年 11 月之後註冊的個人開發者帳號，發正式版前還要先跑 12 人、連續 14 天的封閉測試，本專案的帳號不受此限。
+- **內部測試不用審核**：推出後通常幾分鐘內測試人員就能更新（第一次發布後的測試連結可能要等幾小時）；升級到正式版才進入審核。
 
 ### 36. 簽章指紋：每把金鑰各建一筆 Android 用戶端（通用）
 
@@ -429,7 +447,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 安裝狀態的事件串流只有在**這次執行中呼叫過 `startFlexibleUpdate`** 之後才會送事件。重開 App 時若下載還在背景進行，只能等下一次檢查才知道結果。
   - 重開 App 時，之前觸發的更新會回報成 `developerTriggeredUpdateInProgress`（不是 `updateAvailable`），要一併當成有更新，並依 `installStatus` 接續：已下載就直接跳「重新啟動」提示。
   - `completeFlexibleUpdate` 成功時 App 直接重啟、從不回覆，所以只有前置條件錯誤會以例外回來。
-- **取消與失敗分開處理**：玩家在確認畫面按拒絕、或從通知列取消下載，都視為玩家的選擇，不顯示任何提示；真正的失敗（外掛錯誤、不允許彈性更新）才顯示「目前無法在 App 內更新，請到 Google Play 更新」並附「前往 Google Play」。
+- **取消與失敗分開處理**：玩家在確認畫面按拒絕、或從通知列取消下載，都視為玩家的選擇，不顯示任何提示；真正的失敗（外掛錯誤、不允許彈性更新）才顯示「目前無法在 App 內更新，請到 Google Play 更新」並附「前往 Google Play」。`SnackBarAction` 的按鈕文字不會換行，「前往 Google Play」在 320 dp 寬或放大字級時會溢出；改把 `TextButton` 放進 SnackBar 的內容，讓它跟著寬度換行，不要靠縮短文字解決。
 - **測試方式**：Play Console 的「內部應用程式分享」可以上傳任意版本代碼，不會用掉正式的版本號。從舊版的分享連結安裝，再分享一個版本代碼較大的版本，舊版開啟時就會偵測到更新。要特別測：下載完成後滑掉提示再重開 App、下載途中關掉 App 再重開、從通知列取消下載。
 - 預覽版只放內部測試、不要升級正式版：App 查 GitHub 更新說明時會略過預覽版。
 - **下載中要有進度**（2026-11-09 rc.1 → rc.2 實機發現）：按下 Play 確認視窗的「更新」後回到 App，到「已下載完成」提示出現之前完全沒有畫面回饋（11 MB 約 5 秒，網路慢更久），看起來像沒反應。`in_app_update` 只轉出安裝狀態、沒有位元組數，所以另寫 `PlayUpdateProgressChannel`（EventChannel）自己向 `AppUpdateManager` 註冊 `InstallStateUpdatedListener`，送出 `bytesDownloaded`／`totalBytesToDownload`；app 模組要自己加 `com.google.android.play:app-update` 依賴（外掛的是 `implementation`，不會傳給 app）。進度是以廣播送給整個 App，不必是開始下載的那個 manager 也收得到。畫面是常駐 SnackBar：「正在下載新版本...」＋百分比＋進度條＋「已下載／總大小」，總大小未知時是不確定進度條；下載完成、失敗或拒絕時只關掉這一條（保存 `showSnackBar` 回傳的 controller，不用 `hideCurrentSnackBar`，以免關錯別的提示）。實機（rc.4 → rc.5，10.6 MB）：Play 確認視窗關掉約 0.5 秒後先出現不確定進度條，接著 2% → 20% → 77% → 100%，再換成「重新啟動」。
@@ -450,7 +468,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 ### 40. Windows 解除安裝要清掉根憑證（通用，Windows）
 
 - 這不是 Android 的問題，但在寫隱私權政策時發現：Windows 版的解除安裝程式原本只刪資料資料夾，App 產生的根憑證仍留在「目前使用者」的信任清單，私鑰也留在 `%APPDATA%\wuthering_waves_convene_gacha_analyzer\ca`。拿到這把私鑰就能偽造任何網站的身分。
-- 處理：`installer.iss` 的 `RemoveCaArtifacts` 在解除安裝最後**一定**執行（不受「是否刪除資料」影響）：先 `certutil -user -delstore Root "<CN>"`（Windows 會跳出確認視窗，玩家按「是」才會刪），再刪掉 `ca` 資料夾；就算玩家拒絕刪憑證，私鑰也已經不在，留下的憑證無法拿來偽造。
+- 處理：`scripts/build_installer/installer.iss` 的 `RemoveCaArtifacts` 在解除安裝最後**一定**執行（不受「是否刪除資料」影響）：先 `certutil -user -delstore Root "<CN>"`（Windows 會跳出確認視窗，玩家按「是」才會刪），再刪掉 `ca` 資料夾；就算玩家拒絕刪憑證，私鑰也已經不在，留下的憑證無法拿來偽造。
 - **呼叫 certutil 不可用 `SW_HIDE`**：確認視窗是 certutil 第一個顯示的視窗，會套用啟動時的隱藏設定，玩家看不到它，解除安裝就會一直等。靜默解除安裝（`/VERYSILENT`）也一樣會停在這個系統視窗。憑證名稱與路徑必須和 `rust/src/ca.rs` 的 `EXPECTED_CN`、`ca_dir()` 一致。原神版的解除安裝程式應該也有同樣的問題。
 
 
@@ -461,13 +479,13 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 ### 41. 165Hz 手機上的「頓頓的」（通用）
 
 - **先確認不是 debug 版**：debug 版是邊跑邊編譯（JIT），一定會卡，剛打開時尤其明顯。判斷方法：APK 裡有 `assets/flutter_assets/kernel_blob.bin`，就是 debug 版。效能一律用 profile 版看（`fvm flutter build apk --profile`，`adb install -r` 蓋過去，資料會保留）。
-- **量法**：`tool/measure_frame_pacing.sh`（`.gitattributes` 讓 `*.sh` 固定用 LF；在加入這條規則之前就 checkout 的工作區，要重新取出 `.sh` 檔才會變成 LF，否則 bash 會因 `
-` 報錯） 讀 SurfaceFlinger `--latency` 的實際上屏時間，只統計放手後的慣性滑動。adb 注入的拖曳事件取樣不足，量拖曳期間會讓輕量頁面也出現假的「晚一拍」（設定頁拖曳量到 69%，慣性滑動實為 99%）。想知道每幀時間花在哪，用 logcat 的 `The Dart VM service is listening on ...` 取得位址，`adb forward` 後經 VM Service 的 `setVMTimelineFlags`／`getVMTimeline` 抓 timeline，看 `Animator::BeginFrame` 底下的 `SEMANTICS`、`PAINT`，以及 raster 執行緒的 `Rasterizer::DoDraw`。
+- **量法**：`tool/measure_frame_pacing.sh`（`.gitattributes` 讓 `*.sh` 固定用 LF；在加入這條規則之前就 checkout 的工作區，要重新取出 `.sh` 檔才會變成 LF，否則 bash 會因 `\r` 報錯）讀 SurfaceFlinger `--latency` 的實際上屏時間，只統計放手後的慣性滑動。adb 注入的拖曳事件取樣不足，量拖曳期間會讓輕量頁面也出現假的「晚一拍」（設定頁拖曳量到 69%，慣性滑動實為 99%）。想知道每幀時間花在哪，用 logcat 的 `The Dart VM service is listening on ...` 取得位址，`adb forward` 後經 VM Service 的 `setVMTimelineFlags`／`getVMTimeline` 抓 timeline，看 `Animator::BeginFrame` 底下的 `SEMANTICS`、`PAINT`，以及 raster 執行緒的 `Rasterizer::DoDraw`。
 - **根因一：無障礙服務會讓 Flutter 每幀都更新語意樹**。只要手機開著任何無障礙服務（這次是 ASUS GlideX；密碼管理器、投放、讀屏也都算），語意樹就會啟用。綜合頁每幀 8.1ms 中，SEMANTICS 佔 4.4ms、PAINT 佔 3.3ms，raster 只有 2.2ms。165Hz 的預算是 6.06ms。
-- **根因二：整頁一次建好**。`SingleChildScrollView` + `Column` 每捲一點，整頁（包含畫面外的五星一覽、時間軸）都要重新繪製與更新語意。改成 `ListView`／`CustomScrollView` + `SliverList.list` 後，只處理畫面附近的區塊。橫向時間軸也從 `Row` 改成橫向 `ListView.builder`。帶本地狀態的區塊（紀錄表頁碼、搜尋框、垂直時間軸已載入筆數、橫向時間軸位置）要加 `AutomaticKeepAliveClientMixin`，否則捲出畫面再捲回來會重設。
+- **根因二：整頁一次建好**。`SingleChildScrollView` + `Column` 每捲一點，整頁（包含畫面外的五星一覽、時間軸）都要重新繪製與更新語意。改成 `ListView`／`CustomScrollView` + `SliverList.list` 後，只處理畫面附近的區塊。橫向時間軸也從 `Row` 改成橫向 `ListView.builder`。帶本地狀態的區塊（紀錄表頁碼、搜尋框、垂直時間軸已載入筆數、橫向時間軸位置）要加 `AutomaticKeepAliveClientMixin`，否則捲出畫面再捲回來會重設；分享按鈕產生圖片期間也要保留（`wantKeepAlive => _busy`，平常不保留），否則產生中捲出畫面再捲回來，按鈕會變回可按、能再開一次流程。上方的區塊可能出現或消失時（例如抽到第一個五星，五星一覽才出現），帶狀態的區塊還要加 key（`ValueKey('banner-search')`、`ValueKey('banner-table')`），否則索引位移後狀態會對到別的區塊而被重設，光加 keep-alive 不夠。
+  - **電腦版例外**：按需建構會估算未建區塊的高度，常駐的捲軸滑塊會跟著變大小、跳動，所以 Windows／macOS／Linux 用 `pageScrollCacheExtent()`（`ScrollCacheExtent.pixels(100000)`）整頁預先建好，手機與平板才按需建構。不能用 `double.infinity`：語意樹會算出非有限範圍而 assert。
 - **按需建構的副作用：大區塊進場那一幀會卡**。整頁一次建好時，五星一覽（數十個圖示的 `Wrap`）是在開頁時建；改成按需建構後，它變成在滑動途中、捲入畫面那一幀才一次建好，量到 11～27ms 的尖峰（使用者感覺「中途卡一下」）。處理：`SliverFiveStarOverview` 依寬度切成列，每次只多建一列，尖峰降到約 7ms。**`SliverLayoutBuilder` 每次捲動都會重跑**（捲動位置也在 sliver 約束裡），若每次都回傳新的 `SliverList`，畫面上的列會每幀重建，綜合頁準時率從 97% 掉到 80%；要依寬度快取、寬度沒變就回傳同一個 widget。垂直五星時間軸進場仍有約 10ms 的語意樹尖峰（晚 1 拍）。
 - **根因三：`AnimationController.repeat()` 無條件在跑**。保底卡呼吸動畫只在「快保底」時才顯示，但計時器從頁面打開就一直在跑，每個 vsync 都排一幀，卡池頁靜止時也以 165fps 重畫（主要是耗電）。改成依階段與「移除動畫」設定啟停。
-- **前後對照**（ROG Phone 9，165Hz，開著無障礙服務，慣性滑動準時率；修正後為最終版 0cb1fff 的量測）：
+- **前後對照**（ROG Phone 9，165Hz，開著無障礙服務，慣性滑動準時率；修正後為 0cb1fff 的量測，尚未包含上面五星一覽的逐列建構 6ab24d1）：
 
   | 頁面 | 修正前 | 修正後 |
   |---|---|---|
@@ -484,7 +502,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 - **現象**：每次開 App 都會自動同步一輪，資料變動後 5 秒也會檢查一次。同步檔是全部帳號的 JSON，三個帳號約 4 MB。
 - **根因**：一輪同步的「解析雲端檔」「把本機資料轉成 JSON」「算內容指紋（解析＋重新轉 JSON＋SHA-256）」都在主 isolate 上一次做完，電腦上分別約 145、30、55 ms，手機更慢。下載、上傳是在等網路，不會卡。
-- **處理**：這三步改用 `Isolate.run` 在背景做（`cloud_sync_service.dart` 的 `_importInBackground`、`syncFingerprintInBackground`，`state/cloud_sync.dart` 的 `_exportInBackground`），`runSyncRound` 的 `exportLocal` 改成回傳 `Future<String>`。
+- **處理**：這三步改用 `Isolate.run` 在背景做（`cloud_sync_service.dart` 的 `_importInBackground`、`syncFingerprintInBackground`，`services/accounts_export.dart` 的 `exportAccountsInBackground`；設定頁匯出共用同一個實作，見 #43），`runSyncRound` 的 `exportLocal` 改成回傳 `Future<String>`。
   - 送進 `Isolate.run` 的閉包要寫在 top-level 函式裡、只抓參數：在 notifier 的方法裡直接寫閉包，可能把整個 notifier（含 `Timer` 等不能跨 isolate 傳的物件）一起帶過去而出錯。
   - 背景 isolate 裡的 `Logger` 沒有接到 App 的 log 輸出，訊息會不見；需要記錄的錯誤要丟回主 isolate 再記（現有的雲端檔損毀／版本過新本來就在主 isolate 記錄）。
   - 例外會原樣傳回呼叫端，原本的 `on FormatException` 等分支不用改。
@@ -507,7 +525,6 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
     - 合併前先在背景比指紋，相同就整輪跳過合併與上傳；不同時，在背景挑出內容完全相同的帳號，不送進合併；合併後與原本相同的帳號不重寫檔、不換物件，`byUid` 沒變就不替換。
     - 同步自己的合併期間不排變動檢查；變動檢查到點時若同步正在跑，就等該輪結束再比指紋。
 - **最終實機結果**（開 App 後主 isolate 最長停頓）：情境 A 約 5 ms，情境 B 約 10 ms（修正前 387 ms＋43 ms＋11 ms 等多段）。
-
 
 ### 43. 轉換語言、匯入匯出、寫檔讓畫面停住（通用，桌面也適用）
 
@@ -555,13 +572,14 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **結果**：最長 53 → 43 ms（LAYOUT 28 → 17 ms），其餘幾段 15～22 → 約 9 ms。
 - **沒做**：剩下的是整頁一次建構與排版（`SingleChildScrollView`），取樣大多是原生文字排版，對不到特定區塊。改成按需建構的清單，捲出畫面的區塊會被銷毀；有進行中狀態的區塊（同步、匯入、轉換的忙碌狀態等）要逐一加 `AutomaticKeepAliveClientMixin`（第 41 條的做法），改動面大，收益又不確定。
 - **量測坑：腳本盲點座標會點到別的 App**。第一次量測時，選單沒打開；腳本接著按「返回」，直接退出 App，後續點擊落在桌面，打開了別的 App。`tool/measure_ui_stalls.py` 在每次 `input` 前都檢查前景是不是本 App（`dumpsys activity activities` 的 `topResumedActivity`），不是就中止。開選單這類前置步驟先手動執行、截圖確認，再開始錄。
+
 ---
 
 ## 十二、手機版 UI/UX 調整
 
 ### 46. 手機直向、橫向與電腦版的版面規則（通用）
 
-- **參考資料**：已確認的示意圖（12 個畫面，含直向、橫向、電腦版）在 https://claude.ai/artifact/TeMxuPicwtkHjezNCM7nsL ；設計文件是 `docs/superpowers/specs/2026-11-07-mobile-ui-ux-adjustments-design.md`，實作計畫是 `docs/superpowers/plans/2026-11-07-mobile-ui-ux-adjustments.md`。以下全部屬於通用，原神版可以直接照做。
+- **參考資料**：已確認的示意圖（含直向、橫向、電腦版）在 https://claude.ai/artifact/TeMxuPicwtkHjezNCM7nsL ；設計文件是 `docs/superpowers/specs/2026-11-07-mobile-ui-ux-adjustments-design.md`，實作計畫是 `docs/superpowers/plans/2026-11-07-mobile-ui-ux-adjustments.md`。以下全部屬於通用，原神版可以直接照做。
 - **先分清楚三種版面**：`isCompactLayout` 在手機作業系統看短邊 < 600，在電腦看寬度 < 600。手機專屬的外殼規則（底部列、標題列收起、側欄社群連結、橫向卡片式紀錄）另外用 `phoneOrientationOf(context)` 判斷，只在 Android／iOS 回傳直向或橫向。電腦把視窗拉窄時仍是 compact，但外殼維持電腦版，不受這些規則影響。數字卡、圓餅則照寬度分支。
 - **外殼**：
   - 手機直向的底部列只留「最後更新」，社群連結移到側欄最下方。側欄的社群連結不論直向或橫向都置中，外面包 `FittedBox`，窄的時候縮小、不會溢出。**踩雷：** 圖示按鈕寬 40、圖示 16，圖示兩側各自帶 12dp 空白，最右邊的團隊名稱是純文字沒有。整列置中時看起來左寬右窄，要在文字那端補同寬（`TeamLinksBar.iconInset`），只補在側欄，電腦版底部列靠右對齊不用補。測試要量「第一個圖示左緣到文字右緣」的中點，量整列抓不到。
@@ -573,6 +591,8 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 收起時，狀態列那一條仍維持標題列的底色，內容不會跑到狀態列底下。
   - **踩雷：不能只看捲動方向。** 手指離開螢幕時會多一筆 0.5～2.5dp 的反向拖曳，`UserScrollNotification` 的方向會跟著翻回來，標題列收起約半秒後又自己展開。改成同一方向累積拖曳超過 `kTouchSlop`（18dp）才切換。
   - 單元測試用的是直線拖曳，重現不了這個現象，是在模擬器上加暫時 log 才找到。
+  - **踩雷：** 收起時只用 `ClipRect` 裁掉繪製的話，按鈕仍在語意樹與焦點樹裡（讀屏和鍵盤還停得上去），要再包 `ExcludeSemantics`＋`ExcludeFocus`。
+  - **踩雷：** 頁面只比畫面高一點（不超過一個標題列高）時，收起後整頁剛好放得下，又被「內容已不需捲動就展開」的規則打開，每次拖動閃一下；只在 `maxScrollExtent > kToolbarHeight` 時才收起。
 - **紀錄列表**：
   - 篩選、排序同一個 `Wrap`。
   - 換頁或跳頁後，用 `Scrollable.ensureVisible` 把「紀錄列表」標題捲到頂端。
@@ -583,7 +603,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 手機排版放圓形更新圖示。
   - 電腦版放縮小的「更新資料」按鈕樣子。
   - 找不到標記時退回純文字。
-  - 只改核心四份 ARB 即可：其他語系沒有這個 key，會退回範本語言（zh），一樣看得到圖示。
+  - 新增時只需改核心四份 ARB：其他語系還沒翻譯前會退回範本語言（zh），一樣看得到圖示。現在 31 種語言都已有這個 key，翻譯時 `{icon}` 佔位符要保留（#49 的檢查腳本會擋）。
 - **精簡圓餅**：fl_chart 的半徑是絕對值，圓餅要縮成 112（直向）或 96（橫向、標題在旁）時，必須讓半徑跟著直徑等比例縮放，否則圓餅會超出框。圖例欄一律靠上對齊，3 列和 2 列的兩張卡標題才會在同一水平線。兩張精簡圓餅卡同一列時要包 `IntrinsicHeight`＋`CrossAxisAlignment.stretch`，否則高度跟著圖例列數走，3 列那張會比 2 列那張高（卡池頁原本用 `Wrap` 各自排就踩到）。手機橫向時卡池頁的保底卡列是 6:3:3，下面兩張圓餅卡若平分寬度，中間的縫會差半個間距；第一張要固定寬 `(maxWidth - 2 × 間距) / 2`，等於主保底卡的寬度（總覽頁電腦版早就這樣做）。`phone_layout_pages_test` 檢查稀有度卡右緣要對齊上面某張數值卡的右緣。電腦版卡池頁上面 6:3:3、下面三等分是刻意的不同格線，維持不動。
 - **物品詳情**：
   - 圖片區用 `GestureDetector` 的水平拖曳，放手後換圖（距離 ≥ 48 或速度 ≥ 300）。觸控、滑鼠拖曳、觸控板橫向滑動（PanZoom 事件）都會被同一個辨識器接到。不做跟手輪播，到頭不循環。
@@ -616,7 +636,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - **整頁的空狀態要填滿剩下的高度再置中**（2026-11-09）：卡池頁的「此卡池無紀錄」原本放在標題下的 `SizedBox(height: 320)` 裡，只在那 320 裡置中，下方空一大塊，手機橫向（800×360）還溢出 29 像素。改成 `Expanded(child: EmptyState.noRecords(...))`，和「尚未同步」的 `noSyncPageBody` 同一種寫法；`phone_layout_pages_test` 在直向、橫向、電腦三種尺寸檢查內容中心落在標題以下區域的正中央。卡片裡的空訊息（篩選無結果、時間軸無某稀有度、圓餅無資料）本來就各自包 `Center`，總覽頁的區塊空狀態是跟著捲動的小框，都不用改。
 - **滑動流暢度**（ROG Phone 9，165Hz，profile 版，慣性滑動準時率，量測時同時開著無障礙服務）：
 
-  | 頁面 | 第 41 條優化後（直向） | 本次改版後（直向） | 本次改版後（橫向） | 追加項目後（直向） | 追加項目後（橫向） |
+  | 頁面 | 第 41 條優化後（0cb1fff，直向） | 本次改版後（直向） | 本次改版後（橫向） | 追加項目後（直向） | 追加項目後（橫向） |
   |---|---|---|---|---|---|
   | 綜合（冷啟動後） | 96.3% | 97.7% | － | 96.2% | － |
   | 綜合 | 97.3% | 98.8%、98.0% | 97.2%、97.6% | 97.1%、98.1% | 97.3%、97.2% |
@@ -662,16 +682,16 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   3. 對照鍵名：`selectList.*` 是 12 個卡池名稱，`title` 是喚取記錄，`character`／`weapon`／`item` 是類型。拿英文檔對照，就知道每個值對應哪個詞。
   4. 遊戲沒出的語言，提到遊戲畫面時用英文官方名稱（例如「Convene Records」），玩家在遊戲裡對得上。
   - **原神**：祈願紀錄同樣是遊戲內開的官方網頁，應該也是網頁載入語系檔的架構，用同樣方法（開發者工具看請求、搜 bundle）找它的語系檔，就能拿到祈願、角色活動祈願等各語言官方名稱。
-- **Crowdin**：這 27 種語言由 Crowdin 管理，只寫進 repo 的話，下次 Crowdin 同步可能把 ARB 蓋回空白，要另外把翻譯匯入 Crowdin。
+- **Crowdin**：這 27 種語言由 Crowdin 管理，翻譯先直接寫進 repo。合併後若 Crowdin 同步把現有翻譯蓋掉（例如蓋回空白），再到那時處理。
 - **不支援的語言會掉到南非語**：系統語言清單完全對不上 App 的語言時，Flutter 預設取 `supportedLocales` 的第一個；gen-l10n 依字母排序，加了 27 種語言後第一個變成 `af`（南非語），印尼文、印地文等使用者會看到整個 App 是南非語。`localeListResolution` 在整份清單都對不上（或清單為空）時改回傳英文，`locale_metadata_test` 用實際語言清單鎖住。原神版加語言時一樣會中，要一起改。模擬器上不容易重現：Android 會把系統語言接在 App 語言後面，只切 App 語言時 Flutter 還是會拿到系統的英文。
 - **Android 原生字串也要翻**：啟動器上的 App 名稱與無線偵錯配對通知走 `res/values-*/strings.xml`，不在 ARB 裡；補 ARB 時漏了這邊，選其他語言時這 16 個字串會顯示英文。補齊時 App 名稱沿用各語言 ARB 的 `appName`；「無線偵錯」「使用配對碼配對裝置」等系統用語沿用 ARB 引導頁已對過的 Android 官方譯名與引號樣式；單、雙引號要加反斜線跳脫。`android_locales_config_test` 檢查 `locales_config.xml` 列出的每種語言都有字串檔，且字串名稱與英文版一致。
   - **資料夾代碼**：希伯來文要用 `values-iw`，不能用 `values-he`（Android 比對資源時會把語言代碼轉成舊式寫法 `he` → `iw`，aapt2 卻照原樣編成 `he`，結果對不到）。挪威文 `values-nb`（見下）、巴西葡文 `values-pt-rBR`、繁中 `values-zh-rTW`、簡中 `values-zh-rCN`，英文寫在預設的 `values/`。
-  - **Crowdin**：`crowdin.yml` 加一組，與 ARB 一樣以繁中 `values-zh-rTW/strings.xml` 為原文，輸出到 `values-%two_letters_code%`；用 `languages_mapping` 改 zh-CN／pt-BR／he，用 `translation_replace` 把 `values-en/` 換成 `values/`。不要用 `%android_code%`：它一律帶地區（例如 `de-rDE`），奧地利、瑞士等其他地區的德文使用者會對不到。同上一條，第一次同步若沒把現有翻譯匯入 Crowdin，可能被蓋掉，要回頭處理。
+  - **Crowdin**：`crowdin.yml` 加一組，與 ARB 一樣以繁中 `values-zh-rTW/strings.xml` 為原文，輸出到 `values-%two_letters_code%`；用 `languages_mapping` 改 zh-CN／pt-BR／he，用 `translation_replace` 把 `values-en/` 換成 `values/`。不要用 `%android_code%`：它一律帶地區（例如 `de-rDE`），奧地利、瑞士等其他地區的德文使用者會對不到。同上一條，合併後若 Crowdin 同步把現有的原生字串翻譯蓋掉，再到那時處理。
   - **挪威文**：ARB 是 `no`，但 Android、Windows 回報的系統語言是書面挪威語 `nb`（或新挪威語 `nn`），原本對不上，系統語言是挪威文的使用者整個 App 都落到英文。處理：`localeListResolution` 把 `nb`／`nn` 對到 `no`；送給系統的代碼（`systemLocaleTagOf`）、`locales_config.xml` 與原生字串資料夾都改用 `nb`（`values-nb`），Crowdin 對應 `"no": nb`（YAML 的 `no` 不加引號會被當成布林值 false）；從系統讀回時 `nb` 與舊版送出的 `no` 都認。模擬器以 `cmd locale set-app-locales tw.reh.wuwa.gacha --locales nb` 驗證介面為挪威文。
 - **複數**：範本（繁中）沒有複數，但只要範本把佔位符宣告成 `int`／`num`，其他語言檔可以自己寫 ICU plural，gen-l10n 會接受。英文原本的「1 pulls」「1 seconds ago」也一併改成 plural。斯拉夫語系、阿拉伯文需要 few／many 等類別；`pt` 的 `one` 包含 0，用 `=1{}` 才不會出現「0 registo」。型別是 `String` 的佔位符（例如平均間隔）不能用 plural。
   - **後來逐語言補查**（挪威文出現「For 1 dager siden」）：丹麥、希臘、芬蘭、荷蘭、挪威、瑞典文整批沒做（相對時間、抽數、紀錄數等 15 個字串）；其他語言則漏在「數量後面接名詞、形容詞或動詞」的句子，例如英文匯入確認「1 accounts (1 records total)」、法文「1 nouveaux」、西文「quedan 1」、德文「1 IDs」。共修 16 個檔案、127 個字串。
   - 判斷要不要改：數字後面的字會不會因為 1 而變。標籤寫法（「紀錄：3」）、單複數同形（挪威文 trekk、法文 mois、義大利文 record）不用改；分頁「共 N 筆」只在多於一頁時顯示，總數不會是 1。
-  - 一句話可以放兩組 plural（例如帳號數與紀錄數），gen-l10n 接受。`=1{}` 與 `one{}` 的選擇照上面：法文用 `one`（0 和 1 都算單數），其他用 `=1`。
+  - 一句話可以放兩組 plural（例如帳號數與紀錄數），gen-l10n 接受。`=1{}` 與 `one{}` 的選擇：只有單、複數兩類，而且 `one` 不含 0 的語言（英、德、西、葡、北歐、荷、希等）用 `=1`；法文用 `one`（0 和 1 都算單數）；斯拉夫語系、阿拉伯文、羅馬尼亞文等有 few／many 的語言照 CLDR 用 `one`／`few`／`many`，不可改成 `=1`（例如俄文 21 屬於 `one`）。
   - `test/l10n/plural_forms_test.dart` 抽查幾種語言在 1 與 2 時的實際輸出。用寬鬆的腳本列出「數字佔位符不在 plural 裡」的字串再逐筆判斷，比逐檔閱讀快。
 - **長字串溢出**：`phone_layout_pages_test` 的「1.3 倍字級不溢出」改成跑全部語言，並加上設定頁。一跑就抓到德文、加泰隆尼亞文、羅馬尼亞文的圖片快取「計算中」把列擠爆，以及貢獻者頁「Português (Portugal) — 翻譯者」整列過寬。前者改用 `CompactLegendRow`（數值放不下時換行靠右），後者改 `Wrap`。
 - **由右往左（阿拉伯文、希伯來文）**：Flutter 會自動鏡像 `Row`、`ListView`、`Scrollbar`、可鏡像的圖示，但寫死的 `left`／`right` 不會跟著翻。這次修掉的：
@@ -705,15 +725,17 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 **自動輪播會重複觸發回呼**
 - 橫幅預設會自動換廣告，原生 `AdListener` 每次都會再轉發 `onAdLoaded`／`onAdFailedToLoad`，外掛沒有只觸發一次的保護。把它們接成 `Completer` 時，第二次會丟 `Future already completed`；輪播失敗時若照範例 `ad.dispose()`，會釋放畫面上正在顯示的廣告。兩個回呼都要先檢查 `isCompleted`，載入後的釋放交給元件。
+- 換寬度重新載入時（例如轉向），不能在 `LayoutBuilder` 的 build 裡 `setState`，也不能立刻釋放還掛在畫面上的 `AdWidget`：新的載入排到 post-frame，舊廣告等 `AdWidget` 離開畫面的下一幀才 `dispose()`；晚回來的舊請求用請求序號辨識並直接釋放（`BannerAdSlot`）。
 
 **版面**
 - 底部狀態列和廣告一起放進 `Scaffold.bottomNavigationBar`，SnackBar 才會自動浮在廣告上方（放在 body 裡會被 SnackBar 蓋住）。實測既有頁面沒有可見差異：各頁本來就自己留底部 padding，body 原本也是 `SafeArea(bottom: false)`。
+- **踩雷：** `bottomNavigationBar` 不會隨鍵盤上移（body 的 `resizeToAvoidBottomInset` 不作用在它身上），外殼要自己補 `MediaQuery.viewInsetsOf(context).bottom` 的底部 padding，否則平板開鍵盤時狀態列與廣告會被蓋住。
 - 預設的 fixed SnackBar 會貼著廣告上緣，「重新啟動」等按鈕緊鄰廣告，違反 AdMob 的間距規定；顯示廣告時外殼用 `snackBarTheme` 把 SnackBar 改成 floating，與廣告至少隔 16dp。沒有廣告時維持原本行為。
 - 手機排版開鍵盤時，廣告和狀態列一起收起。
 
 **同意**
 - UMP 以 `canRequestAds()` 為準；拒絕個人化時仍可請求（Google 投非個人化廣告）。查詢同意失敗但先前已同意時，照官方建議沿用；非 `AdsConsentException` 的意外錯誤（例如 `PlatformException`）也一樣沿用，不會因此整個關掉廣告。
-- 需要的地區（歐盟／英國等、美國部分州），設定頁「隱私權」區塊顯示「廣告隱私權選項」。在表單中才改成同意時，關閉表單後要補初始化 SDK，否則這次啟動都不會出現廣告。
+- 需要的地區（歐盟／英國等、美國部分州），設定頁「隱私權」區塊顯示「廣告隱私權選項」。在表單中才改成同意時，關閉表單後要補初始化 SDK：`maxAdContentRating` 是在初始化時設定的，要在第一則橫幅載入前就套用。
 - SDK 初始化用同一個 `Future` 記住（`_sdkInit ??=`）：啟動流程和設定頁的表單可能同時走到初始化，不記住會初始化兩次；失敗時清空，下次才能重試，並保留原本的 stack trace。
 - 刻意不改：廣告要隱藏時（開鍵盤、切到沒有內容的頁面）直接移除並釋放，不改成保留在畫面外。保留的話，隱藏期間仍可能被計算曝光；代價是再次出現時要重新載入。同意查詢失敗時，這次啟動不重試（沿用上次結果，下次啟動再查）。
 
@@ -722,7 +744,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - AdMob 後台（2026-11-09 已完成）：
   - 建立 App（尚未上架，正式上架後要回來連結商店頁並送審）與橫幅廣告單元。單元保留影片廣告、自動重新整理與底價由 Google 最佳化。
   - 「隱私權與訊息」已發布歐洲（GDPR，31 種語言）與美國州級的訊息。歐洲訊息的「不同意」按鈕維持關閉。帳戶層級的「啟用同意聲明收集功能」開關呈灰色是正常的：那是給沒有建立訊息的 App 用的備用機制，帳戶層級已經開啟，不需要處理。
-  - 封鎖控制：決定不設，維持預設。廣告內容分級上限已在程式裡用 `RequestConfiguration(maxAdContentRating: T)` 限制。
+  - 封鎖控制：決定不設，維持預設。這和設計文件刻意不同：設計時原本打算在後台封鎖博弈、賭博等敏感類別，最後決定不設。敏感類別和廣告內容分級是兩套獨立的控制，程式裡的 `maxAdContentRating: T` 不會擋掉這些類別。
 - 正式 ID 驗證：用 `secrets/ads_defines.json` 建 release，Manifest 的 `com.google.android.gms.ads.APPLICATION_ID` 與 `libapp.so` 裡的單元 ID 都是正式值；GitHub secrets `ADMOB_APP_ID`／`ADMOB_BANNER_UNIT_ID` 已設定，CI 的「Write ads defines from secrets」步驟用 actionlint 檢查過。
 - **自己和內測者的手機要在 AdMob「設定 → 測試裝置」登記**（用手機的廣告 ID）：從 Play 安裝的 rc 版與正式版帶的是正式廣告 ID，開發者點到自己的廣告會被判無效流量，嚴重時整個帳號（`reh.tw/app-ads.txt` 用的同一個發布商 ID）被停權。手機重設過廣告 ID 後，舊的登記就會失效，要重新登記新的 ID（2026-11-09 遇過）。
 - AdMob 新 App 要等 Play 商店頁公開、在 AdMob 連結商店頁並通過審查後才會正常投放。**內部測試版看不到正式廣告是正常的**；開發版用測試廣告不受影響。正式上架後要回 AdMob 連結商店頁。
