@@ -370,6 +370,7 @@
   "manualCredentialWarning": "De URL bevat de inloggegevens van je account. Deel hem niet openbaar. Hij verloopt na een tijdje.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Wachten op Convene-geschiedenis...",
+  "progressCheckingLogAccess": "Controleren hoe de Convene-geschiedenis kan worden gelezen...",
   "progressLogUnavailableTitle": "Convene-geschiedenis kan niet automatisch worden gelezen",
   "logUnavailableNotPaired": "Het lezen van het gamelog is nog niet ingesteld. Na een eenmalige configuratie wordt het bij elke update automatisch gelezen.",
   "logUnavailableNoWifi": "Draadloze foutopsporing werkt alleen via wifi. Maak verbinding met wifi en kom terug; de app gaat automatisch verder. Je kunt de geschiedenis ook handmatig invoeren.",

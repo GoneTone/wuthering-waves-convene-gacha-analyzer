@@ -370,6 +370,7 @@
   "manualCredentialWarning": "Az URL a fiókja hitelesítő adatait tartalmazza. Ne ossza meg nyilvánosan. Egy idő után lejár.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Várakozás az idézési előzményekre...",
+  "progressCheckingLogAccess": "Az idézési előzmények beolvasási módjának ellenőrzése...",
   "progressLogUnavailableTitle": "Az idézési előzmények nem olvashatók be automatikusan",
   "logUnavailableNotPaired": "A játéknapló beolvasása még nincs beállítva. Egyszeri beállítás után minden frissítés automatikusan beolvassa.",
   "logUnavailableNoWifi": "A vezeték nélküli hibakeresés csak Wi‑Fi-n működik. Csatlakozzon Wi‑Fi-hálózathoz, majd térjen vissza; az alkalmazás automatikusan folytatja. Az előzményeket kézzel is megadhatja.",

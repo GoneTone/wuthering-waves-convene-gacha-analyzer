@@ -370,6 +370,7 @@
   "manualCredentialWarning": "Ten URL zawiera dane uwierzytelniające Twojego konta. Nie udostępniaj go publicznie. Po pewnym czasie wygasa.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Oczekiwanie na historię przywołań...",
+  "progressCheckingLogAccess": "Sprawdzanie sposobu odczytu historii przywołań...",
   "progressLogUnavailableTitle": "Nie można automatycznie odczytać historii przywołań",
   "logUnavailableNotPaired": "Odczyt logu gry nie jest jeszcze skonfigurowany. Po jednorazowej konfiguracji każda aktualizacja odczyta go automatycznie.",
   "logUnavailableNoWifi": "Debugowanie bezprzewodowe działa tylko przez Wi‑Fi. Połącz się z Wi‑Fi i wróć – aplikacja będzie kontynuować automatycznie. Możesz też wprowadzić historię ręcznie.",

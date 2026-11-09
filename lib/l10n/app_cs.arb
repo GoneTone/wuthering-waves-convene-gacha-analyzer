@@ -370,6 +370,7 @@
   "manualCredentialWarning": "URL obsahuje přihlašovací údaje vašeho účtu. Nesdílejte ji veřejně. Po čase přestane platit.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Čekání na historii přivolání...",
+  "progressCheckingLogAccess": "Zjišťuje se, jak načíst historii přivolání...",
   "progressLogUnavailableTitle": "Historii přivolání nelze načíst automaticky",
   "logUnavailableNotPaired": "Čtení logu hry ještě není nastavené. Po jednorázovém nastavení si ho každá aktualizace přečte automaticky.",
   "logUnavailableNoWifi": "Bezdrátové ladění funguje jen přes Wi‑Fi. Připojte se k Wi‑Fi a vraťte se; aplikace bude automaticky pokračovat. Historii můžete také zadat ručně.",

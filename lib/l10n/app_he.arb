@@ -370,6 +370,7 @@
   "manualCredentialWarning": "ה-URL מכיל את פרטי הגישה לחשבון שלכם. אל תשתפו אותו בפומבי. תוקפו פג לאחר זמן מה.",
   "manualCredentialSubmit": "אישור",
   "progressWaitingLog": "ממתין להיסטוריית הזימונים...",
+  "progressCheckingLogAccess": "בודק איך לקרוא את היסטוריית הזימונים...",
   "progressLogUnavailableTitle": "לא ניתן לקרוא את היסטוריית הזימונים אוטומטית",
   "logUnavailableNotPaired": "קריאת יומן המשחק עדיין לא הוגדרה. אחרי הגדרה חד־פעמית, כל עדכון יקרא אותו אוטומטית.",
   "logUnavailableNoWifi": "ניפוי באגים אלחוטי פועל רק ב-Wi‑Fi. התחברו ל-Wi‑Fi וחזרו; האפליקציה תמשיך אוטומטית. אפשר גם להזין את ההיסטוריה ידנית.",

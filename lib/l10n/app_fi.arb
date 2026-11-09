@@ -370,6 +370,7 @@
   "manualCredentialWarning": "URL-osoite sisältää tilisi tunnistetiedot. Älä jaa sitä julkisesti. Se vanhenee jonkin ajan kuluttua.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Odotetaan Convene-historiaa...",
+  "progressCheckingLogAccess": "Tarkistetaan, miten Convene-historia voidaan lukea...",
   "progressLogUnavailableTitle": "Convene-historiaa ei voi lukea automaattisesti",
   "logUnavailableNotPaired": "Pelilokin lukemista ei ole vielä määritetty. Kertaluonteisen määrityksen jälkeen se luetaan automaattisesti jokaisella päivityksellä.",
   "logUnavailableNoWifi": "Langaton virheenkorjaus toimii vain Wi‑Fi-verkossa. Yhdistä Wi‑Fi-verkkoon ja palaa, niin sovellus jatkaa automaattisesti. Voit myös syöttää historian manuaalisesti.",

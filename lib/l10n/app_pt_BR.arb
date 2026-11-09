@@ -370,6 +370,7 @@
   "manualCredentialWarning": "O URL contém as credenciais da sua conta. Não compartilhe publicamente. Ele expira depois de um tempo.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Aguardando o histórico de invocações...",
+  "progressCheckingLogAccess": "Verificando como ler o histórico de invocações...",
   "progressLogUnavailableTitle": "Não é possível ler o histórico de invocações automaticamente",
   "logUnavailableNotPaired": "A leitura do log do jogo ainda não foi configurada. Depois de uma configuração única, toda atualização lê o log automaticamente.",
   "logUnavailableNoWifi": "A depuração por Wi‑Fi só funciona conectada a uma rede Wi‑Fi. Conecte-se ao Wi‑Fi e volte; o app continua automaticamente. Você também pode inserir o histórico manualmente.",

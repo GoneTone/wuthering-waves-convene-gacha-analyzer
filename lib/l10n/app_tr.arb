@@ -370,6 +370,7 @@
   "manualCredentialWarning": "URL, hesabınızın kimlik bilgilerini içerir. Herkese açık şekilde paylaşmayın. Bir süre sonra geçerliliğini yitirir.",
   "manualCredentialSubmit": "Tamam",
   "progressWaitingLog": "Çağrı geçmişi bekleniyor...",
+  "progressCheckingLogAccess": "Çağrı geçmişini okuma yöntemi kontrol ediliyor...",
   "progressLogUnavailableTitle": "Çağrı geçmişi otomatik olarak okunamıyor",
   "logUnavailableNotPaired": "Oyun günlüğünü okuma henüz ayarlanmadı. Tek seferlik bir kurulumdan sonra her güncellemede otomatik olarak okunur.",
   "logUnavailableNoWifi": "Kablosuz hata ayıklama yalnızca Wi‑Fi'de çalışır. Wi‑Fi'ye bağlanıp geri dönün; uygulama otomatik olarak devam eder. Geçmişi elle de girebilirsiniz.",

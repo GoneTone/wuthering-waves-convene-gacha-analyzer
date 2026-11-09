@@ -370,6 +370,7 @@
   "manualCredentialWarning": "URL-ul conține credențialele contului dvs. Nu îl partajați public. Expiră după un timp.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Se așteaptă istoricul convocărilor...",
+  "progressCheckingLogAccess": "Se verifică modul de citire a istoricului convocărilor...",
   "progressLogUnavailableTitle": "Istoricul convocărilor nu poate fi citit automat",
   "logUnavailableNotPaired": "Citirea jurnalului jocului nu este încă configurată. După o configurare unică, fiecare actualizare îl citește automat.",
   "logUnavailableNoWifi": "Remedierea erorilor wireless funcționează doar prin Wi‑Fi. Conectați-vă la Wi‑Fi și reveniți; aplicația continuă automat. Puteți introduce și manual istoricul.",

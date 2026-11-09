@@ -370,6 +370,7 @@
   "manualCredentialWarning": "URL에는 계정 인증 정보가 포함되어 있으니 공개적으로 공유하지 마세요. 일정 시간이 지나면 만료됩니다.",
   "manualCredentialSubmit": "확인",
   "progressWaitingLog": "튜닝 기록 대기 중...",
+  "progressCheckingLogAccess": "튜닝 기록 읽기 방법 확인 중...",
   "progressLogUnavailableTitle": "튜닝 기록을 자동으로 읽을 수 없음",
   "logUnavailableNotPaired": "게임 로그 읽기가 아직 설정되지 않았습니다. 한 번만 설정하면 이후 업데이트할 때마다 자동으로 읽습니다.",
   "logUnavailableNoWifi": "무선 디버깅은 Wi‑Fi에서만 작동합니다. Wi‑Fi에 연결한 후 돌아오면 자동으로 계속됩니다. 기록을 직접 입력할 수도 있습니다.",

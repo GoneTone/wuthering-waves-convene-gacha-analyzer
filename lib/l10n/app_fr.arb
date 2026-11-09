@@ -370,6 +370,7 @@
   "manualCredentialWarning": "L'URL contient les identifiants de votre compte. Ne la partagez pas publiquement. Elle expire au bout d'un certain temps.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "En attente de l'historique de Convier...",
+  "progressCheckingLogAccess": "Vérification de la méthode de lecture de l'historique de Convier...",
   "progressLogUnavailableTitle": "Impossible de lire l'historique de Convier automatiquement",
   "logUnavailableNotPaired": "La lecture du journal du jeu n'est pas encore configurée. Après une configuration unique, il sera lu automatiquement à chaque mise à jour.",
   "logUnavailableNoWifi": "Le débogage sans fil ne fonctionne qu'en Wi‑Fi. Connectez-vous à un réseau Wi‑Fi et revenez ; l'application reprendra automatiquement. Vous pouvez aussi saisir l'historique manuellement.",

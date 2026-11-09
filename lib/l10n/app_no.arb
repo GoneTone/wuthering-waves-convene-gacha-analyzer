@@ -370,6 +370,7 @@
   "manualCredentialWarning": "URL-en inneholder påloggingsinformasjonen til kontoen din. Ikke del den offentlig. Den utløper etter en stund.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Venter på Convene-historikken...",
+  "progressCheckingLogAccess": "Sjekker hvordan Convene-historikken kan leses...",
   "progressLogUnavailableTitle": "Kan ikke lese Convene-historikken automatisk",
   "logUnavailableNotPaired": "Lesing av spilloggen er ikke konfigurert ennå. Etter et engangsoppsett leses den automatisk ved hver oppdatering.",
   "logUnavailableNoWifi": "Trådløs feilsøking fungerer bare på Wi‑Fi. Koble til Wi‑Fi og kom tilbake, så fortsetter appen automatisk. Du kan også skrive inn historikken manuelt.",
