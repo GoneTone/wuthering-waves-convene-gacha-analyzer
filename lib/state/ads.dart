@@ -46,16 +46,22 @@ class AdsController extends Notifier<AdsState> {
       // 更新失敗仍沿用上次同意結果（UMP 官方建議），所以不 return。
       _log.warning('consent update failed code=${e.code} message=${e.message}');
     }
-    final canRequest = await platform.canRequestAds();
-    if (canRequest) await platform.initializeSdk();
-    final optionsRequired = await platform.isPrivacyOptionsRequired();
-    state = AdsState(
-      canRequestAds: canRequest,
-      privacyOptionsRequired: optionsRequired,
-    );
-    _log.info(
-      'ads enabled canRequestAds=$canRequest privacyOptionsRequired=$optionsRequired',
-    );
+    try {
+      final canRequest = await platform.canRequestAds();
+      if (canRequest) await platform.initializeSdk();
+      final optionsRequired = await platform.isPrivacyOptionsRequired();
+      if (!ref.mounted) return;
+      state = AdsState(
+        canRequestAds: canRequest,
+        privacyOptionsRequired: optionsRequired,
+      );
+      _log.info(
+        'ads enabled canRequestAds=$canRequest privacyOptionsRequired=$optionsRequired',
+      );
+    } catch (e, st) {
+      // 非同意例外（如 PlatformException）不能變成未處理錯誤；狀態維持預設＝廣告關閉。
+      _log.severe('ads start failed: $e', e, st);
+    }
   }
 
   /// 顯示隱私權選項表單，關閉後重讀兩個旗標。
@@ -68,9 +74,12 @@ class AdsController extends Notifier<AdsState> {
         'privacy options form error code=${e.code} message=${e.message}',
       );
     }
+    final canRequest = await platform.canRequestAds();
+    final optionsRequired = await platform.isPrivacyOptionsRequired();
+    if (!ref.mounted) return;
     state = AdsState(
-      canRequestAds: await platform.canRequestAds(),
-      privacyOptionsRequired: await platform.isPrivacyOptionsRequired(),
+      canRequestAds: canRequest,
+      privacyOptionsRequired: optionsRequired,
     );
   }
 }

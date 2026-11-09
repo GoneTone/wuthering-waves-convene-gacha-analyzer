@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/ads/ads_platform.dart';
@@ -21,6 +23,12 @@ class _FakeAdsPlatform extends AdsPlatform {
   /// [isPrivacyOptionsRequired] 的回傳值。
   bool optionsRequired;
 
+  /// 非 null 時 [initializeSdk] 會丟出它。
+  Object? initError;
+
+  /// 非 null 時 [showPrivacyOptionsForm] 會等它完成。
+  Completer<void>? formGate;
+
   /// [requestConsentUpdate] 的呼叫次數。
   int consentUpdates = 0;
 
@@ -43,10 +51,13 @@ class _FakeAdsPlatform extends AdsPlatform {
   Future<bool> isPrivacyOptionsRequired() async => optionsRequired;
 
   @override
-  Future<void> showPrivacyOptionsForm() async {}
+  Future<void> showPrivacyOptionsForm() async => formGate?.future;
 
   @override
-  Future<void> initializeSdk() async => initCalls++;
+  Future<void> initializeSdk() async {
+    initCalls++;
+    if (initError != null) throw initError!;
+  }
 }
 
 /// 以 [fake] 建立容器。
@@ -99,5 +110,27 @@ void main() {
     fake.optionsRequired = false;
     await c.read(adsProvider.notifier).showPrivacyOptions();
     expect(c.read(adsProvider).privacyOptionsRequired, isFalse);
+  });
+
+  test(
+    'unexpected platform error is contained and ads stay disabled',
+    () async {
+      final fake = _FakeAdsPlatform(canRequest: true)
+        ..initError = StateError('plugin');
+      final c = _container(fake);
+      await c.read(adsProvider.notifier).start();
+      expect(c.read(adsProvider).canRequestAds, isFalse);
+    },
+  );
+
+  test('disposing while the privacy form is open does not throw', () async {
+    final fake = _FakeAdsPlatform()..formGate = Completer<void>();
+    final c = ProviderContainer(
+      overrides: [adsPlatformProvider.overrideWithValue(fake)],
+    );
+    final pending = c.read(adsProvider.notifier).showPrivacyOptions();
+    c.dispose();
+    fake.formGate!.complete();
+    await pending;
   });
 }
