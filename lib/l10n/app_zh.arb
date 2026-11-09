@@ -1208,11 +1208,37 @@
   },
   "settingsUnpairDone": "已解除配對",
   "@settingsUnpairDone": {
-    "description": "Snackbar after the pairing was removed"
+    "description": "Title of the dialog after the pairing was removed"
   },
-  "settingsUnpairUnreachable": "已刪除本機金鑰。無法連上無線偵錯收回權限，可以到系統的「無線偵錯 → 已配對的裝置」移除本 App。",
-  "@settingsUnpairUnreachable": {
-    "description": "Snackbar when the key was deleted but the app could not connect to revoke the permission"
+  "settingsUnpairDoneBody": "已刪除本 App 的配對金鑰，並收回「開關無線偵錯」的權限。",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
+  "settingsUnpairUnreachableTitle": "已刪除配對金鑰",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
+  "settingsUnpairUnreachableBody": "已刪除本 App 的配對金鑰，但這次連不上無線偵錯，「開關無線偵錯」的權限還沒收回。",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
+  "settingsUnpairUnreachableRevokeHint": "未配對時本 App 不會使用這個權限；想完全收回，可以連上 Wi‑Fi 後重新配對，再解除一次。",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
+  "settingsUnpairLeftover": "系統「無線偵錯」的配對清單裡還會留著「{name}」。這筆配對已經無法再連線，可以不用理會；想移除的話，點選它即可刪除。",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsUnpairLeftoverAlso": "系統「無線偵錯」的配對清單裡也還留著「{name}」，點選它即可刪除。",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
   },
   "progressCredentialReady": "已取得喚取記錄，回到本 App 後就會開始抓取資料。",
   "@progressCredentialReady": {

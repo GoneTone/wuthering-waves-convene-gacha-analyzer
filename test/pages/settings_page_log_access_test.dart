@@ -12,6 +12,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/pages/log_access_setup_page.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/pages/settings_page.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/flutter_adb_session.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
@@ -33,8 +35,18 @@ class _NullCapture implements GachaCapture {
       CaptureSession(result: Future.value(null), cancel: () async {});
 }
 
+/// 記錄「前往無線偵錯」被呼叫次數的 [LogAccessPlatform] 替身。
+class _FakePlatform extends LogAccessPlatform {
+  /// [openWirelessDebugging] 被呼叫的次數。
+  int opens = 0;
+
+  @override
+  Future<void> openWirelessDebugging() async => opens++;
+}
+
 void main() {
   late Directory tempDir;
+  late _FakePlatform platform;
   late int unpairs;
   late bool unpairReachable;
   Completer<void>? unpairGate;
@@ -45,6 +57,7 @@ void main() {
     unpairs = 0;
     unpairReachable = true;
     unpairGate = null;
+    platform = _FakePlatform();
   });
 
   tearDown(() async {
@@ -64,6 +77,7 @@ void main() {
         overrides: [
           noGameDirOverride,
           isAndroidProvider.overrideWithValue(android),
+          logAccessPlatformProvider.overrideWithValue(platform),
           wirelessPairingStatusProvider.overrideWith(
             (ref) async => (paired: paired, canToggle: canToggle),
           ),
@@ -213,6 +227,19 @@ void main() {
     expect(unpairs, 1);
     expect(container.read(settingsProvider).logAccessMethod, isNull);
     expect(find.text(l.settingsUnpairDone), findsOneWidget);
+    expect(
+      find.text(
+        '${l.settingsUnpairDoneBody}\n\n'
+        '${l.settingsUnpairLeftover(AdbKeyStore.keyName)}',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(
+      find.widgetWithText(FilledButton, l.actionOpenWirelessDebugging),
+    );
+    await tester.pumpAndSettle();
+    expect(platform.opens, 1);
+    expect(find.text(l.settingsUnpairDone), findsNothing);
   });
 
   testWidgets('unpair when unreachable shows the system settings hint', (
@@ -227,8 +254,17 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, l.settingsUnpair));
     await tester.pumpAndSettle();
-    expect(find.text(l.settingsUnpairUnreachable), findsOneWidget);
+    expect(find.text(l.settingsUnpairUnreachableTitle), findsOneWidget);
+    expect(
+      find.textContaining(l.settingsUnpairUnreachableRevokeHint),
+      findsOneWidget,
+    );
+    await tester.tap(find.widgetWithText(TextButton, l.actionClose));
+    await tester.pumpAndSettle();
+    expect(platform.opens, 0);
+    expect(find.text(l.settingsUnpairUnreachableTitle), findsNothing);
   });
+
   testWidgets('unpair shows progress and cannot be started twice', (
     tester,
   ) async {

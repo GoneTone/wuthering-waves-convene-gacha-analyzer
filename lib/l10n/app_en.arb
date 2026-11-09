@@ -1409,11 +1409,37 @@
   },
   "settingsUnpairDone": "Pairing removed",
   "@settingsUnpairDone": {
-    "description": "Snackbar after the pairing was removed"
+    "description": "Title of the dialog after the pairing was removed"
   },
-  "settingsUnpairUnreachable": "Deleted the key on this device. Couldn't connect to wireless debugging to remove the permission; you can remove this app under Wireless debugging → Paired devices.",
-  "@settingsUnpairUnreachable": {
-    "description": "Snackbar when the key was deleted but the app could not connect to revoke the permission"
+  "settingsUnpairDoneBody": "Deleted this app's pairing key and removed its permission to turn wireless debugging on and off.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
+  "settingsUnpairUnreachableTitle": "Pairing key deleted",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
+  "settingsUnpairUnreachableBody": "Deleted this app's pairing key, but couldn't connect to wireless debugging this time, so the permission to turn wireless debugging on and off hasn't been removed.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
+  "settingsUnpairUnreachableRevokeHint": "This app doesn't use that permission while unpaired. To remove it completely, connect to Wi‑Fi, pair again, then unpair once more.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
+  "settingsUnpairLeftover": "The system's Wireless debugging → Paired devices list will still show \"{name}\". It can no longer connect, so you can leave it; to remove it, tap it and delete it.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsUnpairLeftoverAlso": "The system's Wireless debugging → Paired devices list also still shows \"{name}\"; tap it to delete it.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
   },
   "progressCredentialReady": "Got your convene history. Fetching starts when you return to this app.",
   "@progressCredentialReady": {

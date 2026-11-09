@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/pages/log_access_setup_page.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/flutter_adb_session.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/adb_pairing.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
@@ -112,10 +114,9 @@ class _LogAccessSectionState extends ConsumerState<LogAccessSection> {
     if (mounted) ref.invalidate(wirelessPairingStatusProvider);
   }
 
-  /// 確認後解除配對，依是否收回權限顯示不同提示。
+  /// 確認後解除配對，依是否收回權限顯示不同說明（系統清單會留下殘留配對，附前往無線偵錯）。
   Future<void> _unpair(BuildContext context) async {
     final l = AppLocalizations.of(context)!;
-    final messenger = ScaffoldMessenger.maybeOf(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AppDialog(
@@ -143,11 +144,36 @@ class _LogAccessSectionState extends ConsumerState<LogAccessSection> {
     }
     if (!mounted) return;
     ref.invalidate(wirelessPairingStatusProvider);
-    messenger?.showSnackBar(
-      SnackBar(
-        content: Text(
-          revoked ? l.settingsUnpairDone : l.settingsUnpairUnreachable,
+    // 系統沒有公開的方法能移除「已配對的裝置」裡的這一筆，只能說明並帶玩家過去。
+    const name = AdbKeyStore.keyName;
+    final paragraphs = revoked
+        ? [l.settingsUnpairDoneBody, l.settingsUnpairLeftover(name)]
+        : [
+            l.settingsUnpairUnreachableBody,
+            l.settingsUnpairUnreachableRevokeHint,
+            l.settingsUnpairLeftoverAlso(name),
+          ];
+    await showDialog<void>(
+      context: this.context,
+      builder: (ctx) => AppDialog(
+        title: Text(
+          revoked ? l.settingsUnpairDone : l.settingsUnpairUnreachableTitle,
         ),
+        scrollable: true,
+        content: Text(paragraphs.join('\n\n')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l.actionClose),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              ref.read(logAccessPlatformProvider).openWirelessDebugging();
+            },
+            child: Text(l.actionOpenWirelessDebugging),
+          ),
+        ],
       ),
     );
   }

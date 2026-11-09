@@ -1406,11 +1406,37 @@
   },
   "settingsUnpairDone": "ペア設定を解除しました",
   "@settingsUnpairDone": {
-    "description": "Snackbar after the pairing was removed"
+    "description": "Title of the dialog after the pairing was removed"
   },
-  "settingsUnpairUnreachable": "この端末のキーを削除しました。ワイヤレスデバッグに接続できず権限を取り消せませんでした。システムの「ワイヤレスデバッグ → ペア設定済みのデバイス」からこのアプリを削除できます。",
-  "@settingsUnpairUnreachable": {
-    "description": "Snackbar when the key was deleted but the app could not connect to revoke the permission"
+  "settingsUnpairDoneBody": "このアプリのペア設定キーを削除し、ワイヤレスデバッグの切り替え権限を取り消しました。",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
+  "settingsUnpairUnreachableTitle": "ペア設定キーを削除しました",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
+  "settingsUnpairUnreachableBody": "このアプリのペア設定キーを削除しましたが、今回はワイヤレスデバッグに接続できず、ワイヤレスデバッグの切り替え権限は取り消せませんでした。",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
+  "settingsUnpairUnreachableRevokeHint": "ペア設定していない間、このアプリはこの権限を使いません。完全に取り消すには、Wi‑Fi に接続してもう一度ペア設定し、再度解除してください。",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
+  "settingsUnpairLeftover": "システムの「ワイヤレスデバッグ → ペア設定済みのデバイス」には「{name}」が残ります。このペア設定はもう接続できないため、そのままでも問題ありません。削除する場合はタップして削除してください。",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsUnpairLeftoverAlso": "システムの「ワイヤレスデバッグ → ペア設定済みのデバイス」にも「{name}」が残っています。タップすると削除できます。",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
   },
   "progressCredentialReady": "喚取記録を取得しました。アプリに戻るとデータの取得を開始します。",
   "@progressCredentialReady": {

@@ -1402,11 +1402,37 @@
   },
   "settingsUnpairDone": "已解除配对",
   "@settingsUnpairDone": {
-    "description": "Snackbar after the pairing was removed"
+    "description": "Title of the dialog after the pairing was removed"
   },
-  "settingsUnpairUnreachable": "已删除本机密钥。无法连上无线调试收回权限，可以到系统的「无线调试 → 已配对的设备」移除本 App。",
-  "@settingsUnpairUnreachable": {
-    "description": "Snackbar when the key was deleted but the app could not connect to revoke the permission"
+  "settingsUnpairDoneBody": "已删除本 App 的配对密钥，并收回「开关无线调试」的权限。",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
+  "settingsUnpairUnreachableTitle": "已删除配对密钥",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
+  "settingsUnpairUnreachableBody": "已删除本 App 的配对密钥，但这次连不上无线调试，「开关无线调试」的权限还没收回。",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
+  "settingsUnpairUnreachableRevokeHint": "未配对时本 App 不会使用这个权限；想完全收回，可以连上 Wi‑Fi 后重新配对，再解除一次。",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
+  "settingsUnpairLeftover": "系统「无线调试」的配对列表里还会留着「{name}」。这条配对已经无法再连接，可以不用理会；想移除的话，点击它即可删除。",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsUnpairLeftoverAlso": "系统「无线调试」的配对列表里也还留着「{name}」，点击它即可删除。",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
   },
   "progressCredentialReady": "已获取唤取记录，回到本 App 后就会开始抓取数据。",
   "@progressCredentialReady": {
