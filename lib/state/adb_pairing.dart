@@ -69,6 +69,9 @@ class AdbPairingController extends Notifier<AdbPairingState> {
   /// 用來找連接埠的 resolver。
   late LogAccessResolver _resolver;
 
+  /// 開始設定時無線偵錯是否本來就開著；是的話設定完的那次更新不關它（只關照引導才打開的）。
+  bool wirelessWasOnAtStart = false;
+
   /// 切換階段；玩家已離開設定頁（provider 已回收）時忽略。
   void _go(PairingPhase phase) {
     if (ref.mounted) state = state.to(phase);
@@ -90,13 +93,18 @@ class AdbPairingController extends Notifier<AdbPairingState> {
 
   /// 玩家在說明頁按「開始設定」。
   Future<void> startSetup() async {
-    _log.info('setup started');
+    wirelessWasOnAtStart = await _platform.isAdbWifiEnabled();
+    _log.info('setup started wirelessWasOn=$wirelessWasOnAtStart');
     _go(PairingPhase.needDevOptions);
     await refresh();
   }
 
   /// 從設定頁「重試授權」進入：直接到授權步驟。
-  void startAtGrant() => _go(PairingPhase.grantFailed);
+  Future<void> startAtGrant() async {
+    wirelessWasOnAtStart = await _platform.isAdbWifiEnabled();
+    _log.info('retry grant started wirelessWasOn=$wirelessWasOnAtStart');
+    _go(PairingPhase.grantFailed);
+  }
 
   /// 依目前系統狀態更新階段（頁面回到前景時呼叫）；配對服務停了（逾時）就重新啟動。
   Future<void> refresh() async {

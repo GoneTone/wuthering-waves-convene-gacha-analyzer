@@ -251,9 +251,18 @@ void main() {
     expect(phase(), PairingPhase.doneManual);
   });
 
-  test('startAtGrant jumps straight to the grant step', () {
-    ctl().startAtGrant();
+  test('startAtGrant jumps straight to the grant step', () async {
+    await ctl().startAtGrant();
     expect(phase(), PairingPhase.grantFailed);
+  });
+
+  test('records whether wireless debugging was on when setup starts', () async {
+    platform.adbWifiOn = true;
+    await ctl().startSetup();
+    expect(ctl().wirelessWasOnAtStart, isTrue);
+    platform.adbWifiOn = false;
+    await ctl().startAtGrant();
+    expect(ctl().wirelessWasOnAtStart, isFalse);
   });
 
   group('unpairWirelessDebugging', () {

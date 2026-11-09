@@ -183,6 +183,17 @@ void main() {
     expect(repo.updates, [true]);
   });
 
+  testWidgets('keeps wireless debugging on when it was on before setup', (
+    tester,
+  ) async {
+    await pump(tester, const AdbPairingState(PairingPhase.ready));
+    ctl
+      ..wirelessWasOnAtStart = true
+      ..go(PairingPhase.done);
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+    expect(repo.updates, [false]);
+  });
+
   testWidgets('skipping the grant also returns and updates', (tester) async {
     final l = await pump(
       tester,

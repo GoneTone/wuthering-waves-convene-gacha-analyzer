@@ -242,7 +242,7 @@ class GachaRepository extends Notifier<GachaState> {
 
   /// 啟動喚取資料更新，優先使用快取 URL，無快取則等待取得憑證（電腦版攔截＋Client.log，Android 讀遊戲記錄）。
   ///
-  /// [afterPairing] 為 true 表示剛完成無線偵錯配對：這次用完一律關閉無線偵錯（玩家照引導打開的也算 App 開的）。
+  /// [afterPairing] 為 true 表示剛完成無線偵錯配對、且開始設定前無線偵錯沒開：這次用完一律關閉（玩家照引導打開的也算 App 開的）。
   Future<void> update({bool afterPairing = false}) async {
     await _runUpdate(forceRecapture: false, afterPairing: afterPairing);
   }
@@ -932,7 +932,7 @@ class GachaRepository extends Notifier<GachaState> {
     );
   }
 
-  /// 本次更新是否剛完成配對（用完一律關閉無線偵錯）。
+  /// 本次更新是否剛完成配對、且設定前無線偵錯沒開（用完一律關閉無線偵錯）。
   bool _afterPairing = false;
 
   /// 本次更新讀完後無線偵錯是否因沒有權限而留著開（完成畫面要提示）。

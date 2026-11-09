@@ -52,7 +52,7 @@ class _LogAccessSetupPageState extends ConsumerState<LogAccessSetupPage> {
     );
     if (widget.retryGrant) {
       WidgetsBinding.instance.addPostFrameCallback(
-        (_) => ref.read(adbPairingProvider.notifier).startAtGrant(),
+        (_) => unawaited(ref.read(adbPairingProvider.notifier).startAtGrant()),
       );
     }
   }
@@ -63,15 +63,16 @@ class _LogAccessSetupPageState extends ConsumerState<LogAccessSetupPage> {
     super.dispose();
   }
 
-  /// 設定完成：停留一下後返回並開始一次更新（用完會關閉無線偵錯）。
+  /// 設定完成：停留一下後返回並開始一次更新（開始設定前沒開無線偵錯的話，用完會關掉）。
   void _finish() {
     if (_leaving) return;
     _leaving = true;
     final repo = ref.read(gachaRepositoryProvider.notifier);
+    final wasOn = ref.read(adbPairingProvider.notifier).wirelessWasOnAtStart;
     Future<void>.delayed(_doneDelay, () {
       if (!mounted) return;
       Navigator.of(context).pop();
-      unawaited(repo.update(afterPairing: true));
+      unawaited(repo.update(afterPairing: !wasOn));
     });
   }
 
