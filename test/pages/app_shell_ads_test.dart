@@ -254,6 +254,16 @@ void main() {
     );
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
+  testWidgets('switching pages keeps the loaded ad', (tester) async {
+    // 每換一頁就重新請求會灌高請求數、拉低曝光率。
+    await pump(tester, const Size(412, 915));
+    GoRouter.of(tester.element(find.text('page:/banner/1'))).go('/settings');
+    await tester.pumpAndSettle();
+    expect(find.text('page:/settings'), findsOneWidget);
+    expect(find.byKey(_banner), findsOneWidget);
+    expect(loads, 1);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
   testWidgets('hides the ad on empty pages', (tester) async {
     await pump(tester, const Size(412, 915), path: '/banner/2');
     expect(find.byKey(_banner), findsNothing);
