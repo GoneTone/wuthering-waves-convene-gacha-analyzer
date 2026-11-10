@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/log_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/data/app_repo.dart';
@@ -70,7 +71,7 @@ class SettingsPage extends ConsumerWidget {
     final notifier = ref.read(settingsProvider.notifier);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.l),
+      padding: EdgeInsets.all(pagePaddingOf(context)),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),

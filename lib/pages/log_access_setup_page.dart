@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/adb_pairing.dart';
@@ -101,7 +102,7 @@ class _LogAccessSetupPageState extends ConsumerState<LogAccessSetupPage> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
             child: ListView(
-              padding: const EdgeInsets.all(AppSpacing.l),
+              padding: EdgeInsets.all(pagePaddingOf(context)),
               children: switch (s.phase) {
                 PairingPhase.disclosure => _disclosure(l),
                 PairingPhase.grantFailed => _grantFailed(l),

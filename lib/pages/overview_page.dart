@@ -93,7 +93,7 @@ class OverviewPage extends ConsumerWidget {
       ),
     ];
 
-    final pagePadding = isCompactLayout(context) ? AppSpacing.m : AppSpacing.l;
+    final pagePadding = pagePaddingOf(context);
     final brightness = Theme.of(context).brightness;
     final fiveStarItems = buildFiveStarCollectionAcrossBanners(sec.banners);
     // 廣告在頁面層級監聽：放進按需建構的子項，捲出畫面就會被釋放、捲回來又重新載入；
