@@ -850,7 +850,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 **修法**（Android 與電腦版共用 `PollingClientLogWatch`，兩邊一起改）：
 
 1. **用檔案識別判斷換檔**：`ClientLogSource.probe()` 一次回傳長度與識別。shell 來源用 inode（`stat -c '%s %i'`；模擬器驗證過：附加內容 inode 不變，改名換新檔會變）；本機檔案（電腦版、Android 10 以下直接讀）Dart 拿不到 inode，改用前 48 位元組的檔頭（遊戲每個新檔開頭都是精確到秒的 `Log file open, [2026.11.05-18.04.55]`，電腦版實際檔案確認過）。識別讀不到或檔案太短時為 null，**代表無法判斷，不是換檔**，只退回用「變短」判斷。
-2. **積壓超過一次讀取量時由新到舊讀**（`scanClientLogBackward`）：先讀最後一段，找到最新的網址就停；沒找到才往前一段一段補讀，所以不會漏。只掃完整的行：區間結尾還沒換行的那行留給下一輪（可能還在寫，避免接受被截斷的網址），跨段的行會接起來再掃，有測試鎖住。
+2. **一律由新到舊讀**（`scanClientLogBackward`，原本的「往後讀」寫法已合併掉）：每 2 MB 一段，先讀最後一段，找到最新的網址就停；沒找到才往前一段一段補讀，所以不會漏。平常每秒只多一點內容，一段就讀完；積壓超過一段時才會記 `backlog` log。只掃完整的行：區間結尾還沒換行的那行留給下一輪（可能還在寫，避免接受被截斷的網址），跨段的行會接起來再掃，有測試鎖住。
 3. **log**：`client log backlog bytes=... reading newest first`、`client log backlog scanned ms= hit=`、`client log rotated length= by=shrink|identity`。之後看玩家匯出的 log 就能知道是不是這類問題。
 
 **結果**（同一套模擬器步驟）：回到 App 後 **2 秒**抓到網址（`rotated by=identity`，第一段就命中）。

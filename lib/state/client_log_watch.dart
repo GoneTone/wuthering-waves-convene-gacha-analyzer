@@ -96,16 +96,11 @@ class PollingClientLogWatch implements ClientLogWatch {
         id = p.id ?? id;
         final backlog = p.length - offset;
         if (backlog <= 0) return;
-        if (backlog <= maxReadBytes) {
-          final chunk = await source.read(offset, backlog);
-          if (chunk.isEmpty) return;
-          offset += chunk.length;
-          final scan = await _scanInBackground(carry, chunk);
-          handle(scan.cred, scan.carry, scan.rejected);
-          return;
+        // 一律由新到舊讀：玩家在遊戲裡時 App 被凍結，回來可能積了幾十 MB，網址在最後面，不用等全部讀完。
+        final large = backlog > maxReadBytes;
+        if (large) {
+          _log.info('client log backlog bytes=$backlog, reading newest first');
         }
-        // 玩家在遊戲裡時 App 被凍結，回來可能積了幾十 MB；網址在最後面，從新到舊讀才不用等全部讀完。
-        _log.info('client log backlog bytes=$backlog, reading newest first');
         final sw = Stopwatch()..start();
         final scan = await scanClientLogBackward(
           source,
@@ -116,10 +111,12 @@ class PollingClientLogWatch implements ClientLogWatch {
           isStopped: () => completer.isCompleted,
         );
         offset = p.length;
-        _log.info(
-          'client log backlog scanned ms=${sw.elapsedMilliseconds} '
-          'hit=${scan.cred != null}',
-        );
+        if (large) {
+          _log.info(
+            'client log backlog scanned ms=${sw.elapsedMilliseconds} '
+            'hit=${scan.cred != null}',
+          );
+        }
         handle(scan.cred, scan.tail, scan.rejected);
       } on Object catch (e) {
         _log.warning(
@@ -162,27 +159,6 @@ String _describe(Object e) => e is FileSystemException
     ? 'os=${e.osError?.message}'
     : 'error=${e.runtimeType}';
 
-/// 一輪增量的掃描結果：尚未成行的 [carry]、找到的最新憑證、被拒網址的原因（背景 isolate 的 log 不會進 App log，交回主 isolate 寫）。
-typedef _ScanResult = ({
-  Uint8List carry,
-  GachaCredential? cred,
-  List<String> rejected,
-});
-
-/// 在背景 isolate 執行 [_scanChunk]；閉包只抓參數，避免把呼叫端的 Timer／Completer 一起送過去。
-Future<_ScanResult> _scanInBackground(Uint8List carry, Uint8List chunk) =>
-    Isolate.run(() => _scanChunk(carry, chunk));
-
-/// 把 [carry] 接上解碼後的 [chunk]，只在完整的行內找最新且合法的喚取記錄憑證。
-_ScanResult _scanChunk(Uint8List carry, Uint8List chunk) {
-  final buf = _join(carry, decodeClientLogBytes(chunk));
-  final end = buf.lastIndexOf(_newline);
-  if (end < 0) return (carry: buf, cred: null, rejected: const <String>[]);
-  final rejected = <String>[];
-  final cred = _credentialIn(Uint8List.sublistView(buf, 0, end + 1), rejected);
-  return (carry: buf.sublist(end + 1), cred: cred, rejected: rejected);
-}
-
 /// [scanClientLogBackward] 的結果：最新的合法憑證、區間最後一段還沒換行的內容（已解碼）、被拒網址的原因。
 typedef ClientLogBackwardScan = ({
   GachaCredential? cred,
@@ -223,7 +199,7 @@ Future<ClientLogBackwardScan> scanClientLogBackward(
   return (cred: null, tail: tail ?? after, rejected: rejected);
 }
 
-/// 在背景 isolate 執行 [_scanBackChunk]；理由同 [_scanInBackground]。
+/// 在背景 isolate 執行 [_scanBackChunk]；閉包只抓參數，避免把呼叫端的 Timer／Completer 一起送過去。
 Future<_BackStep> _backInBackground(
   Uint8List raw,
   Uint8List after,
