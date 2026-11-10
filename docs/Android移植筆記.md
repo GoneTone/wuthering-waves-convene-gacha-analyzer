@@ -759,7 +759,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 建立 App（尚未上架，正式上架後要回來連結商店頁並送審）與橫幅廣告單元。單元保留影片廣告、自動重新整理與底價由 Google 最佳化。
   - 「隱私權與訊息」已發布歐洲（GDPR，31 種語言）與美國州級的訊息。歐洲訊息的「不同意」按鈕維持關閉。帳戶層級的「啟用同意聲明收集功能」開關呈灰色是正常的：那是給沒有建立訊息的 App 用的備用機制，帳戶層級已經開啟，不需要處理。
   - 封鎖控制：決定不設，維持預設。這和設計文件刻意不同：設計時原本打算在後台封鎖博弈、賭博等敏感類別，最後決定不設。敏感類別和廣告內容分級是兩套獨立的控制，程式裡的 `maxAdContentRating: T` 不會擋掉這些類別。
-- 正式 ID 驗證：用 `secrets/ads_defines.json` 建 release，Manifest 的 `com.google.android.gms.ads.APPLICATION_ID` 與 `libapp.so` 裡的單元 ID 都是正式值；GitHub secrets `ADMOB_APP_ID`／`ADMOB_BANNER_UNIT_ID` 已設定，CI 的「Write ads defines from secrets」步驟用 actionlint 檢查過。
+- 正式 ID 驗證：用 `secrets/ads_defines.json` 建 release，Manifest 的 `com.google.android.gms.ads.APPLICATION_ID` 與 `libapp.so` 裡的單元 ID 都是正式值；GitHub secrets `ADMOB_APP_ID`／`ADMOB_BANNER_UNIT_ID` 已設定（2026-11-10 補上 `ADMOB_NATIVE_UNIT_ID`），CI 的「Write ads defines from secrets」步驟用 actionlint 檢查過。
 - **自己和內測者的手機要在 AdMob「設定 → 測試裝置」登記**（用手機的廣告 ID）：從 Play 安裝的 rc 版與正式版帶的是正式廣告 ID，開發者點到自己的廣告會被判無效流量，嚴重時整個帳號（`reh.tw/app-ads.txt` 用的同一個發布商 ID）被停權。手機重設過廣告 ID 後，舊的登記就會失效，要重新登記新的 ID（2026-11-09 遇過）。
 - AdMob 新 App 要等 Play 商店頁公開、在 AdMob 連結商店頁並通過審查後才會正常投放。**內部測試版看不到正式廣告是正常的**；開發版用測試廣告不受影響。正式上架後要回 AdMob 連結商店頁。
 
@@ -807,7 +807,9 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 外框高度：小型 `kNativeSmallHeight` = 100dp、中型 `kNativeMediumHeight` = 355dp，外框本身也塗 `surfaceCard`，模板沒填滿的空間看起來是卡片留白。
   - 中型模板的版面檔（`google_mobile_ads` 的 `gnt_medium_template_view.xml`）整個寫死 350dp 高、圖片 190dp；文字各限一行，說明最多兩行並以「...」截斷。所以正式廣告文字再長、圖片比例不同，模板都還是 350dp，不會撐破外框。外框 1dp 邊框會吃掉內部高度，用 350 時橫向會切到模板底部留白，所以多留到 355。
   - 小型模板每行文字都限一行，高度撐滿外框，內容只會在框內壓縮。
-  - 放大字級（1.3、2.0 倍）時模板在框內自己壓縮（說明截成一行、標題壓到「Ad」標示），按鈕仍完整。試過讓小型外框跟著字級變高，模板內容不會跟著撐開，只多出空白，所以維持固定高度。
+  - 放大字級時模板在框內自己壓縮，按鈕仍完整。試過讓小型外框跟著字級變高，模板內容不會跟著撐開，只多出空白，所以維持固定高度。
+  - **已知情況：系統字級 1.8 倍以上，中型模板的標題會壓到「Ad」標示上緣**（1.5 倍以下完整；小型 1.5 倍時標題下緣被切一點，標示仍完整）。Ad Manager／Authorized Buyers 的規範寫標示不可被遮住，AdMob 自己的政策頁沒寫這麼細，也沒查到因系統字級被處分的案例。使用者決定不處理（2026-11-10）。
+  - 外框高度沒辦法依內容自動調整：`AdWidget` 是 platform view，大小只能由 Flutter 給，原生端回報不了內容高度；官方 `ConstrainedBox` 範圍寫法會被撐到最大值（試作時小型被撐到 200dp）。要真正自適應只能放棄模板改寫 Kotlin 原生版面（設計時的做法 B）。
 
 **建置注入與 CI**
 - 比照橫幅：`secrets/ads_defines.json` 多一個 `ADMOB_NATIVE_UNIT_ID`；只有 release 且有注入值時才用，否則一律用官方原生廣告測試 ID。
@@ -820,4 +822,5 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 紀錄列表翻到第 2 頁時第 10 筆後顯示同一則廣告，沒有重新載入、沒有紅色錯誤框。
 - **快速切換卡池**：連續切 5 個卡池、每個停約 1 秒，約 10 秒內 10 次 `native loaded`（每個卡池兩則），離開的卡池都有釋放。AdMob 沒有公開多少算異常；使用者決定維持現狀（每個卡池是不同的頁面）。
 - **長螢幕會同時看到兩則**：模擬器解析度調成 1080×2760（約 1051dp 高）、沒有 5★ 的卡池，捲動經過時畫面頂端露出位置 3 的按鈕下緣，同時位置 1 已捲進畫面下方。一般 914dp 高的手機兩者相距約 743dp，不會同時出現。使用者決定接受，不另外處理。
-- 正式版實際執行：待正式原生廣告單元 ID 設定後補上。
+- 正式版實際執行（rc.12 參數、正式單元 ID，2026-11-10）：模擬器移除除錯版後安裝，啟動正常、`logcat -b crash` 為空；APK 的 `libapp.so` 只有正式原生單元 ID；匯入 9605 筆後三個位置都載入（模擬器自動算測試裝置，正式 ID 也回測試廣告，且會跳 validator）。
+- **validator 對小型模板報「MediaView not used for main image or video asset」**：正式 ID 回了影片素材（測試 ID 的 Flood-It／Google Ads 不會）。Google 官方小型模板版面本來就沒有 MediaView（`gnt_small_template_view.xml` 只有 icon），AdMob 論壇的 Google 顧問回覆「MediaView is required to render the main video or image asset」、影片廣告不會投到小於 120dp 的 MediaView，並說 validator 只在測試廣告出現；沒提到政策處分，這個爭議在論壇上沒有結論。實際影響推測是位置 1 拿不到影片廣告、填充率較低。使用者決定維持小型模板（2026-11-10）。
