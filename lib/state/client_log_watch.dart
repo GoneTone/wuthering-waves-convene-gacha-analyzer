@@ -14,16 +14,10 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 
-/// Client.log 監看的起點：從 [offset] 之後開始讀，[id] 是當時的檔案識別（null 為未知）。
-typedef ClientLogPosition = ({int offset, String? id});
-
 /// 監看遊戲 Client.log，等待新附加的喚取記錄 URL 並轉成憑證。
 abstract class ClientLogWatch {
-  /// 從 [from]（預設為 [source] 目前的結尾）開始監看；只處理之後新增的內容，`result` 永不 completeError。
-  Future<CaptureSession> start(
-    ClientLogSource source, {
-    ClientLogPosition? from,
-  });
+  /// 以 [source] 目前長度為起點開始監看；只處理之後新增的內容，`result` 永不 completeError。
+  Future<CaptureSession> start(ClientLogSource source);
 }
 
 /// 以固定間隔輪詢檔案增量的 [ClientLogWatch]。
@@ -44,26 +38,19 @@ class PollingClientLogWatch implements ClientLogWatch {
   static final _log = Logger('gacha.clientLog');
 
   @override
-  Future<CaptureSession> start(
-    ClientLogSource source, {
-    ClientLogPosition? from,
-  }) async {
+  Future<CaptureSession> start(ClientLogSource source) async {
     final completer = Completer<GachaCredential?>();
     var offset = 0;
     String? id;
-    if (from != null) {
-      (offset: offset, id: id) = from;
-    } else {
-      try {
-        final p = await source.probe();
-        offset = p.length;
-        id = p.id;
-      } on Object catch (e) {
-        _log.warning(
-          'client log baseline failed source=${source.logLabel} '
-          '${_describe(e)}; using offset=0',
-        );
-      }
+    try {
+      final p = await source.probe();
+      offset = p.length;
+      id = p.id;
+    } on Object catch (e) {
+      _log.warning(
+        'client log baseline failed source=${source.logLabel} '
+        '${_describe(e)}; using offset=0',
+      );
     }
     var carry = Uint8List(0);
     var polling = false;
@@ -207,13 +194,13 @@ typedef ClientLogBackwardScan = ({
 ///
 /// 只掃完整的行：區間結尾還沒換行的內容放進 `tail`，跨段的行會接起來再掃，
 /// 避免把被切斷的網址當成完整網址。[prefix] 是 [from] 之前還沒成行的內容（已解碼），
-/// 傳 null 代表 [from] 不在行首，最舊那段開頭的殘行直接略過。[isStopped] 回 true 時中途停止。
+/// 會接在最舊那段前面。[isStopped] 回 true 時中途停止。
 Future<ClientLogBackwardScan> scanClientLogBackward(
   ClientLogSource source, {
   required int from,
   required int to,
   required int chunkBytes,
-  Uint8List? prefix,
+  required Uint8List prefix,
   bool Function()? isStopped,
 }) async {
   final rejected = <String>[];
@@ -294,33 +281,6 @@ _BackStep _scanBackChunk(
   final rejected = <String>[];
   final cred = lines.isEmpty ? null : _credentialIn(lines, rejected);
   return (cred: cred, after: next, tail: tail, rejected: rejected);
-}
-
-/// 從整份 Client.log 結尾往前找最新的合法憑證；[maxBytes] 為 null 時讀整份，否則只讀最後這麼多。
-///
-/// 回傳的 `end` 是下一步監看的起點：結尾還沒換行的那行會留給監看重讀，不會漏掉。
-Future<({GachaCredential? cred, ClientLogPosition end, List<String> rejected})>
-findLatestClientLogCredential(
-  ClientLogSource source, {
-  int? maxBytes,
-  int chunkBytes = clientLogChunkBytes,
-  bool Function()? isStopped,
-}) async {
-  final p = await source.probe();
-  final from = maxBytes == null ? 0 : math.max(0, p.length - maxBytes);
-  final scan = await scanClientLogBackward(
-    source,
-    from: from,
-    to: p.length,
-    chunkBytes: chunkBytes,
-    prefix: from == 0 ? Uint8List(0) : null,
-    isStopped: isStopped,
-  );
-  return (
-    cred: scan.cred,
-    end: (offset: p.length - scan.tail.length, id: p.id),
-    rejected: scan.rejected,
-  );
 }
 
 /// 在完整的行（已解碼）裡找最新且合法的憑證，被拒原因加進 [rejected]。

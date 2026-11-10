@@ -44,14 +44,11 @@ void main() {
   });
 
   /// 啟動監看，tearDown 前由測試自行 cancel。
-  Future<CaptureSession> begin({
-    int? maxReadBytes,
-    ClientLogSource? source,
-    ClientLogPosition? from,
-  }) => PollingClientLogWatch(
-    interval: const Duration(milliseconds: 20),
-    maxReadBytes: maxReadBytes ?? 2 * 1024 * 1024,
-  ).start(source ?? LocalFileLogSource(file.path), from: from);
+  Future<CaptureSession> begin({int? maxReadBytes, ClientLogSource? source}) =>
+      PollingClientLogWatch(
+        interval: const Duration(milliseconds: 20),
+        maxReadBytes: maxReadBytes ?? 2 * 1024 * 1024,
+      ).start(source ?? LocalFileLogSource(file.path));
 
   test('ignores url written before start', () async {
     _append(file, '${_url('A')}\n');
@@ -167,13 +164,6 @@ void main() {
     },
   );
 
-  test('starts from the given position', () async {
-    _append(file, '${_url('A')}\n');
-    final s = await begin(from: (offset: 0, id: null));
-    expect((await _await(s.result))!.recordId, 'A');
-    await s.cancel();
-  });
-
   test('read errors from the source keep waiting', () async {
     final src = _FlakySource(file.path);
     final s = await PollingClientLogWatch(
@@ -212,32 +202,6 @@ void main() {
         expect(r.cred?.recordId, 'OK', reason: '$chunk');
         expect(utf8.decode(r.tail), _url('CUT'), reason: '$chunk');
       }
-    });
-  });
-
-  group('findLatestClientLogCredential', () {
-    test(
-      'returns the newest url and stops before the unfinished line',
-      () async {
-        _append(file, '${_url('A')}\n${'x' * 300}\n${_url('B')}\nzzz');
-        final r = await findLatestClientLogCredential(
-          LocalFileLogSource(file.path),
-          chunkBytes: 64,
-        );
-        expect(r.cred?.recordId, 'B');
-        expect(r.end.offset, file.lengthSync() - 3);
-      },
-    );
-
-    test('only reads the last maxBytes when capped', () async {
-      _append(file, '${_url('A')}\n${'x' * 300}\n');
-      final r = await findLatestClientLogCredential(
-        LocalFileLogSource(file.path),
-        maxBytes: 100,
-        chunkBytes: 64,
-      );
-      expect(r.cred, isNull);
-      expect(r.end.offset, file.lengthSync());
     });
   });
 }

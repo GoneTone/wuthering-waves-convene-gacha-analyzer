@@ -52,11 +52,6 @@ class _AllPoolsFailedException implements Exception {
   final GachaApiException apiError;
 }
 
-/// 喚取記錄查詢 API。
-final _gachaQueryEndpoint = Uri.parse(
-  'https://gmserver-api.aki-game2.net/gacha/record/query',
-);
-
 /// 雲端同步請求匯入時，已有更新或匯入進行中而無法執行時拋出；呼叫端應稍後重試。
 class CloudSyncBusyException implements Exception {
   /// 建立 [CloudSyncBusyException]。
@@ -315,10 +310,7 @@ class GachaRepository extends Notifier<GachaState> {
         }
       }
 
-      cred ??= await _acquireCredential(
-        isFallback: false,
-        allowExisting: !forceRecapture,
-      );
+      cred ??= await _acquireCredential(isFallback: false);
       if (!ref.mounted) return;
       if (cred == null) {
         _log.info('update aborted (user cancelled capture)');
@@ -340,11 +332,7 @@ class GachaRepository extends Notifier<GachaState> {
         _log.warning(
           'first pool failed (code=${e.apiError.code}), falling back to recapture',
         );
-        final newCred = await _acquireCredential(
-          isFallback: true,
-          allowExisting: !forceRecapture,
-          failed: cred,
-        );
+        final newCred = await _acquireCredential(isFallback: true);
         if (!ref.mounted) return;
         if (newCred == null) {
           _log.info('recapture cancelled by user');
@@ -432,27 +420,7 @@ class GachaRepository extends Notifier<GachaState> {
   /// log 先拿到時會先停掉攔截並等它收尾（helper 停止、WinDivert 重導向還原）才回傳，
   /// 收尾錯誤只記 warning。log 勝出前攔截就失效（丟錯，或非使用者取消卻沒攔到）時，
   /// 改為只等 log 並在畫面提示；找不到遊戲資料夾時提示改成請使用者選資料夾，選好即接上監看。
-  ///
-  /// [allowExisting] 為 true 時先讀本機 Client.log 找現成網址，能用就直接回傳，不必啟動攔截（也不會跳 UAC）。
-  Future<GachaCredential?> _runMitm({
-    required bool isFallback,
-    required bool allowExisting,
-    GachaCredential? failed,
-  }) async {
-    _windowsLogBaseline = null;
-    if (allowExisting) {
-      try {
-        final existing = await _windowsExistingCredential(failed);
-        if (existing != null) {
-          _clientLog.info('credential source=existing log url');
-          return existing;
-        }
-      } on http.ClientException {
-        if (_cancelTriggered) return null;
-        rethrow;
-      }
-      if (!ref.mounted) return null;
-    }
+  Future<GachaCredential?> _runMitm({required bool isFallback}) async {
     state = state.copyWith(progress: WaitingForCapture(isFallback: isFallback));
     final session = ref.read(gachaCaptureProvider).start();
     _activeCancel = session.cancel;
@@ -521,145 +489,11 @@ class GachaRepository extends Notifier<GachaState> {
     return cred;
   }
 
-  /// 電腦版：定位遊戲資料夾後讀整份 Client.log 找現成網址；找不到資料夾時直接略過。
-  ///
-  /// 讀到的結尾記進 [_windowsLogBaseline]，接著的監看從那裡開始，期間寫入的內容不會漏掉。
-  Future<GachaCredential?> _windowsExistingCredential(
-    GachaCredential? failed,
-  ) async {
-    final GameDirLocation? location;
-    try {
-      location = await ref
-          .read(gameDirLocatorProvider)
-          .locate(settingDir: ref.read(settingsProvider).gameDir);
-    } catch (e) {
-      _clientLog.warning(
-        'existing url skipped: locate failed ${e.runtimeType}',
-      );
-      return null;
-    }
-    if (location == null || !ref.mounted) return null;
-    final path = GameDirLocator.clientLogPath(location.path);
-    final found = await _existingCredential(
-      LocalFileLogSource(path),
-      maxBytes: null,
-      failed: failed,
-    );
-    final end = found.end;
-    if (end != null) _windowsLogBaseline = (path: path, end: end);
-    return found.cred;
-  }
-
   /// 依平台取得憑證：Android 讀遊戲記錄，其他平台走攔截與 Client.log 競速。null 代表使用者取消。
-  ///
-  /// [allowExisting] 為 true 時先試 log 裡現成的最新網址（能用才採用），找不到或已失效才請玩家開記錄頁；
-  /// [failed] 是剛失敗的憑證，log 裡同一個網址不再試。
-  Future<GachaCredential?> _acquireCredential({
-    required bool isFallback,
-    required bool allowExisting,
-    GachaCredential? failed,
-  }) => ref.read(isAndroidProvider)
-      ? _runAndroidWait(
-          isFallback: isFallback,
-          allowExisting: allowExisting,
-          failed: failed,
-        )
-      : _runMitm(
-          isFallback: isFallback,
-          allowExisting: allowExisting,
-          failed: failed,
-        );
-
-  /// Android 找現成網址時只讀 log 最後這麼多：無線偵錯傳 2 MB 約要 3～4 秒，不能讓玩家每次更新都等太久。
-  static const _androidExistingScanBytes = 4 * 1024 * 1024;
-
-  /// 從 [source] 結尾往前找現成的最新網址，回傳能用的憑證（沒有則 null）與之後監看的起點。
-  ///
-  /// 和 [failed] 相同的網址、以及不是目前帳號的網址都不用；讀取失敗只記 log、當成沒有。
-  /// 驗證時的網路錯誤照常往上丟。
-  Future<({GachaCredential? cred, ClientLogPosition? end})> _existingCredential(
-    ClientLogSource source, {
-    required int? maxBytes,
-    required GachaCredential? failed,
-    bool Function()? isStopped,
-  }) async {
-    final sw = Stopwatch()..start();
-    final ({
-      GachaCredential? cred,
-      ClientLogPosition end,
-      List<String> rejected,
-    })
-    found;
-    try {
-      found = await findLatestClientLogCredential(
-        source,
-        maxBytes: maxBytes,
-        isStopped: isStopped,
-      );
-    } catch (e) {
-      // 取消時連線已中斷，進行中的讀取失敗是預期的，不算錯誤。
-      if (isStopped?.call() ?? false) {
-        _clientLog.info('existing url scan stopped');
-      } else {
-        _clientLog.warning(
-          'existing url scan failed source=${source.logLabel} '
-          'error=${e.runtimeType}',
-        );
-      }
-      return (cred: null, end: null);
-    }
-    for (final reason in found.rejected) {
-      _clientLog.warning('existing url rejected reason=$reason');
-    }
-    final cred = found.cred;
-    final scanMs = sw.elapsedMilliseconds;
-    if (cred == null) {
-      _clientLog.info('existing url none source=${source.logLabel} ms=$scanMs');
-      return (cred: null, end: found.end);
-    }
-    if (failed != null &&
-        cred.playerId == failed.playerId &&
-        cred.recordId == failed.recordId) {
-      _clientLog.info('existing url is the one that just failed, skipping');
-      return (cred: null, end: found.end);
-    }
-    // 只沿用目前帳號的網址：遊戲可能已切到別的帳號，要換帳號就讓玩家自己開記錄頁。
-    final activeUid = state.activeUid;
-    if (activeUid != null && cred.playerId != activeUid) {
-      _clientLog.info(
-        'existing url belongs to another account '
-        'playerId=${sanitizeUid(cred.playerId)}, skipping',
-      );
-      return (cred: null, end: found.end);
-    }
-    final usable = await _isUsable(cred);
-    _clientLog.info(
-      'existing url usable=$usable scanMs=$scanMs '
-      'cred=${sanitizeCredential(cred.toJsonString())}',
-    );
-    return (cred: usable ? cred : null, end: found.end);
-  }
-
-  /// 抓第一個卡池確認 [cred] 還能用：API 回錯誤（網址失效）回 false，網路錯誤照常往上丟。
-  Future<bool> _isUsable(GachaCredential cred) async {
-    final client = _activeCancellable?.client;
-    if (client == null) return false;
-    final fetcher = ref.read(gachaFetcherProvider);
-    try {
-      await fetcher.fetchPool(
-        endpoint: _gachaQueryEndpoint,
-        cred: cred,
-        cardPoolType: gachaTypes.first.cardPoolType,
-        client: client,
-      );
-      // 接著馬上要抓全部卡池，照一般請求的間隔等一下，避免被伺服器限流而誤判網址失效。
-      await Future<void>.delayed(fetcher.rateLimit);
-      return true;
-    } on GachaApiException catch (e) {
-      _clientLog.info('existing url rejected by api code=${e.code}');
-      return false;
-    }
-  }
+  Future<GachaCredential?> _acquireCredential({required bool isFallback}) =>
+      ref.read(isAndroidProvider)
+      ? _runAndroidWait(isFallback: isFallback)
+      : _runMitm(isFallback: isFallback);
 
   /// Android 沒有自動讀取方式而等待時重新判斷（玩家打開了無線偵錯、授權了權限、切回 App 時呼叫）；其他時候為 no-op。
   Future<void> retryLogAccess() async {
@@ -673,13 +507,7 @@ class GachaRepository extends Notifier<GachaState> {
   ///
   /// 沒有自動讀取方式時改顯示原因並只等手動輸入，[retryLogAccess] 可以重新判斷。
   /// 結束時一律停監看並 release（中斷連線、依規則關閉無線偵錯）。
-  ///
-  /// [allowExisting] 為 true 時，連上後先在 log 結尾找現成網址（仍顯示準備中），能用就直接回傳。
-  Future<GachaCredential?> _runAndroidWait({
-    required bool isFallback,
-    required bool allowExisting,
-    GachaCredential? failed,
-  }) async {
+  Future<GachaCredential?> _runAndroidWait({required bool isFallback}) async {
     state = state.copyWith(
       progress: WaitingForCapture(
         isFallback: isFallback,
@@ -731,6 +559,9 @@ class GachaRepository extends Notifier<GachaState> {
         if (outcome is LogAccessReady) {
           ready = outcome;
           if (_captureCancelRequested || !ref.mounted) return null;
+          state = state.copyWith(
+            progress: WaitingForCapture(isFallback: isFallback),
+          );
           break;
         }
         if (_captureCancelRequested || !ref.mounted) return null;
@@ -776,36 +607,9 @@ class GachaRepository extends Notifier<GachaState> {
           ),
         );
       });
-      ClientLogPosition? from;
-      if (allowExisting) {
-        final lookup = _existingCredential(
-          ready.source,
-          maxBytes: _androidExistingScanBytes,
-          failed: failed,
-          isStopped: () => logHit.isCompleted || cancelled.isCompleted,
-        );
-        final first = await Future.any<Object?>([lookup, stop]);
-        if (first is! ({GachaCredential? cred, ClientLogPosition? end})) {
-          // 玩家取消或手動送出：晚到的結果（含驗證的網路錯誤）直接丟掉。
-          unawaited(lookup.then((_) {}, onError: (_) {}));
-          if (first is GachaCredential && !_captureCancelRequested) {
-            return first;
-          }
-          return null;
-        }
-        if (_captureCancelRequested || !ref.mounted) return null;
-        if (first.cred != null) {
-          _clientLog.info('credential source=existing log url');
-          return first.cred;
-        }
-        from = first.end;
-      }
-      state = state.copyWith(
-        progress: WaitingForCapture(isFallback: isFallback),
-      );
       final session = await ref
           .read(clientLogWatchProvider)
-          .start(ready.source, from: from);
+          .start(ready.source);
       watch = session;
       _logSession = session;
       if (_captureCancelRequested || !ref.mounted) return null;
@@ -913,14 +717,10 @@ class GachaRepository extends Notifier<GachaState> {
         _syncLogOnlyNotice();
         return;
       }
-      final path = GameDirLocator.clientLogPath(location.path);
-      final baseline = _windowsLogBaseline;
-      _windowsLogBaseline = null;
       final watch = await ref
           .read(clientLogWatchProvider)
           .start(
-            LocalFileLogSource(path),
-            from: baseline?.path == path ? baseline!.end : null,
+            LocalFileLogSource(GameDirLocator.clientLogPath(location.path)),
           );
       // 取 baseline 期間可能已被取消、重啟或命中：這個 session 已過期就直接收掉。
       if (!ref.mounted ||
@@ -974,7 +774,6 @@ class GachaRepository extends Notifier<GachaState> {
   Future<void> restartClientLogWatch() async {
     if (state.progress is! WaitingForCapture) return;
     _clientLog.info('client log watch restart requested');
-    _windowsLogBaseline = null;
     unawaited(_stopClientLogWatch());
     await _startClientLogWatch();
   }
@@ -996,7 +795,9 @@ class GachaRepository extends Notifier<GachaState> {
     required http.Client client,
     required bool abortOnFirstPoolFailure,
   }) async {
-    final endpoint = _gachaQueryEndpoint;
+    final endpoint = Uri.parse(
+      'https://gmserver-api.aki-game2.net/gacha/record/query',
+    );
     final playerId = cred.playerId;
 
     final existing =
@@ -1163,9 +964,6 @@ class GachaRepository extends Notifier<GachaState> {
 
   /// Client.log 監看的啟動世代；只有最新世代的定位結果會啟動 session。
   int _logWatchGeneration = 0;
-
-  /// 電腦版找現成網址時讀到的結尾；接著第一次啟動的監看從這裡開始，用過即清掉。
-  ({String path, ClientLogPosition end})? _windowsLogBaseline;
 
   /// 目前 HTTP 請求的可取消 client，取消後關閉所有連線。
   CancellableHttpClient? _activeCancellable;

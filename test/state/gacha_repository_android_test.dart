@@ -26,7 +26,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/adb_pairing.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_foreground.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
-import '../helpers/client_log_fixtures.dart';
 import '../helpers/no_game_dir.dart';
 import '../helpers/wait_until.dart';
 
@@ -69,8 +68,7 @@ class _FakeResolver extends LogAccessResolver {
 
 /// 記錄 release 次數、可控制 health stream 的 ready 結果。
 class _Ready {
-  _Ready({this.leftOn = false, ClientLogSource? source})
-    : source = source ?? ShellLogSource(exec: (_) async => Uint8List(0));
+  _Ready({this.leftOn = false});
 
   /// release 回傳值。
   final bool leftOn;
@@ -81,8 +79,8 @@ class _Ready {
   /// 健康狀態事件來源。
   final health = StreamController<bool>.broadcast();
 
-  /// 讀取來源；預設輸出空白，找現成網址時讀不到、直接略過（監看是替身）。
-  final ClientLogSource source;
+  /// 讀取來源（不會被真正讀，watch 是替身）。
+  final source = ShellLogSource(exec: (_) async => Uint8List(0));
 
   /// 產生 [LogAccessReady]。
   LogAccessReady outcome() => LogAccessReady(
@@ -102,22 +100,15 @@ class _FakeWatch implements ClientLogWatch {
   final sources = <ClientLogSource>[];
   final cancelled = <int>[];
 
-  /// 每次 start 收到的起點。
-  final froms = <ClientLogPosition?>[];
-
   /// 設定後 cancel 會等它完成才返回，模擬還在讀取的輪詢。
   Completer<void>? cancelGate;
 
   @override
-  Future<CaptureSession> start(
-    ClientLogSource source, {
-    ClientLogPosition? from,
-  }) async {
+  Future<CaptureSession> start(ClientLogSource source) async {
     final i = hits.length;
     final c = Completer<GachaCredential?>();
     hits.add(c);
     sources.add(source);
-    froms.add(from);
     return CaptureSession(
       result: c.future,
       cancel: () async {
@@ -621,101 +612,4 @@ void main() {
     expect(resolver.calls, isEmpty);
     await r.cancelCapture();
   });
-
-  group('existing url in the log', () {
-    /// 寫著 [_cred] 喚取記錄網址的遊戲 log 檔。
-    late File log;
-
-    setUp(() {
-      log = File('${tempDir.path}/Client.log')
-        ..writeAsBytesSync(
-          encodeClientLog('noise\n${_conveneUrl(_cred())}\nmore\n'),
-        );
-    });
-
-    test('a usable url is used without waiting', () async {
-      final ready = _Ready(source: LocalFileLogSource(log.path));
-      resolver.results.add(ready.outcome);
-      final r = await repo();
-
-      await r.update();
-
-      expect(watch.hits, isEmpty);
-      // 1 次確認網址能用，再抓全部卡池。
-      expect(fetches.first, fetches[1]);
-      expect(ready.released, 1);
-      expect(progress(), isA<UpdateCompleted>());
-    });
-
-    test('an expired url falls through to waiting', () async {
-      failFirstPool = true;
-      final ready = _Ready(source: LocalFileLogSource(log.path));
-      resolver.results.add(ready.outcome);
-      final r = await repo();
-
-      final done = r.update();
-      await waitUntil(() => watch.hits.isNotEmpty);
-      expect(fetches, hasLength(1));
-      final waiting = progress() as WaitingForCapture;
-      expect(waiting.checkingLogAccess, isFalse);
-      // 監看從剛才讀到的結尾接著讀。
-      expect(watch.froms.single?.offset, log.lengthSync());
-      watch.hits[0].complete(_cred());
-      await done;
-
-      expect(progress(), isA<UpdateCompleted>());
-    });
-
-    test('cancel while checking ends the update', () async {
-      final source = _GatedSource();
-      final ready = _Ready(source: source);
-      resolver.results.add(ready.outcome);
-      final r = await repo();
-
-      final done = r.update();
-      await waitUntil(() => source.probed);
-      expect(
-        (progress() as WaitingForCapture).checkingLogAccess,
-        isTrue,
-        reason: 'still preparing while looking for an existing url',
-      );
-      await r.cancelCapture();
-      await done;
-
-      expect(watch.hits, isEmpty);
-      expect(fetches, isEmpty);
-      expect(ready.released, 1);
-      expect(progress(), isNull);
-      source.gate.complete();
-    });
-  });
 }
-
-/// probe 會停住直到 [gate] 完成的來源，用來模擬還在讀 log 的狀態。
-class _GatedSource implements ClientLogSource {
-  /// probe 是否已被呼叫。
-  bool probed = false;
-
-  /// 完成後 probe 才回傳。
-  final gate = Completer<void>();
-
-  @override
-  String get logLabel => 'gated';
-
-  @override
-  Future<ClientLogProbe> probe() async {
-    probed = true;
-    await gate.future;
-    return (length: 0, id: null);
-  }
-
-  @override
-  Future<Uint8List> read(int offset, int length) async => Uint8List(0);
-}
-
-/// 組出 [cred] 對應的國際服喚取記錄網址。
-String _conveneUrl(GachaCredential cred) =>
-    'https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record'
-    '?svr_id=${cred.serverId}&player_id=${cred.playerId}'
-    '&lang=${cred.languageCode}&record_id=${cred.recordId}'
-    '&resources_id=${cred.cardPoolId}';
