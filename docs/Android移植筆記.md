@@ -427,6 +427,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 修改 workflow 後用 actionlint 檢查（`go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/*.yml`）。
 - **actionlint 抓到 `ci.yml` 的既有問題**：自動提交 ARB 正規化的步驟把 `${{ github.head_ref }}` 直接拼進 shell，分支名稱裡的 `$(...)` 會被當成指令執行。改成 `env: HEAD_REF: ${{ github.head_ref }}`，指令裡用 `"$HEAD_REF"`。原神版的 `ci.yml` 是同一份底稿，要一起檢查。
 - **內部測試不用審核**：推出後通常幾分鐘內測試人員就能更新（第一次發布後的測試連結可能要等幾小時）；升級到正式版才進入審核。
+- **上傳前一定要實際啟動一次正式版**（2026-11-10，rc.10 一啟動就閃退）：除錯版不做 R8 程式碼縮減，正式版才會；新加的依賴（這次是廣告 SDK）若有反射或舊的保留規則，只有正式版會壞。在模擬器跑除錯版、或只做靜態檢查（看 Manifest、`libapp.so`）都抓不到。流程：用和 AAB 相同的參數建 `flutter build apk --release`，裝到模擬器啟動，`adb logcat -b crash` 沒有東西、App 停在首頁，才建 AAB 上傳。不要裝到自己的手機：手機上是 Play 簽署的版本，本機簽章不同，必須先解除安裝，資料會被清掉。
 
 ### 36. 簽章指紋：每把金鑰各建一筆 Android 用戶端（通用）
 
@@ -729,6 +730,11 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 **橫幅尺寸**
 - `google_mobile_ads` 9.2.0 把標準尺寸的 `getCurrentOrientationAnchoredAdaptiveBannerAdSize` 標成棄用，只推 `getLargeAnchoredAdaptiveBannerAdSize`。但官方文件寫大型橫幅最高可達螢幕高度 20%（50～150dp、為影片最佳化），違反「不打擾」，所以仍用標準尺寸並 `// ignore: deprecated_member_use`。外掛之後若移除，改用 `getInlineAdaptiveBannerAdSize(width, maxHeight)` 設上限。
+
+**正式版一啟動就閃退：WorkManager 的 Room 建構子被 R8 移除**（1.9.0-rc.10）
+- 錯誤是 `Unable to get provider androidx.startup.InitializationProvider` → `Failed to create an instance of androidx.work.impl.WorkDatabase`。`play-services-ads` 25.5.0 帶進 WorkManager 2.7.0，它用的 Room 是 2.2.5；Room 以反射呼叫 `WorkDatabase_Impl` 的無參數建構子建立資料庫，但 Room 2.2.5 附的規則只寫 `-keep class * extends androidx.room.RoomDatabase`。R8 完整模式（AGP 9 預設）只保留類別、不保留建構子，所以建構子被移除了。
+- 處理：`android/app/proguard-rules.pro` 加 `-keep class * extends androidx.room.RoomDatabase { <init>(); }`（Flutter Gradle 外掛會自動套用這個檔）。確認方式：`build/app/outputs/mapping/release/seeds.txt` 有 `androidx.work.impl.WorkDatabase_Impl: WorkDatabase_Impl()`。對照表 `mapping.txt` 本來就不會列出沒改名的建構子，不能拿它判斷。
+- 原神版加廣告時一樣會遇到，同一條規則直接照用。
 
 **自動輪播會重複觸發回呼**
 - 橫幅預設會自動換廣告，原生 `AdListener` 每次都會再轉發 `onAdLoaded`／`onAdFailedToLoad`，外掛沒有只觸發一次的保護。把它們接成 `Completer` 時，第二次會丟 `Future already completed`；輪播失敗時若照範例 `ad.dispose()`，會釋放畫面上正在顯示的廣告。兩個回呼都要先檢查 `isCompleted`，載入後的釋放交給元件。
