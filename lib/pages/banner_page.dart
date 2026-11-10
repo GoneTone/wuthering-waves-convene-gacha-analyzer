@@ -11,12 +11,16 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_stats.dart
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_pity.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_row.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/five_star_collection.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/ads/ad_placement.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/ads.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/record_filter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/ads/native_ad.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_type_icons.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/chart_card.dart';
@@ -55,8 +59,42 @@ class _BannerPageState extends ConsumerState<BannerPage> {
   /// 「紀錄列表」標題的 key，換頁後捲回它。
   final _recordsTitleKey = GlobalKey();
 
+  /// 這次停留已要求過的原生廣告位置；要求過就一直監聽，停留期間每個位置最多載入一次。
+  final _requestedAds = <NativeAdPlacement>{};
+
   /// 對應卡池字串（[BannerPage.cardPoolType]）。
   String get cardPoolType => widget.cardPoolType;
+
+  @override
+  void didUpdateWidget(covariant BannerPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 路由切換卡池時沿用同一個 State，要當成新的停留。
+    if (oldWidget.cardPoolType != cardPoolType) _requestedAds.clear();
+  }
+
+  /// [adsAllowed] 時監聽 [placement] 的原生廣告：[wanted] 第一次成立後這次停留都持續監聽；回傳已載入且 [fits] 時可顯示的廣告。
+  LoadedNative? _nativeAd(
+    WidgetRef ref,
+    NativeAdPlacement placement, {
+    required bool adsAllowed,
+    required bool wanted,
+    required bool fits,
+    required Brightness brightness,
+  }) {
+    if (!adsAllowed) return null;
+    if (wanted) _requestedAds.add(placement);
+    if (!_requestedAds.contains(placement)) return null;
+    final ad = ref
+        .watch(
+          nativeAdProvider((
+            placement: placement,
+            scope: cardPoolType,
+            brightness: brightness,
+          )),
+        )
+        .value;
+    return fits ? ad : null;
+  }
 
   /// 紀錄換頁後把「紀錄列表」標題捲到可視區頂端。
   ///
@@ -160,8 +198,13 @@ class _BannerPageState extends ConsumerState<BannerPage> {
     void cycleSort(SortColumn col) =>
         ref.read(recordFilterProvider(cardPoolType).notifier).cycleSort(col);
     final pagePadding = isCompactLayout(context) ? AppSpacing.m : AppSpacing.l;
+
+    /// 整頁內容；[midAd]／[listAd] 為已載入可顯示的位置 3／位置 1 廣告。
     // 按需建構：畫面外的區塊不建構、不繪製、不產生語意，捲動時只重算看得到的部分。
-    return CustomScrollView(
+    Widget content(
+      LoadedNative? midAd,
+      LoadedNative? listAd,
+    ) => CustomScrollView(
       scrollCacheExtent: pageScrollCacheExtent(),
       slivers: [
         SliverPadding(
@@ -360,6 +403,13 @@ class _BannerPageState extends ConsumerState<BannerPage> {
                   ),
 
                   const SizedBox(height: AppSpacing.xl),
+                  if (midAd != null) ...[
+                    NativeAdBlock(
+                      ad: midAd,
+                      placement: NativeAdPlacement.bannerMid,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
                   if (fiveStarItems.isNotEmpty) ...[
                     InlineSectionTitle(
                       icon: Icons.star_outline,
@@ -420,6 +470,12 @@ class _BannerPageState extends ConsumerState<BannerPage> {
                     // 卡片模式的排序按鈕放在上方篩選列。
                     showSortButton: false,
                     onPageChanged: (_) => _scrollToRecordsTitle(),
+                    midListAd: listAd == null
+                        ? null
+                        : NativeAdBlock(
+                            ad: listAd,
+                            placement: NativeAdPlacement.bannerList,
+                          ),
                   ),
                 ],
               ),
@@ -427,6 +483,50 @@ class _BannerPageState extends ConsumerState<BannerPage> {
           ),
         ),
       ],
+    );
+
+    final adsAllowed =
+        ref.watch(isAndroidProvider) &&
+        ref.watch(adsProvider.select((s) => s.canRequestAds)) &&
+        ref.watch(
+          gachaRepositoryProvider.select(
+            (g) => pageHasAdContent(path: '/banner/$cardPoolType', gacha: g),
+          ),
+        );
+    final brightness = Theme.of(context).brightness;
+    Widget? host;
+    double? hostWidth;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 只有高度變（鍵盤開合、橫向標題列收合）時沿用同一個子 widget，整頁不跟著重建。
+        if (host != null && hostWidth == constraints.maxWidth) return host!;
+        hostWidth = constraints.maxWidth;
+        final contentWidth = constraints.maxWidth - pagePadding * 2;
+        final midFits = contentWidth >= kNativeMinWidth;
+        final listFits = midFits && recordListUsesCards(context, contentWidth);
+        // 廣告在頁面層級監聽：放進按需建構的子項，捲出畫面就會被釋放、捲回來又重新載入；
+        // 寬度要等版面才知道，LayoutBuilder 裡不能用 State 的 ref.watch，改由 Consumer 監聽。
+        return host = Consumer(
+          builder: (context, adsRef, _) => content(
+            _nativeAd(
+              adsRef,
+              NativeAdPlacement.bannerMid,
+              adsAllowed: adsAllowed,
+              wanted: midFits,
+              fits: midFits,
+              brightness: brightness,
+            ),
+            _nativeAd(
+              adsRef,
+              NativeAdPlacement.bannerList,
+              adsAllowed: adsAllowed,
+              wanted: listFits && sorted.length > kMidListAdAfter,
+              fits: listFits,
+              brightness: brightness,
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -16,6 +16,9 @@ const double kNativeSmallHeight = 100;
 /// 中型模板外框的固定高度（dp）。
 const double kNativeMediumHeight = 370;
 
+/// 原生模板的最小寬度（dp）：可用寬度不足時不顯示廣告。
+const double kNativeMinWidth = 320;
+
 /// 原生廣告的顯示位置。
 enum NativeAdPlacement {
   /// 卡池頁紀錄列表中。
@@ -181,7 +184,9 @@ class NativeAdBlock extends StatelessWidget {
     final tokens = Theme.of(context).gacha;
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 320) return const SizedBox.shrink();
+        if (constraints.maxWidth < kNativeMinWidth) {
+          return const SizedBox.shrink();
+        }
         return Center(
           heightFactor: 1,
           child: Container(
