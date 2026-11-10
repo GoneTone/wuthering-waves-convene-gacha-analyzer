@@ -373,7 +373,7 @@
   "manualCredentialWarning": "Die URL bevat jou rekeningbewyse. Moenie dit openlik deel nie. Dit verval ná ’n ruk.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Wag dat jy die Convene Records-bladsy in die speletjie oopmaak...",
-  "progressCheckingLogAccess": "Kyk hoe om Convene-geskiedenis te lees...",
+  "progressCheckingLogAccess": "Kyk hoe om die speletjie se loglêer te lees...",
   "progressLogUnavailableTitle": "Kan nie die Convene Records-URL outomaties kry nie",
   "logUnavailableNotPaired": "Die lees van die speletjie se loglêer is nog nie opgestel nie. Ná ’n eenmalige opstelling lees elke bywerking dit outomaties.",
   "logUnavailableNoWifi": "Draadlose ontfouting werk net op Wi‑Fi. Koppel aan Wi‑Fi en kom terug; die app gaan outomaties voort. Jy kan ook die URL self invoer.",

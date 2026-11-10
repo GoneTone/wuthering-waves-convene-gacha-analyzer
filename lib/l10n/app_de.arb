@@ -373,7 +373,7 @@
   "manualCredentialWarning": "Die URL enthält deine Kontozugangsdaten. Teile sie nicht öffentlich. Sie läuft nach einiger Zeit ab.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Warte darauf, dass du im Spiel die Zusammenrufen-Informationen öffnest...",
-  "progressCheckingLogAccess": "Prüfe, wie Zusammenrufen-Informationen gelesen werden können...",
+  "progressCheckingLogAccess": "Prüfe, wie die Logdatei des Spiels gelesen werden kann...",
   "progressLogUnavailableTitle": "URL der Zusammenrufen-Informationen kann nicht automatisch ermittelt werden",
   "logUnavailableNotPaired": "Das Lesen der Logdatei des Spiels ist noch nicht eingerichtet. Nach einer einmaligen Einrichtung wird sie bei jeder Aktualisierung automatisch gelesen.",
   "logUnavailableNoWifi": "Debugging über WLAN funktioniert nur im WLAN. Verbinde dich mit einem WLAN und kehre zurück; die App macht automatisch weiter. Du kannst die URL auch manuell eingeben.",

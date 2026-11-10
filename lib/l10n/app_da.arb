@@ -373,7 +373,7 @@
   "manualCredentialWarning": "URL'en indeholder loginoplysningerne til din konto. Del den ikke offentligt. Den udløber efter et stykke tid.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Venter på, at du åbner siden Convene Records i spillet...",
-  "progressCheckingLogAccess": "Undersøger, hvordan Convene-historikken kan læses...",
+  "progressCheckingLogAccess": "Undersøger, hvordan spillets logfil kan læses...",
   "progressLogUnavailableTitle": "URL'en til Convene-historikken kan ikke hentes automatisk",
   "logUnavailableNotPaired": "Læsning af spillets logfil er ikke konfigureret endnu. Efter en engangsopsætning læses den automatisk ved hver opdatering.",
   "logUnavailableNoWifi": "Trådløs fejlretning virker kun via Wi‑Fi. Opret forbindelse til Wi‑Fi, og kom tilbage; appen fortsætter automatisk. Du kan også angive URL'en manuelt.",

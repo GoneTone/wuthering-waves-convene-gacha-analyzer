@@ -373,7 +373,7 @@
   "manualCredentialWarning": "URL-osoite sisältää tilisi tunnistetiedot. Älä jaa sitä julkisesti. Se vanhenee jonkin ajan kuluttua.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Odotetaan, että avaat pelissä Convene Records -sivun...",
-  "progressCheckingLogAccess": "Tarkistetaan, miten Convene-historia voidaan lukea...",
+  "progressCheckingLogAccess": "Tarkistetaan, miten pelin lokitiedosto voidaan lukea...",
   "progressLogUnavailableTitle": "Convene-historian URL-osoitetta ei voi hakea automaattisesti",
   "logUnavailableNotPaired": "Pelin lokitiedoston lukemista ei ole vielä määritetty. Kertaluonteisen määrityksen jälkeen se luetaan automaattisesti jokaisella päivityksellä.",
   "logUnavailableNoWifi": "Langaton virheenkorjaus toimii vain Wi‑Fi-verkossa. Yhdistä Wi‑Fi-verkkoon ja palaa, niin sovellus jatkaa automaattisesti. Voit myös syöttää URL-osoitteen manuaalisesti.",

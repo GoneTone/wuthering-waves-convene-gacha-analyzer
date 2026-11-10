@@ -373,7 +373,7 @@
   "manualCredentialWarning": "L'URL conté les credencials del teu compte. No el comparteixis públicament. Caduca al cap d'un temps.",
   "manualCredentialSubmit": "D'acord",
   "progressWaitingLog": "S'està esperant que obris la pàgina Convene Records al joc...",
-  "progressCheckingLogAccess": "S'està comprovant com llegir l'historial de convocacions...",
+  "progressCheckingLogAccess": "S'està comprovant com llegir el fitxer de registre del joc...",
   "progressLogUnavailableTitle": "No es pot obtenir automàticament l'URL de l'historial de convocacions",
   "logUnavailableNotPaired": "La lectura del fitxer de registre del joc encara no està configurada. Després d'una configuració única, cada actualització el llegirà automàticament.",
   "logUnavailableNoWifi": "La depuració sense fil només funciona amb Wi‑Fi. Connecta't a una xarxa Wi‑Fi i torna; l'aplicació continuarà automàticament. També pots introduir l'URL manualment.",

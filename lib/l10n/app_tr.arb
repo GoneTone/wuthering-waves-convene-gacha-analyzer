@@ -373,7 +373,7 @@
   "manualCredentialWarning": "URL, hesabınızın kimlik bilgilerini içerir. Herkese açık şekilde paylaşmayın. Bir süre sonra geçerliliğini yitirir.",
   "manualCredentialSubmit": "Tamam",
   "progressWaitingLog": "Oyunda Convene Records sayfasını açmanız bekleniyor...",
-  "progressCheckingLogAccess": "Çağrı geçmişini okuma yöntemi kontrol ediliyor...",
+  "progressCheckingLogAccess": "Oyun günlük dosyasını okuma yöntemi kontrol ediliyor...",
   "progressLogUnavailableTitle": "Çağrı geçmişi URL'si otomatik olarak alınamıyor",
   "logUnavailableNotPaired": "Oyun günlük dosyasını okuma henüz ayarlanmadı. Tek seferlik bir kurulumdan sonra her güncellemede otomatik olarak okunur.",
   "logUnavailableNoWifi": "Kablosuz hata ayıklama yalnızca Wi‑Fi'de çalışır. Wi‑Fi'ye bağlanıp geri dönün; uygulama otomatik olarak devam eder. URL'yi elle de girebilirsiniz.",

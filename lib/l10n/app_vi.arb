@@ -373,7 +373,7 @@
   "manualCredentialWarning": "URL chứa thông tin xác thực tài khoản của bạn. Đừng chia sẻ công khai. URL sẽ hết hạn sau một thời gian.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Đang chờ bạn mở trang Convene Records trong game...",
-  "progressCheckingLogAccess": "Đang kiểm tra cách đọc lịch sử triệu hồi...",
+  "progressCheckingLogAccess": "Đang kiểm tra cách đọc tệp log của game...",
   "progressLogUnavailableTitle": "Không thể tự động lấy URL lịch sử triệu hồi",
   "logUnavailableNotPaired": "Chưa thiết lập đọc tệp log của game. Chỉ cần thiết lập một lần, sau đó mỗi lần cập nhật sẽ tự động đọc.",
   "logUnavailableNoWifi": "Gỡ lỗi không dây chỉ hoạt động qua Wi‑Fi. Hãy kết nối Wi‑Fi rồi quay lại, ứng dụng sẽ tự động tiếp tục. Bạn cũng có thể nhập URL thủ công.",

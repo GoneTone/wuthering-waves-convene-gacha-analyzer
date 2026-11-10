@@ -373,7 +373,7 @@
   "manualCredentialWarning": "L'URL contiene le credenziali del tuo account. Non condividerlo pubblicamente. Scade dopo un po' di tempo.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "In attesa che tu apra la pagina Convene Records nel gioco...",
-  "progressCheckingLogAccess": "Verifica del metodo di lettura della cronologia convocazioni...",
+  "progressCheckingLogAccess": "Verifica del metodo di lettura del file di log del gioco...",
   "progressLogUnavailableTitle": "Impossibile ottenere automaticamente l'URL della cronologia convocazioni",
   "logUnavailableNotPaired": "La lettura del file di log del gioco non è ancora configurata. Dopo una configurazione una tantum, verrà letto automaticamente a ogni aggiornamento.",
   "logUnavailableNoWifi": "Il debug wireless funziona solo con il Wi‑Fi. Connettiti a una rete Wi‑Fi e torna qui: l'app proseguirà automaticamente. Puoi anche inserire l'URL manualmente.",

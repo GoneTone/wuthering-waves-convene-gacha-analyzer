@@ -373,7 +373,7 @@
   "manualCredentialWarning": "URL-ul conține credențialele contului dvs. Nu îl partajați public. Expiră după un timp.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Se așteaptă să deschideți pagina Convene Records în joc...",
-  "progressCheckingLogAccess": "Se verifică modul de citire a istoricului convocărilor...",
+  "progressCheckingLogAccess": "Se verifică modul de citire a fișierului jurnal al jocului...",
   "progressLogUnavailableTitle": "URL-ul istoricului convocărilor nu poate fi obținut automat",
   "logUnavailableNotPaired": "Citirea fișierului jurnal al jocului nu este încă configurată. După o configurare unică, fiecare actualizare îl citește automat.",
   "logUnavailableNoWifi": "Remedierea erorilor wireless funcționează doar prin Wi‑Fi. Conectați-vă la Wi‑Fi și reveniți; aplicația continuă automat. Puteți introduce și manual URL-ul.",

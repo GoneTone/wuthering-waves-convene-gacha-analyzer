@@ -373,7 +373,7 @@
   "manualCredentialWarning": "URL:en innehåller inloggningsuppgifterna till ditt konto. Dela den inte offentligt. Den slutar gälla efter en stund.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Väntar på att du öppnar sidan Convene Records i spelet...",
-  "progressCheckingLogAccess": "Kontrollerar hur Convene-historiken kan läsas...",
+  "progressCheckingLogAccess": "Kontrollerar hur spelets loggfil kan läsas...",
   "progressLogUnavailableTitle": "URL:en till Convene-historiken kan inte hämtas automatiskt",
   "logUnavailableNotPaired": "Läsning av spelets loggfil har inte konfigurerats än. Efter en engångskonfiguration läses den automatiskt vid varje uppdatering.",
   "logUnavailableNoWifi": "Trådlös felsökning fungerar bara via Wi‑Fi. Anslut till Wi‑Fi och kom tillbaka; appen fortsätter automatiskt. Du kan också ange URL:en manuellt.",

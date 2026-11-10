@@ -373,7 +373,7 @@
   "manualCredentialWarning": "URL obsahuje přihlašovací údaje vašeho účtu. Nesdílejte ji veřejně. Po čase přestane platit.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Čekání, až ve hře otevřete stránku Convene Records...",
-  "progressCheckingLogAccess": "Zjišťuje se, jak načíst historii přivolání...",
+  "progressCheckingLogAccess": "Zjišťuje se, jak načíst soubor logu hry...",
   "progressLogUnavailableTitle": "URL historie přivolání nelze získat automaticky",
   "logUnavailableNotPaired": "Čtení souboru logu hry ještě není nastavené. Po jednorázovém nastavení si ho každá aktualizace přečte automaticky.",
   "logUnavailableNoWifi": "Bezdrátové ladění funguje jen přes Wi‑Fi. Připojte se k Wi‑Fi a vraťte se; aplikace bude automaticky pokračovat. URL můžete také zadat ručně.",
