@@ -734,6 +734,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 **正式版一啟動就閃退：WorkManager 的 Room 建構子被 R8 移除**（1.9.0-rc.10）
 - 錯誤是 `Unable to get provider androidx.startup.InitializationProvider` → `Failed to create an instance of androidx.work.impl.WorkDatabase`。`play-services-ads` 25.5.0 帶進 WorkManager 2.7.0，它用的 Room 是 2.2.5；Room 以反射呼叫 `WorkDatabase_Impl` 的無參數建構子建立資料庫，但 Room 2.2.5 附的規則只寫 `-keep class * extends androidx.room.RoomDatabase`。R8 完整模式（AGP 9 預設）只保留類別、不保留建構子，所以建構子被移除了。
 - 處理：`android/app/proguard-rules.pro` 加 `-keep class * extends androidx.room.RoomDatabase { <init>(); }`（Flutter Gradle 外掛會自動套用這個檔）。確認方式：`build/app/outputs/mapping/release/seeds.txt` 有 `androidx.work.impl.WorkDatabase_Impl: WorkDatabase_Impl()`。對照表 `mapping.txt` 本來就不會列出沒改名的建構子，不能拿它判斷。
+- 官方文件：AdMob 的整合說明沒有提到。傳統版 SDK（`play-services-ads`，`google_mobile_ads` 9.2.0 用的就是它）到最新的 25.5.0（2026-09-17）都沒有修；新一代 SDK 1.6.0（2026-10-22）的更新說明才有「Updated consumer ProGuard rules to prevent a `java.lang.RuntimeException` crash in the `androidx.work.WorkManagerInitializer` class when R8 full mode is enabled」，就是這個問題。等 `google_mobile_ads` 改用已修正的 SDK 後，這條規則就多餘了，但留著沒有副作用。
 - 原神版加廣告時一樣會遇到，同一條規則直接照用。
 
 **自動輪播會重複觸發回呼**
