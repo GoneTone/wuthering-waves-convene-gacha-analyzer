@@ -765,20 +765,31 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('11 rows: ad sits between row 10 and 11 with m spacing', (
+    testWidgets('11 rows: ad is a row between row 10 and 11 in one frame', (
       tester,
     ) async {
       await pumpAd(tester, count: 11);
       final ad = find.byKey(adKey);
       expect(ad, findsOneWidget);
-      expect(cardFrames, findsNWidgets(2));
-      final tenth = tester.getBottomLeft(cardFrames.first).dy;
-      final eleventh = tester.getTopLeft(cardFrames.last).dy;
-      expect(tester.getTopLeft(ad).dy, tenth + AppSpacing.m);
-      expect(eleventh, tester.getBottomLeft(ad).dy + AppSpacing.m);
-      expect(find.text('R1'), findsOneWidget);
+      // 不切開列表：整份列表仍是同一個外框，廣告上下各一條分隔線、留 m 內距。
+      expect(cardFrames, findsOneWidget);
+      final dividers = find.byType(Divider);
+      expect(dividers, findsNWidgets(2));
       expect(
-        tester.getBottomLeft(find.text('R1')).dy,
+        tester.getTopLeft(ad).dy - tester.getBottomLeft(dividers.first).dy,
+        AppSpacing.m,
+      );
+      expect(
+        tester.getTopLeft(dividers.last).dy - tester.getBottomLeft(ad).dy,
+        AppSpacing.m,
+      );
+      // 第 10 筆（R2）在廣告之上、第 11 筆（R1）在廣告之下。
+      expect(
+        tester.getBottomLeft(find.text('R2')).dy,
+        lessThan(tester.getTopLeft(ad).dy),
+      );
+      expect(
+        tester.getTopLeft(find.text('R1')).dy,
         greaterThan(tester.getBottomLeft(ad).dy),
       );
     });

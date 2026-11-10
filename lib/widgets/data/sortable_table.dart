@@ -54,7 +54,7 @@ class SortableTable extends StatefulWidget {
   /// 頁碼實際改變後的回呼，參數為新頁碼（0-based）；停留在同一頁不會觸發。
   final ValueChanged<int>? onPageChanged;
 
-  /// 卡片模式且當頁超過 [kMidListAdAfter] 筆時，插在第 [kMidListAdAfter] 筆之後的廣告位；`null` 則不切開列表。
+  /// 卡片模式且當頁超過 [kMidListAdAfter] 筆時，在同一個外框內插在第 [kMidListAdAfter] 筆之後的廣告列；`null` 時不插入。
   final Widget? midListAd;
 
   @override
@@ -157,13 +157,25 @@ class _SortableTableState extends State<SortableTable>
               ),
               const SizedBox(height: AppSpacing.s),
             ],
-            if (widget.midListAd != null && slice.length > kMidListAdAfter) ...[
-              frame(cards(0, kMidListAdAfter)),
-              const SizedBox(height: AppSpacing.m),
-              widget.midListAd!,
-              const SizedBox(height: AppSpacing.m),
-              frame(cards(kMidListAdAfter, slice.length)),
-            ] else
+            if (widget.midListAd != null && slice.length > kMidListAdAfter)
+              frame(
+                Column(
+                  children: [
+                    cards(0, kMidListAdAfter),
+                    Divider(height: 1, color: tokens.borderSubtle),
+                    // 廣告上下緊鄰可點的紀錄卡：留足內距並加分隔線，降低誤觸。
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.m,
+                      ),
+                      child: widget.midListAd!,
+                    ),
+                    Divider(height: 1, color: tokens.borderSubtle),
+                    cards(kMidListAdAfter, slice.length),
+                  ],
+                ),
+              )
+            else
               frame(cards(0, slice.length)),
           ] else
             Container(

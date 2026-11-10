@@ -168,6 +168,8 @@ void main() {
         tester.getSize(find.byKey(viewKey)),
         const Size(320, kNativeSmallHeight),
       );
+      // 列表中的小型廣告是列表外框裡的一列，不自帶邊框。
+      expect(tester.widget<Container>(frame()).foregroundDecoration, isNull);
       final decoration =
           tester.widget<Container>(frame()).decoration! as BoxDecoration;
       expect(decoration.color, GachaTokens.dark.surfaceCard);
@@ -175,6 +177,10 @@ void main() {
 
     testWidgets('寬螢幕上限 400 並置中，中型高度', (tester) async {
       await pump(tester, 600, NativeAdPlacement.overview);
+      expect(
+        tester.widget<Container>(frame()).foregroundDecoration,
+        isA<BoxDecoration>(),
+      );
       expect(
         kNativeMediumHeight,
         greaterThanOrEqualTo(350),

@@ -203,10 +203,13 @@ class NativeAdBlock extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             // 邊線畫在前景：放在 decoration 會內縮 1dp，模板就小於官方最小寬度 320。
-            foregroundDecoration: BoxDecoration(
-              border: Border.all(color: tokens.borderSubtle),
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
+            // 列表中的廣告是列表外框裡的一列，不再自帶邊框。
+            foregroundDecoration: placement == NativeAdPlacement.bannerList
+                ? null
+                : BoxDecoration(
+                    border: Border.all(color: tokens.borderSubtle),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
             child: ad.view,
           ),
         );

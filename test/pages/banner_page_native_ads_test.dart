@@ -156,6 +156,8 @@ void main() {
 
     await _scrollTo(tester, fakeNativeViewOf(NativeAdPlacement.bannerList));
     expect(fakeNativeViewOf(NativeAdPlacement.bannerList), findsOneWidget);
+    // 列表中的廣告是同一個外框裡的一列，不切開列表。
+    expectListNotSplit(tester);
   });
 
   testWidgets('沒有 5★ 時位置 3 照放，與「紀錄列表」標題至少隔 xl', (tester) async {
