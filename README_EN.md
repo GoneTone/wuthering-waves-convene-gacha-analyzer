@@ -138,12 +138,13 @@ To enable it in your own build:
 
 ### Ad IDs (optional, Android)
 
-The AdMob IDs for the Android bottom banner ad are also injected at build time and never committed. To serve real ads in your own build, create `secrets/ads_defines.json` at the project root (git-ignored) and pass it together with the cloud sync file:
+The AdMob IDs for the Android banner and native ads are also injected at build time and never committed. To serve real ads in your own build, create `secrets/ads_defines.json` at the project root (git-ignored) and pass it together with the cloud sync file:
 
 ```json
 {
   "ADMOB_APP_ID": "ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy",
-  "ADMOB_BANNER_UNIT_ID": "ca-app-pub-xxxxxxxxxxxxxxxx/zzzzzzzzzz"
+  "ADMOB_BANNER_UNIT_ID": "ca-app-pub-xxxxxxxxxxxxxxxx/zzzzzzzzzz",
+  "ADMOB_NATIVE_UNIT_ID": "ca-app-pub-xxxxxxxxxxxxxxxx/wwwwwwwwww"
 }
 ```
 

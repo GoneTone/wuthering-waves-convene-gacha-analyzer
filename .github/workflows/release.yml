@@ -312,15 +312,16 @@ jobs:
         env:
           ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
           ADMOB_BANNER_UNIT_ID: ${{ secrets.ADMOB_BANNER_UNIT_ID }}
+          ADMOB_NATIVE_UNIT_ID: ${{ secrets.ADMOB_NATIVE_UNIT_ID }}
         run: |
-          if [ -n "$ADMOB_APP_ID" ] && [ -n "$ADMOB_BANNER_UNIT_ID" ]; then
+          if [ -n "$ADMOB_APP_ID" ] && [ -n "$ADMOB_BANNER_UNIT_ID" ] && [ -n "$ADMOB_NATIVE_UNIT_ID" ]; then
             mkdir -p secrets
-            jq -n --arg app "$ADMOB_APP_ID" --arg unit "$ADMOB_BANNER_UNIT_ID" \
-              '{ADMOB_APP_ID: $app, ADMOB_BANNER_UNIT_ID: $unit}' > secrets/ads_defines.json
+            jq -n --arg app "$ADMOB_APP_ID" --arg banner "$ADMOB_BANNER_UNIT_ID" --arg native "$ADMOB_NATIVE_UNIT_ID" \
+              '{ADMOB_APP_ID: $app, ADMOB_BANNER_UNIT_ID: $banner, ADMOB_NATIVE_UNIT_ID: $native}' > secrets/ads_defines.json
             echo "DEFINES_ARG=${DEFINES_ARG:-} --dart-define-from-file=secrets/ads_defines.json" >> "$GITHUB_ENV"
             echo "ads defines written"
           else
-            echo "::warning::ADMOB_APP_ID/ADMOB_BANNER_UNIT_ID secrets not set; this release build will only show test ads"
+            echo "::warning::ADMOB_APP_ID/ADMOB_BANNER_UNIT_ID/ADMOB_NATIVE_UNIT_ID secrets not set; this release build will only show test ads"
           fi
 
       # === E. Build =================================================

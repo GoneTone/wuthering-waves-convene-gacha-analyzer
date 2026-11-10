@@ -138,12 +138,13 @@ flutter run -d windows
 
 ### 広告 ID（任意、Android）
 
-Android 下部バナー広告の AdMob ID もビルド時に注入し、ソースコードには書きません。自分のビルドで本番広告を配信するには、プロジェクトルートに `secrets/ads_defines.json` を作成し（git 管理外）、クラウド同期の設定ファイルと一緒に渡します：
+Android のバナー広告とネイティブ広告の AdMob ID もビルド時に注入し、ソースコードには書きません。自分のビルドで本番広告を配信するには、プロジェクトルートに `secrets/ads_defines.json` を作成し（git 管理外）、クラウド同期の設定ファイルと一緒に渡します：
 
 ```json
 {
   "ADMOB_APP_ID": "ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy",
-  "ADMOB_BANNER_UNIT_ID": "ca-app-pub-xxxxxxxxxxxxxxxx/zzzzzzzzzz"
+  "ADMOB_BANNER_UNIT_ID": "ca-app-pub-xxxxxxxxxxxxxxxx/zzzzzzzzzz",
+  "ADMOB_NATIVE_UNIT_ID": "ca-app-pub-xxxxxxxxxxxxxxxx/wwwwwwwwww"
 }
 ```
 
