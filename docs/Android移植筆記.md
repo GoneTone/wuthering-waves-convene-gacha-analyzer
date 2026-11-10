@@ -214,7 +214,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 首次連上 shell 後執行 `pm grant <套件> android.permission.WRITE_SECURE_SETTINGS`。**重開機後授權仍在**；無線偵錯會被系統關掉，但 App 可以自己再打開，約 2.2 秒拿到 shell。
 - **NSD 會回傳已關閉的舊連接埠**：無線偵錯重新開啟後連接埠會換，NSD 結果裡舊的記錄還在，而且常排在前面，連過去會 `Connection refused`。要收集約 2 秒內的所有結果，逐一嘗試連線。
 - **緊接著開下一個 shell 串流會失敗**：前一個串流剛結束就立刻開下一個，`flutter_adb` 偶爾回 `Stream open failed or refused by remote peer`，稍等再開就正常。指令要排隊執行，失敗時延遲重試一次。實機上連上後的第一條指令常卡滿 10 秒才失敗，所以每條指令前都補足 250 ms 間隔，比事後重試快得多。
-- 鳴潮的 `Client.log` 實測將近 10 MB（電腦版一次遊玩可到 20 MB），透過 shell 讀時要只讀需要的部分（`stat -c '%s %i'` 一次取長度與 inode，`tail -c +N | head -c M` 取範圍）。讀檔本身很快（手機上讀 2 MB 只要 15～44 ms），慢的是經由無線偵錯傳回 App：每 2 MB 約 3.7 秒。要追的量很大時改成由新到舊讀，見 #51。
+- 鳴潮的 `Client.log` 實測將近 10 MB（電腦版一次遊玩可到 20 MB），透過 shell 讀時要只讀需要的部分（`stat -c '%s %i'` 一次取長度與 inode，`tail -c +N | head -c M` 取範圍）。讀檔本身很快（手機上讀 2 MB 只要 15～44 ms），慢的是經由無線偵錯傳回 App：每 2 MB 約 3.7 秒。所以一律由新到舊讀，網址在最後面時不用等全部讀完，見 #51。
 - **讀不到長度不能當成 0**：指令寫成 `stat -c '%s %i' '<路徑>' 2>/dev/null || echo 0`，檔案不存在時由指令自己印 0；輸出是空的或看不懂時要當成這次輪詢失敗（`ShellLogSource.probe` 直接 `int.parse`）。若一律當成 0，會被判斷成 log 輪替，從頭重讀整個近 10 MB 的檔案。
 
 **飛航模式取得網址（鳴潮限定，原神要另外驗證）**
