@@ -124,7 +124,7 @@ To enable it in your own build:
    }
    ```
 
-3. Pass the file when running (JetBrains IDEs can use the bundled "main.dart (cloud sync)" run configuration; `build_release.ps1` picks the file up automatically when packaging):
+3. Pass the file when running (JetBrains IDEs can use the bundled "main.dart (cloud sync + ads)" run configuration, which also passes `secrets/ads_defines.json` below, so both files must exist; `build_release.ps1` picks the file up automatically when packaging):
 
    ```bash
    flutter run -d windows --dart-define-from-file=secrets/cloud_sync_defines.json

@@ -124,7 +124,7 @@ flutter run -d windows
    }
    ```
 
-3. 运行时带入该文件（JetBrains IDE 可直接选内置的「main.dart (cloud sync)」运行配置；`build_release.ps1` 打包时会自动检测）：
+3. 运行时带入该文件（JetBrains IDE 可直接选内置的「main.dart (cloud sync + ads)」运行配置（会一并带入下方的 `secrets/ads_defines.json`，两个文件都要存在）；`build_release.ps1` 打包时会自动检测）：
 
    ```bash
    flutter run -d windows --dart-define-from-file=secrets/cloud_sync_defines.json

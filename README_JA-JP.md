@@ -124,7 +124,7 @@ flutter run -d windows
    }
    ```
 
-3. 実行時にこのファイルを渡します（JetBrains IDE では同梱の「main.dart (cloud sync)」実行構成が使えます。`build_release.ps1` はパッケージ時に自動検出します）：
+3. 実行時にこのファイルを渡します（JetBrains IDE では同梱の「main.dart (cloud sync + ads)」実行構成が使えます（後述の `secrets/ads_defines.json` も渡すため、両方のファイルが必要です）。`build_release.ps1` はパッケージ時に自動検出します）：
 
    ```bash
    flutter run -d windows --dart-define-from-file=secrets/cloud_sync_defines.json
