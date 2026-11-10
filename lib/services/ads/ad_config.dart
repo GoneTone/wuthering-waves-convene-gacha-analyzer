@@ -15,3 +15,16 @@ String get admobBannerUnitId => resolveBannerUnitId(
   release: kReleaseMode,
   injected: const String.fromEnvironment('ADMOB_BANNER_UNIT_ID'),
 );
+
+/// Google 官方公布的 Android 原生廣告測試單元 ID，只會出測試廣告。
+const String kTestAdmobNativeUnitId = 'ca-app-pub-3940256099942544/2247696110';
+
+/// 依建置模式決定原生廣告單元 ID：只有 release 且有注入值時才用注入值，否則一律用測試 ID。
+String resolveNativeUnitId({required bool release, required String injected}) =>
+    release && injected.isNotEmpty ? injected : kTestAdmobNativeUnitId;
+
+/// 原生廣告單元 ID，注入方式與不寫死的理由同 [admobBannerUnitId]。
+String get admobNativeUnitId => resolveNativeUnitId(
+  release: kReleaseMode,
+  injected: const String.fromEnvironment('ADMOB_NATIVE_UNIT_ID'),
+);
