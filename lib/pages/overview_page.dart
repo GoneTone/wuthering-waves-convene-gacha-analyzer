@@ -36,6 +36,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rarity_pie.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_action_button.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_image_helper.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/width_layout_builder.dart';
 
 /// 總覽頁，聚合所有 12 池的統計、圖表與 timeline。
 class OverviewPage extends ConsumerWidget {
@@ -97,9 +98,9 @@ class OverviewPage extends ConsumerWidget {
     final fiveStarItems = buildFiveStarCollectionAcrossBanners(sec.banners);
     // 廣告在頁面層級監聽：放進按需建構的子項，捲出畫面就會被釋放、捲回來又重新載入；
     // 寬度要等版面才知道，LayoutBuilder 裡不能用此處的 ref.watch，改由 Consumer 監聽。
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final fits = constraints.maxWidth - pagePadding * 2 >= kNativeMinWidth;
+    return WidthLayoutBuilder(
+      builder: (context, width) {
+        final fits = width - pagePadding * 2 >= kNativeMinWidth;
         return Consumer(
           builder: (context, adsRef, _) => _buildScroll(
             context,

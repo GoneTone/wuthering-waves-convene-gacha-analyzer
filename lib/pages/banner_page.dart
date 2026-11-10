@@ -41,6 +41,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/rarity_pie.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_action_button.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/share/share_image_helper.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/width_layout_builder.dart';
 
 /// 單一 banner 的詳細統計頁，顯示保底進度、圖表、記錄列表。
 class BannerPage extends ConsumerStatefulWidget {
@@ -494,19 +495,14 @@ class _BannerPageState extends ConsumerState<BannerPage> {
           ),
         );
     final brightness = Theme.of(context).brightness;
-    Widget? host;
-    double? hostWidth;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 只有高度變（鍵盤開合、橫向標題列收合）時沿用同一個子 widget，整頁不跟著重建。
-        if (host != null && hostWidth == constraints.maxWidth) return host!;
-        hostWidth = constraints.maxWidth;
-        final contentWidth = constraints.maxWidth - pagePadding * 2;
+    return WidthLayoutBuilder(
+      builder: (context, width) {
+        final contentWidth = width - pagePadding * 2;
         final midFits = contentWidth >= kNativeMinWidth;
         final listFits = midFits && recordListUsesCards(context, contentWidth);
         // 廣告在頁面層級監聽：放進按需建構的子項，捲出畫面就會被釋放、捲回來又重新載入；
         // 寬度要等版面才知道，LayoutBuilder 裡不能用 State 的 ref.watch，改由 Consumer 監聽。
-        return host = Consumer(
+        return Consumer(
           builder: (context, adsRef, _) => content(
             _nativeAd(
               adsRef,
