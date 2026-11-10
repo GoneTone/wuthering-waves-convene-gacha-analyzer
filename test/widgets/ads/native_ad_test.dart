@@ -91,16 +91,19 @@ void main() {
 
         final primary = style.primaryTextStyle!;
         expect(primary.textColor, tokens.textPrimary);
+        expect(primary.backgroundColor, tokens.surfaceCard);
         expect(primary.style, NativeTemplateFontStyle.bold);
         expect(primary.size, 14);
 
         final secondary = style.secondaryTextStyle!;
         expect(secondary.textColor, tokens.textSecondary);
+        expect(secondary.backgroundColor, tokens.surfaceCard);
         expect(secondary.style, NativeTemplateFontStyle.normal);
         expect(secondary.size, 12);
 
         final tertiary = style.tertiaryTextStyle!;
         expect(tertiary.textColor, tokens.textMuted);
+        expect(tertiary.backgroundColor, tokens.surfaceCard);
         expect(tertiary.style, NativeTemplateFontStyle.normal);
         expect(tertiary.size, 12);
       });
@@ -160,10 +163,18 @@ void main() {
       await pump(tester, 320, NativeAdPlacement.bannerList);
       expect(find.byKey(viewKey), findsOneWidget);
       expect(tester.getSize(frame()), const Size(320, kNativeSmallHeight));
+      final decoration =
+          tester.widget<Container>(frame()).decoration! as BoxDecoration;
+      expect(decoration.color, GachaTokens.dark.surfaceCard);
     });
 
     testWidgets('寬螢幕上限 400 並置中，中型高度', (tester) async {
       await pump(tester, 600, NativeAdPlacement.overview);
+      expect(
+        kNativeMediumHeight,
+        greaterThanOrEqualTo(350),
+        reason: '官方中型模板版面固定 350dp 高',
+      );
       expect(tester.getSize(frame()), const Size(400, kNativeMediumHeight));
       expect(tester.getCenter(frame()).dx, 300);
       expect(

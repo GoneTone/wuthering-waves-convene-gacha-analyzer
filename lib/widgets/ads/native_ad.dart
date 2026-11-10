@@ -13,8 +13,8 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 /// 小型模板外框的固定高度（dp）。
 const double kNativeSmallHeight = 100;
 
-/// 中型模板外框的固定高度（dp）。
-const double kNativeMediumHeight = 370;
+/// 中型模板外框的固定高度（dp）：官方中型模板版面固定 350dp，多留一點避免橫向時切到底部留白。
+const double kNativeMediumHeight = 355;
 
 /// 原生模板的最小寬度（dp）：可用寬度不足時不顯示廣告。
 const double kNativeMinWidth = 320;
@@ -75,16 +75,19 @@ NativeTemplateStyle nativeTemplateStyleFor(
     ),
     primaryTextStyle: NativeTemplateTextStyle(
       textColor: tokens.textPrimary,
+      backgroundColor: tokens.surfaceCard,
       style: NativeTemplateFontStyle.bold,
       size: 14,
     ),
     secondaryTextStyle: NativeTemplateTextStyle(
       textColor: tokens.textSecondary,
+      backgroundColor: tokens.surfaceCard,
       style: NativeTemplateFontStyle.normal,
       size: 12,
     ),
     tertiaryTextStyle: NativeTemplateTextStyle(
       textColor: tokens.textMuted,
+      backgroundColor: tokens.surfaceCard,
       style: NativeTemplateFontStyle.normal,
       size: 12,
     ),
@@ -196,6 +199,7 @@ class NativeAdBlock extends StatelessWidget {
                 : kNativeMediumHeight,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
+              color: tokens.surfaceCard,
               border: Border.all(color: tokens.borderSubtle),
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
