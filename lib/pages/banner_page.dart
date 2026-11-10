@@ -320,7 +320,7 @@ class _BannerPageState extends ConsumerState<BannerPage> {
                     },
                   ),
 
-                  const SizedBox(height: AppSpacing.l),
+                  const SizedBox(height: AppSpacing.m),
 
                   // Row 2: 兩 Pie + Timeline
                   LayoutBuilder(
@@ -403,14 +403,14 @@ class _BannerPageState extends ConsumerState<BannerPage> {
                     },
                   ),
 
-                  const SizedBox(height: AppSpacing.xl),
                   if (midAd != null) ...[
+                    const SizedBox(height: AppSpacing.m),
                     NativeAdBlock(
                       ad: midAd,
                       placement: NativeAdPlacement.bannerMid,
                     ),
-                    const SizedBox(height: AppSpacing.xl),
                   ],
+                  const SizedBox(height: AppSpacing.xl),
                   if (fiveStarItems.isNotEmpty) ...[
                     InlineSectionTitle(
                       icon: Icons.star_outline,

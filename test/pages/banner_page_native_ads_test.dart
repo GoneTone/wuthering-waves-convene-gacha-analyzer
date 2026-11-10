@@ -145,12 +145,13 @@ void main() {
     final timelineBottom = _bottom(tester, _timelineCard);
     final mid = fakeNativeViewOf(NativeAdPlacement.bannerMid);
     await _scrollTo(tester, mid);
-    expect(_top(tester, mid), greaterThanOrEqualTo(timelineBottom));
+    // 卡片之間一律 m；廣告下方接區塊標題，維持段落間距 xl。
+    expect(_top(tester, mid) - timelineBottom, AppSpacing.m);
     final midBottom = _bottom(tester, mid);
     await _scrollTo(tester, _sectionTitle(Icons.star_outline));
     expect(
-      _top(tester, _sectionTitle(Icons.star_outline)),
-      greaterThanOrEqualTo(midBottom),
+      _top(tester, _sectionTitle(Icons.star_outline)) - midBottom,
+      AppSpacing.xl,
     );
 
     await _scrollTo(tester, fakeNativeViewOf(NativeAdPlacement.bannerList));

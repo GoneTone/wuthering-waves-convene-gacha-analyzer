@@ -755,6 +755,29 @@ void main() {
       expect(pieLayouts(tester), everyElement(ChartCardLayout.standard));
       expect(tester.getSize(find.byType(RarityChartCard)).height, 380);
     }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+    for (final (form, size, platform) in const [
+      ('portrait phone', Size(360, 800), TargetPlatform.android),
+      ('landscape phone', Size(800, 360), TargetPlatform.android),
+      ('desktop', Size(1280, 800), TargetPlatform.windows),
+    ]) {
+      testWidgets('$name stat row and pie row are one card gap apart ($form)', (
+        tester,
+      ) async {
+        await pump(tester, size, page);
+        final statBottom = [
+          for (final e
+              in find
+                  .byWidgetPredicate((w) => w is StatCard || w is PityCard)
+                  .evaluate())
+            tester.getBottomLeft(find.byWidget(e.widget)).dy,
+        ].reduce((a, b) => a > b ? a : b);
+        expect(
+          tester.getTopLeft(find.byType(RarityChartCard)).dy - statBottom,
+          AppSpacing.m,
+        );
+      }, variant: TargetPlatformVariant.only(platform));
+    }
   }
 
   /// 橫向時間軸所在的 [ChartCard]。
