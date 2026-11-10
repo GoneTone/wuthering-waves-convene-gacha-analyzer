@@ -141,6 +141,64 @@ void main() {
     });
   }
 
+  testWidgets('進頁時尚未可請求廣告，之後變成可請求：載入一次，之後重建不再載入', (tester) async {
+    setUpContainer(canRequestAds: false);
+    await pumpPage(tester);
+    expect(loader.loads, isEmpty);
+
+    (container.read(adsProvider.notifier) as FakeAdsController).canRequestAds =
+        true;
+    await tester.pump();
+    await tester.pump();
+    expect(loader.calls(NativeAdPlacement.overview), 1);
+    expect(anyFakeNativeView, findsOneWidget);
+
+    await pumpPage(tester);
+    expect(loader.calls(NativeAdPlacement.overview), 1);
+    expect(loader.loads.single.disposed, isFalse);
+  });
+
+  testWidgets('手機橫向：廣告寬 400 並置中', (tester) async {
+    setUpContainer();
+    await pumpPage(tester, size: const Size(800, 360));
+    expect(loader.calls(NativeAdPlacement.overview), 1);
+    await tester.scrollUntilVisible(
+      anyFakeNativeView,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pump();
+    expect(
+      tester.getSize(anyFakeNativeView),
+      const Size(400, kNativeMediumHeight),
+    );
+    expect(tester.getCenter(anyFakeNativeView).dx, 400);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('捲到按需建構範圍外再捲回來：不重新載入、不釋放', (tester) async {
+    // 300 筆有 30 個 5★，五星一覽與時間軸夠長，捲到底時廣告會離開建構範圍。
+    setUpContainer(banners: {'1': _records(300)});
+    await pumpPage(tester, size: const Size(360, 800));
+    final ad = loader.loads.single;
+    expect(find.byKey(ad.key), findsOneWidget);
+
+    final position = tester
+        .state<ScrollableState>(find.byType(Scrollable).first)
+        .position;
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
+    expect(find.byKey(ad.key, skipOffstage: false), findsNothing);
+    // 釋放排在 post-frame，多推一幀才看得到。
+    await tester.pump();
+    expect(ad.disposed, isFalse);
+
+    position.jumpTo(0);
+    await tester.pump();
+    expect(find.byKey(ad.key), findsOneWidget);
+    expect(loader.calls(NativeAdPlacement.overview), 1);
+    expect(ad.disposed, isFalse);
+  });
+
   testWidgets('內容寬度不足 320 時不載入、不多間距', (tester) async {
     setUpContainer();
     // 手機頁邊距 m：340 − 24 = 316。

@@ -169,12 +169,40 @@ void main() {
       _top(tester, title) - midBottom,
       greaterThanOrEqualTo(AppSpacing.xl),
     );
+  });
 
-    // 「同畫面最多一則」的佐證：位置 3 下緣到位置 1 上緣的距離。
+  testWidgets('手機橫向：卡片模式載入兩個位置，位置 3 寬 400 並置中', (tester) async {
+    setUpContainer(banners: {'1': _records(25)});
+    await pumpPage(tester, size: const Size(800, 360));
+    expect(loader.calls(NativeAdPlacement.bannerList), 1);
+    expect(loader.calls(NativeAdPlacement.bannerMid), 1);
+
+    final mid = fakeNativeViewOf(NativeAdPlacement.bannerMid);
+    await _scrollTo(tester, mid);
+    expect(tester.getSize(mid), const Size(400, kNativeMediumHeight));
+    expect(tester.getCenter(mid).dx, 400);
+
     final list = fakeNativeViewOf(NativeAdPlacement.bannerList);
     await _scrollTo(tester, list);
-    final gap = _top(tester, list) - midBottom;
-    expect(gap, greaterThan(0));
+    expect(list, findsOneWidget);
+    expect(_recordCards, findsWidgets);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('進頁時尚未可請求廣告，之後變成可請求：兩個位置各載入一次，之後重建不再載入', (tester) async {
+    setUpContainer(banners: {'1': _records(25)}, canRequestAds: false);
+    await pumpPage(tester);
+    expect(loader.loads, isEmpty);
+
+    (container.read(adsProvider.notifier) as FakeAdsController).canRequestAds =
+        true;
+    await _settle(tester);
+    expect(loader.calls(NativeAdPlacement.bannerList), 1);
+    expect(loader.calls(NativeAdPlacement.bannerMid), 1);
+
+    await pumpPage(tester);
+    await _scrollTo(tester, fakeNativeViewOf(NativeAdPlacement.bannerList));
+    expect(loader.loads.length, 2);
+    expect(loader.loads.where((a) => a.disposed), isEmpty);
   });
 
   testWidgets('只有 8 筆時不載入位置 1，仍載入位置 3', (tester) async {
