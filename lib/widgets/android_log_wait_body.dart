@@ -72,7 +72,7 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
     return false;
   }
 
-  /// 結束這次更新（等待對話框關閉）後開啟「讀取遊戲記錄」設定頁；配對完成後設定頁會重新開始更新。
+  /// 結束這次更新（等待對話框關閉）後開啟「讀取遊戲 log 檔」設定頁；配對完成後設定頁會重新開始更新。
   Future<void> _openSetup() async {
     final nav = Navigator.of(context, rootNavigator: true);
     final container = ProviderScope.containerOf(context);

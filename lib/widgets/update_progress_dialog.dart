@@ -149,7 +149,7 @@ class _Title extends StatelessWidget {
     required this.android,
   });
 
-  /// 是否為 Android（等待時標題改為「等待喚取記錄」）。
+  /// 是否為 Android（等待時標題改為「等待在遊戲中開啟喚取記錄頁」）。
   final bool android;
 
   /// 當前更新進度狀態。

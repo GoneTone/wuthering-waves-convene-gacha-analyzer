@@ -11,7 +11,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/section_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/manual_credential_dialog.dart';
 
-/// 開啟「讀取遊戲記錄」設定頁；[retryGrant] 為 true 時直接進到授權步驟（設定頁的「重試授權」）。
+/// 開啟「讀取遊戲 log 檔」設定頁；[retryGrant] 為 true 時直接進到授權步驟（設定頁的「重試授權」）。
 Future<void> openLogAccessSetup(
   BuildContext context, {
   bool retryGrant = false,

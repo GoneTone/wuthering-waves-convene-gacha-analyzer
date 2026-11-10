@@ -83,7 +83,7 @@ void main() {
     tester,
   ) async {
     await _pumpDialog(tester, progress: const WaitingForCapture());
-    await tester.tap(find.text('手動輸入喚取記錄'));
+    await tester.tap(find.text('手動輸入喚取記錄網址'));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('如何取得網址？'), findsOneWidget);
@@ -99,11 +99,11 @@ void main() {
         gameDirMissing: true,
       ),
     );
-    expect(find.text('手動輸入喚取記錄'), findsOneWidget);
+    expect(find.text('手動輸入喚取記錄網址'), findsOneWidget);
   });
 
   const captureUnavailableNotice =
-      '無法啟動攔截程式（可能是 Windows 權限提示被拒絕），改為只從遊戲記錄檔偵測。請開啟喚取記錄。';
+      '無法啟動攔截程式（可能是 Windows 權限提示被拒絕），改為只從遊戲 log 檔偵測。請在遊戲中開啟喚取記錄頁。';
   const chooseGameDir = '選擇遊戲資料夾';
 
   testWidgets('normal wait does not show log-only notice', (tester) async {

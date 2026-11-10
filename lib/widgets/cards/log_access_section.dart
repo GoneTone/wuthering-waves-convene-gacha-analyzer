@@ -11,7 +11,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 
-/// 設定頁「讀取遊戲記錄」區塊（只在 Android 顯示）：讀取方式、配對狀態、重試授權與解除配對。
+/// 設定頁「讀取遊戲 log 檔」區塊（只在 Android 顯示）：讀取方式、配對狀態、重試授權與解除配對。
 class LogAccessSection extends ConsumerStatefulWidget {
   /// 建立 [LogAccessSection]。
   const LogAccessSection({super.key});

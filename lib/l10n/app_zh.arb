@@ -164,7 +164,7 @@
   "progressFailed": "失敗",
   "progressOpenGameHint": "請開啟鳴潮 → 喚取 → 喚取記錄",
   "progressFallbackHint": "（先前的擷取已失效，需重新攔截）",
-  "progressCaptureUnavailableHint": "無法啟動攔截程式（可能是 Windows 權限提示被拒絕），改為只從遊戲記錄檔偵測。請開啟喚取記錄。",
+  "progressCaptureUnavailableHint": "無法啟動攔截程式（可能是 Windows 權限提示被拒絕），改為只從遊戲 log 檔偵測。請在遊戲中開啟喚取記錄頁。",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
   },
@@ -180,7 +180,7 @@
   "@gameDirHelpTitle": {
     "description": "Title of the detection help dialog shown when the convene record is not detected"
   },
-  "gameDirHelpNotFound": "找不到鳴潮的遊戲資料夾。選擇遊戲資料夾後，本工具也能改從遊戲記錄檔讀取喚取記錄。",
+  "gameDirHelpNotFound": "找不到鳴潮的遊戲資料夾。選擇遊戲資料夾後，本工具也能改從遊戲 log 檔取得喚取記錄網址。",
   "@gameDirHelpNotFound": {
     "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
   },
@@ -193,7 +193,7 @@
   "@gameDirHelpReopen": {
     "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
   },
-  "gameDirInvalid": "這個資料夾裡找不到遊戲記錄檔，請選擇「Wuthering Waves Game」資料夾。",
+  "gameDirInvalid": "這個資料夾裡找不到遊戲 log 檔，請選擇「Wuthering Waves Game」資料夾。",
   "@gameDirInvalid": {
     "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
   },
@@ -894,11 +894,11 @@
   "@actionViewOnEncore": {
     "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
   },
-  "progressManualInputLink": "手動輸入喚取記錄",
+  "progressManualInputLink": "手動輸入喚取記錄網址",
   "@progressManualInputLink": {
     "description": "Link on the waiting screen that opens the manual convene record input dialog"
   },
-  "manualCredentialTitle": "手動輸入喚取記錄",
+  "manualCredentialTitle": "手動輸入喚取記錄網址",
   "@manualCredentialTitle": {
     "description": "Title of the manual convene record input dialog"
   },
@@ -946,7 +946,7 @@
   "@manualCredentialSubmit": {
     "description": "Confirm button of the manual convene record input dialog"
   },
-  "progressWaitingLog": "等待喚取記錄...",
+  "progressWaitingLog": "等待在遊戲中開啟喚取記錄頁...",
   "@progressWaitingLog": {
     "description": "Android waiting screen title while the app watches the game log for the convene history URL"
   },
@@ -954,15 +954,15 @@
   "@progressCheckingLogAccess": {
     "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
   },
-  "progressLogUnavailableTitle": "無法自動讀取喚取記錄",
+  "progressLogUnavailableTitle": "無法自動取得喚取記錄網址",
   "@progressLogUnavailableTitle": {
     "description": "Android waiting screen title when the game log cannot be read automatically"
   },
-  "logUnavailableNotPaired": "尚未設定讀取遊戲記錄的方式。設定一次之後，每次更新都會自動讀取。",
+  "logUnavailableNotPaired": "尚未設定讀取遊戲 log 檔的方式。設定一次之後，每次更新都會自動讀取。",
   "@logUnavailableNotPaired": {
     "description": "Reason shown when wireless debugging has not been paired yet"
   },
-  "logUnavailableNoWifi": "無線偵錯只能在連上 Wi‑Fi 時使用。連上 Wi‑Fi 後回到本 App 就會自動繼續，也可以改用手動輸入。",
+  "logUnavailableNoWifi": "無線偵錯只能在連上 Wi‑Fi 時使用。連上 Wi‑Fi 後回到本 App 就會自動繼續，也可以改用手動輸入網址。",
   "@logUnavailableNoWifi": {
     "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
   },
@@ -982,11 +982,11 @@
   "@logUnavailableNetworkNotAllowed": {
     "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
   },
-  "logUnavailableStorage": "需要儲存空間權限才能讀取遊戲記錄。",
+  "logUnavailableStorage": "需要儲存空間權限才能讀取遊戲 log 檔。",
   "@logUnavailableStorage": {
     "description": "Reason shown on Android 10 or older when storage permission was denied"
   },
-  "logUnavailableUnsupported": "這台裝置無法自動讀取遊戲記錄，請改用手動輸入。",
+  "logUnavailableUnsupported": "這台裝置無法自動讀取遊戲 log 檔，請改用手動輸入網址。",
   "@logUnavailableUnsupported": {
     "description": "Reason shown when the device cannot read the game log automatically"
   },
@@ -1002,7 +1002,7 @@
   "@actionRegrantStorage": {
     "description": "Button that asks for storage permission again"
   },
-  "progressLogConnectionLost": "與無線偵錯的連線中斷，正在重新連線...如果一直無法恢復，請確認 Wi‑Fi 是否連線，或改用手動輸入。",
+  "progressLogConnectionLost": "與無線偵錯的連線中斷，正在重新連線...如果一直無法恢復，請確認 Wi‑Fi 是否連線，或改用手動輸入網址。",
   "@progressLogConnectionLost": {
     "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
   },
@@ -1018,7 +1018,7 @@
   "@actionRepair": {
     "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
   },
-  "setupTitle": "讀取遊戲記錄",
+  "setupTitle": "讀取遊戲 log 檔",
   "@setupTitle": {
     "description": "App bar title of the log access setup disclosure page"
   },
@@ -1026,7 +1026,7 @@
   "@setupWhyTitle": {
     "description": "Disclosure page card title"
   },
-  "setupWhyBody": "Android 不允許 App 直接讀取其他遊戲的檔案。本 App 會透過系統內建的「無線偵錯」，讀取鳴潮的記錄檔，從中取得喚取記錄網址。",
+  "setupWhyBody": "Android 不允許 App 直接讀取其他 App 的檔案。本 App 會透過系統內建的「無線偵錯」，讀取鳴潮的 log 檔，從中取得喚取記錄網址。",
   "@setupWhyBody": {
     "description": "Disclosure page: why the app needs wireless debugging"
   },
@@ -1034,11 +1034,11 @@
   "@setupWhatTitle": {
     "description": "Disclosure page card title"
   },
-  "setupWhatBody": "・只讀取鳴潮的記錄檔\n・讀完立刻中斷連線並關閉無線偵錯\n・授權自己開關無線偵錯，之後不用再設定\n・可以隨時在設定頁解除",
+  "setupWhatBody": "・只讀取鳴潮的 log 檔\n・讀完立刻中斷連線；無線偵錯若是本 App 打開的，會一併關閉\n・授權自己開關無線偵錯，之後不用再設定\n・可以隨時在設定頁解除",
   "@setupWhatBody": {
     "description": "Disclosure page bullet list. Keep the line breaks."
   },
-  "setupNeedTitle": "需要",
+  "setupNeedTitle": "使用條件",
   "@setupNeedTitle": {
     "description": "Disclosure page card title"
   },
@@ -1050,7 +1050,7 @@
   "@setupStart": {
     "description": "Disclosure page primary button"
   },
-  "setupUseManual": "改用手動輸入",
+  "setupUseManual": "改用手動輸入網址",
   "@setupUseManual": {
     "description": "Disclosure page link to manual input instead"
   },
@@ -1098,7 +1098,7 @@
   "@setupStepPair": {
     "description": "Pairing guide step 3 title"
   },
-  "setupStepPairBody": "1. 按下方按鈕，會跳到「無線偵錯」\n2. 打開「使用無線偵錯功能」，點「使用配對碼配對裝置」\n3. 從螢幕頂端往下拉，在本 App 的通知輸入畫面上的 6 位數",
+  "setupStepPairBody": "1. 按下方按鈕，會跳到「無線偵錯」\n2. 打開「使用無線偵錯功能」，點「使用配對碼配對裝置」\n3. 從螢幕頂端往下拉，在本 App 的通知中，輸入「無線偵錯」配對畫面上顯示的 6 位數配對碼",
   "@setupStepPairBody": {
     "description": "Pairing guide step 3 instructions. Keep the line breaks."
   },
@@ -1158,7 +1158,7 @@
   "@setupDoneReturning": {
     "description": "Shown just before returning and starting the update"
   },
-  "settingsLogAccess": "讀取遊戲記錄",
+  "settingsLogAccess": "讀取遊戲 log 檔",
   "@settingsLogAccess": {
     "description": "Settings section title (Android only) for how the app reads the game log"
   },
@@ -1210,7 +1210,7 @@
   "@settingsUnpairConfirmTitle": {
     "description": "Confirm dialog title for removing the pairing"
   },
-  "settingsUnpairConfirmBody": "解除配對會刪除本機金鑰，並收回本 App 開關無線偵錯的權限。之後要再使用無線偵錯，需要重新配對。",
+  "settingsUnpairConfirmBody": "解除配對會刪除本 App 的配對金鑰，並收回本 App 開關無線偵錯的權限。之後要再使用無線偵錯，需要重新配對。",
   "@settingsUnpairConfirmBody": {
     "description": "Confirm dialog body for removing the pairing"
   },
@@ -1248,7 +1248,7 @@
       "name": { "type": "String" }
     }
   },
-  "progressCredentialReady": "已取得喚取記錄，回到本 App 後就會開始抓取資料。",
+  "progressCredentialReady": "已取得喚取記錄網址，回到本 App 後就會開始抓取喚取記錄。",
   "@progressCredentialReady": {
     "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
   },

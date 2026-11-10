@@ -18,7 +18,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialo
 /// 本對話框的 logger。
 final _log = Logger('capture.manual');
 
-/// 顯示「手動輸入喚取記錄」對話框：貼上網址（或含網址的整段文字）或選 Client.log 檔案。
+/// 顯示「手動輸入喚取記錄網址」對話框：貼上網址（或含網址的整段文字）或選 Client.log 檔案。
 ///
 /// [pickClientLog] 僅供測試注入；預設開系統選檔視窗並讀出整份檔案。
 Future<void> showManualCredentialDialog(

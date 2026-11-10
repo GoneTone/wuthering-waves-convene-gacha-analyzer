@@ -192,7 +192,7 @@
   "progressFailed": "失敗",
   "progressOpenGameHint": "鳴潮 → 集音 → 集音履歴 を開いてください",
   "progressFallbackHint": "（前回の取得が失効しました。集音履歴ページを開き直してください）",
-  "progressCaptureUnavailableHint": "キャプチャ用プログラムを起動できませんでした（Windows の権限確認が拒否された可能性があります）。ゲームのログファイルのみで検出します。集音履歴を開いてください。",
+  "progressCaptureUnavailableHint": "キャプチャ用プログラムを起動できませんでした（Windows の権限確認が拒否された可能性があります）。ゲームのログファイルのみで検出します。ゲームで集音履歴ページを開いてください。",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
   },
@@ -208,7 +208,7 @@
   "@gameDirHelpTitle": {
     "description": "Title of the detection help dialog shown when the convene record is not detected"
   },
-  "gameDirHelpNotFound": "鳴潮のゲームフォルダが見つかりません。ゲームフォルダを選択すると、ゲームのログファイルからも集音履歴を読み取れます。",
+  "gameDirHelpNotFound": "鳴潮のゲームフォルダが見つかりません。ゲームフォルダを選択すると、ゲームのログファイルからも集音履歴の URL を取得できます。",
   "@gameDirHelpNotFound": {
     "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
   },
@@ -358,7 +358,7 @@
   "settingsDataLanguageUnset": "未設定（変換しない）",
   "settingsDataLanguageUnify": "データ言語を今すぐ変換",
   "settingsDataLanguageUnifying": "変換中...",
-  "settingsDataLanguageUnifyDone": "{converted} 件を変換、{backfilled} 件のIDを補完、{unresolved} 件は変換できませんでした。",
+  "settingsDataLanguageUnifyDone": "{converted} 件を変換、{backfilled} 件の ID を補完、{unresolved} 件は変換できませんでした。",
   "@settingsDataLanguageUnifyDone": {
     "placeholders": {
       "converted": {
@@ -1092,15 +1092,15 @@
   "@actionViewOnEncore": {
     "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
   },
-  "progressManualInputLink": "喚取記録を手動で入力",
+  "progressManualInputLink": "集音履歴の URL を手動で入力",
   "@progressManualInputLink": {
     "description": "Link on the waiting screen that opens the manual convene record input dialog"
   },
-  "manualCredentialTitle": "喚取記録を手動で入力",
+  "manualCredentialTitle": "集音履歴の URL を手動で入力",
   "@manualCredentialTitle": {
     "description": "Title of the manual convene record input dialog"
   },
-  "manualCredentialHint": "喚取記録の URL、または URL を含むテキストを貼り付けてください。",
+  "manualCredentialHint": "集音履歴の URL、または URL を含むテキストを貼り付けてください。",
   "@manualCredentialHint": {
     "description": "Explanation above the text field of the manual input dialog"
   },
@@ -1120,19 +1120,19 @@
   "@manualCredentialHowTo": {
     "description": "Expandable heading that shows how to get the convene history URL"
   },
-  "manualCredentialNotFound": "喚取記録の URL が見つかりません",
+  "manualCredentialNotFound": "集音履歴の URL が見つかりません",
   "@manualCredentialNotFound": {
     "description": "Error shown when the pasted text contains no valid convene history URL"
   },
-  "manualCredentialNotFoundInLog": "このファイルに喚取記録の URL が見つかりません。ゲームで喚取記録を開いてから、もう一度選択してください。",
+  "manualCredentialNotFoundInLog": "このファイルに集音履歴の URL が見つかりません。ゲームで集音履歴を開いてから、もう一度選択してください。",
   "@manualCredentialNotFoundInLog": {
     "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
   },
-  "manualCredentialHelpAndroid": "方法 1：機内モード\n1. ゲームで「喚取」画面を開く\n2. 機内モードをオンにしてから「喚取記録」をタップ\n3. 読み込み失敗のページが表示されたら、長押し → すべて選択 → コピー\n4. 機内モードをオフにして、テキストをそのまま貼り付け\n\n方法 2：Client.log ファイルがある場合\n「Client.log ファイルを選択」をタップすると、URL を自動で見つけます。",
+  "manualCredentialHelpAndroid": "方法 1：機内モード\n1. ゲームで「集音」画面を開く\n2. 機内モードをオンにしてから「集音履歴」をタップ\n3. 読み込み失敗のページが表示されたら、長押し → すべて選択 → コピー\n4. 機内モードをオフにして、テキストをそのまま貼り付け\n\n方法 2：Client.log ファイルがある場合\n「Client.log ファイルを選択」をタップすると、URL を自動で見つけます。",
   "@manualCredentialHelpAndroid": {
     "description": "Help text in the manual input dialog on Android. Keep the line breaks."
   },
-  "manualCredentialHelpWindows": "Client.log ファイルを選択\n1. ゲームで「喚取記録」を開く\n2. 「Client.log ファイルを選択」をクリック。場所：\nゲームフォルダ\\Client\\Saved\\Logs\\Client.log\n\n他のツールで取得した URL\nWuWa Tracker などで取得した URL もそのまま貼り付けられます。",
+  "manualCredentialHelpWindows": "Client.log ファイルを選択\n1. ゲームで「集音履歴」を開く\n2. 「Client.log ファイルを選択」をクリック。場所：\nゲームフォルダ\\Client\\Saved\\Logs\\Client.log\n\n他のツールで取得した URL\nWuWa Tracker などで取得した URL もそのまま貼り付けられます。",
   "@manualCredentialHelpWindows": {
     "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
   },
@@ -1144,7 +1144,7 @@
   "@manualCredentialSubmit": {
     "description": "Confirm button of the manual convene record input dialog"
   },
-  "progressWaitingLog": "喚取記録を待っています...",
+  "progressWaitingLog": "ゲームで集音履歴ページが開かれるのを待っています...",
   "@progressWaitingLog": {
     "description": "Android waiting screen title while the app watches the game log for the convene history URL"
   },
@@ -1152,15 +1152,15 @@
   "@progressCheckingLogAccess": {
     "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
   },
-  "progressLogUnavailableTitle": "喚取記録を自動で読み取れません",
+  "progressLogUnavailableTitle": "集音履歴の URL を自動で取得できません",
   "@progressLogUnavailableTitle": {
     "description": "Android waiting screen title when the game log cannot be read automatically"
   },
-  "logUnavailableNotPaired": "ゲーム記録の読み取り方法がまだ設定されていません。一度設定すれば、以降の更新では自動で読み取ります。",
+  "logUnavailableNotPaired": "ゲームのログファイルの読み取り方法がまだ設定されていません。一度設定すれば、以降の更新では自動で読み取ります。",
   "@logUnavailableNotPaired": {
     "description": "Reason shown when wireless debugging has not been paired yet"
   },
-  "logUnavailableNoWifi": "ワイヤレスデバッグは Wi‑Fi 接続時のみ使えます。Wi‑Fi に接続してアプリに戻ると、自動で続行します。手動で入力することもできます。",
+  "logUnavailableNoWifi": "ワイヤレスデバッグは Wi‑Fi 接続時のみ使えます。Wi‑Fi に接続してアプリに戻ると、自動で続行します。URL を手動で入力することもできます。",
   "@logUnavailableNoWifi": {
     "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
   },
@@ -1180,11 +1180,11 @@
   "@logUnavailableNetworkNotAllowed": {
     "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
   },
-  "logUnavailableStorage": "ゲーム記録を読み取るにはストレージの権限が必要です。",
+  "logUnavailableStorage": "ゲームのログファイルを読み取るにはストレージの権限が必要です。",
   "@logUnavailableStorage": {
     "description": "Reason shown on Android 10 or older when storage permission was denied"
   },
-  "logUnavailableUnsupported": "このデバイスではゲーム記録を自動で読み取れません。手動で入力してください。",
+  "logUnavailableUnsupported": "このデバイスではゲームのログファイルを自動で読み取れません。URL を手動で入力してください。",
   "@logUnavailableUnsupported": {
     "description": "Reason shown when the device cannot read the game log automatically"
   },
@@ -1200,7 +1200,7 @@
   "@actionRegrantStorage": {
     "description": "Button that asks for storage permission again"
   },
-  "progressLogConnectionLost": "ワイヤレスデバッグとの接続が切れました。再接続しています...復旧しない場合は Wi‑Fi の接続を確認するか、手動で入力してください。",
+  "progressLogConnectionLost": "ワイヤレスデバッグとの接続が切れました。再接続しています...復旧しない場合は Wi‑Fi の接続を確認するか、URL を手動で入力してください。",
   "@progressLogConnectionLost": {
     "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
   },
@@ -1216,7 +1216,7 @@
   "@actionRepair": {
     "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
   },
-  "setupTitle": "ゲーム記録の読み取り",
+  "setupTitle": "ゲームのログファイルの読み取り",
   "@setupTitle": {
     "description": "App bar title of the log access setup disclosure page"
   },
@@ -1224,7 +1224,7 @@
   "@setupWhyTitle": {
     "description": "Disclosure page card title"
   },
-  "setupWhyBody": "Android では、アプリが他のゲームのファイルを直接読むことはできません。このアプリはシステム標準の「ワイヤレスデバッグ」を使って鳴潮の記録ファイルを読み、喚取記録の URL を取得します。",
+  "setupWhyBody": "Android では、アプリが他のアプリのファイルを直接読むことはできません。このアプリはシステム標準の「ワイヤレスデバッグ」を使って鳴潮のログファイルを読み、集音履歴の URL を取得します。",
   "@setupWhyBody": {
     "description": "Disclosure page: why the app needs wireless debugging"
   },
@@ -1232,11 +1232,11 @@
   "@setupWhatTitle": {
     "description": "Disclosure page card title"
   },
-  "setupWhatBody": "・鳴潮の記録ファイルだけを読み取ります\n・読み取り後すぐに切断し、ワイヤレスデバッグをオフにします\n・ワイヤレスデバッグのオン／オフを自分で行う権限を付与し、次回からは設定不要です\n・設定画面からいつでも解除できます",
+  "setupWhatBody": "・鳴潮のログファイルだけを読み取ります\n・読み取り後すぐに切断します（ワイヤレスデバッグをこのアプリがオンにした場合はオフに戻します）\n・ワイヤレスデバッグのオン／オフを自分で行う権限を付与し、次回からは設定不要です\n・設定画面からいつでも解除できます",
   "@setupWhatBody": {
     "description": "Disclosure page bullet list. Keep the line breaks."
   },
-  "setupNeedTitle": "必要なもの",
+  "setupNeedTitle": "利用条件",
   "@setupNeedTitle": {
     "description": "Disclosure page card title"
   },
@@ -1248,7 +1248,7 @@
   "@setupStart": {
     "description": "Disclosure page primary button"
   },
-  "setupUseManual": "手動入力を使う",
+  "setupUseManual": "URL を手動で入力する",
   "@setupUseManual": {
     "description": "Disclosure page link to manual input instead"
   },
@@ -1296,7 +1296,7 @@
   "@setupStepPair": {
     "description": "Pairing guide step 3 title"
   },
-  "setupStepPairBody": "1. 下のボタンで「ワイヤレスデバッグ」を開く\n2. 「ワイヤレスデバッグを使用」をオンにして「ペア設定コードによるデバイスのペア設定」をタップ\n3. 画面上部から下にスワイプし、このアプリの通知に表示された 6 桁のコードを入力",
+  "setupStepPairBody": "1. 下のボタンで「ワイヤレスデバッグ」を開く\n2. 「ワイヤレスデバッグを使用」をオンにして「ペア設定コードによるデバイスのペア設定」をタップ\n3. 画面上部から下にスワイプし、このアプリの通知に、「ワイヤレスデバッグ」のペア設定画面に表示された 6 桁のペア設定コードを入力",
   "@setupStepPairBody": {
     "description": "Pairing guide step 3 instructions. Keep the line breaks."
   },
@@ -1356,7 +1356,7 @@
   "@setupDoneReturning": {
     "description": "Shown just before returning and starting the update"
   },
-  "settingsLogAccess": "ゲーム記録の読み取り",
+  "settingsLogAccess": "ゲームのログファイルの読み取り",
   "@settingsLogAccess": {
     "description": "Settings section title (Android only) for how the app reads the game log"
   },
@@ -1408,7 +1408,7 @@
   "@settingsUnpairConfirmTitle": {
     "description": "Confirm dialog title for removing the pairing"
   },
-  "settingsUnpairConfirmBody": "この端末のキーを削除し、アプリのワイヤレスデバッグ切り替え権限を取り消します。再び使うにはもう一度ペア設定が必要です。",
+  "settingsUnpairConfirmBody": "このアプリのペア設定キーを削除し、アプリのワイヤレスデバッグ切り替え権限を取り消します。再び使うにはもう一度ペア設定が必要です。",
   "@settingsUnpairConfirmBody": {
     "description": "Confirm dialog body for removing the pairing"
   },
@@ -1446,7 +1446,7 @@
       "name": { "type": "String" }
     }
   },
-  "progressCredentialReady": "喚取記録を取得しました。アプリに戻るとデータの取得を開始します。",
+  "progressCredentialReady": "集音履歴の URL を取得しました。アプリに戻ると集音履歴の取得を開始します。",
   "@progressCredentialReady": {
     "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
   },
