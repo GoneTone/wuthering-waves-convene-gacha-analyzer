@@ -200,6 +200,10 @@ class NativeAdBlock extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: tokens.surfaceCard,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            // 邊線畫在前景：放在 decoration 會內縮 1dp，模板就小於官方最小寬度 320。
+            foregroundDecoration: BoxDecoration(
               border: Border.all(color: tokens.borderSubtle),
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),

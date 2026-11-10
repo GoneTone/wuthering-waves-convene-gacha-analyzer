@@ -163,6 +163,11 @@ void main() {
       await pump(tester, 320, NativeAdPlacement.bannerList);
       expect(find.byKey(viewKey), findsOneWidget);
       expect(tester.getSize(frame()), const Size(320, kNativeSmallHeight));
+      // 外框的邊線不能吃掉內容寬度，否則模板會小於官方最小寬度 320。
+      expect(
+        tester.getSize(find.byKey(viewKey)),
+        const Size(320, kNativeSmallHeight),
+      );
       final decoration =
           tester.widget<Container>(frame()).decoration! as BoxDecoration;
       expect(decoration.color, GachaTokens.dark.surfaceCard);
@@ -176,6 +181,10 @@ void main() {
         reason: '官方中型模板版面固定 350dp 高',
       );
       expect(tester.getSize(frame()), const Size(400, kNativeMediumHeight));
+      expect(
+        tester.getSize(find.byKey(viewKey)),
+        const Size(400, kNativeMediumHeight),
+      );
       expect(tester.getCenter(frame()).dx, 300);
       expect(
         tester.getSize(find.byKey(const Key('block'))).height,
