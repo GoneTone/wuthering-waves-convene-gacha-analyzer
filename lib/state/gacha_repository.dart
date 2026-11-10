@@ -575,7 +575,8 @@ class GachaRepository extends Notifier<GachaState> {
 
   /// 從 [source] 結尾往前找現成的最新網址，回傳能用的憑證（沒有則 null）與之後監看的起點。
   ///
-  /// 和 [failed] 相同的網址不再試；讀取失敗只記 log、當成沒有。驗證時的網路錯誤照常往上丟。
+  /// 和 [failed] 相同的網址、以及不是目前帳號的網址都不用；讀取失敗只記 log、當成沒有。
+  /// 驗證時的網路錯誤照常往上丟。
   Future<({GachaCredential? cred, ClientLogPosition? end})> _existingCredential(
     ClientLogSource source, {
     required int? maxBytes,
@@ -620,6 +621,15 @@ class GachaRepository extends Notifier<GachaState> {
         cred.playerId == failed.playerId &&
         cred.recordId == failed.recordId) {
       _clientLog.info('existing url is the one that just failed, skipping');
+      return (cred: null, end: found.end);
+    }
+    // 只沿用目前帳號的網址：遊戲可能已切到別的帳號，要換帳號就讓玩家自己開記錄頁。
+    final activeUid = state.activeUid;
+    if (activeUid != null && cred.playerId != activeUid) {
+      _clientLog.info(
+        'existing url belongs to another account '
+        'playerId=${sanitizeUid(cred.playerId)}, skipping',
+      );
       return (cred: null, end: found.end);
     }
     final usable = await _isUsable(cred);

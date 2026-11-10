@@ -1474,6 +1474,48 @@ void main() {
         await done;
       });
 
+      test('a url of another account is not used', () async {
+        final storage = GachaStorage(tempDir);
+        await storage.save(
+          BannerStorage(
+            playerId: '701000000',
+            languageCode: 'zh-Hant',
+            lastUpdated: DateTime.utc(2026),
+            banners: const {'1': [], '2': []},
+          ),
+        );
+        await storage.saveCapturedCredential(
+          '701000000',
+          _cred().toJsonString(),
+        );
+        final other = GachaCredential(
+          playerId: '702000000',
+          cardPoolId: '2e23deadbeef2768',
+          serverId: '86d5deadbeef9650',
+          recordId: 'aaaadeadbeefbbbb',
+          languageCode: 'zh-Hant',
+        );
+        final capture = _ControlledCapture(completeOnCancel: true);
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: logWith(other),
+          storage: storage,
+          respond: firstFails,
+        );
+        final repo = await bootstrap(t.container);
+
+        final done = repo.update();
+        await waitUntil(() => watch.hits.isNotEmpty);
+        // 只有目前帳號存的網址被試過；另一個帳號的網址沒有去驗證，直接請玩家開記錄頁。
+        expect(t.hits, hasLength(1));
+        final waiting = t.container.read(gachaRepositoryProvider).progress;
+        expect((waiting as WaitingForCapture).isFallback, isTrue);
+        await repo.cancelCapture();
+        await done;
+      });
+
       test('force recapture ignores it', () async {
         final capture = _ControlledCapture(completeOnCancel: true);
         final watch = _FakeWatch();
