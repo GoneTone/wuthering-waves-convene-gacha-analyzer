@@ -718,7 +718,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 設計見 `docs/superpowers/specs/2026-11-09-android-banner-ads-design.md`。
 
-> **2026-11-10 拿掉底部橫幅**：加上原生廣告後，使用者覺得底部橫幅很破壞美觀，決定只保留內容中的原生廣告。程式已刪除（`BannerAdSlot`、外殼的橫幅區塊、有廣告時 SnackBar 改浮動、`ADMOB_BANNER_UNIT_ID`），`pageHasAdContent` 也拿掉只給橫幅用的「設定頁、貢獻者頁一律有內容」。下面橫幅相關的段落保留當時的設計與踩雷，給原神姐妹專案參考；同意流程、SDK 初始化、ID 注入、R8 閃退這些原生廣告也用得到的部分仍然有效。AdMob 後台的橫幅單元與 GitHub secret `ADMOB_BANNER_UNIT_ID` 沒用到了，留著無害。
+> **2026-11-10 拿掉底部橫幅**：加上原生廣告後，使用者覺得底部橫幅很破壞美觀，決定只保留內容中的原生廣告。程式已刪除（`BannerAdSlot`、外殼的橫幅區塊、有廣告時 SnackBar 改浮動、`ADMOB_BANNER_UNIT_ID`），`pageHasAdContent` 也拿掉只給橫幅用的「設定頁、貢獻者頁一律有內容」。下面橫幅相關的段落保留當時的設計與踩雷，給原神姐妹專案參考；同意流程、SDK 初始化、ID 注入、R8 閃退這些原生廣告也用得到的部分仍然有效。GitHub secret `ADMOB_BANNER_UNIT_ID` 已刪除；AdMob 後台的橫幅單元沒用到了，留著無害。
 
 **當初為什麼只放底部橫幅**
 - 目的是「有一點收入、不打擾使用者」。插頁、獎勵廣告要強制觀看，不做。
