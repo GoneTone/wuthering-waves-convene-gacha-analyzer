@@ -596,10 +596,15 @@ class GachaRepository extends Notifier<GachaState> {
         isStopped: isStopped,
       );
     } catch (e) {
-      _clientLog.warning(
-        'existing url scan failed source=${source.logLabel} '
-        'error=${e.runtimeType}',
-      );
+      // 取消時連線已中斷，進行中的讀取失敗是預期的，不算錯誤。
+      if (isStopped?.call() ?? false) {
+        _clientLog.info('existing url scan stopped');
+      } else {
+        _clientLog.warning(
+          'existing url scan failed source=${source.logLabel} '
+          'error=${e.runtimeType}',
+        );
+      }
       return (cred: null, end: null);
     }
     for (final reason in found.rejected) {
@@ -629,15 +634,16 @@ class GachaRepository extends Notifier<GachaState> {
   Future<bool> _isUsable(GachaCredential cred) async {
     final client = _activeCancellable?.client;
     if (client == null) return false;
+    final fetcher = ref.read(gachaFetcherProvider);
     try {
-      await ref
-          .read(gachaFetcherProvider)
-          .fetchPool(
-            endpoint: _gachaQueryEndpoint,
-            cred: cred,
-            cardPoolType: gachaTypes.first.cardPoolType,
-            client: client,
-          );
+      await fetcher.fetchPool(
+        endpoint: _gachaQueryEndpoint,
+        cred: cred,
+        cardPoolType: gachaTypes.first.cardPoolType,
+        client: client,
+      );
+      // 接著馬上要抓全部卡池，照一般請求的間隔等一下，避免被伺服器限流而誤判網址失效。
+      await Future<void>.delayed(fetcher.rateLimit);
       return true;
     } on GachaApiException catch (e) {
       _clientLog.info('existing url rejected by api code=${e.code}');
