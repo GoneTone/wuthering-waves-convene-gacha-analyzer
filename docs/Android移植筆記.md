@@ -428,6 +428,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **actionlint 抓到 `ci.yml` 的既有問題**：自動提交 ARB 正規化的步驟把 `${{ github.head_ref }}` 直接拼進 shell，分支名稱裡的 `$(...)` 會被當成指令執行。改成 `env: HEAD_REF: ${{ github.head_ref }}`，指令裡用 `"$HEAD_REF"`。原神版的 `ci.yml` 是同一份底稿，要一起檢查。
 - **內部測試不用審核**：推出後通常幾分鐘內測試人員就能更新（第一次發布後的測試連結可能要等幾小時）；升級到正式版才進入審核。
 - **上傳前一定要實際啟動一次正式版**（2026-11-10，rc.10 一啟動就閃退）：除錯版不做 R8 程式碼縮減，正式版才會；新加的依賴（這次是廣告 SDK）若有反射或舊的保留規則，只有正式版會壞。在模擬器跑除錯版、或只做靜態檢查（看 Manifest、`libapp.so`）都抓不到。流程：用和 AAB 相同的參數建 `flutter build apk --release`，裝到模擬器啟動，`adb logcat -b crash` 沒有東西、App 停在首頁，才建 AAB 上傳。不要裝到自己的手機：手機上是 Play 簽署的版本，本機簽章不同，必須先解除安裝，資料會被清掉。
+  - **要看廣告等需要資料的畫面時**（2026-11-10，rc.12／rc.13）：正式版不能 `run-as`，沒辦法直接塞資料。做法：先用 `adb exec-out run-as <package> tar cf - -C /data/data/<package> app_flutter shared_prefs files > 備份.tar` 備份除錯版的資料；把 `files/gacha_data/<uid>.records.json` 包成匯出格式（`{"schema_version":2,"app":"wuthering_waves_convene_gacha_analyzer",...,"accounts":[紀錄檔內容]}`）推到 `/sdcard/Download`，正式版從設定頁「匯入資料」選它；驗完移除正式版、裝回除錯版，`cat 備份.tar | adb exec-in run-as <package> tar xf - -C /data/data/<package>` 還原。Git Bash 要加 `MSYS_NO_PATHCONV=1`。
 
 ### 36. 簽章指紋：每把金鑰各建一筆 Android 用戶端（通用）
 
@@ -827,3 +828,4 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **長螢幕會同時看到兩則**：模擬器解析度調成 1080×2760（約 1051dp 高）、沒有 5★ 的卡池，捲動經過時畫面頂端露出位置 3 的按鈕下緣，同時位置 1 已捲進畫面下方。一般 914dp 高的手機兩者相距約 743dp，不會同時出現。使用者決定接受，不另外處理。
 - 正式版實際執行（rc.12 參數、正式單元 ID，2026-11-10）：模擬器移除除錯版後安裝，啟動正常、`logcat -b crash` 為空；APK 的 `libapp.so` 只有正式原生單元 ID；匯入 9605 筆後三個位置都載入（模擬器自動算測試裝置，正式 ID 也回測試廣告，且會跳 validator）。
 - **validator 對小型模板報「MediaView not used for main image or video asset」**：正式 ID 回了影片素材（測試 ID 的 Flood-It／Google Ads 不會）。Google 官方小型模板版面本來就沒有 MediaView（`gnt_small_template_view.xml` 只有 icon），AdMob 論壇的 Google 顧問回覆「MediaView is required to render the main video or image asset」、影片廣告不會投到小於 120dp 的 MediaView，並說 validator 只在測試廣告出現；沒提到政策處分，這個爭議在論壇上沒有結論。實際影響推測是位置 1 拿不到影片廣告、填充率較低。使用者決定維持小型模板（2026-11-10）。
+- **正式版關閉 validator**（2026-11-10，rc.13 起）：登記成 AdMob 測試裝置的內測手機，從 Play 安裝的正式版也拿到測試廣告，validator 會一直彈出、擋住觸控。官方做法是在 `<application>` 加 `<meta-data android:name="com.google.android.gms.ads.flag.NATIVE_AD_DEBUGGER_ENABLED" android:value="false" />`；放在 `android/app/src/release/AndroidManifest.xml`，只有正式版合併，除錯／profile 版保留以便開發時抓排版問題。validator 只出現在測試廣告，不影響一般玩家與投放。確認方式：`build/app/intermediates/merged_manifest/release/.../AndroidManifest.xml` 有這行、debug 的沒有；rc.13 參數的正式版在模擬器匯入資料後原生廣告照常載入、沒有彈出。
