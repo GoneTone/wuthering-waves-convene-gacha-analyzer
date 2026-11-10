@@ -722,4 +722,92 @@ void main() {
       expect(find.byType(RecordSortButton), findsOneWidget);
     });
   });
+
+  group('mid-list ad slot', () {
+    const adKey = Key('mid-ad');
+
+    /// 卡片外框容器（圓角邊框的 Container）。
+    final cardFrames = find.byWidgetPredicate(
+      (w) =>
+          w is Container &&
+          w.decoration is BoxDecoration &&
+          (w.decoration! as BoxDecoration).border != null &&
+          (w.decoration! as BoxDecoration).borderRadius ==
+              BorderRadius.circular(AppRadius.md),
+    );
+
+    /// 以 [count] 筆紀錄（名稱 R0..）建立表格；[width] 決定卡片或表格模式。
+    Future<void> pumpAd(
+      WidgetTester tester, {
+      required int count,
+      Widget? ad = const SizedBox(key: adKey, height: 50),
+      double width = 360,
+    }) async {
+      tester.view.physicalSize = const Size(1200, 6000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final records = [
+        for (var i = count; i >= 1; i--) _r(seq: i, rank: 3, name: 'R$i'),
+      ];
+      await tester.pumpWidget(
+        _wrapWidth(
+          SortableTable(
+            rows: buildRecordRows(records, _idxFor(records)),
+            sort: null,
+            mainRank: 5,
+            onSortColumnTapped: (_) {},
+            midListAd: ad,
+          ),
+          width: width,
+          container: container,
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('11 rows: ad sits between row 10 and 11 with m spacing', (
+      tester,
+    ) async {
+      await pumpAd(tester, count: 11);
+      final ad = find.byKey(adKey);
+      expect(ad, findsOneWidget);
+      expect(cardFrames, findsNWidgets(2));
+      final tenth = tester.getBottomLeft(cardFrames.first).dy;
+      final eleventh = tester.getTopLeft(cardFrames.last).dy;
+      expect(tester.getTopLeft(ad).dy, tenth + AppSpacing.m);
+      expect(eleventh, tester.getBottomLeft(ad).dy + AppSpacing.m);
+      expect(find.text('R1'), findsOneWidget);
+      expect(
+        tester.getBottomLeft(find.text('R1')).dy,
+        greaterThan(tester.getBottomLeft(ad).dy),
+      );
+    });
+
+    testWidgets('10 rows: no ad, single frame', (tester) async {
+      await pumpAd(tester, count: 10);
+      expect(find.byKey(adKey), findsNothing);
+      expect(cardFrames, findsOneWidget);
+    });
+
+    testWidgets('null ad with 20 rows keeps a single frame', (tester) async {
+      await pumpAd(tester, count: 20, ad: null);
+      expect(cardFrames, findsOneWidget);
+    });
+
+    testWidgets('table mode ignores the ad', (tester) async {
+      await pumpAd(tester, count: 15, width: 1200);
+      expect(find.byKey(adKey), findsNothing);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+    testWidgets('hidden on a short last page, back on page 1', (tester) async {
+      await pumpAd(tester, count: 25);
+      expect(find.byKey(adKey), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.last_page));
+      await tester.pumpAndSettle();
+      expect(find.byKey(adKey), findsNothing);
+      await tester.tap(find.byIcon(Icons.first_page));
+      await tester.pumpAndSettle();
+      expect(find.byKey(adKey), findsOneWidget);
+    });
+  });
 }
