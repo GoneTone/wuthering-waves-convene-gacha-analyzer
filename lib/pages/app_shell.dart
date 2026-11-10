@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/ads/ad_placement.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/ads.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/app_release.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
@@ -17,7 +16,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/play_update_download.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/ads/banner_ad_slot.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/new_version_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_type_icons.dart';
@@ -393,88 +391,41 @@ class _AppShellState extends ConsumerState<AppShell> {
     final showStatusBar =
         phoneOrientation != PhoneOrientation.landscape &&
         !(compact && keyboardOpen);
-    final showAd =
-        ref.watch(isAndroidProvider) &&
-        ref.watch(adsProvider.select((s) => s.canRequestAds)) &&
-        !(compact && keyboardOpen) &&
-        ref.watch(
-          gachaRepositoryProvider.select(
-            (g) => pageHasAdContent(path: location, gacha: g),
-          ),
-        );
-    final bottomBar = showStatusBar || showAd
+    final bottomBar = showStatusBar
         ? Padding(
             // 放在 bottomNavigationBar 時 Scaffold 不會把它推到鍵盤上方，補回鍵盤高度維持原本位置。
             padding: EdgeInsets.only(
               bottom: MediaQuery.viewInsetsOf(context).bottom,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showAd)
-                  SafeArea(
-                    top: false,
-                    bottom: false,
-                    child: Padding(
-                      // 平板的狀態列右側有連結按鈕，廣告只放在內容欄、不延伸到側欄下方。
-                      padding: EdgeInsetsDirectional.only(
-                        start: compact ? 0 : railWidth + 1,
-                      ),
-                      child: BannerAdSlot(
-                        load: ref.watch(bannerLoaderProvider),
-                        frame: (banner) => Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Divider(height: 1),
-                            SafeArea(
-                              top: false,
-                              left: false,
-                              right: false,
-                              bottom: !showStatusBar,
-                              child: banner,
-                            ),
-                            if (showStatusBar) ...[
-                              if (!compact)
-                                const SizedBox(height: AppSpacing.l),
-                              const Divider(height: 1),
-                            ],
-                          ],
-                        ),
-                      ),
+            child: Container(
+              key: const Key('shell-bottom-bar'),
+              width: double.infinity,
+              color: tokens.surfaceCardHigh,
+              // 背景延伸到螢幕底與兩側，文字和連結避開手勢列與開孔鏡頭。
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  // 手機直向沒有連結圖示撐高，改用最小高度 48dp 維持觸控尺寸的狀態列。
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.l,
+                    vertical: compact ? 0 : AppSpacing.xs * 1.5,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: phoneOrientation == null ? 0 : 48,
+                    ),
+                    child: Row(
+                      children: [
+                        const Expanded(child: LastUpdatedLabel()),
+                        if (phoneOrientation == null) ...[
+                          const SizedBox(width: AppSpacing.s),
+                          TeamLinksBar(compact: compact),
+                        ],
+                      ],
                     ),
                   ),
-                if (showStatusBar)
-                  Container(
-                    key: const Key('shell-bottom-bar'),
-                    width: double.infinity,
-                    color: tokens.surfaceCardHigh,
-                    // 背景延伸到螢幕底與兩側，文字和連結避開手勢列與開孔鏡頭。
-                    child: SafeArea(
-                      top: false,
-                      child: Padding(
-                        // 手機直向沒有連結圖示撐高，改用最小高度 48dp 維持觸控尺寸的狀態列。
-                        padding: EdgeInsets.symmetric(
-                          horizontal: AppSpacing.l,
-                          vertical: compact ? 0 : AppSpacing.xs * 1.5,
-                        ),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: phoneOrientation == null ? 0 : 48,
-                          ),
-                          child: Row(
-                            children: [
-                              const Expanded(child: LastUpdatedLabel()),
-                              if (phoneOrientation == null) ...[
-                                const SizedBox(width: AppSpacing.s),
-                                TeamLinksBar(compact: compact),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+                ),
+              ),
             ),
           )
         : null;
@@ -482,7 +433,6 @@ class _AppShellState extends ConsumerState<AppShell> {
     // 抽屜不是一個頁面：不先宣告由 App 處理返回，Android 的預測返回會直接關掉 App。
     // 側欄／抽屜切換的頁面是同一層：其他頁按返回先回綜合，在綜合才交給系統離開 App。
     final drawerOpen = compact && _drawerOpen;
-    final theme = Theme.of(context);
     return PopScope(
       canPop: !drawerOpen && location == '/',
       onPopInvokedWithResult: (didPop, _) {
@@ -493,39 +443,23 @@ class _AppShellState extends ConsumerState<AppShell> {
           context.go('/');
         }
       },
-      // 預設 fixed SnackBar 會貼著廣告上緣，按鈕緊鄰廣告違反 AdMob 間距規定；有廣告時改浮動並隔開。
-      child: Theme(
-        data: showAd
-            ? theme.copyWith(
-                snackBarTheme: theme.snackBarTheme.copyWith(
-                  behavior: SnackBarBehavior.floating,
-                  insetPadding: const EdgeInsets.fromLTRB(
-                    AppSpacing.l,
-                    AppSpacing.xs,
-                    AppSpacing.l,
-                    AppSpacing.l,
-                  ),
-                ),
-              )
-            : theme,
-        child: TweenAnimationBuilder<double>(
-          tween: Tween(end: barHidden ? 0 : 1),
-          // 轉成直向時要立刻出現，不播展開動畫。
-          duration: phoneOrientation == PhoneOrientation.landscape
-              ? const Duration(milliseconds: 200)
-              : Duration.zero,
-          curve: Curves.easeOut,
-          builder: (context, barFactor, _) => Scaffold(
-            key: _scaffoldKey,
-            onDrawerChanged: (open) => setState(() => _drawerOpen = open),
-            drawer: drawer,
-            appBar: PreferredSize(
-              preferredSize: Size.fromHeight(kToolbarHeight * barFactor),
-              child: topBar,
-            ),
-            body: body,
-            bottomNavigationBar: bottomBar,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(end: barHidden ? 0 : 1),
+        // 轉成直向時要立刻出現，不播展開動畫。
+        duration: phoneOrientation == PhoneOrientation.landscape
+            ? const Duration(milliseconds: 200)
+            : Duration.zero,
+        curve: Curves.easeOut,
+        builder: (context, barFactor, _) => Scaffold(
+          key: _scaffoldKey,
+          onDrawerChanged: (open) => setState(() => _drawerOpen = open),
+          drawer: drawer,
+          appBar: PreferredSize(
+            preferredSize: Size.fromHeight(kToolbarHeight * barFactor),
+            child: topBar,
           ),
+          body: body,
+          bottomNavigationBar: bottomBar,
         ),
       ),
     );

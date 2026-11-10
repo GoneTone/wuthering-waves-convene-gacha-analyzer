@@ -714,11 +714,13 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 ## 十四、廣告（Android）
 
-### 50. 只放底部橫幅，以及踩到的坑（通用，2026-11-09）
+### 50. 廣告：底部橫幅（已拿掉）與原生廣告，以及踩到的坑（通用，2026-11-09～10）
 
 設計見 `docs/superpowers/specs/2026-11-09-android-banner-ads-design.md`。
 
-**為什麼只放底部橫幅**
+> **2026-11-10 拿掉底部橫幅**：加上原生廣告後，使用者覺得底部橫幅很破壞美觀，決定只保留內容中的原生廣告。程式已刪除（`BannerAdSlot`、外殼的橫幅區塊、有廣告時 SnackBar 改浮動、`ADMOB_BANNER_UNIT_ID`），`pageHasAdContent` 也拿掉只給橫幅用的「設定頁、貢獻者頁一律有內容」。下面橫幅相關的段落保留當時的設計與踩雷，給原神姐妹專案參考；同意流程、SDK 初始化、ID 注入、R8 閃退這些原生廣告也用得到的部分仍然有效。AdMob 後台的橫幅單元與 GitHub secret `ADMOB_BANNER_UNIT_ID` 沒用到了，留著無害。
+
+**當初為什麼只放底部橫幅**
 - 目的是「有一點收入、不打擾使用者」。插頁、獎勵廣告要強制觀看，不做。
 - 「看一則廣告支持開發者」的按鈕不能做：AdMob 獎勵廣告政策原文舉的違規例子就是 `"watch this ad to support our business"`；沒有獎勵也不適合用獎勵廣告。
 - 原生廣告（混在卡片中）政策允許，官方 Flutter 有現成模板（小型最小 320×90dp）。當時擔心和橫幅同畫面時廣告比例偏高所以先不做，2026-11-10 在使用者要求下加上，見本節最後的「原生廣告」小節。
@@ -772,7 +774,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 #### 原生廣告（2026-11-10）
 
-設計見 `docs/superpowers/specs/2026-11-10-android-native-ads-design.md`。底部橫幅保留，另外在內容中間穿插原生廣告；底線不變：沒有強制觀看，也不追求收入最大化。
+設計見 `docs/superpowers/specs/2026-11-10-android-native-ads-design.md`。原本底部橫幅保留、另外在內容中間穿插原生廣告，之後橫幅拿掉（見本節開頭）；底線不變：沒有強制觀看，也不追求收入最大化。
 
 **三個位置與模板**
 - 位置 1：卡池頁紀錄列表（卡片模式）當頁第 10 筆之後，小型模板；當頁 10 筆以下時不放（插進去會緊貼分頁列），平板／桌面的表格排版也不放。是否**載入**看篩選後的總筆數（超過 10 筆就載入），是否**插入**看當頁筆數，所以停在只有幾筆的最後一頁時，廣告已載入但不顯示。
@@ -785,7 +787,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 **為什麼要在頁面層級載入**
 - 卡池頁與綜合頁是按需建構的清單，廣告所在的區塊捲到附近才會被建構。如果等區塊建構才載入，插入時位置常常已經在畫面上，下方內容會突然往下移，可能造成誤觸。所以改成一進頁面就由頁面層級 `ref.watch`，廣告通常一兩秒內就緒，玩家很少這麼快捲到那裡。
 - 監聽放在頁面層級還有另一個理由：放進按需建構的子項，捲出畫面就會被釋放、捲回來又重新載入。
-- 載入條件和底部橫幅相同：Android，且 `canRequestAds` 為真。`canRequestAds` 要等 SDK 初始化完成，且該頁有內容（`pageHasAdContent`）之後才會成立。
+- 載入條件：Android，且 `canRequestAds` 為真。`canRequestAds` 要等 SDK 初始化完成，且該頁有內容（`pageHasAdContent`）之後才會成立。
 - **一定要等 SDK 初始化。** 試作時在 SDK 還沒初始化就載入，畫面出現紅色錯誤框。
 
 **廣告未顯示時不佔位**
@@ -814,7 +816,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 **建置注入與 CI**
 - 比照橫幅：`secrets/ads_defines.json` 多一個 `ADMOB_NATIVE_UNIT_ID`；只有 release 且有注入值時才用，否則一律用官方原生廣告測試 ID。
-- CI 的「Write ads defines from secrets」步驟三個 secrets（`ADMOB_APP_ID`、`ADMOB_BANNER_UNIT_ID`、`ADMOB_NATIVE_UNIT_ID`）都有才寫檔，缺任何一個就沿用原本的警告、只顯示測試廣告。所以 GitHub 要新增 `ADMOB_NATIVE_UNIT_ID` 這個 secret，否則正式版連橫幅也會變測試廣告。
+- CI 的「Write ads defines from secrets」步驟要 `ADMOB_APP_ID`、`ADMOB_NATIVE_UNIT_ID` 兩個 secrets 都有才寫檔，缺任何一個就沿用原本的警告、只顯示測試廣告（拿掉橫幅前還要求 `ADMOB_BANNER_UNIT_ID`）。
 - 隱私權政策「廣告」一節已改成也包含原生廣告（資料收集不變，同一個 SDK）。
 
 **模擬器驗證（API 36，2026-11-10，debug 版＝測試廣告）**

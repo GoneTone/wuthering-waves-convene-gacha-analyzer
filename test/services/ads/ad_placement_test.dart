@@ -41,20 +41,9 @@ void main() {
   );
   final empty = _state(banners: {'1': const []});
 
-  test('/settings 不論資料一律有廣告內容', () {
-    expect(pageHasAdContent(path: '/settings', gacha: empty), isTrue);
-    expect(
-      pageHasAdContent(path: '/settings', gacha: _state(bootstrapping: true)),
-      isTrue,
-    );
-  });
-
-  test('/contributors 不論資料一律有廣告內容', () {
-    expect(pageHasAdContent(path: '/contributors', gacha: empty), isTrue);
-    expect(
-      pageHasAdContent(path: '/contributors', gacha: _state(hasActive: false)),
-      isTrue,
-    );
+  test('設定頁、貢獻者頁不放原生廣告', () {
+    expect(pageHasAdContent(path: '/settings', gacha: empty), isFalse);
+    expect(pageHasAdContent(path: '/contributors', gacha: empty), isFalse);
   });
 
   test('/ 在 bootstrap 中沒有廣告內容', () {

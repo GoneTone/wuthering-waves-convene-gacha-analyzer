@@ -28,7 +28,7 @@
 - **encore.moe**：下載物品名稱、圖示與角色、武器資料。只傳送物品 ID 與語言，不包含你的帳號資料。
 - **GitHub**：檢查有沒有新版本、取得更新說明。
 - **Google Play**（只限 Android 版）：檢查有沒有新版本、下載更新。
-- **Google AdMob**（只限 Android 版）：顯示頁面底部的橫幅廣告與部分頁面內容之間的原生廣告，見下方「廣告」。
+- **Google AdMob**（只限 Android 版）：在部分頁面的內容之間顯示原生廣告，見下方「廣告」。
 - **Google 雲端硬碟**（只在你自己開啟雲端同步時）：把喚取紀錄寫入你自己的 Google 雲端硬碟中、只有本 App 能存取的隱藏資料夾（appDataFolder）。App 只會取得你的 Google 帳號 email 用來顯示「已連結哪個帳號」，以及存取這個資料夾的權限。你可以隨時在設定頁中斷連結，並到 Google 帳號的安全性設定移除授權。
 
 ### Android 版讀取 log 檔的方式
@@ -40,7 +40,7 @@ Android 不允許 App 直接讀取其他 App 的檔案。本 App 會在你按下
 
 ### 廣告（只限 Android 版）
 
-Android 版會在有內容的頁面底部顯示一則 Google AdMob 橫幅廣告，部分頁面的內容之間也會穿插 Google AdMob 原生廣告。Windows 版沒有廣告。
+Android 版會在部分有內容的頁面中，於內容之間穿插 Google AdMob 原生廣告。Windows 版沒有廣告。
 
 - 依 Google 公布的說明，Google Mobile Ads SDK 會自動收集並傳送以下資料給 Google，用於廣告、分析與防止詐騙：裝置的 IP 位址（可能用來推估大致位置）、與廣告的互動（例如 App 啟動、點擊、影片觀看）、效能診斷資訊，以及 Android 廣告 ID、應用程式集 ID 等裝置識別碼。所有資料在傳輸時都經過 TLS 加密。
 - 這些資料由 Google 收集與處理，開發者收不到個人資料。詳見 [Google 如何使用合作夥伴網站或應用程式的資訊](https://policies.google.com/technologies/partner-sites)。
@@ -101,7 +101,7 @@ This data is stored on your device. Deleting an account in the app removes that 
 - **encore.moe**: to download item names, icons, and character and weapon data. Only item IDs and the language are sent, never your account data.
 - **GitHub**: to check for new versions and fetch release notes.
 - **Google Play** (Android only): to check for and download updates.
-- **Google AdMob** (Android only): to show the banner ad at the bottom of the screen and native ads between the content of some pages; see "Ads" below.
+- **Google AdMob** (Android only): to show native ads between the content of some pages; see "Ads" below.
 - **Google Drive** (only if you turn on cloud sync yourself): the app writes your convene history to a hidden folder in your own Google Drive that only this app can access (appDataFolder). The app only gets your Google account email, to show which account is linked, and access to that folder. You can unlink at any time in Settings and remove the access in your Google Account security settings.
 
 ### How the Android version reads the game's log
@@ -113,7 +113,7 @@ Android doesn't let apps read other apps' files. When you tap "Update", the app 
 
 ### Ads (Android only)
 
-The Android version shows one Google AdMob banner ad at the bottom of pages that have content, and some pages also show Google AdMob native ads between their content. The Windows version has no ads.
+The Android version shows Google AdMob native ads between the content of some pages that have content. The Windows version has no ads.
 
 - According to Google's disclosure, the Google Mobile Ads SDK automatically collects and sends the following data to Google for advertising, analytics and fraud prevention: the device's IP address (which may be used to estimate its general location), interactions with ads (such as app launches, taps and video views), performance diagnostics, and device identifiers such as the Android advertising ID and app set ID. All of it is encrypted in transit with TLS.
 - This data is collected and processed by Google; the developer does not receive personal data. See [How Google uses information from sites or apps that use our services](https://policies.google.com/technologies/partner-sites).

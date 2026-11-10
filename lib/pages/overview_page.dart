@@ -53,7 +53,7 @@ class OverviewPage extends ConsumerWidget {
         (s) => (activeData: s.activeData, isBootstrapping: s.isBootstrapping),
       ),
     );
-    // 條件與底部橫幅一致（app_shell）；啟動載入中或沒有紀錄時 pageHasAdContent 為 false。
+    // 條件與卡池頁一致；啟動載入中或沒有紀錄時 pageHasAdContent 為 false。
     final adsAllowed =
         ref.watch(isAndroidProvider) &&
         ref.watch(adsProvider.select((s) => s.canRequestAds)) &&

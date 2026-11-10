@@ -138,12 +138,11 @@ flutter run -d windows
 
 ### 廣告 ID（選用，Android）
 
-Android 橫幅與原生廣告的 AdMob ID 同樣在建置時注入，不寫進原始碼。要在自己的建置播正式廣告，在專案根目錄建立 `secrets/ads_defines.json`（已被 git 忽略），並和雲端同步設定檔一起帶入：
+Android 原生廣告的 AdMob ID 同樣在建置時注入，不寫進原始碼。要在自己的建置播正式廣告，在專案根目錄建立 `secrets/ads_defines.json`（已被 git 忽略），並和雲端同步設定檔一起帶入：
 
 ```json
 {
   "ADMOB_APP_ID": "ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy",
-  "ADMOB_BANNER_UNIT_ID": "ca-app-pub-xxxxxxxxxxxxxxxx/zzzzzzzzzz",
   "ADMOB_NATIVE_UNIT_ID": "ca-app-pub-xxxxxxxxxxxxxxxx/wwwwwwwwww"
 }
 ```
