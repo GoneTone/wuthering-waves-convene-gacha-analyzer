@@ -725,7 +725,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 **廣告 ID 不寫進原始碼**
 - 專案開源，寫死的話任何人自己編譯都會用開發者帳號播正式廣告，測試時的點擊會算成無效流量，可能被扣款或停權。
-- 比照雲端同步憑證，`secrets/ads_defines.json`（`ADMOB_APP_ID`、`ADMOB_BANNER_UNIT_ID`）以 `--dart-define-from-file` 注入；CI 從 secrets 產生。可以同時給兩個 `--dart-define-from-file`。
+- 比照雲端同步憑證，`secrets/ads_defines.json`（`ADMOB_APP_ID`、`ADMOB_BANNER_UNIT_ID`，2026-11-10 起多一個 `ADMOB_NATIVE_UNIT_ID`，見本節最後的「原生廣告」小節）以 `--dart-define-from-file` 注入；CI 從 secrets 產生。可以同時給兩個 `--dart-define-from-file`。
 - 應用程式 ID 要寫在 Manifest（缺少時 SDK 一啟動就閃退）。Gradle 從 `dart-defines` 屬性解出 `ADMOB_APP_ID`（`--dart-define-from-file` 的值也會展開進這個屬性），只在 release buildType 覆寫 manifest placeholder；其餘一律官方測試 App ID。Dart 端非 `kReleaseMode` 也一律用測試單元 ID。
 
 **橫幅尺寸**
@@ -774,7 +774,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 設計見 `docs/superpowers/specs/2026-11-10-android-native-ads-design.md`。底部橫幅保留，另外在內容中間穿插原生廣告；底線不變：沒有強制觀看，也不追求收入最大化。
 
 **三個位置與模板**
-- 位置 1：卡池頁紀錄列表（卡片模式）當頁第 10 筆之後，小型模板；當頁 10 筆以下時不放（插進去會緊貼分頁列），平板／桌面的表格排版也不放。
+- 位置 1：卡池頁紀錄列表（卡片模式）當頁第 10 筆之後，小型模板；當頁 10 筆以下時不放（插進去會緊貼分頁列），平板／桌面的表格排版也不放。是否**載入**看篩選後的總筆數（超過 10 筆就載入），是否**插入**看當頁筆數，所以停在只有幾筆的最後一頁時，廣告已載入但不顯示。
 - 位置 3：卡池頁 5★ 時間軸那一列的下方、「5★ 一覽」標題的上方，中型模板。
 - 位置 4：綜合頁「類型分布」的下方、「各卡池最高稀有度件數」的上方，中型模板。
 - 手機橫向、平板仍用中型模板，寬度上限 400dp 並置中。設定頁、貢獻者頁、對話框不放。
@@ -802,13 +802,22 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 **外觀：模板可改與不可改**
 - 可改：背景（`surfaceCard`）、圓角（`AppRadius.md`）、按鈕底色與文字色、標題／副標／第三行的文字色、粗細、字級。這些都取自 App 色票（`GachaTokens`），外層再包一層 `borderSubtle` 邊框與相同圓角，和 App 的卡片一致。
+- **踩雷：三組文字都要給背景色。** 只設 `mainBackgroundColor` 時，中型模板實際畫出來是白底，標題和說明文字後面各有一塊深色底，上方還多一條深色帶；標題、副標、第三行的 `backgroundColor` 也設成 `surfaceCard` 才正常（試作版有設，正式版漏掉，2026-11-10 在模擬器發現）。
 - 不可改：版面本身固定（小型寬 320～400dp、高 90～200dp；中型寬 320～400dp、高 320～400dp）；必須保留模板自帶的「Ad」標籤與 AdChoices 圖示，不可修改或遮住廣告素材。外觀不能和紀錄、統計卡片一模一樣，否則會讓人誤以為是內容，違反原生廣告政策。
-- 外框高度目前用固定值（`kNativeSmallHeight`、`kNativeMediumHeight`）。
+- 外框高度：小型 `kNativeSmallHeight` = 100dp、中型 `kNativeMediumHeight` = 355dp，外框本身也塗 `surfaceCard`，模板沒填滿的空間看起來是卡片留白。
+  - 中型模板的版面檔（`google_mobile_ads` 的 `gnt_medium_template_view.xml`）整個寫死 350dp 高、圖片 190dp；文字各限一行，說明最多兩行並以「...」截斷。所以正式廣告文字再長、圖片比例不同，模板都還是 350dp，不會撐破外框。外框 1dp 邊框會吃掉內部高度，用 350 時橫向會切到模板底部留白，所以多留到 355。
+  - 小型模板每行文字都限一行，高度撐滿外框，內容只會在框內壓縮。
+  - 放大字級（1.3、2.0 倍）時模板在框內自己壓縮（說明截成一行、標題壓到「Ad」標示），按鈕仍完整。試過讓小型外框跟著字級變高，模板內容不會跟著撐開，只多出空白，所以維持固定高度。
 
 **建置注入與 CI**
 - 比照橫幅：`secrets/ads_defines.json` 多一個 `ADMOB_NATIVE_UNIT_ID`；只有 release 且有注入值時才用，否則一律用官方原生廣告測試 ID。
 - CI 的「Write ads defines from secrets」步驟三個 secrets（`ADMOB_APP_ID`、`ADMOB_BANNER_UNIT_ID`、`ADMOB_NATIVE_UNIT_ID`）都有才寫檔，缺任何一個就沿用原本的警告、只顯示測試廣告。所以 GitHub 要新增 `ADMOB_NATIVE_UNIT_ID` 這個 secret，否則正式版連橫幅也會變測試廣告。
 - 隱私權政策「廣告」一節已改成也包含原生廣告（資料收集不變，同一個 SDK）。
 
-**尚待驗證**
-- 模擬器上的實際廣告高度、快速切換卡池的請求次數、高螢幕是否可能同時看到兩則原生廣告，以及正式版的實際執行，都還沒驗證，之後補在這裡。
+**模擬器驗證（API 36，2026-11-10，debug 版＝測試廣告）**
+- 三個位置都在預期的地方出現，AdMob native ad validator 顯示「No implementation issues found」（這個提示視窗只在測試廣告出現，會擋住觸控，自動操作前要先關掉）。
+- 直向、橫向（中型寬 400dp 置中）、深色、淺色都看過；切換深淺色時 log 依序是兩則 `native disposed` 再兩則 `native loaded`。
+- 紀錄列表翻到第 2 頁時第 10 筆後顯示同一則廣告，沒有重新載入、沒有紅色錯誤框。
+- **快速切換卡池**：連續切 5 個卡池、每個停約 1 秒，約 10 秒內 10 次 `native loaded`（每個卡池兩則），離開的卡池都有釋放。AdMob 沒有公開多少算異常；使用者決定維持現狀（每個卡池是不同的頁面）。
+- **長螢幕會同時看到兩則**：模擬器解析度調成 1080×2760（約 1051dp 高）、沒有 5★ 的卡池，捲動經過時畫面頂端露出位置 3 的按鈕下緣，同時位置 1 已捲進畫面下方。一般 914dp 高的手機兩者相距約 743dp，不會同時出現。使用者決定接受，不另外處理。
+- 正式版實際執行：待正式原生廣告單元 ID 設定後補上。
