@@ -373,7 +373,7 @@
   "manualCredentialWarning": "Az URL a fiókja hitelesítő adatait tartalmazza. Ne ossza meg nyilvánosan. Egy idő után lejár.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Várakozás arra, hogy megnyissa a játékban a Convene Records oldalt...",
-  "progressCheckingLogAccess": "A játék naplófájljának beolvasási módját ellenőrizzük...",
+  "progressCheckingLogAccess": "A játék naplófájljának beolvasása előkészítés alatt...",
   "progressLogUnavailableTitle": "Az idézési előzmények URL-je nem szerezhető meg automatikusan",
   "logUnavailableNotPaired": "A játék naplófájljának beolvasása még nincs beállítva. Egyszeri beállítás után minden frissítés automatikusan beolvassa.",
   "logUnavailableNoWifi": "A vezeték nélküli hibakeresés csak Wi‑Fi-n működik. Csatlakozzon Wi‑Fi-hálózathoz, majd térjen vissza; az alkalmazás automatikusan folytatja. Az URL-t kézzel is megadhatja.",

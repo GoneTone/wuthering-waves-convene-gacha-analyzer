@@ -373,7 +373,7 @@
   "manualCredentialWarning": "ה-URL מכיל את פרטי הגישה לחשבון שלכם. אל תשתפו אותו בפומבי. תוקפו פג לאחר זמן מה.",
   "manualCredentialSubmit": "אישור",
   "progressWaitingLog": "ממתין שתפתחו את דף Convene Records במשחק...",
-  "progressCheckingLogAccess": "בודק איך לקרוא את קובץ היומן של המשחק...",
+  "progressCheckingLogAccess": "מתכונן לקריאת קובץ היומן של המשחק...",
   "progressLogUnavailableTitle": "לא ניתן לקבל אוטומטית את כתובת ה-URL של היסטוריית הזימונים",
   "logUnavailableNotPaired": "קריאת קובץ היומן של המשחק עדיין לא הוגדרה. אחרי הגדרה חד־פעמית, כל עדכון יקרא אותו אוטומטית.",
   "logUnavailableNoWifi": "ניפוי באגים אלחוטי פועל רק ב-Wi‑Fi. התחברו ל-Wi‑Fi וחזרו; האפליקציה תמשיך אוטומטית. אפשר גם להזין את כתובת ה-URL ידנית.",

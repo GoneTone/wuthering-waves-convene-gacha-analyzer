@@ -373,7 +373,7 @@
   "manualCredentialWarning": "O URL contém as credenciais da sua conta. Não o partilhe publicamente. Expira passado algum tempo.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "A aguardar que abra a página Registros de invocação no jogo...",
-  "progressCheckingLogAccess": "A verificar como ler o ficheiro de log do jogo...",
+  "progressCheckingLogAccess": "A preparar a leitura do ficheiro de log do jogo...",
   "progressLogUnavailableTitle": "Não é possível obter o URL do histórico de invocações automaticamente",
   "logUnavailableNotPaired": "A leitura do ficheiro de log do jogo ainda não está configurada. Após uma configuração única, cada atualização lê-o automaticamente.",
   "logUnavailableNoWifi": "A depuração sem fios só funciona com Wi‑Fi. Ligue-se a uma rede Wi‑Fi e volte; a aplicação continua automaticamente. Também pode introduzir o URL manualmente.",

@@ -373,7 +373,7 @@
   "manualCredentialWarning": "يحتوي الرابط على بيانات اعتماد حسابك. لا تشاركه علنًا. تنتهي صلاحيته بعد فترة.",
   "manualCredentialSubmit": "موافق",
   "progressWaitingLog": "في انتظار فتحك صفحة Convene Records في اللعبة...",
-  "progressCheckingLogAccess": "جارٍ التحقق من طريقة قراءة ملف سجل أحداث اللعبة...",
+  "progressCheckingLogAccess": "جارٍ التحضير لقراءة ملف سجل أحداث اللعبة...",
   "progressLogUnavailableTitle": "تعذّر الحصول على رابط سجل الاستدعاء تلقائيًا",
   "logUnavailableNotPaired": "لم يتم إعداد قراءة ملف سجل أحداث اللعبة بعد. بعد إعداد لمرة واحدة، ستتم قراءته تلقائيًا عند كل تحديث.",
   "logUnavailableNoWifi": "لا يعمل تصحيح الأخطاء اللاسلكي إلا عبر Wi‑Fi. اتصل بشبكة Wi‑Fi ثم عُد، وسيتابع التطبيق تلقائيًا. يمكنك أيضًا إدخال الرابط يدويًا.",

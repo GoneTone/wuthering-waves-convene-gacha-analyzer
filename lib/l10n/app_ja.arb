@@ -1148,7 +1148,7 @@
   "@progressWaitingLog": {
     "description": "Android waiting screen title while the app watches the game log for the convene history URL"
   },
-  "progressCheckingLogAccess": "ゲームのログファイルの読み取り方法を確認しています...",
+  "progressCheckingLogAccess": "ゲームのログファイルを読み取る準備をしています...",
   "@progressCheckingLogAccess": {
     "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
   },

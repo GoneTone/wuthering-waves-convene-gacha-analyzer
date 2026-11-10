@@ -373,7 +373,7 @@
   "manualCredentialWarning": "Ten URL zawiera dane uwierzytelniające Twojego konta. Nie udostępniaj go publicznie. Po pewnym czasie wygasa.",
   "manualCredentialSubmit": "OK",
   "progressWaitingLog": "Oczekiwanie na otwarcie strony Convene Records w grze...",
-  "progressCheckingLogAccess": "Sprawdzanie sposobu odczytu pliku logu gry...",
+  "progressCheckingLogAccess": "Przygotowywanie odczytu pliku logu gry...",
   "progressLogUnavailableTitle": "Nie można automatycznie uzyskać adresu URL historii przywołań",
   "logUnavailableNotPaired": "Odczyt pliku logu gry nie jest jeszcze skonfigurowany. Po jednorazowej konfiguracji każda aktualizacja odczyta go automatycznie.",
   "logUnavailableNoWifi": "Debugowanie bezprzewodowe działa tylko przez Wi‑Fi. Połącz się z Wi‑Fi i wróć – aplikacja będzie kontynuować automatycznie. Możesz też wprowadzić adres URL ręcznie.",
