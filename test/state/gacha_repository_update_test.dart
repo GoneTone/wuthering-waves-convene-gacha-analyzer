@@ -18,6 +18,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/client_log_watch.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import '../helpers/client_log_fixtures.dart';
 import '../helpers/no_game_dir.dart';
 import '../helpers/wait_until.dart';
 
@@ -67,15 +68,22 @@ class _FakeWatch implements ClientLogWatch {
   /// 每次 `start` 收到的 Client.log 路徑。
   final paths = <String>[];
 
+  /// 每次 `start` 收到的起點（null 代表從當下結尾開始）。
+  final froms = <ClientLogPosition?>[];
+
   /// 被 `cancel()` 的 session 索引。
   final cancelled = <int>[];
 
   @override
-  Future<CaptureSession> start(ClientLogSource source) async {
+  Future<CaptureSession> start(
+    ClientLogSource source, {
+    ClientLogPosition? from,
+  }) async {
     final i = hits.length;
     final c = Completer<GachaCredential?>();
     hits.add(c);
     paths.add((source as LocalFileLogSource).path);
+    froms.add(from);
     return CaptureSession(
       result: c.future,
       cancel: () async {
@@ -1132,7 +1140,8 @@ void main() {
       await waitUntil(() => watch.hits.isNotEmpty);
       await repo.restartClientLogWatch();
 
-      expect(locator.calls, 2);
+      // 第一次是攔截前找現成網址。
+      expect(locator.calls, 3);
       expect(watch.hits, hasLength(2));
       expect(watch.cancelled, [0]);
 
@@ -1204,7 +1213,8 @@ void main() {
       capture.result.complete(_cred());
       await done;
 
-      expect(locator.calls, 2);
+      // 第一次是攔截前找現成網址，之後兩次是啟動與重啟監看。
+      expect(locator.calls, 3);
       expect(watch.hits, isEmpty);
       expect(
         records.where(
@@ -1252,14 +1262,17 @@ void main() {
       final repo = await bootstrap(t.container);
 
       final done = repo.update();
+      // 第一次定位是攔截前找現成網址，找不到資料夾就直接開始攔截。
       await waitUntil(() => locator.gates.length == 1);
-      final restart = repo.restartClientLogWatch();
+      locator.gates[0].complete(null);
       await waitUntil(() => locator.gates.length == 2);
-      locator.gates[1].complete(
+      final restart = repo.restartClientLogWatch();
+      await waitUntil(() => locator.gates.length == 3);
+      locator.gates[2].complete(
         const GameDirLocation(newDir, GameDirSource.setting),
       );
       await restart;
-      locator.gates[0].complete(loc);
+      locator.gates[1].complete(loc);
       await _settle();
 
       expect(watch.paths, [GameDirLocator.clientLogPath(newDir)]);
@@ -1353,5 +1366,138 @@ void main() {
         expect(t.hits, hasLength(12), reason: 'no second update');
       });
     });
+
+    group('existing url in the log', () {
+      /// 遊戲資料夾（Client.log 放在它底下）。
+      late String dir;
+
+      /// 在遊戲資料夾的 Client.log 寫入 [cred] 的喚取記錄網址，回傳指向它的 locator。
+      _FakeLocator logWith(GachaCredential cred) {
+        dir = '${tempDir.path}${Platform.pathSeparator}game';
+        File(GameDirLocator.clientLogPath(dir))
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(
+            encodeClientLog('noise\n${_conveneUrl(cred)}\nmore\n'),
+          );
+        return _FakeLocator(GameDirLocation(dir, GameDirSource.setting));
+      }
+
+      /// 第 1 個請求回 API 錯誤（網址失效），其餘正常。
+      String firstFails(int hit, int type) =>
+          hit == 1 ? _fail(-1) : (type == 1 ? _ok([_row('1')]) : _ok(const []));
+
+      test('a usable url is used without starting capture', () async {
+        final capture = _ControlledCapture();
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: logWith(_cred()),
+        );
+        final repo = await bootstrap(t.container);
+
+        await repo.update();
+
+        expect(capture.starts, 0);
+        expect(watch.hits, isEmpty);
+        // 1 次確認網址能用，再抓 12 池。
+        expect(t.hits, hasLength(13));
+        expect(
+          t.container.read(gachaRepositoryProvider).progress,
+          isA<UpdateCompleted>(),
+        );
+      });
+
+      test('an expired url falls through to waiting for a new one', () async {
+        final capture = _ControlledCapture();
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: logWith(_cred()),
+          respond: firstFails,
+        );
+        final repo = await bootstrap(t.container);
+
+        final done = repo.update();
+        await waitUntil(() => watch.hits.isNotEmpty);
+        expect(capture.starts, 1);
+        final waiting = t.container.read(gachaRepositoryProvider).progress;
+        expect((waiting as WaitingForCapture).isFallback, isFalse);
+        // 監看從找現成網址讀到的結尾接著讀，期間寫入的內容不會漏。
+        expect(
+          watch.froms.single?.offset,
+          File(GameDirLocator.clientLogPath(dir)).lengthSync(),
+        );
+        watch.hits[0].complete(_cred());
+        await waitUntil(() => capture.cancelCalls > 0);
+        capture.result.complete(null);
+        await done;
+
+        expect(
+          t.container.read(gachaRepositoryProvider).progress,
+          isA<UpdateCompleted>(),
+        );
+      });
+
+      test('the url that just failed is not tried again', () async {
+        final storage = GachaStorage(tempDir);
+        await storage.save(
+          BannerStorage(
+            playerId: '701000000',
+            languageCode: 'zh-Hant',
+            lastUpdated: DateTime.utc(2026),
+            banners: const {'1': [], '2': []},
+          ),
+        );
+        await storage.saveCapturedCredential(
+          '701000000',
+          _cred().toJsonString(),
+        );
+        final capture = _ControlledCapture(completeOnCancel: true);
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: logWith(_cred()),
+          storage: storage,
+          respond: firstFails,
+        );
+        final repo = await bootstrap(t.container);
+
+        final done = repo.update();
+        await waitUntil(() => watch.hits.isNotEmpty);
+        expect(t.hits, hasLength(1), reason: 'same url is not re-checked');
+        final waiting = t.container.read(gachaRepositoryProvider).progress;
+        expect((waiting as WaitingForCapture).isFallback, isTrue);
+        await repo.cancelCapture();
+        await done;
+      });
+
+      test('force recapture ignores it', () async {
+        final capture = _ControlledCapture(completeOnCancel: true);
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: logWith(_cred()),
+        );
+        final repo = await bootstrap(t.container);
+
+        final done = repo.forceRecaptureAndUpdate();
+        await waitUntil(() => watch.hits.isNotEmpty);
+        expect(capture.starts, 1);
+        expect(t.hits, isEmpty);
+        await repo.cancelCapture();
+        await done;
+      });
+    });
   });
 }
+
+/// 組出 [cred] 對應的國際服喚取記錄網址。
+String _conveneUrl(GachaCredential cred) =>
+    'https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record'
+    '?svr_id=${cred.serverId}&player_id=${cred.playerId}'
+    '&lang=${cred.languageCode}&record_id=${cred.recordId}'
+    '&resources_id=${cred.cardPoolId}';

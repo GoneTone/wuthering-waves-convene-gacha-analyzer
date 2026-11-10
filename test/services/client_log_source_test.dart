@@ -26,10 +26,10 @@ void main() {
     );
   });
 
-  test('length command quotes path', () {
+  test('probe command quotes path and asks for size and inode', () {
     expect(
-      clientLogLengthCommand('/a/Client.log'),
-      "stat -c %s '/a/Client.log' 2>/dev/null || echo 0",
+      clientLogProbeCommand('/a/Client.log'),
+      "stat -c '%s %i' '/a/Client.log' 2>/dev/null || echo 0",
     );
   });
 
@@ -37,22 +37,27 @@ void main() {
     expect(() => clientLogReadCommand("/a/x'y", 0, 1), throwsArgumentError);
     expect(() => clientLogReadCommand('/a', -1, 1), throwsArgumentError);
     expect(() => clientLogReadCommand('/a', 0, 0), throwsArgumentError);
-    expect(() => clientLogLengthCommand("/a/x'y"), throwsArgumentError);
+    expect(() => clientLogProbeCommand("/a/x'y"), throwsArgumentError);
   });
 
-  test('shell length parses trimmed stat output', () async {
-    for (final (out, want) in [('1234\n', 1234), ('0\n', 0)]) {
-      expect(await ShellLogSource(exec: _out(out)).length(), want, reason: out);
+  test('shell probe parses size and inode from stat output', () async {
+    for (final (out, length, id) in [
+      ('1234 5678\n', 1234, '5678'),
+      // 檔案不存在時指令只印 0：沒有識別，代表無法判斷。
+      ('0\n', 0, null),
+    ]) {
+      final p = await ShellLogSource(exec: _out(out)).probe();
+      expect((p.length, p.id), (length, id), reason: out);
     }
   });
 
   test(
-    'shell length throws on empty or garbled output instead of reporting 0',
+    'shell probe throws on empty or garbled output instead of reporting 0',
     () async {
       // 回 0 會被監看當成 log 輪替而從頭重讀整個檔；丟例外則只是這一輪讀取失敗。
       for (final out in ['', 'stat: weird\n']) {
         await expectLater(
-          ShellLogSource(exec: _out(out)).length(),
+          ShellLogSource(exec: _out(out)).probe(),
           throwsFormatException,
           reason: out,
         );
@@ -60,16 +65,16 @@ void main() {
     },
   );
 
-  test('shell length sends the length command for the android path', () async {
+  test('shell probe sends the probe command for the android path', () async {
     final sent = <String>[];
     final src = ShellLogSource(
       exec: (c) async {
         sent.add(c);
-        return Uint8List.fromList(utf8.encode('7\n'));
+        return Uint8List.fromList(utf8.encode('7 1\n'));
       },
     );
-    await src.length();
-    expect(sent.single, clientLogLengthCommand(androidClientLogPath));
+    await src.probe();
+    expect(sent.single, clientLogProbeCommand(androidClientLogPath));
   });
 
   test('shell read sends the read command and returns raw bytes', () async {
@@ -84,14 +89,31 @@ void main() {
     expect(sent.single, clientLogReadCommand(androidClientLogPath, 5, 3));
   });
 
-  test('local file source: missing file has length 0', () async {
-    expect(await LocalFileLogSource('${tmp.path}/nope.log').length(), 0);
+  test('local file source: missing file has length 0 and no id', () async {
+    final p = await LocalFileLogSource('${tmp.path}/nope.log').probe();
+    expect((p.length, p.id), (0, null));
+  });
+
+  test('local file source identifies the file by its header', () async {
+    final f = File('${tmp.path}/Client.log');
+    final src = LocalFileLogSource(f.path);
+    // 檔頭還不夠長時無法判斷。
+    f.writeAsStringSync('Log file open');
+    expect((await src.probe()).id, isNull);
+    f.writeAsStringSync('Log file open, [2026.11.05-18.04.55]\r\n${'x' * 40}');
+    final first = await src.probe();
+    expect(first.id, isNotNull);
+    // 附加內容不改變識別；換成另一個時間開的新檔才會變。
+    f.writeAsStringSync('more', mode: FileMode.append);
+    expect((await src.probe()).id, first.id);
+    f.writeAsStringSync('Log file open, [2026.11.05-19.00.00]\r\n${'x' * 40}');
+    expect((await src.probe()).id, isNot(first.id));
   });
 
   test('local file source reads the requested range', () async {
     final f = File('${tmp.path}/Client.log')..writeAsBytesSync([9, 8, 7, 6, 5]);
     final src = LocalFileLogSource(f.path);
-    expect(await src.length(), 5);
+    expect((await src.probe()).length, 5);
     expect(await src.read(1, 3), [8, 7, 6]);
   });
 }

@@ -9,10 +9,16 @@ const String androidClientLogPath =
     '/sdcard/Android/data/com.kurogame.wutheringwaves.global/files/UE4Game/'
     'Client/Client/Saved/Logs/Client.log';
 
-/// 提供 Client.log 的長度與指定範圍的原始（未解碼）位元組。
+/// Client.log 某一刻的長度與檔案識別。
+///
+/// [id] 用來判斷遊戲是否換了新檔（舊檔改名成 `Client-backup-*.log`、另開新檔）；
+/// 讀不到時為 null，代表「無法判斷」，只能退回用長度變短判斷。
+typedef ClientLogProbe = ({int length, String? id});
+
+/// 提供 Client.log 的長度、檔案識別與指定範圍的原始（未解碼）位元組。
 abstract interface class ClientLogSource {
-  /// 檔案目前長度；檔案不存在時回 0。
-  Future<int> length();
+  /// 檔案目前的長度與識別；檔案不存在時長度為 0、識別為 null。
+  Future<ClientLogProbe> probe();
 
   /// 讀取 [offset] 起最多 [length] 個位元組。
   Future<Uint8List> read(int offset, int length);
@@ -33,9 +39,16 @@ class LocalFileLogSource implements ClientLogSource {
   String get logLabel => sanitizeFsPath(path);
 
   @override
-  Future<int> length() async {
+  Future<ClientLogProbe> probe() async {
     final file = File(path);
-    return await file.exists() ? file.length() : 0;
+    if (!await file.exists()) return (length: 0, id: null);
+    final length = await file.length();
+    if (length < clientLogHeaderBytes) return (length: length, id: null);
+    // Dart 拿不到 inode；遊戲每個新檔開頭都是精確到秒的「Log file open, [時間]」，用檔頭當識別。
+    return (
+      length: length,
+      id: base64.encode(await read(0, clientLogHeaderBytes)),
+    );
   }
 
   @override
@@ -76,13 +89,17 @@ class ShellLogSource implements ClientLogSource {
   String get logLabel => _label;
 
   @override
-  Future<int> length() async {
+  Future<ClientLogProbe> probe() async {
     final out = utf8.decode(
-      await _exec(clientLogLengthCommand(path)),
+      await _exec(clientLogProbeCommand(path)),
       allowMalformed: true,
     );
     // 檔案不存在時指令本身印 0；空的或看不懂的輸出是讀取出錯，若當成 0 會被誤判為 log 輪替而從頭重讀。
-    return int.parse(out.trim());
+    final parts = out.trim().split(' ');
+    return (
+      length: int.parse(parts.first),
+      id: parts.length > 1 && parts[1].isNotEmpty ? parts[1] : null,
+    );
   }
 
   @override
@@ -90,10 +107,13 @@ class ShellLogSource implements ClientLogSource {
       _exec(clientLogReadCommand(path, offset, length));
 }
 
-/// 產生取得 [path] 長度的 shell 指令。
-String clientLogLengthCommand(String path) {
+/// 本機檔案用來當識別的檔頭長度（涵蓋「Log file open, [時間]」整行）。
+const int clientLogHeaderBytes = 48;
+
+/// 產生一次取得 [path] 長度與 inode 的 shell 指令；檔案不存在時只印 0。
+String clientLogProbeCommand(String path) {
   _checkPath(path);
-  return "stat -c %s '$path' 2>/dev/null || echo 0";
+  return "stat -c '%s %i' '$path' 2>/dev/null || echo 0";
 }
 
 /// 產生讀取 [path] 自 [offset] 起 [length] 位元組的 shell 指令。

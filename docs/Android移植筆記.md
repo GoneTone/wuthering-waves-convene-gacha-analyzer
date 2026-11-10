@@ -214,8 +214,8 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 首次連上 shell 後執行 `pm grant <套件> android.permission.WRITE_SECURE_SETTINGS`。**重開機後授權仍在**；無線偵錯會被系統關掉，但 App 可以自己再打開，約 2.2 秒拿到 shell。
 - **NSD 會回傳已關閉的舊連接埠**：無線偵錯重新開啟後連接埠會換，NSD 結果裡舊的記錄還在，而且常排在前面，連過去會 `Connection refused`。要收集約 2 秒內的所有結果，逐一嘗試連線。
 - **緊接著開下一個 shell 串流會失敗**：前一個串流剛結束就立刻開下一個，`flutter_adb` 偶爾回 `Stream open failed or refused by remote peer`，稍等再開就正常。指令要排隊執行，失敗時延遲重試一次。實機上連上後的第一條指令常卡滿 10 秒才失敗，所以每條指令前都補足 250 ms 間隔，比事後重試快得多。
-- 鳴潮的 `Client.log` 實測將近 10 MB，透過 shell 讀時要只讀新增的部分（`stat -c %s` 取長度，`tail -c +N | head -c M` 取範圍）。
-- **讀不到長度不能當成 0**：長度指令寫成 `stat -c %s '<路徑>' 2>/dev/null || echo 0`，檔案不存在時由指令自己印 0；輸出是空的或看不懂時要當成這次輪詢失敗（`ShellLogSource.length` 直接 `int.parse`）。若一律當成 0，會被判斷成 log 輪替，從頭重讀整個近 10 MB 的檔案。
+- 鳴潮的 `Client.log` 實測將近 10 MB（電腦版一次遊玩可到 20 MB），透過 shell 讀時要只讀需要的部分（`stat -c '%s %i'` 一次取長度與 inode，`tail -c +N | head -c M` 取範圍）。讀檔本身很快（手機上讀 2 MB 只要 15～44 ms），慢的是經由無線偵錯傳回 App：每 2 MB 約 3.7 秒。要追的量很大時改成由新到舊讀，見 #51。
+- **讀不到長度不能當成 0**：指令寫成 `stat -c '%s %i' '<路徑>' 2>/dev/null || echo 0`，檔案不存在時由指令自己印 0；輸出是空的或看不懂時要當成這次輪詢失敗（`ShellLogSource.probe` 直接 `int.parse`）。若一律當成 0，會被判斷成 log 輪替，從頭重讀整個近 10 MB 的檔案。
 
 **飛航模式取得網址（鳴潮限定，原神要另外驗證）**
 - 這是 WuWa Tracker 教學提供的 Android 手動方式。開飛航模式後進「喚取記錄」，頁面只顯示載入失敗，但長按可以全選複製出看不見的文字，內容是整段錯誤訊息（「網頁無法使用...無法載入位於 <網址> 的網頁...」），裡面有完整網址。
@@ -833,3 +833,27 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 正式版實際執行（rc.12 參數、正式單元 ID，2026-11-10）：模擬器移除除錯版後安裝，啟動正常、`logcat -b crash` 為空；APK 的 `libapp.so` 只有正式原生單元 ID；匯入 9605 筆後三個位置都載入（模擬器自動算測試裝置，正式 ID 也回測試廣告，且會跳 validator）。
 - **validator 對小型模板報「MediaView not used for main image or video asset」**：正式 ID 回了影片素材（測試 ID 的 Flood-It／Google Ads 不會）。Google 官方小型模板版面本來就沒有 MediaView（`gnt_small_template_view.xml` 只有 icon），AdMob 論壇的 Google 顧問回覆「MediaView is required to render the main video or image asset」、影片廣告不會投到小於 120dp 的 MediaView，並說 validator 只在測試廣告出現；沒提到政策處分，這個爭議在論壇上沒有結論。實際影響推測是位置 1 拿不到影片廣告、填充率較低。使用者決定維持小型模板（2026-11-10）。
 - **正式版關閉 validator**（2026-11-10，rc.13 起）：登記成 AdMob 測試裝置的內測手機，從 Play 安裝的正式版也拿到測試廣告，validator 會一直彈出、擋住觸控。官方做法是在 `<application>` 加 `<meta-data android:name="com.google.android.gms.ads.flag.NATIVE_AD_DEBUGGER_ENABLED" android:value="false" />`；放在 `android/app/src/release/AndroidManifest.xml`，只有正式版合併，除錯／profile 版保留以便開發時抓排版問題。validator 只出現在測試廣告，不影響一般玩家與投放。確認方式：`build/app/intermediates/merged_manifest/release/.../AndroidManifest.xml` 有這行、debug 的沒有；rc.13 參數的正式版在模擬器匯入資料後原生廣告照常載入、沒有彈出。
+
+## 十五、讀取喚取記錄網址
+
+### 51. 遊戲更新後卡在等待開啟記錄頁：先找現成網址、由新到舊讀、用檔案識別判斷換檔（通用，2026-11-10）
+
+**症狀**：兩位內測玩家按更新後進遊戲，遊戲還要先下載更新；更新完開記錄頁、回到 App，畫面一直停在「等待在遊戲中開啟喚取記錄頁...」，沒有錯誤也沒有抓取。更新完再跑一次整個流程就正常。
+
+**不是逾時，也不是 App 被關掉**：等待沒有上限；App 被關掉的話等待畫面會消失，不會停在原本的訊息。每條 shell 指令最多等 20 秒，失敗會重連，連不上畫面會改成「連線中斷」。
+
+**模擬器重現**（Android 16 模擬器、除錯版、無線偵錯）：在遊戲 log 路徑放 10 MB 的舊檔（XOR 編碼，同 `encodeClientLog`），按更新後 App 記下起點 10 MB；按 Home 讓 App 到背景，把 log 換成 60 MB 的新檔、網址放在最後一行，再叫回 App。舊做法要 **96 秒**才抓到，中間畫面完全沒變化。原因：
+
+- **照順序讀完所有積壓才讀得到網址**：玩家在遊戲裡時 App 被凍結（Android 14 以後背景 App 很快會被凍結，見 #19），回來後從上次位置往後每秒讀 2 MB，網址在最後面。傳輸是瓶頸，每 2 MB 約 3.7 秒。
+- **新檔比舊檔長時沒發現換過檔**：只看「檔案變短」判斷換檔，新檔從舊長度往後讀，log 裡也沒有 `client log rotated`。這次網址在最後沒漏，但網址若落在新檔的前段就會漏掉。
+
+**修法**（Android 與電腦版共用 `PollingClientLogWatch`，兩邊一起改）：
+
+1. **用檔案識別判斷換檔**：`ClientLogSource.probe()` 一次回傳長度與識別。shell 來源用 inode（`stat -c '%s %i'`；模擬器驗證過：附加內容 inode 不變，改名換新檔會變）；本機檔案（電腦版、Android 10 以下直接讀）Dart 拿不到 inode，改用前 48 位元組的檔頭（遊戲每個新檔開頭都是精確到秒的 `Log file open, [2026.11.05-18.04.55]`，電腦版實際檔案確認過）。識別讀不到或檔案太短時為 null，**代表無法判斷，不是換檔**，只退回用「變短」判斷。
+2. **積壓超過一次讀取量時由新到舊讀**（`scanClientLogBackward`）：先讀最後一段，找到最新的網址就停；沒找到才往前一段一段補讀，所以不會漏。只掃完整的行：區間結尾還沒換行的那行留給下一輪（可能還在寫，避免接受被截斷的網址），跨段的行會接起來再掃，有測試鎖住。
+3. **按更新時先找 log 裡現成的網址**：順序是「這個帳號存過的網址 → log 裡最新的網址 → 請玩家開記錄頁」。找到後先抓第一個卡池確認能用（API 回錯誤就當成已失效），能用才採用，失效就照常等新網址，所以失效的網址不會用掉原本「重攔一次」的機會。剛失敗的同一個網址（playerId 與 recordId 相同）不再試；強制重新取得網址時不找。電腦版在啟動攔截前找（找到就不用跳 UAC），讀整份檔；Android 在連上無線偵錯之後找，畫面維持「正在準備讀取遊戲 log 檔...」，只讀最後 4 MB，取消與手動輸入都能中途打斷。找完後的監看從讀到的結尾接著讀，期間寫入的內容不會漏。
+4. **log**：`client log backlog bytes=... reading newest first`、`client log backlog scanned ms= hit=`、`client log rotated length= by=shrink|identity`、`existing url none|usable= scanMs=`。之後看玩家匯出的 log 就能知道是不是這類問題。
+
+**結果**（同一套模擬器步驟）：回到 App 後 **2 秒**抓到網址（`rotated by=identity`，第一段就命中）。找現成網址：最後 4 MB 沒有網址時約 4.3 秒，網址在最後一段時約 2.2 秒；從按下更新到開始抓卡池約 5 秒（連線 2.8 秒＋找網址 2.2 秒），不用進遊戲。
+
+**限制**：遊戲每次啟動都會換新 log 檔，所以只找得到最近一次遊戲裡開過的網址；網址多久失效未知。Android 只讀最後 4 MB，網址在更前面時會請玩家再開一次記錄頁（新網址寫在最後，馬上就抓到）。兩位玩家的實際 log 還沒拿到，60 MB 是假設的更新 log 大小。

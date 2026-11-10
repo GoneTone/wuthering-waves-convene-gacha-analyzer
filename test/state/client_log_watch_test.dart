@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logging/logging.dart';
@@ -13,6 +15,9 @@ import '../helpers/client_log_fixtures.dart';
 String _url(String id) =>
     'https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record'
     '?svr_id=s&player_id=1&lang=en&gacha_id=1&resources_id=r&record_id=$id';
+
+/// 遊戲在 [time] 開新檔時寫的第一行。
+String _header(String time) => 'Log file open, [2026.11.10-$time]\r\n';
 
 /// 以編碼後的位元組 append [text] 到 [file]。
 void _append(File file, String text) => file.writeAsBytesSync(
@@ -39,10 +44,14 @@ void main() {
   });
 
   /// 啟動監看，tearDown 前由測試自行 cancel。
-  Future<CaptureSession> begin({int? maxReadBytes}) => PollingClientLogWatch(
+  Future<CaptureSession> begin({
+    int? maxReadBytes,
+    ClientLogSource? source,
+    ClientLogPosition? from,
+  }) => PollingClientLogWatch(
     interval: const Duration(milliseconds: 20),
     maxReadBytes: maxReadBytes ?? 2 * 1024 * 1024,
-  ).start(LocalFileLogSource(file.path));
+  ).start(source ?? LocalFileLogSource(file.path), from: from);
 
   test('ignores url written before start', () async {
     _append(file, '${_url('A')}\n');
@@ -78,6 +87,17 @@ void main() {
     final s = await begin();
     file.writeAsBytesSync(encodeClientLog('${_url('C')}\n'));
     expect((await _await(s.result))!.recordId, 'C');
+    await s.cancel();
+  });
+
+  test('reads a swapped-in longer file from its start', () async {
+    // 遊戲更新後新檔比舊檔長，只看長度會以為沒換檔、從舊長度往後讀而漏掉前面的網址。
+    _append(file, '${_header('10.00.00')}${'x' * 200}\n');
+    final s = await begin();
+    file.writeAsBytesSync(
+      encodeClientLog('${_header('10.05.00')}${_url('G')}\n${'y' * 500}\n'),
+    );
+    expect((await _await(s.result))!.recordId, 'G');
     await s.cancel();
   });
 
@@ -122,6 +142,38 @@ void main() {
     await s.cancel();
   });
 
+  test('large backlog returns the newest url without reading it all', () async {
+    final src = _CountingSource(file.path);
+    final s = await begin(maxReadBytes: 64, source: src);
+    _append(file, '${_url('OLD')}\n${'x' * 2000}\n${_url('NEW')}\n');
+    expect((await _await(s.result))!.recordId, 'NEW');
+    expect(src.bytesRead, lessThan(1000));
+    await s.cancel();
+  });
+
+  test(
+    'large backlog keeps an unfinished last line for the next poll',
+    () async {
+      final s = await begin(maxReadBytes: 64);
+      final full = _url('H');
+      _append(file, '${'x' * 300}\n${full.substring(0, 50)}');
+      var done = false;
+      unawaited(s.result.then((_) => done = true));
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      expect(done, isFalse);
+      _append(file, '${full.substring(50)}\n');
+      expect((await _await(s.result))!.recordId, 'H');
+      await s.cancel();
+    },
+  );
+
+  test('starts from the given position', () async {
+    _append(file, '${_url('A')}\n');
+    final s = await begin(from: (offset: 0, id: null));
+    expect((await _await(s.result))!.recordId, 'A');
+    await s.cancel();
+  });
+
   test('read errors from the source keep waiting', () async {
     final src = _FlakySource(file.path);
     final s = await PollingClientLogWatch(
@@ -134,9 +186,63 @@ void main() {
     expect((await _await(s.result))!.recordId, 'F');
     await s.cancel();
   });
+
+  group('scanClientLogBackward', () {
+    /// 以 [chunk] 位元組一段，由新到舊掃整份檔案。
+    Future<ClientLogBackwardScan> scan(int chunk) => scanClientLogBackward(
+      LocalFileLogSource(file.path),
+      from: 0,
+      to: file.lengthSync(),
+      chunkBytes: chunk,
+      prefix: Uint8List(0),
+    );
+
+    test('joins a url split across chunks', () async {
+      _append(file, 'a\n${_url('SPLIT')}\n${'b' * 10}\n');
+      for (final chunk in [7, 37, 64, 150]) {
+        expect((await scan(chunk)).cred?.recordId, 'SPLIT', reason: '$chunk');
+      }
+    });
+
+    test('never accepts the unfinished last line', () async {
+      // 最後一行還沒換行（可能還在寫），即使看起來像完整網址也要留到下一輪。
+      _append(file, 'a\n${_url('OK')}\n${_url('CUT')}');
+      for (final chunk in [16, 64, 1000]) {
+        final r = await scan(chunk);
+        expect(r.cred?.recordId, 'OK', reason: '$chunk');
+        expect(utf8.decode(r.tail), _url('CUT'), reason: '$chunk');
+      }
+    });
+  });
+
+  group('findLatestClientLogCredential', () {
+    test(
+      'returns the newest url and stops before the unfinished line',
+      () async {
+        _append(file, '${_url('A')}\n${'x' * 300}\n${_url('B')}\nzzz');
+        final r = await findLatestClientLogCredential(
+          LocalFileLogSource(file.path),
+          chunkBytes: 64,
+        );
+        expect(r.cred?.recordId, 'B');
+        expect(r.end.offset, file.lengthSync() - 3);
+      },
+    );
+
+    test('only reads the last maxBytes when capped', () async {
+      _append(file, '${_url('A')}\n${'x' * 300}\n');
+      final r = await findLatestClientLogCredential(
+        LocalFileLogSource(file.path),
+        maxBytes: 100,
+        chunkBytes: 64,
+      );
+      expect(r.cred, isNull);
+      expect(r.end.offset, file.lengthSync());
+    });
+  });
 }
 
-/// [failing] 為 true 時 length/read 丟例外的本機檔案來源。
+/// [failing] 為 true 時 probe 丟例外的本機檔案來源。
 class _FlakySource extends LocalFileLogSource {
   /// 建立讀 [path] 的來源。
   _FlakySource(super.path);
@@ -145,8 +251,24 @@ class _FlakySource extends LocalFileLogSource {
   bool failing = false;
 
   @override
-  Future<int> length() {
+  Future<ClientLogProbe> probe() {
     if (failing) throw const FileSystemException('flaky');
-    return super.length();
+    return super.probe();
+  }
+}
+
+/// 記錄讀了多少位元組的本機檔案來源。
+class _CountingSource extends LocalFileLogSource {
+  /// 建立讀 [path] 的來源。
+  _CountingSource(super.path);
+
+  /// 目前為止 [read] 讀到的位元組數（不含 [probe] 讀檔頭）。
+  int bytesRead = 0;
+
+  @override
+  Future<Uint8List> read(int offset, int length) async {
+    final out = await super.read(offset, length);
+    if (offset > 0 || length != clientLogHeaderBytes) bytesRead += out.length;
+    return out;
   }
 }
