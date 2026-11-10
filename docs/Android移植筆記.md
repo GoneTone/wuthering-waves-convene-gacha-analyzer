@@ -434,7 +434,9 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 - 接續 #32：Google Cloud 的 Android OAuth 用戶端一筆只能填一個 SHA-1，所以 debug、上傳金鑰、Play 應用程式簽署金鑰各建一筆（套件名稱相同、同一個專案）。
 - **玩家從 Play 下載的版本是用 Play 應用程式簽署金鑰簽的**，SHA-1 要到 Play Console「應用程式完整性」頁複製，不是上傳金鑰的。沒登記時，Play 版的雲端同步會顯示授權失敗；登記後本專案幾分鐘內就生效。
-- **Play 簽署金鑰不只一張憑證**（2026-11 新建的 App 實測）：Play 版 APK 除了 v2／v3 簽章（API 24 以上），還有一組只給 Android 17（API 37）以上用的混合後量子簽章（v3.2，區塊 ID `0x70e1c89f`），裡面是**另外兩張憑證**。Play Console「應用程式簽署」頁把它列在「先前的應用程式簽署金鑰」並標「支援量子金鑰（Beta 版）」，按「複製所有憑證指紋」會一次給出三個 SHA-1。Android 17 手機回報哪一張還沒實測，三張都各建一筆 Android 用戶端（多登記沒有副作用）。
+- **Play 簽署金鑰不只一張憑證**（2026-11 新建的 App 實測）：Play 版 APK 除了 v2／v3 簽章（API 24 以上），還有一組只給 Android 17（API 37）以上用的混合後量子簽章（v3.2，區塊 ID `0x70e1c89f`），裡面是**另外兩張憑證**。Play Console「應用程式簽署」頁把它列在「先前的應用程式簽署金鑰」並標「支援量子金鑰（Beta 版）」，按「複製所有憑證指紋」會一次給出三個 SHA-1。三張都各建一筆 Android 用戶端（多登記沒有副作用）。
+  - **Android 17 實測（2026-11-10，API 37 Google Play 模擬器，從 Play 安裝的 rc.15）**：`dumpsys package` 顯示 `apkSigningVersion=3`，目前憑證是 **60:78**，輪替紀錄依序為 8D:01 → BE:B5 → 60:78（dumpsys 只印 Java `Signature.hashCode()`，要拿 APK 裡每張憑證的 DER 算 `Arrays.hashCode` 才對得出是哪張）。雲端同步登入成功並完成第一次同步。Google 端比對到哪一筆用戶端從裝置看不出來，三筆都要留著，不要刪。
+  - 取得 Play 簽署的 APK：服務帳戶現有權限就能呼叫 Android Publisher 的 `generatedApks.list`／`download`（版本代碼 → 通用 APK）。但 **用 adb 側載這份 APK，一啟動就會被 Play 導到「Get this app from Play」**（安裝來源不是 Play 時 Play 會擋），所以要先在裝置登入 Google 帳號，再按 Play 的「Update from Play」重新安裝（簽章不變，安裝來源變成 `com.android.vending`）。
 - **JDK 21 的 `apksigner` 讀不了 Play 版 APK**：遇到 v3.2 會報 `ML-DSA KeyFactory not available`。加 `--min-sdk-version 32 --max-sdk-version 36` 只驗 Android 16 以下的簽章，就能讀出傳統那張。要看全部憑證用 `tool/apk_signer_certs.py`：直接解析 APK Signing Block、取出憑證算 SHA-1，不驗簽所以不需要新演算法；結果和 Play Console 的「複製所有憑證指紋」逐一相符。
 - Play Console 的選單位置常改版，找不到「應用程式簽署」頁時，先從手機上已安裝的 Play 版讀（`adb shell pm path --user 0 <套件>` → `adb pull` → `tool/apk_signer_certs.py`），兩邊的值一樣。
 
