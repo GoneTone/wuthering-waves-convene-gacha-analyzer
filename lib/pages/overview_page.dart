@@ -4,18 +4,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/ads/ad_placement.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/five_star_collection.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_stats.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/overview_sections.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/ads.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/stat_format.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/ads/native_ad.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/banner_top_rarity_bars.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/chart_card.dart';
@@ -48,6 +52,15 @@ class OverviewPage extends ConsumerWidget {
         (s) => (activeData: s.activeData, isBootstrapping: s.isBootstrapping),
       ),
     );
+    // 條件與底部橫幅一致（app_shell）；啟動載入中或沒有紀錄時 pageHasAdContent 為 false。
+    final adsAllowed =
+        ref.watch(isAndroidProvider) &&
+        ref.watch(adsProvider.select((s) => s.canRequestAds)) &&
+        ref.watch(
+          gachaRepositoryProvider.select(
+            (g) => pageHasAdContent(path: '/', gacha: g),
+          ),
+        );
     if (isBootstrapping) {
       return const LoadingState();
     }
@@ -79,14 +92,61 @@ class OverviewPage extends ConsumerWidget {
       ),
     ];
 
+    final pagePadding = isCompactLayout(context) ? AppSpacing.m : AppSpacing.l;
+    final brightness = Theme.of(context).brightness;
+    final fiveStarItems = buildFiveStarCollectionAcrossBanners(sec.banners);
+    // 廣告在頁面層級監聽：放進按需建構的子項，捲出畫面就會被釋放、捲回來又重新載入；
+    // 寬度要等版面才知道，LayoutBuilder 裡不能用此處的 ref.watch，改由 Consumer 監聽。
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fits = constraints.maxWidth - pagePadding * 2 >= kNativeMinWidth;
+        return Consumer(
+          builder: (context, adsRef, _) => _buildScroll(
+            context,
+            ref,
+            l,
+            activeData,
+            sec,
+            statCards,
+            bannerColors,
+            fiveStarItems,
+            pagePadding,
+            adsAllowed && fits
+                ? adsRef
+                      .watch(
+                        nativeAdProvider((
+                          placement: NativeAdPlacement.overview,
+                          scope: 'overview',
+                          brightness: brightness,
+                        )),
+                      )
+                      .value
+                : null,
+          ),
+        );
+      },
+    );
+  }
+
+  /// 總覽頁的捲動內容；[nativeAd] 非 null 時在「類型分布」與「各卡池最高稀有度件數」之間插入原生廣告。
+  Widget _buildScroll(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l,
+    BannerStorage activeData,
+    OverviewSections sec,
+    List<Widget> statCards,
+    BannerColors bannerColors,
+    List<FiveStarCollectionItem> fiveStarItems,
+    double pagePadding,
+    LoadedNative? nativeAd,
+  ) {
     // 按需建構：標題列與區塊內容都是清單裡的獨立項目，畫面外的五星一覽與時間軸不會被建構。
     return CustomScrollView(
       scrollCacheExtent: pageScrollCacheExtent(),
       slivers: [
         SliverPadding(
-          padding: EdgeInsets.all(
-            isCompactLayout(context) ? AppSpacing.m : AppSpacing.l,
-          ),
+          padding: EdgeInsets.all(pagePadding),
           sliver: SliverMainAxisGroup(
             slivers: [
               SliverToBoxAdapter(
@@ -120,9 +180,8 @@ class OverviewPage extends ConsumerWidget {
                 timeline: sec.timeline,
                 timelineNowPulls: sec.timelineNowPulls,
                 timelineRank: sec.timelineRank,
-                fiveStarItems: buildFiveStarCollectionAcrossBanners(
-                  sec.banners,
-                ),
+                fiveStarItems: fiveStarItems,
+                nativeAd: nativeAd,
               ),
             ],
           ),
@@ -172,6 +231,7 @@ class _OverviewSection extends StatelessWidget {
     required this.timelineNowPulls,
     required this.timelineRank,
     this.fiveStarItems = const [],
+    this.nativeAd,
   });
 
   /// 段落標題文字。
@@ -206,6 +266,9 @@ class _OverviewSection extends StatelessWidget {
 
   /// 此段的五星一覽清單；空清單時不顯示該區塊（12 池聚合段一律有五星一覽）。
   final List<FiveStarCollectionItem> fiveStarItems;
+
+  /// 已載入、可顯示的原生廣告；null 時版面與沒有廣告時相同。
+  final LoadedNative? nativeAd;
 
   @override
   Widget build(BuildContext context) {
@@ -337,6 +400,13 @@ class _OverviewSection extends StatelessWidget {
             ),
 
             const SizedBox(height: AppSpacing.m),
+            if (nativeAd != null) ...[
+              NativeAdBlock(
+                ad: nativeAd!,
+                placement: NativeAdPlacement.overview,
+              ),
+              const SizedBox(height: AppSpacing.m),
+            ],
 
             // 各卡池主稀有度件數
             ChartCard(
