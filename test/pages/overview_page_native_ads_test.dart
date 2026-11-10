@@ -1,15 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/pages/overview_page.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/ads.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
@@ -20,8 +17,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/ads/native_ad.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/chart_card.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/item_type_pie.dart';
 
-/// 測試帳號。
-const _uid = '701000000';
+import '../helpers/native_ad_fakes.dart';
 
 /// 卡池 1 的 [count] 筆紀錄。
 List<GachaRecord> _records(int count) => [
@@ -37,109 +33,6 @@ List<GachaRecord> _records(int count) => [
     ),
 ];
 
-/// 狀態固定的 repository 替身，不做 bootstrap 與 I/O。
-class _Repo extends GachaRepository {
-  /// 建立替身；[bootstrapping] 時維持啟動載入中。
-  _Repo(this.banners, {this.bootstrapping = false});
-
-  /// 各卡池的紀錄。
-  final Map<String, List<GachaRecord>> banners;
-
-  /// 是否維持啟動載入中。
-  final bool bootstrapping;
-
-  @override
-  GachaState build() => GachaState(
-    activeUid: _uid,
-    byUid: {
-      _uid: BannerStorage(
-        playerId: _uid,
-        languageCode: 'zh-Hant',
-        lastUpdated: DateTime.utc(2026, 5, 1),
-        banners: banners,
-      ),
-    },
-    isBootstrapping: bootstrapping,
-  );
-}
-
-/// 固定為空 index、不讀磁碟的圖片索引替身。
-class _Index extends ItemImageIndexNotifier {
-  @override
-  ItemImageIndex build() => const ItemImageIndex.empty();
-}
-
-/// 狀態固定、不碰原生 SDK 的廣告控制器替身。
-class _Ads extends AdsController {
-  /// 建立替身。
-  _Ads(this.canRequestAds);
-
-  /// 固定的「可請求廣告」旗標。
-  final bool canRequestAds;
-
-  @override
-  AdsState build() => AdsState(canRequestAds: canRequestAds);
-}
-
-/// 一則假原生廣告的載入紀錄。
-class _FakeAd {
-  /// 建立紀錄。
-  _FakeAd(this.brightness, this.key);
-
-  /// 載入時的深淺色。
-  final Brightness brightness;
-
-  /// 假 view 的 key。
-  final Key key;
-
-  /// 是否已被 dispose。
-  bool disposed = false;
-
-  /// dispose 當下假 view 是否還掛在畫面上。
-  bool disposedWhileMounted = false;
-
-  /// 是否在某一幀的 post-frame 階段才 dispose。
-  bool disposedAfterFrame = false;
-}
-
-/// 記錄每次載入的假原生廣告載入器。
-class _FakeLoader {
-  /// 建立假載入器；[fail] 時一律回傳 null。
-  _FakeLoader({this.fail = false});
-
-  /// 是否模擬載入失敗。
-  final bool fail;
-
-  /// 每次載入的紀錄。
-  final loads = <_FakeAd>[];
-
-  /// 回傳帶唯一 key 的假廣告，或在 [fail] 時回傳 null。
-  Future<LoadedNative?> call(
-    NativeAdPlacement placement,
-    Brightness brightness,
-  ) async {
-    expect(placement, NativeAdPlacement.overview);
-    final ad = _FakeAd(brightness, ValueKey('native-${loads.length}'));
-    loads.add(ad);
-    if (fail) return null;
-    return (
-      view: SizedBox(key: ad.key, height: 100),
-      dispose: () {
-        ad.disposed = true;
-        ad.disposedWhileMounted = find.byKey(ad.key).evaluate().isNotEmpty;
-        ad.disposedAfterFrame =
-            SchedulerBinding.instance.schedulerPhase ==
-            SchedulerPhase.postFrameCallbacks;
-      },
-    );
-  }
-}
-
-/// 畫面上的假原生廣告 view。
-final _fakeView = find.byWidgetPredicate(
-  (w) => w.key is ValueKey<String> && '${w.key}'.contains('native-'),
-);
-
 /// 「類型分布」卡。
 final _typeCard = find.byType(ItemTypeChartCard);
 
@@ -149,7 +42,7 @@ final _barsCard = find.byWidgetPredicate(
 );
 
 void main() {
-  late _FakeLoader loader;
+  late FakeNativeAdLoader loader;
   late ProviderContainer container;
 
   /// 建立 container：[android]／[canRequestAds] 為廣告條件，[banners] 為紀錄。
@@ -160,19 +53,19 @@ void main() {
     bool fail = false,
     bool bootstrapping = false,
   }) {
-    loader = _FakeLoader(fail: fail);
+    loader = FakeNativeAdLoader(fail: fail);
     container = ProviderContainer(
       overrides: [
         gachaRepositoryProvider.overrideWith(
-          () => _Repo(
+          () => FixedGachaRepository(
             banners ?? {'1': _records(25)},
             bootstrapping: bootstrapping,
           ),
         ),
-        itemImageIndexProvider.overrideWith(_Index.new),
+        itemImageIndexProvider.overrideWith(EmptyItemImageIndex.new),
         itemImageCacheDirProvider.overrideWithValue(Directory.systemTemp),
         isAndroidProvider.overrideWithValue(android),
-        adsProvider.overrideWith(() => _Ads(canRequestAds)),
+        adsProvider.overrideWith(() => FakeAdsController(canRequestAds)),
         nativeAdLoaderProvider.overrideWithValue(loader.call),
       ],
     );
@@ -213,9 +106,9 @@ void main() {
   testWidgets('有紀錄時進頁載入一次，廣告夾在兩張卡之間、前後間距都是 m', (tester) async {
     setUpContainer();
     await pumpPage(tester);
-    expect(loader.loads.length, 1);
+    expect(loader.calls(NativeAdPlacement.overview), 1);
     final block = find.byType(NativeAdBlock);
-    expect(_fakeView, findsOneWidget);
+    expect(anyFakeNativeView, findsOneWidget);
     expect(
       tester.getTopLeft(block).dy - tester.getBottomLeft(_typeCard).dy,
       AppSpacing.m,
@@ -241,7 +134,7 @@ void main() {
       );
       await pumpPage(tester);
       expect(loader.loads, isEmpty);
-      expect(_fakeView, findsNothing);
+      expect(anyFakeNativeView, findsNothing);
       if (!noRecords && !bootstrapping) {
         expect(typeToBarsGap(tester), AppSpacing.m);
       }
@@ -259,8 +152,8 @@ void main() {
   testWidgets('載入失敗時不顯示、不多間距', (tester) async {
     setUpContainer(fail: true);
     await pumpPage(tester);
-    expect(loader.loads.length, 1);
-    expect(_fakeView, findsNothing);
+    expect(loader.calls(NativeAdPlacement.overview), 1);
+    expect(anyFakeNativeView, findsNothing);
     expect(typeToBarsGap(tester), AppSpacing.m);
   });
 
@@ -272,7 +165,7 @@ void main() {
 
     await pumpPage(tester, mode: ThemeMode.light);
     await tester.pump();
-    expect(loader.loads.length, 2);
+    expect(loader.calls(NativeAdPlacement.overview), 2);
     expect(loader.loads.last.brightness, Brightness.light);
     expect(old.disposed, isTrue);
     expect(old.disposedWhileMounted, isFalse);
