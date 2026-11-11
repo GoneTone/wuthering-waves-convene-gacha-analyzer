@@ -89,28 +89,27 @@ Besides importing this utility's own backup files, you can also import convene h
 ### Android phone
 
 <p>
-<img src="docs/images/en/android/phone/1.png" alt="Waiting for the Convene Records page" width="32%">
-<img src="docs/images/en/android/phone/2.png" alt="Overview page" width="32%">
-<img src="docs/images/en/android/phone/3.png" alt="Character Event Convene page" width="32%">
-<img src="docs/images/en/android/phone/4.png" alt="5★ timeline and 5★ overview" width="32%">
-<img src="docs/images/en/android/phone/5.png" alt="Weapon Event Convene page" width="32%">
-<img src="docs/images/en/android/phone/6.png" alt="Share image options" width="32%">
-<img src="docs/images/en/android/phone/7.png" alt="Item details" width="32%">
-<img src="docs/images/en/android/phone/8.png" alt="Side menu" width="32%">
-<img src="docs/images/en/android/phone/9.png" alt="Settings page" width="32%">
+<img src="docs/images/play-store/screenshots/en/phone/1.png" alt="Overview page" width="24%">
+<img src="docs/images/play-store/screenshots/en/phone/2.png" alt="Character Event Convene page" width="24%">
+<img src="docs/images/play-store/screenshots/en/phone/3.png" alt="5★ timeline and 5★ overview" width="24%">
+<img src="docs/images/play-store/screenshots/en/phone/4.png" alt="Weapon Event Convene page" width="24%">
+<img src="docs/images/play-store/screenshots/en/phone/5.png" alt="Item details" width="24%">
+<img src="docs/images/play-store/screenshots/en/phone/6.png" alt="Share image options" width="24%">
+<img src="docs/images/play-store/screenshots/en/phone/7.png" alt="Waiting for the Convene Records page" width="24%">
+<img src="docs/images/play-store/screenshots/en/phone/8.png" alt="Settings page" width="24%">
 </p>
 
 ### Android tablet
 
 <p>
-<img src="docs/images/en/android/tablet/1.png" alt="Waiting for the Convene Records page" width="49%">
-<img src="docs/images/en/android/tablet/2.png" alt="Overview page" width="49%">
-<img src="docs/images/en/android/tablet/3.png" alt="Character Event Convene page" width="49%">
-<img src="docs/images/en/android/tablet/4.png" alt="5★ timeline and 5★ overview" width="49%">
-<img src="docs/images/en/android/tablet/5.png" alt="Weapon Event Convene page" width="49%">
-<img src="docs/images/en/android/tablet/6.png" alt="Share image options" width="49%">
-<img src="docs/images/en/android/tablet/7.png" alt="Item details" width="49%">
-<img src="docs/images/en/android/tablet/8.png" alt="Settings page" width="49%">
+<img src="docs/images/play-store/screenshots/en/tablet-10/1.png" alt="Overview page" width="49%">
+<img src="docs/images/play-store/screenshots/en/tablet-10/2.png" alt="Character Event Convene page" width="49%">
+<img src="docs/images/play-store/screenshots/en/tablet-10/3.png" alt="5★ timeline and 5★ overview" width="49%">
+<img src="docs/images/play-store/screenshots/en/tablet-10/4.png" alt="Weapon Event Convene page" width="49%">
+<img src="docs/images/play-store/screenshots/en/tablet-10/5.png" alt="Item details" width="49%">
+<img src="docs/images/play-store/screenshots/en/tablet-10/6.png" alt="Share image options" width="49%">
+<img src="docs/images/play-store/screenshots/en/tablet-10/7.png" alt="Waiting for the Convene Records page" width="49%">
+<img src="docs/images/play-store/screenshots/en/tablet-10/8.png" alt="Settings page" width="49%">
 </p>
 
 ## Development

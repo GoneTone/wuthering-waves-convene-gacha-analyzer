@@ -89,28 +89,27 @@
 ### Android スマートフォン
 
 <p>
-<img src="docs/images/ja-JP/android/phone/1.png" alt="ゲームで集音履歴ページが開かれるのを待機" width="32%">
-<img src="docs/images/ja-JP/android/phone/2.png" alt="総合データページ" width="32%">
-<img src="docs/images/ja-JP/android/phone/3.png" alt="共鳴者集音（イベント）ページ" width="32%">
-<img src="docs/images/ja-JP/android/phone/4.png" alt="★5 タイムラインと ★5 一覧" width="32%">
-<img src="docs/images/ja-JP/android/phone/5.png" alt="武器集音（イベント）ページ" width="32%">
-<img src="docs/images/ja-JP/android/phone/6.png" alt="シェア画像の生成設定" width="32%">
-<img src="docs/images/ja-JP/android/phone/7.png" alt="アイテム詳細の表示" width="32%">
-<img src="docs/images/ja-JP/android/phone/8.png" alt="サイドメニュー" width="32%">
-<img src="docs/images/ja-JP/android/phone/9.png" alt="設定ページ" width="32%">
+<img src="docs/images/play-store/screenshots/ja/phone/1.png" alt="総合データページ" width="24%">
+<img src="docs/images/play-store/screenshots/ja/phone/2.png" alt="共鳴者集音（イベント）ページ" width="24%">
+<img src="docs/images/play-store/screenshots/ja/phone/3.png" alt="★5 タイムラインと ★5 一覧" width="24%">
+<img src="docs/images/play-store/screenshots/ja/phone/4.png" alt="武器集音（イベント）ページ" width="24%">
+<img src="docs/images/play-store/screenshots/ja/phone/5.png" alt="アイテム詳細の表示" width="24%">
+<img src="docs/images/play-store/screenshots/ja/phone/6.png" alt="シェア画像の生成設定" width="24%">
+<img src="docs/images/play-store/screenshots/ja/phone/7.png" alt="ゲームで集音履歴ページが開かれるのを待機" width="24%">
+<img src="docs/images/play-store/screenshots/ja/phone/8.png" alt="設定ページ" width="24%">
 </p>
 
 ### Android タブレット
 
 <p>
-<img src="docs/images/ja-JP/android/tablet/1.png" alt="ゲームで集音履歴ページが開かれるのを待機" width="49%">
-<img src="docs/images/ja-JP/android/tablet/2.png" alt="総合データページ" width="49%">
-<img src="docs/images/ja-JP/android/tablet/3.png" alt="共鳴者集音（イベント）ページ" width="49%">
-<img src="docs/images/ja-JP/android/tablet/4.png" alt="★5 タイムラインと ★5 一覧" width="49%">
-<img src="docs/images/ja-JP/android/tablet/5.png" alt="武器集音（イベント）ページ" width="49%">
-<img src="docs/images/ja-JP/android/tablet/6.png" alt="シェア画像の生成設定" width="49%">
-<img src="docs/images/ja-JP/android/tablet/7.png" alt="アイテム詳細の表示" width="49%">
-<img src="docs/images/ja-JP/android/tablet/8.png" alt="設定ページ" width="49%">
+<img src="docs/images/play-store/screenshots/ja/tablet-10/1.png" alt="総合データページ" width="49%">
+<img src="docs/images/play-store/screenshots/ja/tablet-10/2.png" alt="共鳴者集音（イベント）ページ" width="49%">
+<img src="docs/images/play-store/screenshots/ja/tablet-10/3.png" alt="★5 タイムラインと ★5 一覧" width="49%">
+<img src="docs/images/play-store/screenshots/ja/tablet-10/4.png" alt="武器集音（イベント）ページ" width="49%">
+<img src="docs/images/play-store/screenshots/ja/tablet-10/5.png" alt="アイテム詳細の表示" width="49%">
+<img src="docs/images/play-store/screenshots/ja/tablet-10/6.png" alt="シェア画像の生成設定" width="49%">
+<img src="docs/images/play-store/screenshots/ja/tablet-10/7.png" alt="ゲームで集音履歴ページが開かれるのを待機" width="49%">
+<img src="docs/images/play-store/screenshots/ja/tablet-10/8.png" alt="設定ページ" width="49%">
 </p>
 
 ## 開発

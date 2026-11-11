@@ -89,28 +89,27 @@
 ### Android 手機
 
 <p>
-<img src="docs/images/zh-Hant/android/phone/1.png" alt="等待在遊戲中開啟喚取記錄頁" width="32%">
-<img src="docs/images/zh-Hant/android/phone/2.png" alt="綜合數據頁" width="32%">
-<img src="docs/images/zh-Hant/android/phone/3.png" alt="角色活動喚取頁" width="32%">
-<img src="docs/images/zh-Hant/android/phone/4.png" alt="5★ 時間軸與 5★ 一覽" width="32%">
-<img src="docs/images/zh-Hant/android/phone/5.png" alt="武器活動喚取頁" width="32%">
-<img src="docs/images/zh-Hant/android/phone/6.png" alt="分享圖生成設定" width="32%">
-<img src="docs/images/zh-Hant/android/phone/7.png" alt="物品詳情顯示" width="32%">
-<img src="docs/images/zh-Hant/android/phone/8.png" alt="側選單" width="32%">
-<img src="docs/images/zh-Hant/android/phone/9.png" alt="設定頁" width="32%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/1.png" alt="綜合數據頁" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/2.png" alt="角色活動喚取頁" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/3.png" alt="5★ 時間軸與 5★ 一覽" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/4.png" alt="武器活動喚取頁" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/5.png" alt="物品詳情顯示" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/6.png" alt="分享圖生成設定" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/7.png" alt="等待在遊戲中開啟喚取記錄頁" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/8.png" alt="設定頁" width="24%">
 </p>
 
 ### Android 平板
 
 <p>
-<img src="docs/images/zh-Hant/android/tablet/1.png" alt="等待在遊戲中開啟喚取記錄頁" width="49%">
-<img src="docs/images/zh-Hant/android/tablet/2.png" alt="綜合數據頁" width="49%">
-<img src="docs/images/zh-Hant/android/tablet/3.png" alt="角色活動喚取頁" width="49%">
-<img src="docs/images/zh-Hant/android/tablet/4.png" alt="5★ 時間軸與 5★ 一覽" width="49%">
-<img src="docs/images/zh-Hant/android/tablet/5.png" alt="武器活動喚取頁" width="49%">
-<img src="docs/images/zh-Hant/android/tablet/6.png" alt="分享圖生成設定" width="49%">
-<img src="docs/images/zh-Hant/android/tablet/7.png" alt="物品詳情顯示" width="49%">
-<img src="docs/images/zh-Hant/android/tablet/8.png" alt="設定頁" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/1.png" alt="綜合數據頁" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/2.png" alt="角色活動喚取頁" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/3.png" alt="5★ 時間軸與 5★ 一覽" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/4.png" alt="武器活動喚取頁" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/5.png" alt="物品詳情顯示" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/6.png" alt="分享圖生成設定" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/7.png" alt="等待在遊戲中開啟喚取記錄頁" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/8.png" alt="設定頁" width="49%">
 </p>
 
 ## 開發

@@ -917,3 +917,27 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 **驗證**（模擬器）：等待中關掉無線偵錯 → `adb socket error error=SocketException`（不再是 Zone uncaught）→ 重試失敗 → `adb disconnect failed error=TimeoutException` → App 自己重新打開無線偵錯並 `adb connected`；之後「切換版本」能正常結束並重新開始。
 
 **順帶發現**：模擬器還原 App 資料備份時連 `FlutterSecureKeyStorage.xml` 一起還原，金鑰庫對不上，新配對的金鑰在連線時被 adbd 拒絕（logcat：`CERTIFICATE_VERIFY_FAILED`）。刪掉 `shared_prefs/FlutterSecureKeyStorage.xml` 後重新配對就好。之後還原備份不要包含 `FlutterSecure*.xml`。
+
+## 十六、商店與 README 截圖
+
+### 54. Play 商店截圖：先查規格、用同一份資料、斷網拍（通用，2026-11-11）
+
+**規格（先查清楚再拍）**：Play Console 的截圖規定比想像中嚴，拍之前先確認每個欄位要什麼，否則整批重拍。
+- 共通：JPEG 或 24 位元 PNG（不能有 alpha），每邊 320–3840px，**長邊不能超過短邊的 2 倍**。現在的手機多半是 20:9（例如 1080×2400），直接截圖會超過 2 倍，不能上傳。
+- 手機：要進推薦版位，至少 4 張、9:16（最小 1080×1920）。
+- 7 吋平板、10 吋平板、Chromebook：每種裝置 4–8 張，16:9 或 9:16，每邊 1080–7680px，單張 8 MB 以內。16:10 的平板（例如 2560×1600）不符合。
+- 每種裝置最多 8 張；各語言的商店資訊可以各放一組，沒放的沿用預設語言。
+
+**做法**（一台模擬器就能拍完四種裝置）：
+- 用 `adb shell wm size` 與 `wm density` 切成目標尺寸，拍完 `wm size reset`、`wm density reset`。本專案用的參數：手機 1080×1920／420dpi、7 吋 1920×1080／280dpi、10 吋 2560×1440／288dpi、Chromebook 2560×1440／213dpi（版面接近電腦版）。
+- 資料要和電腦版截圖一致：電腦版「匯出資料」→ 檔案推到模擬器 → 「匯入資料」→ 切到同一個帳號，先拍一張比對總抽數等數字再批次拍。四種語言要先在設定頁把資料語言轉成該語言，物品名稱才會是官方譯名。
+- 狀態列用展示模式固定成 12:00、電量滿、只有 Wi-Fi：先 `settings put global sysui_demo_allowed 1`，再送 `com.android.systemui.demo` 的 `enter`、`clock`、`battery`、`network`（`mobile hide`）、`notifications visible false`。換解析度或重開機後要重送；每張拍完都把狀態列裁下來拼在一起檢查，縮圖看不出少了圖示。
+- 通知橫幅會蓋住畫面：拍的時候 `settings put global heads_up_notifications_enabled 0`，拍完改回 1。
+- **廣告**：除錯版會載入測試廣告，斷網（`svc wifi disable`）後重開 App，原生廣告載入失敗會收起不佔位。立繪與物品詳情要先在連網時打開一次讓它快取，斷網後再拍。等待讀取喚取記錄的畫面需要網路（無線偵錯），只能連網拍，要挑畫面上看不到廣告的頁面當背景（寬畫面的角色活動頁圓餅圖下方就有廣告，改用設定頁）。
+- 除錯／profile 版的 AdMob 原生廣告驗證器提示會蓋在畫面上，每張拍之前都要關掉。它在平板上讀不到無障礙文字，改從截圖找它藍色的 Dismiss 按鈕（RGB 26,115,232）點掉。
+- **操作方式**：用 `uiautomator dump` 讀元件的文字與座標，依 ARB 的字串（例如 `navSettings`、`actionUpdate`）找按鈕點擊，換解析度、換語言都不用重量座標。例外：平板與 Chromebook 的側欄項目沒有無障礙文字，只能用座標點。捲動用慢速 `input swipe`，讓目標元件停在固定比例的位置；20px 以內的小幅拖曳會被當成點擊，不會捲動。
+- 等待畫面要是一般版本：存過的網址（`<UID>.cred.json`）過期時畫面會多一行「先前的擷取已失效」，拍之前先暫時移開。電腦版拍等待畫面會跳 UAC，要有人按。
+
+**工具**：上面的步驟都寫在 `tool/capture_store_screenshots.py`（事前準備見檔頭：匯入資料、遮蔽 UID、配對無線偵錯、裝好遊戲空殼套件），例如 `python tool/capture_store_screenshots.py --langs en --devices phone tablet-10`，拍完會自動還原模擬器設定。平板與 Chromebook 的側欄座標是寫死的，側欄改版要重量。
+
+**成品**：`docs/images/play-store/screenshots/<語言>/<裝置>/1–8.png`（語言 `zh-TW`、`en`、`ja`、`zh-CN`，和主題圖片一致；裝置 `phone`、`tablet-7`、`tablet-10`、`chromebook`）。README 的 Android 段落直接引用其中的 `phone` 與 `tablet-10`，不再另存一套；Windows 截圖仍在 `docs/images/<語言>/windows/`。
