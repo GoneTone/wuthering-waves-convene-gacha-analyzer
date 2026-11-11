@@ -1457,15 +1457,15 @@
   "dialogSelectFolderTitle": "フォルダーの選択",
   "actionSave": "保存",
   "settingsLogsShare": "ログを共有",
-  "logUnavailableGameNotInstalled": "このスマホに鳴潮が見つかりません。グローバル版の Google Play 版と Galaxy Store 版に対応しています。インストール後にここへ戻ると自動で再検出します。",
+  "logUnavailableGameNotInstalled": "このデバイスにグローバル版の鳴潮が見つかりません。インストール後にここへ戻ると自動で再検出します。",
   "@logUnavailableGameNotInstalled": {
-    "description": "Waiting screen on Android when no global Wuthering Waves app is installed. \"Google Play\" and \"Galaxy Store\" are store names, do not translate."
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
   },
   "actionRedetectGame": "再検出",
   "@actionRedetectGame": {
     "description": "Button that checks again whether Wuthering Waves is installed"
   },
-  "logChooseGameVersion": "鳴潮が複数のバージョンでインストールされています。どのバージョンの記録を読み取りますか？",
+  "logChooseGameVersion": "このデバイスには鳴潮が複数のバージョンでインストールされています。どのバージョンの記録を読み取りますか？",
   "@logChooseGameVersion": {
     "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
   },

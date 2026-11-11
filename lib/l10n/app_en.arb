@@ -1481,15 +1481,15 @@
   "@settingsLogsShare": {
     "description": "Button that shares the exported log bundle through the system share sheet (Android)."
   },
-  "logUnavailableGameNotInstalled": "Wuthering Waves isn't installed on this phone. The global Google Play and Galaxy Store versions are supported; once it's installed, come back here and it will be detected automatically.",
+  "logUnavailableGameNotInstalled": "The global version of Wuthering Waves isn't installed on this device. Once it's installed, come back here and it will be detected automatically.",
   "@logUnavailableGameNotInstalled": {
-    "description": "Waiting screen on Android when no global Wuthering Waves app is installed. \"Google Play\" and \"Galaxy Store\" are store names, do not translate."
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
   },
   "actionRedetectGame": "Check again",
   "@actionRedetectGame": {
     "description": "Button that checks again whether Wuthering Waves is installed"
   },
-  "logChooseGameVersion": "More than one version of Wuthering Waves is installed. Which one should be read?",
+  "logChooseGameVersion": "More than one version of Wuthering Waves is installed on this device. Which one should be read?",
   "@logChooseGameVersion": {
     "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
   },

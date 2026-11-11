@@ -880,7 +880,7 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 1. **偵測**：`wuwa_game_package.dart` 是單一來源（開頭、已知版本、log 路徑、排序）。Kotlin `installedGames` 回傳「有桌面圖示且套件名稱是 `com.kurogame.wutheringwaves` 或以它加 `.` 開頭」的 App，加上已知版本裡有裝的。manifest 的 `<queries>` 逐一宣告已知版本，再加 MAIN／LAUNCHER intent。**不用 `QUERY_ALL_PACKAGES`**（Play 只准檔案管理、防毒這類 App 用）。Kotlin 只回傳比對到的套件，其他已安裝的 App 不會離開 Kotlin。
 2. **先找遊戲再決定讀取方式**（`LogAccessResolver._pickGame`）：沒裝就不跳 root 授權、也不打開無線偵錯。查詢失敗（channel 出錯，Dart 端回 null）**不能當成沒裝**，退回 Google Play 版照舊讀取。
 3. **多個版本**：只裝一個時直接用它，不管之前選過什麼；裝了多個時用記住的選擇（`AppSettings.gamePackage`，只存本機，不參與雲端同步），沒選過或選的已經移除就請玩家選。選版本、找不到遊戲都是 `LogAccessUnavailable` 的新值，沿用原本「重新判斷」的流程（回到前景會自動重新偵測）。選版本這一步還沒試過讀取方式，所以 `requestPermissions` 要留給選完後那一次，否則 Android 10 以下永遠不會問儲存權限。
-4. **等待畫面**：找不到遊戲時說明支援哪些版本，「重新偵測」「前往 Google Play」並排，再加手動輸入；選版本畫面把所有版本並排列出（沒見過的版本顯示套件名稱，太窄時換行）；裝了多個版本時，「開啟鳴潮」旁多一顆「⇄ 鳴潮版本：…」按鈕（tooltip「切換版本」），點了就切換。按鈕都並排是因為橫向時直排會把手動輸入擠出可見範圍（要捲動才看得到），版面測試用 `hitTestable` 鎖住手動輸入在橫向一定看得到。切換會清掉記住的選擇、結束這次更新再重新開始（`switchGameVersion` 等這次更新真的結束才重新開始；連線中斷時進行中的讀取要等逾時才停，只等固定秒數會被防重入擋掉而沒有重新開始）。
+4. **等待畫面**：找不到遊戲時只說「這台裝置上找不到國際服鳴潮」，不列出商店（偵測是用套件名稱開頭，列出固定的商店反而會跟實際行為不一致），「重新偵測」「前往 Google Play」並排，再加手動輸入；選版本畫面把所有版本並排列出（沒見過的版本顯示套件名稱，太窄時換行）；裝了多個版本時，「開啟鳴潮」旁多一顆「⇄ 鳴潮版本：…」按鈕（tooltip「切換版本」），點了就切換。按鈕都並排是因為橫向時直排會把手動輸入擠出可見範圍（要捲動才看得到），版面測試用 `hitTestable` 鎖住手動輸入在橫向一定看得到。切換會清掉記住的選擇、結束這次更新再重新開始（`switchGameVersion` 等這次更新真的結束才重新開始；連線中斷時進行中的讀取要等逾時才停，只等固定秒數會被防重入擋掉而沒有重新開始）。
 5. **套件名稱會組進 shell 指令的路徑**：只接受 `^com\.kurogame\.wutheringwaves(\.[A-Za-z0-9_]+)*$`；Kotlin 的 `launchGame` 也只開這個開頭的套件。
 6. **路徑猜錯時自己留線索**：shell 來源建立時跑一次 `[ -e <log> ] || find <data>/files -maxdepth 6 -name '*.log' | head`，log 不在預期位置就記 `client log missing game=... found=...`（只有路徑）。Galaxy Store 版的 log 位置是照 Google Play 版推測的，下一份玩家 log 可以直接確認。
 

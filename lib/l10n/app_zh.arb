@@ -1259,15 +1259,15 @@
   "dialogSelectFolderTitle": "選取資料夾",
   "actionSave": "儲存",
   "settingsLogsShare": "分享 logs",
-  "logUnavailableGameNotInstalled": "這支手機上找不到鳴潮。目前支援國際服的 Google Play 版和 Galaxy Store 版，裝好後回到這裡會自動重新偵測。",
+  "logUnavailableGameNotInstalled": "這台裝置上找不到國際服鳴潮，裝好後回到這裡會自動重新偵測。",
   "@logUnavailableGameNotInstalled": {
-    "description": "Waiting screen on Android when no global Wuthering Waves app is installed. \"Google Play\" and \"Galaxy Store\" are store names, do not translate."
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
   },
   "actionRedetectGame": "重新偵測",
   "@actionRedetectGame": {
     "description": "Button that checks again whether Wuthering Waves is installed"
   },
-  "logChooseGameVersion": "這支手機裝了多個版本的鳴潮，要讀取哪一個版本的記錄？",
+  "logChooseGameVersion": "這台裝置裝了多個版本的鳴潮，要讀取哪一個版本的記錄？",
   "@logChooseGameVersion": {
     "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
   },
