@@ -27,8 +27,10 @@ VARIANTS = {
 W, H = 1024, 500
 ICON_SIZE, ICON_X, ICON_Y = 400, 40, 50
 TEXT_X, TEXT_RIGHT_MARGIN = 470, 48
+REPO = 'github.com/GoneTone/wuthering-waves-convene-gacha-analyzer'
 GOLD = (0xD6, 0xA2, 0x68)
 MUTED = (0xB8, 0xBF, 0xCF)
+FAINT = (0x8A, 0x92, 0xA6)
 
 
 def background(icon: Image.Image) -> Image.Image:
@@ -56,22 +58,30 @@ def fit_font(draw: ImageDraw.ImageDraw, text: str, font: str, size: int, min_siz
 
 
 def render(base: Image.Image, title: str, sub: str, tagline: str, title_font: str, tagline_font: str) -> Image.Image:
-    """在背景右側畫出垂直置中的名稱、「for 遊戲名」、金色短線與標語。"""
+    """在背景右側畫出垂直置中的名稱、「for 遊戲名」、金色短線、標語與 GitHub 網址。"""
     img = base.copy()
     d = ImageDraw.Draw(img)
     max_w = W - TEXT_X - TEXT_RIGHT_MARGIN
     ft, ts = fit_font(d, title, title_font, 72, 40, max_w)
     fs = ImageFont.truetype(str(FONTS / title_font), int(ts * 0.6))
     fg, _ = fit_font(d, tagline, tagline_font, 26, 16, max_w)
-    tb, sb, gb = (d.textbbox((0, 0), s, font=f) for s, f in ((title, ft), (sub, fs), (tagline, fg)))
-    gap1, gap2 = 14, 34
-    y = (H - ((tb[3] - tb[1]) + gap1 + (sb[3] - sb[1]) + gap2 + (gb[3] - gb[1]))) // 2
+    fr, _ = fit_font(d, REPO, 'seguisb.ttf', 18, 12, max_w)
+    tb, sb, gb, rb = (
+        d.textbbox((0, 0), s, font=f) for s, f in ((title, ft), (sub, fs), (tagline, fg), (REPO, fr))
+    )
+    gap1, gap2, gap3 = 14, 34, 18
+    y = (
+        H
+        - ((tb[3] - tb[1]) + gap1 + (sb[3] - sb[1]) + gap2 + (gb[3] - gb[1]) + gap3 + (rb[3] - rb[1]))
+    ) // 2
     d.text((TEXT_X, y - tb[1]), title, font=ft, fill=(255, 255, 255))
     y += tb[3] - tb[1] + gap1
     d.text((TEXT_X, y - sb[1]), sub, font=fs, fill=GOLD)
     y += sb[3] - sb[1] + gap2
     d.line((TEXT_X, y - gap2 // 2, TEXT_X + 64, y - gap2 // 2), fill=GOLD, width=3)
     d.text((TEXT_X, y - gb[1]), tagline, font=fg, fill=MUTED)
+    y += gb[3] - gb[1] + gap3
+    d.text((TEXT_X, y - rb[1]), REPO, font=fr, fill=FAINT)
     return img
 
 
