@@ -125,7 +125,7 @@ void main() {
       expect(find.text(l.progressNotDetectedLink), findsNothing);
       expect(find.text(l.progressManualInputLink), findsOneWidget);
       // 只裝一個版本時不提版本。
-      expect(find.text(l.actionSwitchGameVersion), findsNothing);
+      expect(find.byTooltip(l.actionSwitchGameVersion), findsNothing);
       await tester.tap(find.text(l.actionOpenGame));
       expect(platform.calls, ['launchGame $wuwaSamsungPackage']);
     },
@@ -163,7 +163,10 @@ void main() {
       find.text(l.progressGameVersion(l.gameVersionGalaxyStore)),
       findsOneWidget,
     );
-    await tester.tap(find.text(l.actionSwitchGameVersion));
+    expect(find.byTooltip(l.actionSwitchGameVersion), findsOneWidget);
+    await tester.tap(
+      find.text(l.progressGameVersion(l.gameVersionGalaxyStore)),
+    );
     await tester.pump();
     expect(repo.switches, 1);
   });
@@ -379,11 +382,7 @@ void main() {
       'choose game',
       const WaitingForCapture(
         logAccessUnavailable: LogAccessUnavailable.chooseGame,
-        installedGames: [
-          wuwaGlobalPackage,
-          wuwaSamsungPackage,
-          'com.kurogame.wutheringwaves.some_long_store_name',
-        ],
+        installedGames: [wuwaGlobalPackage, wuwaSamsungPackage],
       ),
     ),
     (
@@ -413,8 +412,16 @@ void main() {
       tester.view.physicalSize = const Size(873, 393);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      await pump(tester, progress);
+      final l = await pump(tester, progress);
       expect(tester.takeException(), isNull);
+      // 手動輸入是一定要看得到的退路，不能要捲動才出現。
+      if (label != 'checking') {
+        expect(
+          find.text(l.progressManualInputLink).hitTestable(),
+          findsOneWidget,
+          reason: label,
+        );
+      }
     });
   }
 

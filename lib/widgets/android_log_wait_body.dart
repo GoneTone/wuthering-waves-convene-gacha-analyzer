@@ -130,17 +130,23 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(l.logChooseGameVersion, textAlign: TextAlign.center),
-          for (final game in p.installedGames)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.s),
-              child: OutlinedButton(
-                onPressed: () => repo.selectGame(game),
-                child: Text(
-                  gameVersionName(game, l),
-                  textAlign: TextAlign.center,
+          const SizedBox(height: AppSpacing.s),
+          // 並排、太窄時換行：橫向時直排會把手動輸入擠出可見範圍。
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: AppSpacing.s,
+            runSpacing: AppSpacing.s,
+            children: [
+              for (final game in p.installedGames)
+                OutlinedButton(
+                  onPressed: () => repo.selectGame(game),
+                  child: Text(
+                    gameVersionName(game, l),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
-            ),
+            ],
+          ),
           const SizedBox(height: AppSpacing.s),
           manualLink,
         ],
@@ -184,22 +190,29 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
                   .retryLogAccess,
               child: Text(l.actionRetry),
             ),
-            LogAccessUnavailable.gameNotInstalled => FilledButton(
-              onPressed: ref
-                  .read(gachaRepositoryProvider.notifier)
-                  .retryLogAccess,
-              child: Text(l.actionRedetectGame),
+            // 兩顆並排，橫向時才不會把手動輸入擠出可見範圍；太窄時自動換行。
+            LogAccessUnavailable.gameNotInstalled => Wrap(
+              alignment: WrapAlignment.center,
+              spacing: AppSpacing.s,
+              runSpacing: AppSpacing.s,
+              children: [
+                FilledButton(
+                  onPressed: ref
+                      .read(gachaRepositoryProvider.notifier)
+                      .retryLogAccess,
+                  child: Text(l.actionRedetectGame),
+                ),
+                OutlinedButton(
+                  onPressed: () => openExternalUrl(_playStoreGameUri),
+                  child: Text(
+                    l.updateOpenPlayStore,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
             _ => null,
           },
-          if (reason == LogAccessUnavailable.gameNotInstalled)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.s),
-              child: OutlinedButton(
-                onPressed: () => openExternalUrl(_playStoreGameUri),
-                child: Text(l.updateOpenPlayStore, textAlign: TextAlign.center),
-              ),
-            ),
           manualLink,
         ],
       );
@@ -237,27 +250,36 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
             style: warning,
           ),
         ],
-        if (p.installedGames.length > 1 && p.gamePackage != null) ...[
-          const SizedBox(height: AppSpacing.s),
-          Text(
-            l.progressGameVersion(gameVersionName(p.gamePackage!, l)),
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall,
-          ),
-          TextButton(
-            onPressed: ref
-                .read(gachaRepositoryProvider.notifier)
-                .switchGameVersion,
-            child: Text(l.actionSwitchGameVersion),
-          ),
-        ],
+        // 版本做成按鈕放在「開啟鳴潮」旁邊，點了就切換；不多佔一行，橫向時手動輸入才不會被擠出可見範圍。
         if (p.gamePackage case final game?)
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.s),
-            child: FilledButton.icon(
-              onPressed: () => platform.launchGame(game),
-              icon: const Icon(Icons.play_arrow, size: 18),
-              label: Text(l.actionOpenGame),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.s,
+              runSpacing: AppSpacing.xs,
+              children: [
+                FilledButton.icon(
+                  onPressed: () => platform.launchGame(game),
+                  icon: const Icon(Icons.play_arrow, size: 18),
+                  label: Text(l.actionOpenGame),
+                ),
+                if (p.installedGames.length > 1)
+                  Tooltip(
+                    message: l.actionSwitchGameVersion,
+                    child: TextButton.icon(
+                      onPressed: ref
+                          .read(gachaRepositoryProvider.notifier)
+                          .switchGameVersion,
+                      icon: const Icon(Icons.swap_horiz, size: 18),
+                      label: Text(
+                        l.progressGameVersion(gameVersionName(game, l)),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         const SizedBox(height: AppSpacing.s),
