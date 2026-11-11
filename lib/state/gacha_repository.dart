@@ -495,6 +495,13 @@ class GachaRepository extends Notifier<GachaState> {
       ? _runAndroidWait(isFallback: isFallback)
       : _runMitm(isFallback: isFallback);
 
+  /// Android 裝了多個版本的鳴潮時，記下玩家選的 [package] 並重新判斷讀取方式。
+  Future<void> selectGame(String package) async {
+    _androidLog.info('game selected package=$package');
+    await ref.read(settingsProvider.notifier).setGamePackage(package);
+    await retryLogAccess();
+  }
+
   /// Android 沒有自動讀取方式而等待時重新判斷（玩家打開了無線偵錯、授權了權限、切回 App 時呼叫）；其他時候為 no-op。
   Future<void> retryLogAccess() async {
     final retry = _logAccessRetry;
@@ -502,6 +509,11 @@ class GachaRepository extends Notifier<GachaState> {
     _androidLog.info('log access retry requested');
     retry.complete();
   }
+
+  /// [reason] 是否為找遊戲／選版本這一步（還沒試過任何讀取方式）。
+  static bool _isGameStep(LogAccessUnavailable reason) =>
+      reason == LogAccessUnavailable.gameNotInstalled ||
+      reason == LogAccessUnavailable.chooseGame;
 
   /// Android 的等待流程：決定讀取方式、監看 Client.log，等命中、手動輸入或取消。null 代表使用者取消。
   ///
@@ -536,11 +548,11 @@ class GachaRepository extends Notifier<GachaState> {
             .read(logAccessResolverProvider)
             .resolve(
               preferred: ref.read(settingsProvider).logAccessMethod,
+              preferredGame: ref.read(settingsProvider).gamePackage,
               forceDisableAfterUse: forceDisableAfterUse,
               requestPermissions: requestPermissions,
               abort: stop,
             );
-        requestPermissions = false;
         final first = await Future.any<Object?>([resolving, stop]);
         if (first is! LogAccessOutcome) {
           _androidLog.info('log access resolve abandoned');
@@ -556,11 +568,19 @@ class GachaRepository extends Notifier<GachaState> {
           return null;
         }
         final outcome = first;
+        // 找遊戲、選版本時還沒試過讀取方式，權限詢問要留給真正試的那一次。
+        if (outcome is! LogAccessBlocked || !_isGameStep(outcome.reason)) {
+          requestPermissions = false;
+        }
         if (outcome is LogAccessReady) {
           ready = outcome;
           if (_captureCancelRequested || !ref.mounted) return null;
           state = state.copyWith(
-            progress: WaitingForCapture(isFallback: isFallback),
+            progress: WaitingForCapture(
+              isFallback: isFallback,
+              gamePackage: outcome.game,
+              installedGames: outcome.games,
+            ),
           );
           break;
         }
@@ -574,6 +594,7 @@ class GachaRepository extends Notifier<GachaState> {
             isFallback: isFallback,
             logAccessUnavailable: blocked.reason,
             rootDenied: blocked.rootDenied,
+            installedGames: blocked.games,
           ),
         );
         final retry = Completer<void>();
@@ -596,6 +617,8 @@ class GachaRepository extends Notifier<GachaState> {
       await ref
           .read(settingsProvider.notifier)
           .setLogAccessMethod(ready.method);
+      final game = ready.game;
+      final games = ready.games;
       healthSub = ready.healthChanges.listen((healthy) {
         final p = state.progress;
         if (p is! WaitingForCapture || p.logConnectionLost == !healthy) return;
@@ -604,6 +627,8 @@ class GachaRepository extends Notifier<GachaState> {
           progress: WaitingForCapture(
             isFallback: p.isFallback,
             logConnectionLost: !healthy,
+            gamePackage: game,
+            installedGames: games,
           ),
         );
       });
@@ -631,6 +656,8 @@ class GachaRepository extends Notifier<GachaState> {
           progress: WaitingForCapture(
             isFallback: isFallback,
             credentialReady: true,
+            gamePackage: game,
+            installedGames: games,
           ),
         );
         final resumed = await Future.any([

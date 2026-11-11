@@ -1258,5 +1258,39 @@
   "dialogOpenTitle": "開啟",
   "dialogSelectFolderTitle": "選取資料夾",
   "actionSave": "儲存",
-  "settingsLogsShare": "分享 logs"
+  "settingsLogsShare": "分享 logs",
+  "logUnavailableGameNotInstalled": "這支手機上找不到鳴潮。目前支援國際服的 Google Play 版和 Galaxy Store 版，裝好後回到這裡會自動重新偵測。",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed. \"Google Play\" and \"Galaxy Store\" are store names, do not translate."
+  },
+  "actionRedetectGame": "重新偵測",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
+  "logChooseGameVersion": "這支手機裝了多個版本的鳴潮，要讀取哪一個版本的記錄？",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
+  "gameVersionGooglePlay": "Google Play 版",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
+  "gameVersionGalaxyStore": "Galaxy Store 版",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
+  "progressGameVersion": "鳴潮版本：{name}",
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "切換版本",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }

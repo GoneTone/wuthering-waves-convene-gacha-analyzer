@@ -85,6 +85,7 @@ class AppSettings {
     this.maskUidInUi = false,
     this.gameDir,
     this.logAccessMethod,
+    this.gamePackage,
     this.dataLanguage,
     this.dataLanguageSeeded = false,
     this.cloudAccountEmail,
@@ -119,6 +120,9 @@ class AppSettings {
 
   /// Android 上次成功讀取遊戲記錄的方式；null 代表尚未設定。僅存本機，不參與雲端同步。
   final LogAccessMethod? logAccessMethod;
+
+  /// Android 裝了多個版本的鳴潮時玩家選的套件名稱；null 代表還沒選過。僅存本機，不參與雲端同步。
+  final String? gamePackage;
 
   /// 資料語言代碼（如 `ja`）；null 代表未設定（停用轉換）。獨立於 App UI 語言。
   final String? dataLanguage;
@@ -161,6 +165,8 @@ class AppSettings {
     bool clearGameDir = false,
     LogAccessMethod? logAccessMethod,
     bool clearLogAccessMethod = false,
+    String? gamePackage,
+    bool clearGamePackage = false,
     String? dataLanguage,
     bool clearDataLanguage = false,
     bool? dataLanguageSeeded,
@@ -186,6 +192,7 @@ class AppSettings {
     logAccessMethod: clearLogAccessMethod
         ? null
         : (logAccessMethod ?? this.logAccessMethod),
+    gamePackage: clearGamePackage ? null : (gamePackage ?? this.gamePackage),
     dataLanguage: clearDataLanguage
         ? null
         : (dataLanguage ?? this.dataLanguage),
@@ -233,6 +240,9 @@ abstract final class SettingsStorage {
   /// SharedPreferences key：Android 讀取遊戲記錄的方式（[LogAccessMethod.name]）。
   static const _kLogAccessMethod = 'pref.logAccessMethod';
 
+  /// SharedPreferences key：Android 選用的鳴潮套件名稱。
+  static const _kGamePackage = 'pref.gamePackage';
+
   /// SharedPreferences key：資料語言（語言碼／`"none"`／不存在三態）。
   static const _kDataLanguage = 'pref.dataLanguage';
 
@@ -264,6 +274,7 @@ abstract final class SettingsStorage {
       logAccessMethod: LogAccessMethod.fromName(
         prefs.getString(_kLogAccessMethod),
       ),
+      gamePackage: prefs.getString(_kGamePackage),
       dataLanguage: dataLangRaw == null || dataLangRaw == 'none'
           ? null
           : dataLangRaw,
@@ -305,6 +316,11 @@ abstract final class SettingsStorage {
       await prefs.remove(_kLogAccessMethod);
     } else {
       await prefs.setString(_kLogAccessMethod, s.logAccessMethod!.name);
+    }
+    if (s.gamePackage == null) {
+      await prefs.remove(_kGamePackage);
+    } else {
+      await prefs.setString(_kGamePackage, s.gamePackage!);
     }
     if (!s.dataLanguageSeeded) {
       await prefs.remove(_kDataLanguage);

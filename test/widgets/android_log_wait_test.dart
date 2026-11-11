@@ -6,6 +6,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 import 'package:wuthering_waves_convene_gacha_analyzer/pages/log_access_setup_page.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/wuwa_game_package.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
@@ -27,6 +28,18 @@ class _Repo extends GachaRepository {
   @override
   Future<void> retryLogAccess() async => retries++;
 
+  /// selectGame 收到的套件。
+  final selected = <String>[];
+
+  @override
+  Future<void> selectGame(String package) async => selected.add(package);
+
+  /// update 被呼叫的次數。
+  int updates = 0;
+
+  @override
+  Future<void> update({bool afterPairing = false}) async => updates++;
+
   @override
   Future<void> cancelCapture() async {
     cancels++;
@@ -39,11 +52,6 @@ class _Repo extends GachaRepository {
 
 /// 記錄呼叫的平台替身。
 class _Platform extends LogAccessPlatform {
-  _Platform({this.installed = true});
-
-  /// 是否安裝遊戲。
-  final bool installed;
-
   /// 被呼叫過的方法。
   final calls = <String>[];
 
@@ -54,10 +62,8 @@ class _Platform extends LogAccessPlatform {
   Future<bool> isAdbWifiEnabled() async => adbWifiOn;
 
   @override
-  Future<bool> isGameInstalled() async => installed;
-  @override
-  Future<bool> launchGame() async {
-    calls.add('launchGame');
+  Future<bool> launchGame(String package) async {
+    calls.add('launchGame $package');
     return true;
   }
 
@@ -81,11 +87,10 @@ void main() {
     WidgetTester tester,
     UpdateProgress progress, {
     bool android = true,
-    bool installed = true,
     Locale locale = const Locale('zh'),
   }) async {
     repo = _Repo(progress);
-    platform = _Platform(installed: installed);
+    platform = _Platform();
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -112,12 +117,17 @@ void main() {
   testWidgets(
     'android wait shows open game and manual input, no game dir link',
     (tester) async {
-      final l = await pump(tester, const WaitingForCapture());
+      final l = await pump(
+        tester,
+        const WaitingForCapture(gamePackage: wuwaSamsungPackage),
+      );
       expect(find.text(l.progressWaitingLog), findsOneWidget);
       expect(find.text(l.progressNotDetectedLink), findsNothing);
       expect(find.text(l.progressManualInputLink), findsOneWidget);
+      // 只裝一個版本時不提版本。
+      expect(find.text(l.actionSwitchGameVersion), findsNothing);
       await tester.tap(find.text(l.actionOpenGame));
-      expect(platform.calls, ['launchGame']);
+      expect(platform.calls, ['launchGame $wuwaSamsungPackage']);
     },
   );
 
@@ -134,11 +144,61 @@ void main() {
     expect(find.text(l.actionCancel), findsOneWidget);
   });
 
-  testWidgets('open game hidden when the game is not installed', (
+  testWidgets('open game hidden until the game is known', (tester) async {
+    final l = await pump(tester, const WaitingForCapture());
+    expect(find.text(l.actionOpenGame), findsNothing);
+  });
+
+  testWidgets('several versions show the one being read and can switch', (
     tester,
   ) async {
-    final l = await pump(tester, const WaitingForCapture(), installed: false);
-    expect(find.text(l.actionOpenGame), findsNothing);
+    final l = await pump(
+      tester,
+      const WaitingForCapture(
+        gamePackage: wuwaSamsungPackage,
+        installedGames: [wuwaGlobalPackage, wuwaSamsungPackage],
+      ),
+    );
+    expect(
+      find.text(l.progressGameVersion(l.gameVersionGalaxyStore)),
+      findsOneWidget,
+    );
+    await tester.tap(find.text(l.actionSwitchGameVersion));
+    await tester.pumpAndSettle();
+    expect(repo.cancels, 1);
+    expect(repo.updates, 1);
+  });
+
+  testWidgets('choose game lists every installed version', (tester) async {
+    const other = 'com.kurogame.wutheringwaves.other';
+    final l = await pump(
+      tester,
+      const WaitingForCapture(
+        logAccessUnavailable: LogAccessUnavailable.chooseGame,
+        installedGames: [wuwaGlobalPackage, wuwaSamsungPackage, other],
+      ),
+    );
+    expect(find.text(l.progressCheckingLogAccess), findsOneWidget);
+    expect(find.text(l.logChooseGameVersion), findsOneWidget);
+    expect(find.text(l.gameVersionGooglePlay), findsOneWidget);
+    expect(find.text(other), findsOneWidget);
+    await tester.tap(find.text(l.gameVersionGalaxyStore));
+    expect(repo.selected, [wuwaSamsungPackage]);
+    expect(find.text(l.progressManualInputLink), findsOneWidget);
+  });
+
+  testWidgets('game not installed offers check again and the store', (
+    tester,
+  ) async {
+    final l = await pump(
+      tester,
+      const WaitingForCapture(
+        logAccessUnavailable: LogAccessUnavailable.gameNotInstalled,
+      ),
+    );
+    expect(find.text(l.updateOpenPlayStore), findsOneWidget);
+    await tester.tap(find.text(l.actionRedetectGame));
+    expect(repo.retries, 1);
   });
 
   testWidgets('windows wait is unchanged', (tester) async {
@@ -188,6 +248,7 @@ void main() {
   });
 
   for (final reason in LogAccessUnavailable.values) {
+    if (reason == LogAccessUnavailable.chooseGame) continue;
     testWidgets(
       'unavailable ${reason.name} shows reason without progress bar',
       (tester) async {
@@ -208,6 +269,9 @@ void main() {
           LogAccessUnavailable.unsupported => l.logUnavailableUnsupported,
           LogAccessUnavailable.networkNotAllowed =>
             l.logUnavailableNetworkNotAllowed,
+          LogAccessUnavailable.gameNotInstalled =>
+            l.logUnavailableGameNotInstalled,
+          LogAccessUnavailable.chooseGame => l.logChooseGameVersion,
         };
         expect(find.text(text), findsOneWidget);
         expect(find.text(l.progressManualInputLink), findsOneWidget);
@@ -302,6 +366,33 @@ void main() {
   for (final (label, progress) in [
     ('checking', const WaitingForCapture(checkingLogAccess: true)),
     ('waiting', const WaitingForCapture()),
+    (
+      'waiting with several versions',
+      const WaitingForCapture(
+        gamePackage: 'com.kurogame.wutheringwaves.some_long_store_name',
+        installedGames: [
+          wuwaGlobalPackage,
+          'com.kurogame.wutheringwaves.some_long_store_name',
+        ],
+      ),
+    ),
+    (
+      'choose game',
+      const WaitingForCapture(
+        logAccessUnavailable: LogAccessUnavailable.chooseGame,
+        installedGames: [
+          wuwaGlobalPackage,
+          wuwaSamsungPackage,
+          'com.kurogame.wutheringwaves.some_long_store_name',
+        ],
+      ),
+    ),
+    (
+      'game not installed',
+      const WaitingForCapture(
+        logAccessUnavailable: LogAccessUnavailable.gameNotInstalled,
+      ),
+    ),
     ('connection lost', const WaitingForCapture(logConnectionLost: true)),
     (
       'not paired',
@@ -328,20 +419,33 @@ void main() {
     });
   }
 
-  testWidgets('long english title wraps on a narrow phone', (tester) async {
-    // 實機直向 1080 寬、dpr 2.625 → 約 411 邏輯像素。
-    tester.view.physicalSize = const Size(411, 800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await pump(
+  for (final reason in [
+    LogAccessUnavailable.notPaired,
+    LogAccessUnavailable.gameNotInstalled,
+    LogAccessUnavailable.chooseGame,
+  ]) {
+    testWidgets('long english ${reason.name} wraps on a narrow phone', (
       tester,
-      const WaitingForCapture(
-        logAccessUnavailable: LogAccessUnavailable.notPaired,
-      ),
-      locale: const Locale('en'),
-    );
-    expect(tester.takeException(), isNull);
-  });
+    ) async {
+      // 實機直向 1080 寬、dpr 2.625 → 約 411 邏輯像素。
+      tester.view.physicalSize = const Size(411, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pump(
+        tester,
+        WaitingForCapture(
+          logAccessUnavailable: reason,
+          installedGames: const [
+            wuwaGlobalPackage,
+            wuwaSamsungPackage,
+            'com.kurogame.wutheringwaves.some_long_store_name',
+          ],
+        ),
+        locale: const Locale('en'),
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('completed shows wireless left on hint', (tester) async {
     final l = await pump(

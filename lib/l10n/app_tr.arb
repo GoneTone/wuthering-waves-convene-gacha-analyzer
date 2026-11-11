@@ -453,5 +453,12 @@
   "dialogOpenTitle": "Aç",
   "dialogSelectFolderTitle": "Klasör seç",
   "actionSave": "Kaydet",
-  "settingsLogsShare": "Günlükleri paylaş"
+  "settingsLogsShare": "Günlükleri paylaş",
+  "logUnavailableGameNotInstalled": "Bu telefonda Wuthering Waves bulunamadı. Google Play ve Galaxy Store'daki global sürümler desteklenir; yükledikten sonra buraya dönün, oyun otomatik olarak algılanır.",
+  "actionRedetectGame": "Yeniden kontrol et",
+  "logChooseGameVersion": "Wuthering Waves'in birden fazla sürümü yüklü. Hangisi okunsun?",
+  "gameVersionGooglePlay": "Google Play sürümü",
+  "gameVersionGalaxyStore": "Galaxy Store sürümü",
+  "progressGameVersion": "Wuthering Waves sürümü: {name}",
+  "actionSwitchGameVersion": "Sürümü değiştir"
 }

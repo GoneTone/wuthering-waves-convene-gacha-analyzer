@@ -453,5 +453,12 @@
   "dialogOpenTitle": "Avaa",
   "dialogSelectFolderTitle": "Valitse kansio",
   "actionSave": "Tallenna",
-  "settingsLogsShare": "Jaa lokit"
+  "settingsLogsShare": "Jaa lokit",
+  "logUnavailableGameNotInstalled": "Wuthering Wavesia ei löytynyt tästä puhelimesta. Tuetut versiot ovat maailmanlaajuiset Google Play- ja Galaxy Store -versiot. Palaa tänne asennuksen jälkeen, niin peli tunnistetaan automaattisesti.",
+  "actionRedetectGame": "Tarkista uudelleen",
+  "logChooseGameVersion": "Wuthering Wavesista on asennettu useampi kuin yksi versio. Mikä niistä luetaan?",
+  "gameVersionGooglePlay": "Google Play -versio",
+  "gameVersionGalaxyStore": "Galaxy Store -versio",
+  "progressGameVersion": "Wuthering Waves -versio: {name}",
+  "actionSwitchGameVersion": "Vaihda versiota"
 }

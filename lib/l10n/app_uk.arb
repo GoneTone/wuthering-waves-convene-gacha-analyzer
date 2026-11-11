@@ -453,5 +453,12 @@
   "dialogOpenTitle": "Відкрити",
   "dialogSelectFolderTitle": "Вибір папки",
   "actionSave": "Зберегти",
-  "settingsLogsShare": "Поділитися журналами"
+  "settingsLogsShare": "Поділитися журналами",
+  "logUnavailableGameNotInstalled": "Гру Wuthering Waves не знайдено на цьому телефоні. Підтримуються глобальні версії з Google Play і Galaxy Store. Після встановлення поверніться сюди — гру буде виявлено автоматично.",
+  "actionRedetectGame": "Перевірити знову",
+  "logChooseGameVersion": "Встановлено кілька версій Wuthering Waves. Яку з них читати?",
+  "gameVersionGooglePlay": "Версія з Google Play",
+  "gameVersionGalaxyStore": "Версія з Galaxy Store",
+  "progressGameVersion": "Версія Wuthering Waves: {name}",
+  "actionSwitchGameVersion": "Змінити версію"
 }

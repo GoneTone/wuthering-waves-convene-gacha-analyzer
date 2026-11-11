@@ -26,7 +26,15 @@ class WaitingForCapture extends UpdateProgress {
     this.logConnectionLost = false,
     this.credentialReady = false,
     this.rootDenied = false,
+    this.gamePackage,
+    this.installedGames = const [],
   });
+
+  /// Android 正在讀取的鳴潮版本（套件名稱），「開啟鳴潮」開的就是它；還沒決定時為 null。
+  final String? gamePackage;
+
+  /// Android 手機上裝的鳴潮版本；選版本畫面列出它們，超過一個時等待畫面提供「切換版本」。
+  final List<String> installedGames;
 
   /// true 表示 recordId 全池失效後的二次捕獲（UI 顯示重新攔取提示）。
   final bool isFallback;

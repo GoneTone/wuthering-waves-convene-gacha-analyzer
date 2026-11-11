@@ -4,11 +4,6 @@ import 'dart:typed_data';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
-/// Android 國際服鳴潮 `Client.log` 的固定路徑。
-const String androidClientLogPath =
-    '/sdcard/Android/data/com.kurogame.wutheringwaves.global/files/UE4Game/'
-    'Client/Client/Saved/Logs/Client.log';
-
 /// Client.log 某一刻的長度與檔案識別。
 ///
 /// [id] 用來判斷遊戲是否換了新檔（舊檔改名成 `Client-backup-*.log`、另開新檔）；
@@ -71,7 +66,7 @@ class ShellLogSource implements ClientLogSource {
   /// 建立來源；[exec] 執行指令，[label] 寫進 log 用。
   ShellLogSource({
     required ShellExec exec,
-    this.path = androidClientLogPath,
+    required this.path,
     String label = 'shell',
   }) : _exec = exec,
        _label = label;
@@ -131,6 +126,16 @@ String clientLogReadCommand(String path, int offset, int length) {
   if (offset < 0) throw ArgumentError.value(offset, 'offset');
   if (length <= 0) throw ArgumentError.value(length, 'length');
   return "tail -c +${offset + 1} '$path' | head -c $length";
+}
+
+/// 產生「[path] 不存在時列出 [dataDir] 底下的 `.log` 檔」的 shell 指令；檔案存在時沒有輸出。
+///
+/// 用來確認沒見過的版本 log 放在哪裡（例如 Galaxy Store 版），只列路徑、不讀內容。
+String clientLogMissingCommand(String path, String dataDir) {
+  _checkPath(path);
+  _checkPath(dataDir);
+  return "[ -e '$path' ] || "
+      "find '$dataDir' -maxdepth 6 -name '*.log' 2>&1 | head -n 10";
 }
 
 /// 路徑會被單引號包住，不允許含單引號以免跳出字串。

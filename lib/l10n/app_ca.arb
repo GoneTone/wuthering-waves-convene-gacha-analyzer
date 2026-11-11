@@ -453,5 +453,12 @@
   "dialogOpenTitle": "Obre",
   "dialogSelectFolderTitle": "Tria una carpeta",
   "actionSave": "Desa",
-  "settingsLogsShare": "Comparteix els registres"
+  "settingsLogsShare": "Comparteix els registres",
+  "logUnavailableGameNotInstalled": "No s'ha trobat Wuthering Waves en aquest telèfon. S'admeten les versions globals de Google Play i de Galaxy Store; un cop instal·lat, torna aquí i es detectarà automàticament.",
+  "actionRedetectGame": "Torna a comprovar",
+  "logChooseGameVersion": "Hi ha més d'una versió de Wuthering Waves instal·lada. Quina vols llegir?",
+  "gameVersionGooglePlay": "Versió de Google Play",
+  "gameVersionGalaxyStore": "Versió de Galaxy Store",
+  "progressGameVersion": "Versió de Wuthering Waves: {name}",
+  "actionSwitchGameVersion": "Canvia de versió"
 }

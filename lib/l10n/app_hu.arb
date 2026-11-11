@@ -453,5 +453,12 @@
   "dialogOpenTitle": "Megnyitás",
   "dialogSelectFolderTitle": "Mappa kiválasztása",
   "actionSave": "Mentés",
-  "settingsLogsShare": "Naplók megosztása"
+  "settingsLogsShare": "Naplók megosztása",
+  "logUnavailableGameNotInstalled": "A Wuthering Waves nem található ezen a telefonon. A Google Play és a Galaxy Store globális verziói támogatottak; telepítés után térjen vissza ide, és az alkalmazás automatikusan felismeri a játékot.",
+  "actionRedetectGame": "Újbóli ellenőrzés",
+  "logChooseGameVersion": "A Wuthering Waves több verziója is telepítve van. Melyiket olvassa be az alkalmazás?",
+  "gameVersionGooglePlay": "Google Play-verzió",
+  "gameVersionGalaxyStore": "Galaxy Store-verzió",
+  "progressGameVersion": "Wuthering Waves-verzió: {name}",
+  "actionSwitchGameVersion": "Verzió váltása"
 }

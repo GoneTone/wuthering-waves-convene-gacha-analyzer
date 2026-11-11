@@ -453,5 +453,12 @@
   "dialogOpenTitle": "Deschide",
   "dialogSelectFolderTitle": "Selectați dosarul",
   "actionSave": "Salvează",
-  "settingsLogsShare": "Distribuie jurnalele"
+  "settingsLogsShare": "Distribuie jurnalele",
+  "logUnavailableGameNotInstalled": "Wuthering Waves nu a fost găsit pe acest telefon. Sunt acceptate versiunile globale din Google Play și Galaxy Store; după instalare, reveniți aici și jocul va fi detectat automat.",
+  "actionRedetectGame": "Verificați din nou",
+  "logChooseGameVersion": "Sunt instalate mai multe versiuni de Wuthering Waves. Pe care doriți să o citiți?",
+  "gameVersionGooglePlay": "Versiunea Google Play",
+  "gameVersionGalaxyStore": "Versiunea Galaxy Store",
+  "progressGameVersion": "Versiunea Wuthering Waves: {name}",
+  "actionSwitchGameVersion": "Schimbați versiunea"
 }

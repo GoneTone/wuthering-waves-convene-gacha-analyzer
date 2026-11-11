@@ -453,5 +453,12 @@
   "dialogOpenTitle": "פתיחה",
   "dialogSelectFolderTitle": "בחירת תיקייה",
   "actionSave": "שמירה",
-  "settingsLogsShare": "שיתוף היומנים"
+  "settingsLogsShare": "שיתוף היומנים",
+  "logUnavailableGameNotInstalled": "Wuthering Waves לא נמצא בטלפון הזה. הגרסאות הגלובליות של Google Play ושל Galaxy Store נתמכות; אחרי ההתקנה חזרו לכאן והמשחק יזוהה אוטומטית.",
+  "actionRedetectGame": "בדיקה חוזרת",
+  "logChooseGameVersion": "מותקנת יותר מגרסה אחת של Wuthering Waves. איזו גרסה לקרוא?",
+  "gameVersionGooglePlay": "גרסת Google Play",
+  "gameVersionGalaxyStore": "גרסת Galaxy Store",
+  "progressGameVersion": "גרסת Wuthering Waves: {name}",
+  "actionSwitchGameVersion": "החלפת גרסה"
 }

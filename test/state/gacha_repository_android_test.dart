@@ -14,6 +14,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/android/flutter_
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/root_shell.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/wuwa_game_package.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_source.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
@@ -43,7 +44,10 @@ class _FakeResolver extends LogAccessResolver {
   final results = <FutureOr<LogAccessOutcome> Function()>[];
 
   /// 每次 resolve 收到的參數。
-  final calls = <({LogAccessMethod? preferred, bool force, bool request})>[];
+  final calls =
+      <
+        ({LogAccessMethod? preferred, String? game, bool force, bool request})
+      >[];
 
   /// 每次 resolve 收到的 abort。
   final aborts = <Future<void>?>[];
@@ -51,6 +55,7 @@ class _FakeResolver extends LogAccessResolver {
   @override
   Future<LogAccessOutcome> resolve({
     LogAccessMethod? preferred,
+    String? preferredGame,
     bool forceDisableAfterUse = false,
     bool requestPermissions = true,
     Future<void>? abort,
@@ -58,6 +63,7 @@ class _FakeResolver extends LogAccessResolver {
     aborts.add(abort);
     calls.add((
       preferred: preferred,
+      game: preferredGame,
       force: forceDisableAfterUse,
       request: requestPermissions,
     ));
@@ -68,7 +74,10 @@ class _FakeResolver extends LogAccessResolver {
 
 /// 記錄 release 次數、可控制 health stream 的 ready 結果。
 class _Ready {
-  _Ready({this.leftOn = false});
+  _Ready({this.leftOn = false, this.games = const [wuwaGlobalPackage]});
+
+  /// 手機上裝的版本；讀的是第一個。
+  final List<String> games;
 
   /// release 回傳值。
   final bool leftOn;
@@ -80,12 +89,17 @@ class _Ready {
   final health = StreamController<bool>.broadcast();
 
   /// 讀取來源（不會被真正讀，watch 是替身）。
-  final source = ShellLogSource(exec: (_) async => Uint8List(0));
+  late final source = ShellLogSource(
+    exec: (_) async => Uint8List(0),
+    path: androidClientLogPathFor(games.first),
+  );
 
   /// 產生 [LogAccessReady]。
   LogAccessReady outcome() => LogAccessReady(
     source: source,
     method: LogAccessMethod.wirelessDebugging,
+    game: games.first,
+    games: games,
     healthChanges: health.stream,
     release: () async {
       released++;
@@ -286,6 +300,53 @@ void main() {
     await container.read(wirelessPairingStatusProvider.future);
     expect(computes, 2);
     sub.close();
+  });
+
+  test('ready: waiting state names the game being read', () async {
+    final ready = _Ready(games: [wuwaSamsungPackage, wuwaGlobalPackage]);
+    resolver.results.add(ready.outcome);
+    final r = await repo();
+    final done = r.update();
+    await waitUntil(() => watch.hits.isNotEmpty);
+    final p = progress()! as WaitingForCapture;
+    expect(p.gamePackage, wuwaSamsungPackage);
+    expect(p.installedGames, [wuwaSamsungPackage, wuwaGlobalPackage]);
+    ready.health.add(false);
+    await waitUntil(() => (progress()! as WaitingForCapture).logConnectionLost);
+    expect((progress()! as WaitingForCapture).gamePackage, wuwaSamsungPackage);
+    await r.cancelCapture();
+    await done;
+  });
+
+  test('choose game: the pick is saved and used for the next try', () async {
+    final ready = _Ready(games: [wuwaSamsungPackage, wuwaGlobalPackage]);
+    resolver.results
+      ..add(
+        () => const LogAccessBlocked(
+          LogAccessUnavailable.chooseGame,
+          games: [wuwaGlobalPackage, wuwaSamsungPackage],
+        ),
+      )
+      ..add(ready.outcome);
+    final r = await repo();
+    final done = r.update();
+    await waitUntil(
+      () => (progress() as WaitingForCapture?)?.logAccessUnavailable != null,
+    );
+    expect((progress()! as WaitingForCapture).installedGames, [
+      wuwaGlobalPackage,
+      wuwaSamsungPackage,
+    ]);
+
+    await r.selectGame(wuwaSamsungPackage);
+    await waitUntil(() => watch.hits.isNotEmpty);
+    expect(container.read(settingsProvider).gamePackage, wuwaSamsungPackage);
+    expect(resolver.calls[0].game, isNull);
+    expect(resolver.calls[1].game, wuwaSamsungPackage);
+    // 選版本前還沒試過讀取方式，權限詢問要留給選完後那一次。
+    expect(resolver.calls[1].request, isTrue);
+    await r.cancelCapture();
+    await done;
   });
 
   test('blocked: root denial is shown in the waiting state', () async {

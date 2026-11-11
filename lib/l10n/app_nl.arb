@@ -453,5 +453,12 @@
   "dialogOpenTitle": "Openen",
   "dialogSelectFolderTitle": "Map selecteren",
   "actionSave": "Opslaan",
-  "settingsLogsShare": "Logs delen"
+  "settingsLogsShare": "Logs delen",
+  "logUnavailableGameNotInstalled": "Wuthering Waves is niet gevonden op deze telefoon. De wereldwijde versies uit Google Play en de Galaxy Store worden ondersteund; kom na de installatie hier terug, dan wordt het spel automatisch gevonden.",
+  "actionRedetectGame": "Opnieuw controleren",
+  "logChooseGameVersion": "Er zijn meerdere versies van Wuthering Waves geïnstalleerd. Welke moet worden gelezen?",
+  "gameVersionGooglePlay": "Google Play-versie",
+  "gameVersionGalaxyStore": "Galaxy Store-versie",
+  "progressGameVersion": "Wuthering Waves-versie: {name}",
+  "actionSwitchGameVersion": "Andere versie kiezen"
 }

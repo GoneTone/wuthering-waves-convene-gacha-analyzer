@@ -453,5 +453,12 @@
   "dialogOpenTitle": "Отвори",
   "dialogSelectFolderTitle": "Изаберите фасциклу",
   "actionSave": "Сачувај",
-  "settingsLogsShare": "Дели евиденције"
+  "settingsLogsShare": "Дели евиденције",
+  "logUnavailableGameNotInstalled": "Игра Wuthering Waves није пронађена на овом телефону. Подржане су глобалне верзије из Google Play и Galaxy Store продавнице; након инсталације вратите се овде и игра ће бити аутоматски откривена.",
+  "actionRedetectGame": "Провери поново",
+  "logChooseGameVersion": "Инсталирано је више верзија игре Wuthering Waves. Коју треба читати?",
+  "gameVersionGooglePlay": "Google Play верзија",
+  "gameVersionGalaxyStore": "Galaxy Store верзија",
+  "progressGameVersion": "Верзија игре Wuthering Waves: {name}",
+  "actionSwitchGameVersion": "Промени верзију"
 }

@@ -40,11 +40,11 @@ Android 11 起，一般 App 不能讀其他 App 的 `Android/data`；Android 13 
 
 ### 3. 鳴潮的 log 位置和格式（鳴潮限定）
 
-- 路徑：`/sdcard/Android/data/com.kurogame.wutheringwaves.global/files/UE4Game/Client/Client/Saved/Logs/Client.log`，會輪替成 `Client-backup-*.log`。
+- 路徑：`/sdcard/Android/data/<套件>/files/UE4Game/Client/Client/Saved/Logs/Client.log`，會輪替成 `Client-backup-*.log`。套件依版本不同（Google Play 版 `com.kurogame.wutheringwaves.global`、Galaxy Store 版 `com.kurogame.wutheringwaves.samsung`），見 #52。
 - XOR 混淆**和 PC 版完全相同**（`b ^ ((b & 1) != 0 ? 0xA5 : 0xEF)`），解碼和解析的程式碼可以直接共用。
 - 喚取 URL 也會出現在 logcat（tag `KUROSDK`），格式和 PC 版一樣，只差 `platform=Android`。
 - **原神要另外查**：原神 Android 版的 log 或 WebView 快取位置、是否有混淆。
-- 要在 manifest 的 `<queries>` 宣告遊戲套件（`com.kurogame.wutheringwaves.global`），Android 11 以上才查得到它是否已安裝、才能從 App 開啟遊戲。原神版要換成原神的套件名稱。
+- 要在 manifest 的 `<queries>` 宣告遊戲套件，Android 11 以上才查得到它是否已安裝、才能從 App 開啟遊戲。已知版本逐一宣告，另外宣告有桌面圖示的 App（MAIN／LAUNCHER intent）用開頭比對沒見過的版本，見 #52。原神版要換成原神的套件名稱。
 - 解析 log 的正規表示式若需要非 ASCII 或控制字元，一律寫成跳脫序列（例如 `[^\x00-\x7F]`），不要直接放原始位元組，否則 git 會把整個檔案當成二進位，無法 diff。原神版共用這段解碼程式時也要注意。
 
 ---
@@ -859,3 +859,34 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 **試過但拿掉的做法：按更新時先找 log 裡現成的網址**（3a49857 加入、2026-11-10 移除）：順序原本是「帳號存的網址 → log 裡最新的網址 → 請玩家開記錄頁」，log 裡的網址先抓第一個卡池確認能用才採用。模擬器實測可行（網址在最後一段時約 2.2 秒找到，不用進遊戲；最後 4 MB 沒有網址時「開啟鳴潮」會晚約 4.3 秒出現）。使用者決定拿掉，**一律請玩家開記錄頁，只有帳號存的網址還有效時例外**：log 裡的網址可能屬於遊戲目前登入的另一個帳號，不該在玩家沒操作的情況下更新別的帳號。帳號存的網址本來就依帳號分開（`<UID>.cred.json`），只拿目前選的帳號那份。
 
 **限制**：兩位玩家的實際 log 還沒拿到，60 MB 是假設的更新 log 大小；實機只驗過「重開遊戲」的換檔，遊戲更新時的換檔方式要等下次更新確認；同一秒內換兩次檔檔頭會一樣，只能靠「變短」判斷。
+
+### 52. 不同商店的鳴潮版本：用套件名稱開頭偵測、可以選版本（通用，2026-11-11）
+
+**症狀**：一位玩家從 Galaxy Store 安裝鳴潮，等待畫面沒有「開啟鳴潮」，也一直抓不到網址。他的 log 每次都是 `client log watch started source=adb offset=0`：App 讀的是 Google Play 版的路徑，那個檔案不存在。無線偵錯本身正常。
+
+**原因**：Galaxy Store 版是另一個 App，套件名稱是 `com.kurogame.wutheringwaves.samsung`，Google Play 版是 `com.kurogame.wutheringwaves.global`。App 原本只認 Google Play 版：manifest 的 `<queries>`、Kotlin 的 `GAME_PACKAGE`、Dart 的 log 路徑都寫死。
+
+**查到的版本**（2026-11-11 網路查詢）：
+
+| 套件名稱 | 版本 | 支援 |
+|---|---|---|
+| `com.kurogame.wutheringwaves.global` | 國際服：Google Play、官網 APK、QooApp、APKPure 都是這個 | ✅ |
+| `com.kurogame.wutheringwaves.samsung` | 國際服：Galaxy Store | ✅ |
+| `com.kurogame.mingchao` | 國服 | ❌ 伺服器和網址網域不同 |
+
+Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本。
+
+**做法**：
+1. **偵測**：`wuwa_game_package.dart` 是單一來源（開頭、已知版本、log 路徑、排序）。Kotlin `installedGames` 回傳「有桌面圖示且套件名稱是 `com.kurogame.wutheringwaves` 或以它加 `.` 開頭」的 App，加上已知版本裡有裝的。manifest 的 `<queries>` 逐一宣告已知版本，再加 MAIN／LAUNCHER intent。**不用 `QUERY_ALL_PACKAGES`**（Play 只准檔案管理、防毒這類 App 用）。Kotlin 只回傳比對到的套件，其他已安裝的 App 不會離開 Kotlin。
+2. **先找遊戲再決定讀取方式**（`LogAccessResolver._pickGame`）：沒裝就不跳 root 授權、也不打開無線偵錯。查詢失敗（channel 出錯，Dart 端回 null）**不能當成沒裝**，退回 Google Play 版照舊讀取。
+3. **多個版本**：只裝一個時直接用它，不管之前選過什麼；裝了多個時用記住的選擇（`AppSettings.gamePackage`，只存本機，不參與雲端同步），沒選過或選的已經移除就請玩家選。選版本、找不到遊戲都是 `LogAccessUnavailable` 的新值，沿用原本「重新判斷」的流程（回到前景會自動重新偵測）。選版本這一步還沒試過讀取方式，所以 `requestPermissions` 要留給選完後那一次，否則 Android 10 以下永遠不會問儲存權限。
+4. **等待畫面**：找不到遊戲時說明支援哪些版本，提供「重新偵測」「前往 Google Play」和手動輸入；選版本畫面列出所有版本（沒見過的版本顯示套件名稱）；裝了多個版本時顯示「鳴潮版本：…」和「切換版本」，切換會清掉記住的選擇、結束這次更新再重新開始。
+5. **套件名稱會組進 shell 指令的路徑**：只接受 `^com\.kurogame\.wutheringwaves(\.[A-Za-z0-9_]+)*$`；Kotlin 的 `launchGame` 也只開這個開頭的套件。
+6. **路徑猜錯時自己留線索**：shell 來源建立時跑一次 `[ -e <log> ] || find <data>/files -maxdepth 6 -name '*.log' | head`，log 不在預期位置就記 `client log missing game=... found=...`（只有路徑）。Galaxy Store 版的 log 位置是照 Google Play 版推測的，下一份玩家 log 可以直接確認。
+
+**模擬器驗證**（Android 16）：用 aapt2 做只有桌面圖示的空殼 APK（`android:hasCode="false"`、activity 用 `android.app.Activity`），套件名稱取 `.samsung` 和 `.other`。
+- 都不裝：顯示找不到鳴潮；裝好 `.samsung` 回到 App 會自動重新偵測。
+- 只裝 `.samsung`：連上後 `log access ready ... game=com.kurogame.wutheringwaves.samsung`；log 還不存在時記下 `client log missing ... No such file or directory`；在 `.samsung` 路徑放編碼過的 log 後讀到網址。
+- 裝兩個：顯示選版本；選了之後記住，下次直接用；等待畫面顯示版本與「切換版本」。
+
+**限制**：Galaxy Store 版的 log 路徑沒有實機確認，等玩家用新版測過再看 log。

@@ -125,6 +125,17 @@ class SettingsNotifier extends Notifier<AppSettings> {
     Logger('app.settings').info('logAccessMethod=${method?.name}');
   }
 
+  /// 記錄 Android 選用的鳴潮套件並持久化；[package] 為 null 時清除（下次要重新選）。
+  Future<void> setGamePackage(String? package) async {
+    if (state.gamePackage == package) return;
+    state = state.copyWith(
+      gamePackage: package,
+      clearGamePackage: package == null,
+    );
+    await SettingsStorage.save(state);
+    Logger('app.settings').info('gamePackage=$package');
+  }
+
   /// 切換「遮蔽介面 UID」設定並持久化；變更值同步寫入 log。
   Future<void> setMaskUidInUi(bool value) async {
     state = state.copyWith(maskUidInUi: value);

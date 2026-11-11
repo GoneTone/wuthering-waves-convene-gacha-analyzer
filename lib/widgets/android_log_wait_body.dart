@@ -7,8 +7,11 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 import 'package:wuthering_waves_convene_gacha_analyzer/pages/log_access_setup_page.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/wuwa_game_package.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/manual_credential_dialog.dart';
 
 /// Android 等待喚取記錄時的對話框內容：可以自動讀取時顯示進度與「開啟鳴潮」，
@@ -24,18 +27,14 @@ class AndroidLogWaitBody extends ConsumerStatefulWidget {
   ConsumerState<AndroidLogWaitBody> createState() => _AndroidLogWaitBodyState();
 }
 
-/// [AndroidLogWaitBody] 的狀態：遊戲是否安裝、切回前景時重新判斷讀取方式。
+/// [AndroidLogWaitBody] 的狀態：切回前景時重新判斷讀取方式。
 class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
-  /// 是否安裝了鳴潮（決定要不要顯示「開啟鳴潮」）。
-  late final Future<bool> _installed;
-
-  /// 切回前景時觸發重新判斷（玩家可能剛打開無線偵錯或授權）。
+  /// 切回前景時觸發重新判斷（玩家可能剛打開無線偵錯、授權或裝好遊戲）。
   late final AppLifecycleListener _lifecycle;
 
   @override
   void initState() {
     super.initState();
-    _installed = ref.read(logAccessPlatformProvider).isGameInstalled();
     _lifecycle = AppLifecycleListener(
       onResume: () => unawaited(_retryIfBlocked()),
     );
@@ -53,7 +52,8 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
   /// 變成關不掉的迴圈，所以只有系統已經打開無線偵錯（玩家按了允許）才重試。
   Future<void> _retryIfBlocked() async {
     final reason = widget.progress.logAccessUnavailable;
-    if (reason == null) return;
+    // 選版本要等玩家點，重新判斷只會讓畫面閃一下。
+    if (reason == null || reason == LogAccessUnavailable.chooseGame) return;
     if (reason == LogAccessUnavailable.networkNotAllowed &&
         !await _wirelessTurnedOn()) {
       return;
@@ -82,6 +82,16 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
     // 以免被它的 popUntil 一起關掉。
     await Future<void>.delayed(Duration.zero);
     if (nav.mounted) unawaited(openLogAccessSetup(nav.context));
+  }
+
+  /// 清掉記住的版本後結束這次更新再重新開始，讓玩家重新選版本。
+  Future<void> _switchGame() async {
+    final container = ProviderScope.containerOf(context);
+    final repo = ref.read(gachaRepositoryProvider.notifier);
+    await ref.read(settingsProvider.notifier).setGamePackage(null);
+    await repo.cancelCapture();
+    await _untilIdle(container);
+    await repo.update();
   }
 
   /// 等到沒有進行中的更新（最多 5 秒）。
@@ -125,6 +135,29 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
       child: Text(l.progressManualInputLink, textAlign: TextAlign.center),
     );
 
+    if (reason == LogAccessUnavailable.chooseGame) {
+      final repo = ref.read(gachaRepositoryProvider.notifier);
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l.logChooseGameVersion, textAlign: TextAlign.center),
+          for (final game in p.installedGames)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.s),
+              child: OutlinedButton(
+                onPressed: () => repo.selectGame(game),
+                child: Text(
+                  gameVersionName(game, l),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          const SizedBox(height: AppSpacing.s),
+          manualLink,
+        ],
+      );
+    }
+
     if (reason != null) {
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -162,8 +195,22 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
                   .retryLogAccess,
               child: Text(l.actionRetry),
             ),
+            LogAccessUnavailable.gameNotInstalled => FilledButton(
+              onPressed: ref
+                  .read(gachaRepositoryProvider.notifier)
+                  .retryLogAccess,
+              child: Text(l.actionRedetectGame),
+            ),
             _ => null,
           },
+          if (reason == LogAccessUnavailable.gameNotInstalled)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.s),
+              child: OutlinedButton(
+                onPressed: () => openExternalUrl(_playStoreGameUri),
+                child: Text(l.updateOpenPlayStore, textAlign: TextAlign.center),
+              ),
+            ),
           manualLink,
         ],
       );
@@ -201,19 +248,27 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
             style: warning,
           ),
         ],
-        FutureBuilder<bool>(
-          future: _installed,
-          builder: (context, snap) => snap.data == true
-              ? Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.s),
-                  child: FilledButton.icon(
-                    onPressed: platform.launchGame,
-                    icon: const Icon(Icons.play_arrow, size: 18),
-                    label: Text(l.actionOpenGame),
-                  ),
-                )
-              : const SizedBox.shrink(),
-        ),
+        if (p.installedGames.length > 1 && p.gamePackage != null) ...[
+          const SizedBox(height: AppSpacing.s),
+          Text(
+            l.progressGameVersion(gameVersionName(p.gamePackage!, l)),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall,
+          ),
+          TextButton(
+            onPressed: _switchGame,
+            child: Text(l.actionSwitchGameVersion),
+          ),
+        ],
+        if (p.gamePackage case final game?)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.s),
+            child: FilledButton.icon(
+              onPressed: () => platform.launchGame(game),
+              icon: const Icon(Icons.play_arrow, size: 18),
+              label: Text(l.actionOpenGame),
+            ),
+          ),
         const SizedBox(height: AppSpacing.s),
         manualLink,
       ],
@@ -232,5 +287,19 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
     LogAccessUnavailable.storagePermissionDenied => l.logUnavailableStorage,
     LogAccessUnavailable.unsupported => l.logUnavailableUnsupported,
     LogAccessUnavailable.networkNotAllowed => l.logUnavailableNetworkNotAllowed,
+    LogAccessUnavailable.gameNotInstalled => l.logUnavailableGameNotInstalled,
+    LogAccessUnavailable.chooseGame => l.logChooseGameVersion,
   };
 }
+
+/// 鳴潮在 Google Play 的頁面（找不到遊戲時的「前往 Google Play」）。
+final _playStoreGameUri = Uri.parse(
+  'https://play.google.com/store/apps/details?id=$wuwaGlobalPackage',
+);
+
+/// [package] 版本的顯示名稱；沒見過的版本直接顯示套件名稱。
+String gameVersionName(String package, AppLocalizations l) => switch (package) {
+  wuwaGlobalPackage => l.gameVersionGooglePlay,
+  wuwaSamsungPackage => l.gameVersionGalaxyStore,
+  _ => package,
+};

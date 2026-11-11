@@ -3,6 +3,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
@@ -174,13 +175,16 @@ class _Title extends StatelessWidget {
         :final checkingLogAccess,
       ) =>
         (
-          logAccessUnavailable == null
+          logAccessUnavailable == null ||
+                  logAccessUnavailable == LogAccessUnavailable.chooseGame
               ? Icons.hourglass_top
               : Icons.info_outline,
           tokens.textPrimary,
           !android
               ? l.progressWaiting
-              : checkingLogAccess
+              // 選版本是準備讀取的一步，不是讀不到。
+              : checkingLogAccess ||
+                    logAccessUnavailable == LogAccessUnavailable.chooseGame
               ? l.progressCheckingLogAccess
               : logAccessUnavailable == null
               ? l.progressWaitingLog

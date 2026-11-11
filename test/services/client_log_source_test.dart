@@ -9,6 +9,9 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_sourc
 ShellExec _out(String text) =>
     (_) async => Uint8List.fromList(utf8.encode(text));
 
+/// 測試用的 log 路徑。
+const _path = '/a/Client.log';
+
 void main() {
   late Directory tmp;
 
@@ -52,7 +55,7 @@ void main() {
       // 檔案不存在時指令只印 0：沒有識別，代表無法判斷。
       ('0\n', 0, null),
     ]) {
-      final p = await ShellLogSource(exec: _out(out)).probe();
+      final p = await ShellLogSource(exec: _out(out), path: _path).probe();
       expect((p.length, p.id), (length, id), reason: out);
     }
   });
@@ -63,7 +66,7 @@ void main() {
       // 回 0 會被監看當成 log 輪替而從頭重讀整個檔；丟例外則只是這一輪讀取失敗。
       for (final out in ['', 'stat: weird\n']) {
         await expectLater(
-          ShellLogSource(exec: _out(out)).probe(),
+          ShellLogSource(exec: _out(out), path: _path).probe(),
           throwsFormatException,
           reason: out,
         );
@@ -71,16 +74,17 @@ void main() {
     },
   );
 
-  test('shell probe sends the probe command for the android path', () async {
+  test('shell probe sends the probe command for its path', () async {
     final sent = <String>[];
     final src = ShellLogSource(
       exec: (c) async {
         sent.add(c);
         return Uint8List.fromList(utf8.encode('7 1\n'));
       },
+      path: _path,
     );
     await src.probe();
-    expect(sent.single, clientLogProbeCommand(androidClientLogPath));
+    expect(sent.single, clientLogProbeCommand(_path));
   });
 
   test('shell read sends the read command and returns raw bytes', () async {
@@ -90,9 +94,10 @@ void main() {
         sent.add(c);
         return Uint8List.fromList([1, 2, 3]);
       },
+      path: _path,
     );
     expect(await src.read(5, 3), [1, 2, 3]);
-    expect(sent.single, clientLogReadCommand(androidClientLogPath, 5, 3));
+    expect(sent.single, clientLogReadCommand(_path, 5, 3));
   });
 
   test('local file source: missing file has length 0 and no id', () async {

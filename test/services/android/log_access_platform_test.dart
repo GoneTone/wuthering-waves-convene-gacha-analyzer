@@ -43,6 +43,44 @@ void main() {
     expect(await LogAccessPlatform().setAdbWifiEnabled(true), isFalse);
   });
 
+  test('installedGamePackages filters, sorts and sends the prefix', () async {
+    respond(
+      (_) => [
+        'com.kurogame.wutheringwaves.samsung',
+        'com.kurogame.mingchao',
+        'com.kurogame.wutheringwaves.global',
+      ],
+    );
+    expect(await LogAccessPlatform().installedGamePackages(), [
+      'com.kurogame.wutheringwaves.global',
+      'com.kurogame.wutheringwaves.samsung',
+    ]);
+    expect(calls.single.method, 'installedGames');
+    expect(
+      (calls.single.arguments as Map)['prefix'],
+      'com.kurogame.wutheringwaves',
+    );
+  });
+
+  test('installedGamePackages is null on error, not empty', () async {
+    // 空清單代表「沒裝」，查詢失敗不能被當成沒裝。
+    respond((_) => throw PlatformException(code: 'pm'));
+    expect(await LogAccessPlatform().installedGamePackages(), isNull);
+  });
+
+  test('launchGame passes the package', () async {
+    respond((_) => true);
+    expect(
+      await LogAccessPlatform().launchGame(
+        'com.kurogame.wutheringwaves.samsung',
+      ),
+      isTrue,
+    );
+    expect(calls.single.arguments, {
+      'package': 'com.kurogame.wutheringwaves.samsung',
+    });
+  });
+
   test('missing plugin returns conservative defaults', () async {
     final p = LogAccessPlatform();
     expect(await p.isWifiConnected(), isFalse);

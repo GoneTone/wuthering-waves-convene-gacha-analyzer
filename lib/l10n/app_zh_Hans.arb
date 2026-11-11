@@ -1452,5 +1452,12 @@
   "dialogOpenTitle": "打开",
   "dialogSelectFolderTitle": "选择文件夹",
   "actionSave": "保存",
-  "settingsLogsShare": "分享日志"
+  "settingsLogsShare": "分享日志",
+  "logUnavailableGameNotInstalled": "这台手机上找不到鸣潮。目前支持国际服的 Google Play 版和 Galaxy Store 版，装好后回到这里会自动重新检测。",
+  "actionRedetectGame": "重新检测",
+  "logChooseGameVersion": "这台手机装了多个版本的鸣潮，要读取哪一个版本的记录？",
+  "gameVersionGooglePlay": "Google Play 版",
+  "gameVersionGalaxyStore": "Galaxy Store 版",
+  "progressGameVersion": "鸣潮版本：{name}",
+  "actionSwitchGameVersion": "切换版本"
 }

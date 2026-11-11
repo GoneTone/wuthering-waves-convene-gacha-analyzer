@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
@@ -8,6 +9,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/android/flutter_
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_method.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/root_shell.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/wuwa_game_package.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_source.dart';
 
 export 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_method.dart';
@@ -34,6 +36,12 @@ enum LogAccessUnavailable {
 
   /// 這台裝置無法自動讀取。
   unsupported,
+
+  /// 手機上找不到國際服鳴潮。
+  gameNotInstalled,
+
+  /// 裝了多個版本的鳴潮、還沒選要讀哪一個（候選見 [LogAccessBlocked.games]）。
+  chooseGame,
 }
 
 /// [LogAccessResolver.resolve] 的結果。
@@ -49,11 +57,19 @@ final class LogAccessReady extends LogAccessOutcome {
     required this.source,
     required this.method,
     required this.release,
+    required this.game,
+    this.games = const [],
     Stream<bool>? healthChanges,
   }) : healthChanges = healthChanges ?? const Stream.empty();
 
   /// 讀取 Client.log 的來源。
   final ClientLogSource source;
+
+  /// 讀取的是哪個版本的鳴潮（套件名稱）。
+  final String game;
+
+  /// 手機上裝的所有鳴潮版本；超過一個時等待畫面提供「切換版本」。
+  final List<String> games;
 
   /// 使用的讀取方式。
   final LogAccessMethod method;
@@ -74,7 +90,11 @@ final class LogAccessBlocked extends LogAccessOutcome {
     this.reason, {
     this.rootDenied = false,
     this.enabledWireless = false,
+    this.games = const [],
   });
+
+  /// [LogAccessUnavailable.chooseGame] 時可選的鳴潮版本（套件名稱）。
+  final List<String> games;
 
   /// 原因。
   final LogAccessUnavailable reason;
@@ -142,8 +162,10 @@ class LogAccessResolver {
   ///
   /// [requestPermissions] 為 false 時（自動重試）只檢查權限、不跳系統詢問。
   /// [abort] 完成時（玩家取消或手動送出）結束 root 授權等待，之後的方式都不再嘗試。
+  /// 讀取方式之前先找鳴潮：沒裝就不跳 root 授權或打開無線偵錯；裝了多個版本時用 [preferredGame]，沒選過就請玩家選。
   Future<LogAccessOutcome> resolve({
     LogAccessMethod? preferred,
+    String? preferredGame,
     bool forceDisableAfterUse = false,
     bool requestPermissions = true,
     Future<void>? abort,
@@ -161,7 +183,12 @@ class LogAccessResolver {
       }),
     );
     try {
+      final picked = await _pickGame(preferredGame);
+      if (picked is LogAccessBlocked) return picked;
+      final (game, games) = picked as (String, List<String>);
       return await _resolve(
+        game: game,
+        games: games,
         preferred: preferred,
         forceDisableAfterUse: forceDisableAfterUse,
         requestPermissions: requestPermissions,
@@ -173,8 +200,30 @@ class LogAccessResolver {
     }
   }
 
+  /// 決定讀哪個版本：回傳 `(套件, 已安裝的版本)`，或沒裝／要玩家選時的 [LogAccessBlocked]。
+  ///
+  /// 查詢失敗（channel 出錯）不能當成沒裝，退回 Google Play 版照舊讀取。
+  Future<Object> _pickGame(String? preferredGame) async {
+    final games = await platform.installedGamePackages();
+    if (games == null) {
+      _log.warning('game detection failed, assuming $wuwaGlobalPackage');
+      return (wuwaGlobalPackage, const <String>[]);
+    }
+    _log.info('games installed=${games.join(',')} preferred=$preferredGame');
+    if (games.isEmpty) {
+      return const LogAccessBlocked(LogAccessUnavailable.gameNotInstalled);
+    }
+    if (games.length == 1) return (games.single, games);
+    if (preferredGame != null && games.contains(preferredGame)) {
+      return (preferredGame, games);
+    }
+    return LogAccessBlocked(LogAccessUnavailable.chooseGame, games: games);
+  }
+
   /// [resolve] 的實際流程；[isAborted] 為 true 後不再嘗試下一種方式。
   Future<LogAccessOutcome> _resolve({
+    required String game,
+    required List<String> games,
     required LogAccessMethod? preferred,
     required bool forceDisableAfterUse,
     required bool requestPermissions,
@@ -193,16 +242,25 @@ class LogAccessResolver {
       if (isAborted()) break;
       final outcome = switch (method) {
         LogAccessMethod.root => await _tryRoot(
+          game,
+          games,
           onDenied: () => rootDenied = true,
         ),
-        LogAccessMethod.legacyDirect => await _tryLegacy(requestPermissions),
+        LogAccessMethod.legacyDirect => await _tryLegacy(
+          game,
+          games,
+          requestPermissions,
+        ),
         LogAccessMethod.wirelessDebugging => await _tryWireless(
+          game,
+          games,
           forceDisableAfterUse,
         ),
       };
       if (outcome is LogAccessReady) {
         _log.info(
-          'log access ready method=${method.name} ms=${sw.elapsedMilliseconds}',
+          'log access ready method=${method.name} game=$game '
+          'ms=${sw.elapsedMilliseconds}',
         );
         return outcome;
       }
@@ -221,7 +279,9 @@ class LogAccessResolver {
   }
 
   /// root：有 `su` 且授權成功才可用；否則回 null 讓下一種方式接手。有 `su` 卻沒拿到授權時呼叫 [onDenied]。
-  Future<LogAccessOutcome?> _tryRoot({
+  Future<LogAccessOutcome?> _tryRoot(
+    String game,
+    List<String> games, {
     required void Function() onDenied,
   }) async {
     if (!await root.isSuPresent()) return null;
@@ -230,8 +290,10 @@ class LogAccessResolver {
       return null;
     }
     return LogAccessReady(
-      source: ShellLogSource(exec: root.exec, label: 'root'),
+      source: _shellSource(root.exec, 'root', game),
       method: LogAccessMethod.root,
+      game: game,
+      games: games,
       release: () async {
         await root.close();
         return false;
@@ -240,7 +302,11 @@ class LogAccessResolver {
   }
 
   /// Android 10 以下：取得儲存權限後直接讀檔；[request] 為 false 時只檢查不詢問。
-  Future<LogAccessOutcome?> _tryLegacy(bool request) async {
+  Future<LogAccessOutcome?> _tryLegacy(
+    String game,
+    List<String> games,
+    bool request,
+  ) async {
     if (await platform.sdkInt() > 29) return null;
     if (!await platform.hasStoragePermission() &&
         !(request && await platform.requestStoragePermission())) {
@@ -249,8 +315,10 @@ class LogAccessResolver {
       );
     }
     return LogAccessReady(
-      source: LocalFileLogSource(androidClientLogPath),
+      source: LocalFileLogSource(androidClientLogPathFor(game)),
       method: LogAccessMethod.legacyDirect,
+      game: game,
+      games: games,
       release: () async => false,
     );
   }
@@ -266,7 +334,11 @@ class LogAccessResolver {
   }
 
   /// 無線偵錯：檢查配對與 Wi‑Fi、必要時打開無線偵錯、連線、補授權。
-  Future<LogAccessOutcome?> _tryWireless(bool forceDisableAfterUse) async {
+  Future<LogAccessOutcome?> _tryWireless(
+    String game,
+    List<String> games,
+    bool forceDisableAfterUse,
+  ) async {
     if (await platform.sdkInt() < 30) return null;
     if (!await keyStore.hasKey()) {
       return const LogAccessBlocked(LogAccessUnavailable.notPaired);
@@ -316,8 +388,10 @@ class LogAccessResolver {
       }
     }
     return LogAccessReady(
-      source: ShellLogSource(exec: client.exec, label: 'adb'),
+      source: _shellSource(client.exec, 'adb', game),
       method: LogAccessMethod.wirelessDebugging,
+      game: game,
+      games: games,
       healthChanges: client.healthChanges,
       release: () async {
         await client.close();
@@ -327,6 +401,29 @@ class LogAccessResolver {
         return true;
       },
     );
+  }
+
+  /// 讀 [game] 版本 log 的 shell 來源；log 不在預期路徑時記下實際找到的 `.log` 路徑（只記路徑），供之後修正。
+  ShellLogSource _shellSource(ShellExec exec, String label, String game) {
+    final path = androidClientLogPathFor(game);
+    unawaited(_logIfMissing(exec, path, game));
+    return ShellLogSource(exec: exec, path: path, label: label);
+  }
+
+  /// [path] 不存在時把 [game] 資料夾裡找到的 `.log` 路徑寫進 log。
+  Future<void> _logIfMissing(ShellExec exec, String path, String game) async {
+    try {
+      final out = await exec(
+        clientLogMissingCommand(path, '/sdcard/Android/data/$game/files'),
+      );
+      final found = utf8.decode(out, allowMalformed: true).trim();
+      if (found.isEmpty) return;
+      _log.warning(
+        'client log missing game=$game found=${found.split('\n').join(' | ')}',
+      );
+    } on Object catch (e) {
+      _log.info('client log missing check failed error=${e.runtimeType}');
+    }
   }
 }
 

@@ -453,5 +453,12 @@
   "dialogOpenTitle": "Åpne",
   "dialogSelectFolderTitle": "Velg mappe",
   "actionSave": "Lagre",
-  "settingsLogsShare": "Del logger"
+  "settingsLogsShare": "Del logger",
+  "logUnavailableGameNotInstalled": "Fant ikke Wuthering Waves på denne telefonen. De globale versjonene fra Google Play og Galaxy Store støttes; kom tilbake hit etter installasjonen, så oppdages spillet automatisk.",
+  "actionRedetectGame": "Sjekk på nytt",
+  "logChooseGameVersion": "Mer enn én versjon av Wuthering Waves er installert. Hvilken skal leses?",
+  "gameVersionGooglePlay": "Google Play-versjon",
+  "gameVersionGalaxyStore": "Galaxy Store-versjon",
+  "progressGameVersion": "Wuthering Waves-versjon: {name}",
+  "actionSwitchGameVersion": "Bytt versjon"
 }

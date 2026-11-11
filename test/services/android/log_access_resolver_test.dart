@@ -9,7 +9,10 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/android/flutter_
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/root_shell.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/wuwa_game_package.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_source.dart';
+
+import '../../helpers/wait_until.dart';
 
 /// 可設定各項回傳值的平台替身。
 class _FakePlatform extends LogAccessPlatform {
@@ -25,6 +28,12 @@ class _FakePlatform extends LogAccessPlatform {
   bool grantStorage = false;
   List<int> ports = [5555];
   final adbWifiWrites = <bool>[];
+
+  /// 手機上裝的鳴潮；null 模擬查詢失敗。
+  List<String>? games = [wuwaGlobalPackage];
+
+  @override
+  Future<List<String>?> installedGamePackages() async => games;
 
   @override
   Future<int> sdkInt() async => sdk;
@@ -239,7 +248,89 @@ void main() {
       ..storage = true;
     final r = await resolver().resolve() as LogAccessReady;
     expect(r.method, LogAccessMethod.legacyDirect);
-    expect((r.source as LocalFileLogSource).path, androidClientLogPath);
+    expect(
+      (r.source as LocalFileLogSource).path,
+      androidClientLogPathFor(wuwaGlobalPackage),
+    );
+  });
+
+  group('game detection', () {
+    test('no game: blocked before asking for root', () async {
+      root
+        ..present = true
+        ..granted = true;
+      platform.games = [];
+      final r = await resolver().resolve() as LogAccessBlocked;
+      expect(r.reason, LogAccessUnavailable.gameNotInstalled);
+      expect(root.verifies, 0);
+      expect(platform.adbWifiWrites, isEmpty);
+    });
+
+    test('several versions without a pick ask to choose', () async {
+      platform.games = [wuwaGlobalPackage, wuwaSamsungPackage];
+      final r = await resolver().resolve() as LogAccessBlocked;
+      expect(r.reason, LogAccessUnavailable.chooseGame);
+      expect(r.games, [wuwaGlobalPackage, wuwaSamsungPackage]);
+    });
+
+    test('a saved pick that is no longer installed asks again', () async {
+      platform.games = [wuwaGlobalPackage, wuwaSamsungPackage];
+      final r =
+          await resolver().resolve(preferredGame: '$wuwaPackagePrefix.gone')
+              as LogAccessBlocked;
+      expect(r.reason, LogAccessUnavailable.chooseGame);
+    });
+
+    test('the saved pick reads that version', () async {
+      root
+        ..present = true
+        ..granted = true;
+      platform.games = [wuwaGlobalPackage, wuwaSamsungPackage];
+      final r =
+          await resolver().resolve(preferredGame: wuwaSamsungPackage)
+              as LogAccessReady;
+      expect(r.game, wuwaSamsungPackage);
+      expect(r.games, [wuwaGlobalPackage, wuwaSamsungPackage]);
+      expect(
+        (r.source as ShellLogSource).path,
+        androidClientLogPathFor(wuwaSamsungPackage),
+      );
+    });
+
+    test('a single version is used even if another was saved', () async {
+      platform
+        ..sdk = 29
+        ..storage = true
+        ..games = [wuwaSamsungPackage];
+      final r =
+          await resolver().resolve(preferredGame: wuwaGlobalPackage)
+              as LogAccessReady;
+      expect(r.game, wuwaSamsungPackage);
+      expect(
+        (r.source as LocalFileLogSource).path,
+        androidClientLogPathFor(wuwaSamsungPackage),
+      );
+    });
+
+    test('detection failure keeps reading the google play version', () async {
+      // channel 出錯不代表沒裝，不能因此擋住原本能用的流程。
+      platform
+        ..sdk = 29
+        ..storage = true
+        ..games = null;
+      final r = await resolver().resolve() as LogAccessReady;
+      expect(r.game, wuwaGlobalPackage);
+    });
+
+    test('shell source checks once where the log really is', () async {
+      final r = await resolver().resolve() as LogAccessReady;
+      final check = clientLogMissingCommand(
+        androidClientLogPathFor(wuwaGlobalPackage),
+        '/sdcard/Android/data/$wuwaGlobalPackage/files',
+      );
+      await waitUntil(() => session.commands.contains(check));
+      await r.release();
+    });
   });
 
   test('android 10 permission denied is blocked', () async {

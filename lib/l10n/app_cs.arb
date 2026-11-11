@@ -453,5 +453,12 @@
   "dialogOpenTitle": "Otevřít",
   "dialogSelectFolderTitle": "Vybrat složku",
   "actionSave": "Uložit",
-  "settingsLogsShare": "Sdílet logy"
+  "settingsLogsShare": "Sdílet logy",
+  "logUnavailableGameNotInstalled": "Wuthering Waves v tomto telefonu nebylo nalezeno. Podporovány jsou globální verze z Google Play a Galaxy Store; po instalaci se sem vraťte a hra bude rozpoznána automaticky.",
+  "actionRedetectGame": "Zkontrolovat znovu",
+  "logChooseGameVersion": "Je nainstalováno více verzí Wuthering Waves. Kterou chcete načíst?",
+  "gameVersionGooglePlay": "Verze z Google Play",
+  "gameVersionGalaxyStore": "Verze z Galaxy Store",
+  "progressGameVersion": "Verze Wuthering Waves: {name}",
+  "actionSwitchGameVersion": "Změnit verzi"
 }

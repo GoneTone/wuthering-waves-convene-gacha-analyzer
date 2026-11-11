@@ -69,8 +69,14 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
-        <!-- 「開啟鳴潮」按鈕與是否安裝的判斷。 -->
+        <!-- 「開啟鳴潮」按鈕與是否安裝的判斷：已知版本逐一宣告；沒見過的版本靠有桌面圖示的 App
+             比對套件名稱開頭（wuwa_game_package.dart），不需要 QUERY_ALL_PACKAGES。 -->
         <package android:name="com.kurogame.wutheringwaves.global"/>
+        <package android:name="com.kurogame.wutheringwaves.samsung"/>
+        <intent>
+            <action android:name="android.intent.action.MAIN"/>
+            <category android:name="android.intent.category.LAUNCHER"/>
+        </intent>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>

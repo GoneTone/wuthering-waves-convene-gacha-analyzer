@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/wuwa_game_package.dart';
+
 /// Android 讀取遊戲記錄所需的系統功能（Kotlin `LogAccessChannel`）的 Dart 包裝。
 ///
 /// 所有方法遇到平台錯誤或非 Android（沒有 plugin）都記 warning 並回保守值，不往外丟。
@@ -93,11 +95,18 @@ class LogAccessPlatform {
         'openSettingsIfBlocked': openSettingsIfBlocked,
       });
 
-  /// 是否安裝了國際服鳴潮。
-  Future<bool> isGameInstalled() => _call('isGameInstalled', false);
+  /// 手機上安裝的國際服鳴潮套件（已排序）；查詢失敗時回 null，與「沒有安裝」區分。
+  Future<List<String>?> installedGamePackages() async {
+    final found = await _call<List<Object?>?>('installedGames', null, {
+      'prefix': wuwaPackagePrefix,
+      'known': knownWuwaPackages,
+    });
+    return found == null ? null : sortWuwaPackages(found.whereType<String>());
+  }
 
-  /// 開啟國際服鳴潮；沒有安裝時回 false。
-  Future<bool> launchGame() => _call('launchGame', false);
+  /// 開啟 [package] 版本的鳴潮；沒有安裝時回 false。
+  Future<bool> launchGame(String package) =>
+      _call('launchGame', false, {'package': package});
 
   /// 啟動配對前景服務（找配對連接埠、顯示可輸入配對碼的通知）。
   Future<void> startPairingService() =>

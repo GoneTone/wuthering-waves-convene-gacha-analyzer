@@ -34,7 +34,8 @@ class LogAccessChannel(private val activity: Activity, messenger: BinaryMessenge
 
     companion object {
         const val CHANNEL = "tw.reh.wuwa.gacha/log_access"
-        const val GAME_PACKAGE = "com.kurogame.wutheringwaves.global"
+        /** 國際服鳴潮各版本的套件名稱開頭；只開啟這類套件。 */
+        const val GAME_PACKAGE_PREFIX = "com.kurogame.wutheringwaves"
         private const val TAG = "capture.android"
         private const val ADB_WIFI_ENABLED = "adb_wifi_enabled"
         private const val REQ_NOTIFICATIONS = 4101
@@ -107,9 +108,17 @@ class LogAccessChannel(private val activity: Activity, messenger: BinaryMessenge
                     requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, REQ_STORAGE, result)
                 }
             }
-            "isGameInstalled" -> result.success(activity.packageManager.getLaunchIntentForPackage(GAME_PACKAGE) != null)
+            "installedGames" -> result.success(
+                installedGames(
+                    call.argument<String>("prefix") ?: GAME_PACKAGE_PREFIX,
+                    call.argument<List<String>>("known") ?: emptyList(),
+                )
+            )
             "launchGame" -> {
-                val intent = activity.packageManager.getLaunchIntentForPackage(GAME_PACKAGE)
+                val pkg = call.argument<String>("package")
+                val intent = pkg
+                    ?.takeIf { it == GAME_PACKAGE_PREFIX || it.startsWith("$GAME_PACKAGE_PREFIX.") }
+                    ?.let { activity.packageManager.getLaunchIntentForPackage(it) }
                 if (intent == null) {
                     result.success(false)
                 } else {
@@ -158,6 +167,20 @@ class LogAccessChannel(private val activity: Activity, messenger: BinaryMessenge
 
     private fun areNotificationsEnabled(): Boolean =
         activity.getSystemService(NotificationManager::class.java).areNotificationsEnabled()
+
+    /**
+     * 有桌面圖示且套件名稱是 [prefix] 或以 `[prefix].` 開頭的 App，加上 [known] 裡裝了的。
+     * 只回傳比對到的套件，其他已安裝的 App 不離開這裡。
+     */
+    private fun installedGames(prefix: String, known: List<String>): List<String> {
+        val pm = activity.packageManager
+        val launcher = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        @Suppress("DEPRECATION")
+        val found = pm.queryIntentActivities(launcher, 0)
+            .map { it.activityInfo.packageName }
+            .filter { it == prefix || it.startsWith("$prefix.") }
+        return (found + known.filter { pm.getLaunchIntentForPackage(it) != null }).distinct()
+    }
 
     private fun isWifiConnected(): Boolean {
         val cm = activity.getSystemService(ConnectivityManager::class.java) ?: return false
