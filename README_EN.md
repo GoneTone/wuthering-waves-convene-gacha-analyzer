@@ -75,13 +75,43 @@ Besides importing this utility's own backup files, you can also import convene h
 
 ## Screenshot
 
-![Overview page](docs/images/en/1.png)
-![Character Event Convene page](docs/images/en/2.png)
-![Weapon Event Convene page](docs/images/en/3.png)
-![Settings page](docs/images/en/4.png)
-![Share image options](docs/images/en/5.png)
-![Share image](docs/images/en/6.png)
-![Item details](docs/images/en/7.png)
+### Windows
+
+![Waiting for the Convene Records page](docs/images/en/windows/1.png)
+![Overview page](docs/images/en/windows/2.png)
+![Character Event Convene page](docs/images/en/windows/3.png)
+![Weapon Event Convene page](docs/images/en/windows/4.png)
+![Share image options](docs/images/en/windows/5.png)
+![Share image](docs/images/en/windows/6.png)
+![Item details](docs/images/en/windows/7.png)
+![Settings page](docs/images/en/windows/8.png)
+
+### Android phone
+
+<p>
+<img src="docs/images/en/android/phone/1.png" alt="Waiting for the Convene Records page" width="32%">
+<img src="docs/images/en/android/phone/2.png" alt="Overview page" width="32%">
+<img src="docs/images/en/android/phone/3.png" alt="Character Event Convene page" width="32%">
+<img src="docs/images/en/android/phone/4.png" alt="5★ timeline and 5★ overview" width="32%">
+<img src="docs/images/en/android/phone/5.png" alt="Weapon Event Convene page" width="32%">
+<img src="docs/images/en/android/phone/6.png" alt="Share image options" width="32%">
+<img src="docs/images/en/android/phone/7.png" alt="Item details" width="32%">
+<img src="docs/images/en/android/phone/8.png" alt="Side menu" width="32%">
+<img src="docs/images/en/android/phone/9.png" alt="Settings page" width="32%">
+</p>
+
+### Android tablet
+
+<p>
+<img src="docs/images/en/android/tablet/1.png" alt="Waiting for the Convene Records page" width="49%">
+<img src="docs/images/en/android/tablet/2.png" alt="Overview page" width="49%">
+<img src="docs/images/en/android/tablet/3.png" alt="Character Event Convene page" width="49%">
+<img src="docs/images/en/android/tablet/4.png" alt="5★ timeline and 5★ overview" width="49%">
+<img src="docs/images/en/android/tablet/5.png" alt="Weapon Event Convene page" width="49%">
+<img src="docs/images/en/android/tablet/6.png" alt="Share image options" width="49%">
+<img src="docs/images/en/android/tablet/7.png" alt="Item details" width="49%">
+<img src="docs/images/en/android/tablet/8.png" alt="Settings page" width="49%">
+</p>
 
 ## Development
 

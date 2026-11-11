@@ -75,13 +75,43 @@
 
 ## スクリーンショット
 
-![総合データページ](docs/images/ja-JP/1.png)
-![共鳴者集音（イベント）ページ](docs/images/ja-JP/2.png)
-![武器集音（イベント）ページ](docs/images/ja-JP/3.png)
-![設定ページ](docs/images/ja-JP/4.png)
-![シェア画像の生成設定](docs/images/ja-JP/5.png)
-![シェア画像](docs/images/ja-JP/6.png)
-![アイテム詳細の表示](docs/images/ja-JP/7.png)
+### Windows
+
+![ゲームで集音履歴ページが開かれるのを待機](docs/images/ja-JP/windows/1.png)
+![総合データページ](docs/images/ja-JP/windows/2.png)
+![共鳴者集音（イベント）ページ](docs/images/ja-JP/windows/3.png)
+![武器集音（イベント）ページ](docs/images/ja-JP/windows/4.png)
+![シェア画像の生成設定](docs/images/ja-JP/windows/5.png)
+![シェア画像](docs/images/ja-JP/windows/6.png)
+![アイテム詳細の表示](docs/images/ja-JP/windows/7.png)
+![設定ページ](docs/images/ja-JP/windows/8.png)
+
+### Android スマートフォン
+
+<p>
+<img src="docs/images/ja-JP/android/phone/1.png" alt="ゲームで集音履歴ページが開かれるのを待機" width="32%">
+<img src="docs/images/ja-JP/android/phone/2.png" alt="総合データページ" width="32%">
+<img src="docs/images/ja-JP/android/phone/3.png" alt="共鳴者集音（イベント）ページ" width="32%">
+<img src="docs/images/ja-JP/android/phone/4.png" alt="★5 タイムラインと ★5 一覧" width="32%">
+<img src="docs/images/ja-JP/android/phone/5.png" alt="武器集音（イベント）ページ" width="32%">
+<img src="docs/images/ja-JP/android/phone/6.png" alt="シェア画像の生成設定" width="32%">
+<img src="docs/images/ja-JP/android/phone/7.png" alt="アイテム詳細の表示" width="32%">
+<img src="docs/images/ja-JP/android/phone/8.png" alt="サイドメニュー" width="32%">
+<img src="docs/images/ja-JP/android/phone/9.png" alt="設定ページ" width="32%">
+</p>
+
+### Android タブレット
+
+<p>
+<img src="docs/images/ja-JP/android/tablet/1.png" alt="ゲームで集音履歴ページが開かれるのを待機" width="49%">
+<img src="docs/images/ja-JP/android/tablet/2.png" alt="総合データページ" width="49%">
+<img src="docs/images/ja-JP/android/tablet/3.png" alt="共鳴者集音（イベント）ページ" width="49%">
+<img src="docs/images/ja-JP/android/tablet/4.png" alt="★5 タイムラインと ★5 一覧" width="49%">
+<img src="docs/images/ja-JP/android/tablet/5.png" alt="武器集音（イベント）ページ" width="49%">
+<img src="docs/images/ja-JP/android/tablet/6.png" alt="シェア画像の生成設定" width="49%">
+<img src="docs/images/ja-JP/android/tablet/7.png" alt="アイテム詳細の表示" width="49%">
+<img src="docs/images/ja-JP/android/tablet/8.png" alt="設定ページ" width="49%">
+</p>
 
 ## 開発
 

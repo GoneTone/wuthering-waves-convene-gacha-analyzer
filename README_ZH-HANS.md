@@ -75,13 +75,43 @@
 
 ## 截图
 
-![综合数据页](docs/images/zh-Hans/1.png)
-![角色活动唤取页](docs/images/zh-Hans/2.png)
-![武器活动唤取页](docs/images/zh-Hans/3.png)
-![设置页](docs/images/zh-Hans/4.png)
-![分享图生成设置](docs/images/zh-Hans/5.png)
-![分享图](docs/images/zh-Hans/6.png)
-![物品详情显示](docs/images/zh-Hans/7.png)
+### Windows
+
+![等待在游戏中打开唤取记录页](docs/images/zh-Hans/windows/1.png)
+![综合数据页](docs/images/zh-Hans/windows/2.png)
+![角色活动唤取页](docs/images/zh-Hans/windows/3.png)
+![武器活动唤取页](docs/images/zh-Hans/windows/4.png)
+![分享图生成设置](docs/images/zh-Hans/windows/5.png)
+![分享图](docs/images/zh-Hans/windows/6.png)
+![物品详情显示](docs/images/zh-Hans/windows/7.png)
+![设置页](docs/images/zh-Hans/windows/8.png)
+
+### Android 手机
+
+<p>
+<img src="docs/images/zh-Hans/android/phone/1.png" alt="等待在游戏中打开唤取记录页" width="32%">
+<img src="docs/images/zh-Hans/android/phone/2.png" alt="综合数据页" width="32%">
+<img src="docs/images/zh-Hans/android/phone/3.png" alt="角色活动唤取页" width="32%">
+<img src="docs/images/zh-Hans/android/phone/4.png" alt="5★ 时间轴与 5★ 一览" width="32%">
+<img src="docs/images/zh-Hans/android/phone/5.png" alt="武器活动唤取页" width="32%">
+<img src="docs/images/zh-Hans/android/phone/6.png" alt="分享图生成设置" width="32%">
+<img src="docs/images/zh-Hans/android/phone/7.png" alt="物品详情显示" width="32%">
+<img src="docs/images/zh-Hans/android/phone/8.png" alt="侧边菜单" width="32%">
+<img src="docs/images/zh-Hans/android/phone/9.png" alt="设置页" width="32%">
+</p>
+
+### Android 平板
+
+<p>
+<img src="docs/images/zh-Hans/android/tablet/1.png" alt="等待在游戏中打开唤取记录页" width="49%">
+<img src="docs/images/zh-Hans/android/tablet/2.png" alt="综合数据页" width="49%">
+<img src="docs/images/zh-Hans/android/tablet/3.png" alt="角色活动唤取页" width="49%">
+<img src="docs/images/zh-Hans/android/tablet/4.png" alt="5★ 时间轴与 5★ 一览" width="49%">
+<img src="docs/images/zh-Hans/android/tablet/5.png" alt="武器活动唤取页" width="49%">
+<img src="docs/images/zh-Hans/android/tablet/6.png" alt="分享图生成设置" width="49%">
+<img src="docs/images/zh-Hans/android/tablet/7.png" alt="物品详情显示" width="49%">
+<img src="docs/images/zh-Hans/android/tablet/8.png" alt="设置页" width="49%">
+</p>
 
 ## 开发
 

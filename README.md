@@ -75,13 +75,43 @@
 
 ## 截圖
 
-![綜合數據頁](docs/images/zh-Hant/1.png)
-![角色活動喚取頁](docs/images/zh-Hant/2.png)
-![武器活動喚取頁](docs/images/zh-Hant/3.png)
-![設定頁](docs/images/zh-Hant/4.png)
-![分享圖生成設定](docs/images/zh-Hant/5.png)
-![分享圖](docs/images/zh-Hant/6.png)
-![物品詳情顯示](docs/images/zh-Hant/7.png)
+### Windows
+
+![等待在遊戲中開啟喚取記錄頁](docs/images/zh-Hant/windows/1.png)
+![綜合數據頁](docs/images/zh-Hant/windows/2.png)
+![角色活動喚取頁](docs/images/zh-Hant/windows/3.png)
+![武器活動喚取頁](docs/images/zh-Hant/windows/4.png)
+![分享圖生成設定](docs/images/zh-Hant/windows/5.png)
+![分享圖](docs/images/zh-Hant/windows/6.png)
+![物品詳情顯示](docs/images/zh-Hant/windows/7.png)
+![設定頁](docs/images/zh-Hant/windows/8.png)
+
+### Android 手機
+
+<p>
+<img src="docs/images/zh-Hant/android/phone/1.png" alt="等待在遊戲中開啟喚取記錄頁" width="32%">
+<img src="docs/images/zh-Hant/android/phone/2.png" alt="綜合數據頁" width="32%">
+<img src="docs/images/zh-Hant/android/phone/3.png" alt="角色活動喚取頁" width="32%">
+<img src="docs/images/zh-Hant/android/phone/4.png" alt="5★ 時間軸與 5★ 一覽" width="32%">
+<img src="docs/images/zh-Hant/android/phone/5.png" alt="武器活動喚取頁" width="32%">
+<img src="docs/images/zh-Hant/android/phone/6.png" alt="分享圖生成設定" width="32%">
+<img src="docs/images/zh-Hant/android/phone/7.png" alt="物品詳情顯示" width="32%">
+<img src="docs/images/zh-Hant/android/phone/8.png" alt="側選單" width="32%">
+<img src="docs/images/zh-Hant/android/phone/9.png" alt="設定頁" width="32%">
+</p>
+
+### Android 平板
+
+<p>
+<img src="docs/images/zh-Hant/android/tablet/1.png" alt="等待在遊戲中開啟喚取記錄頁" width="49%">
+<img src="docs/images/zh-Hant/android/tablet/2.png" alt="綜合數據頁" width="49%">
+<img src="docs/images/zh-Hant/android/tablet/3.png" alt="角色活動喚取頁" width="49%">
+<img src="docs/images/zh-Hant/android/tablet/4.png" alt="5★ 時間軸與 5★ 一覽" width="49%">
+<img src="docs/images/zh-Hant/android/tablet/5.png" alt="武器活動喚取頁" width="49%">
+<img src="docs/images/zh-Hant/android/tablet/6.png" alt="分享圖生成設定" width="49%">
+<img src="docs/images/zh-Hant/android/tablet/7.png" alt="物品詳情顯示" width="49%">
+<img src="docs/images/zh-Hant/android/tablet/8.png" alt="設定頁" width="49%">
+</p>
 
 ## 開發
 
