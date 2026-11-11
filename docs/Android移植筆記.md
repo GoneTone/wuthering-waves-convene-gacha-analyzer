@@ -887,9 +887,16 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 **模擬器驗證**（Android 16）：用 aapt2 做只有桌面圖示的空殼 APK（`android:hasCode="false"`、activity 用 `android.app.Activity`），套件名稱取 `.samsung` 和 `.other`。
 - 都不裝：顯示找不到鳴潮；裝好 `.samsung` 回到 App 會自動重新偵測。
 - 只裝 `.samsung`：連上後 `log access ready ... game=com.kurogame.wutheringwaves.samsung`；log 還不存在時記下 `client log missing ... No such file or directory`；在 `.samsung` 路徑放編碼過的 log 後讀到網址。
-- 裝兩個：顯示選版本；選了之後記住，下次直接用；等待畫面顯示版本與「切換版本」。
+- 裝兩個：顯示選版本；選了之後記住，下次直接用；等待畫面「開啟鳴潮」旁有「⇄ 鳴潮版本：Galaxy Store 版」，點了回到選版本。
+- 「前往 Google Play」實點會開 Play 商店（`com.android.vending`）。
+- 直向、橫向都截圖確認過；rc.18（1090018）的 release 版裝兩個空殼按更新，選版本畫面正常、無閃退（R8 下 Kotlin `installedGames` 也正常）。
 
-**限制**：Galaxy Store 版的 log 路徑沒有實機確認，等玩家用新版測過再看 log。
+**用詞**：字串一律寫「這台裝置」（各語言用自己的 device 一詞），不寫「手機」：Android 版也會裝在平板上。只有引用系統頁面名稱（例如「關於手機」）照抄。
+
+**限制**：
+- Galaxy Store 版的 log 路徑、喚取記錄網址的網域都沒有實機確認，等玩家用 rc.18 測過再看 log（`games installed=`、`client log missing`、`url rejected`）。
+- 「前往 Google Play」固定開 Google Play 的鳴潮頁面；沒有 Play 商店的裝置按了沒反應，只會記 `openExternalUrl: cannot launch`。
+- Play 的套件可見性政策頁（Console Help「QUERY_ALL_PACKAGES」）只規範這個權限，沒提到用 MAIN／LAUNCHER `<queries>` 取得可見性，只有「能用較窄的方式就要用」的通則。我們只比對 `com.kurogame.wutheringwaves` 開頭、清單不離開 Kotlin，但沒有政策明文保證；要保守的話可以拿掉 `<intent>` 和 `queryIntentActivities`，只留已知版本的 `<package>`（Google Play 版、Galaxy Store 版照常可用，新的商店版本就要改版才認得）。
 
 ### 53. 無線偵錯斷線後的 `Broken pipe` 與取消卡住（通用，2026-11-11）
 
