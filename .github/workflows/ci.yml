@@ -54,5 +54,9 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      # 圖例版面測試要載入 SDK 附的 Roboto 量實際字寬；flutter test 不會下載 material_fonts，要先 precache。
+      - name: Download Material fonts
+        run: flutter precache --universal --no-android --no-ios --no-web --no-linux --no-windows --no-macos --no-fuchsia
+
       - name: Test
         run: flutter test
