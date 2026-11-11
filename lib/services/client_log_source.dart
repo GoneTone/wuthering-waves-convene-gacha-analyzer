@@ -44,7 +44,7 @@ class LocalFileLogSource implements ClientLogSource {
     if (!await file.exists()) return (length: 0, id: null);
     final length = await file.length();
     if (length < clientLogHeaderBytes) return (length: length, id: null);
-    // Dart 拿不到 inode；遊戲每個新檔開頭都是精確到秒的「Log file open, [時間]」，用檔頭當識別。
+    // 遊戲每個新檔開頭都是精確到秒的「Log file open, [時間]」，用檔頭當識別（shell 來源用它的雜湊）。
     return (
       length: length,
       id: base64.encode(await read(0, clientLogHeaderBytes)),
@@ -96,9 +96,15 @@ class ShellLogSource implements ClientLogSource {
     );
     // 檔案不存在時指令本身印 0；空的或看不懂的輸出是讀取出錯，若當成 0 會被誤判為 log 輪替而從頭重讀。
     final parts = out.trim().split(' ');
+    final length = int.parse(parts.first);
     return (
-      length: int.parse(parts.first),
-      id: parts.length > 1 && parts[1].isNotEmpty ? parts[1] : null,
+      length: length,
+      id:
+          length >= clientLogHeaderBytes &&
+              parts.length > 1 &&
+              parts[1].isNotEmpty
+          ? parts[1]
+          : null,
     );
   }
 
@@ -107,13 +113,16 @@ class ShellLogSource implements ClientLogSource {
       _exec(clientLogReadCommand(path, offset, length));
 }
 
-/// 本機檔案用來當識別的檔頭長度（涵蓋「Log file open, [時間]」整行）。
+/// 用來當識別的檔頭長度（涵蓋「Log file open, [時間]」整行）。
 const int clientLogHeaderBytes = 48;
 
-/// 產生一次取得 [path] 長度與 inode 的 shell 指令；檔案不存在時只印 0。
+/// 產生一次取得 [path] 長度與檔頭雜湊的 shell 指令；檔案不存在時只印 0。
+///
+/// 不用 inode：實機上遊戲換檔後新 `Client.log` 沿用舊 inode（舊內容的 backup 反而是新 inode）。
 String clientLogProbeCommand(String path) {
   _checkPath(path);
-  return "stat -c '%s %i' '$path' 2>/dev/null || echo 0";
+  return "s=\$(stat -c %s '$path' 2>/dev/null) && "
+      "echo \"\$s \$(head -c $clientLogHeaderBytes '$path' | md5sum)\" || echo 0";
 }
 
 /// 產生讀取 [path] 自 [offset] 起 [length] 位元組的 shell 指令。

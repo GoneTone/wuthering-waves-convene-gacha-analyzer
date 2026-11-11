@@ -26,10 +26,10 @@ void main() {
     );
   });
 
-  test('probe command quotes path and asks for size and inode', () {
+  test('probe command quotes path and asks for size and header hash', () {
     expect(
       clientLogProbeCommand('/a/Client.log'),
-      "stat -c '%s %i' '/a/Client.log' 2>/dev/null || echo 0",
+      r"""s=$(stat -c %s '/a/Client.log' 2>/dev/null) && echo "$s $(head -c 48 '/a/Client.log' | md5sum)" || echo 0""",
     );
   });
 
@@ -40,9 +40,15 @@ void main() {
     expect(() => clientLogProbeCommand("/a/x'y"), throwsArgumentError);
   });
 
-  test('shell probe parses size and inode from stat output', () async {
+  test('shell probe parses size and header hash', () async {
     for (final (out, length, id) in [
-      ('1234 5678\n', 1234, '5678'),
+      (
+        '1234 ebf6516b4690d5e1590b561d3505b8ad  -\n',
+        1234,
+        'ebf6516b4690d5e1590b561d3505b8ad',
+      ),
+      // 檔頭還沒寫完整：跟本機來源一樣不給識別，免得檔頭寫完時被當成換檔。
+      ('20 d41d8cd98f00b204e9800998ecf8427e  -\n', 20, null),
       // 檔案不存在時指令只印 0：沒有識別，代表無法判斷。
       ('0\n', 0, null),
     ]) {
