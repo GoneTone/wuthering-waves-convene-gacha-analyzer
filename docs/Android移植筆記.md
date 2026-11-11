@@ -893,8 +893,9 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 
 **用詞**：字串一律寫「這台裝置」（各語言用自己的 device 一詞），不寫「手機」：Android 版也會裝在平板上。只有引用系統頁面名稱（例如「關於手機」）照抄。
 
+**實機確認**（2026-11-11）：回報問題的玩家用 rc.18、Galaxy Store 版鳴潮成功抓到資料，代表 Galaxy Store 版的 log 路徑（`/sdcard/Android/data/com.kurogame.wutheringwaves.samsung/files/UE4Game/Client/Client/Saved/Logs/Client.log`）和喚取記錄網址的網域都跟 Google Play 版一樣。
+
 **限制**：
-- Galaxy Store 版的 log 路徑、喚取記錄網址的網域都沒有實機確認，等玩家用 rc.18 測過再看 log（`games installed=`、`client log missing`、`url rejected`）。
 - 「前往 Google Play」固定開 Google Play 的鳴潮頁面；沒有 Play 商店的裝置按了沒反應，只會記 `openExternalUrl: cannot launch`。
 - Play 的套件可見性政策頁（Console Help「QUERY_ALL_PACKAGES」）只規範這個權限，沒提到用 MAIN／LAUNCHER `<queries>` 取得可見性，只有「能用較窄的方式就要用」的通則。我們只比對 `com.kurogame.wutheringwaves` 開頭、清單不離開 Kotlin，但沒有政策明文保證；要保守的話可以拿掉 `<intent>` 和 `queryIntentActivities`，只留已知版本的 `<package>`（Google Play 版、Galaxy Store 版照常可用，新的商店版本就要改版才認得）。
 
