@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_adb/flutter_adb.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -19,6 +20,30 @@ const _host = '127.0.0.1';
 /// 單一指令最長等待時間。
 const _commandTimeout = Duration(seconds: 20);
 
+/// 連線（含 TLS 握手）最長等待時間；`flutter_adb` 等裝置回應時沒有逾時。
+const _connectTimeout = Duration(seconds: 10);
+
+/// 中斷連線、送出關閉串流最長等待時間；連線已斷時 `flutter_adb` 的 flush 可能一直不回來。
+const _closeTimeout = Duration(seconds: 2);
+
+/// 在獨立的 error zone 執行 [body]，結果照常交回呼叫端。
+///
+/// `flutter_adb` 寫 socket 時只 `add` 不等結果，連線斷掉後（例如玩家關掉無線偵錯）寫入失敗的
+/// `Broken pipe` 會落到建立 socket 的 zone 變成未處理錯誤；在這裡建立連線，那些錯誤就只記 log。
+/// 結果用外面建立的 [Completer] 交回，因為 error zone 裡建立的 future 出錯時傳不到 zone 外。
+@visibleForTesting
+Future<T> guardAdbZone<T>(Future<T> Function() body) {
+  final result = Completer<T>();
+  runZonedGuarded(() async {
+    try {
+      result.complete(await body());
+    } catch (e, st) {
+      if (!result.isCompleted) result.completeError(e, st);
+    }
+  }, (e, _) => _log.info('adb socket error error=${e.runtimeType}'));
+  return result.future;
+}
+
 /// 以 `flutter_adb` 實作的 [AdbSession]。
 class FlutterAdbSession implements AdbSession {
   /// 包住已連上的 [_connection]；[timeout] 為單一指令的等待上限。
@@ -32,7 +57,7 @@ class FlutterAdbSession implements AdbSession {
 
   @override
   Future<Uint8List> shell(String command) async {
-    final stream = await _connection.open('shell:$command');
+    final stream = await _connection.open('shell:$command').timeout(timeout);
     final out = BytesBuilder(copy: false);
     final done = Completer<void>();
     final sub = stream.onPayload.listen(
@@ -46,7 +71,7 @@ class FlutterAdbSession implements AdbSession {
     } on TimeoutException {
       // 沒關掉的話裝置端串流一直開著，flutter_adb 下一個串流可能拿到重複的 localId。
       try {
-        await stream.sendClose();
+        await stream.sendClose().timeout(_closeTimeout);
       } catch (_) {}
       rethrow;
     } finally {
@@ -57,27 +82,33 @@ class FlutterAdbSession implements AdbSession {
 
   @override
   Future<void> close() async {
-    try {
-      await _connection.disconnect();
-    } catch (e) {
-      _log.info('adb disconnect failed error=${e.runtimeType}');
-    }
+    await _disconnect(_connection);
+  }
+}
+
+/// 中斷 [connection]；連線已斷時最多等 [_closeTimeout]。
+Future<void> _disconnect(AdbConnection connection) async {
+  try {
+    await connection.disconnect().timeout(_closeTimeout);
+  } catch (e) {
+    _log.info('adb disconnect failed error=${e.runtimeType}');
   }
 }
 
 /// 用 [crypto] 連到本機 [port] 的無線偵錯；連不上時回 null。
-Future<AdbSession?> connectFlutterAdb(AdbCrypto crypto, int port) async {
-  final connection = AdbConnection(_host, port, crypto);
-  try {
-    if (await connection.connect()) return FlutterAdbSession(connection);
-  } catch (e) {
-    _log.info('adb connect error port=$port error=${e.runtimeType}');
-  }
-  try {
-    await connection.disconnect();
-  } catch (_) {}
-  return null;
-}
+Future<AdbSession?> connectFlutterAdb(AdbCrypto crypto, int port) =>
+    guardAdbZone(() async {
+      final connection = AdbConnection(_host, port, crypto);
+      try {
+        if (await connection.connect().timeout(_connectTimeout)) {
+          return FlutterAdbSession(connection);
+        }
+      } catch (e) {
+        _log.info('adb connect error port=$port error=${e.runtimeType}');
+      }
+      await _disconnect(connection);
+      return null;
+    });
 
 /// 用配對碼和本機 [port] 的配對服務配對；任何失敗都回 false。
 Future<bool> pairWithCode({

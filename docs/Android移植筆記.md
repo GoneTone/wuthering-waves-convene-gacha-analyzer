@@ -890,3 +890,19 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 - 裝兩個：顯示選版本；選了之後記住，下次直接用；等待畫面顯示版本與「切換版本」。
 
 **限制**：Galaxy Store 版的 log 路徑沒有實機確認，等玩家用新版測過再看 log。
+
+### 53. 無線偵錯斷線後的 `Broken pipe` 與取消卡住（通用，2026-11-11）
+
+**症狀**：玩家的 log 有 `[app.error] Zone uncaught ... SocketException: Broken pipe`。模擬器重現：等待喚取記錄時關掉無線偵錯（`settings put global adb_wifi_enabled 0`），幾秒後就出現；之後按「切換版本」或取消，等待畫面一直關不掉。
+
+**原因**（看 `flutter_adb` 1.0.0 原始碼）：
+- `AdbConnection._sendRaw` 寫 socket 時只 `add` 不等結果（回 READY 等訊息不 flush），連線斷掉後寫入失敗的錯誤落在 socket 的 `done` future，沒人接就變成 zone 的未處理錯誤。
+- 連線斷掉後 `disconnect()` 裡的 `flush()` 不會回來，重連前的關閉、取消時的 release 都卡在這裡。`connect()` 等裝置回應時也沒有逾時。
+
+**修法**（`flutter_adb_session.dart`，不改套件）：
+1. 建立連線包在 `guardAdbZone`（`runZonedGuarded`）裡：socket 在這個 zone 建立，之後的寫入錯誤只記 `adb socket error`。結果用 zone 外建立的 `Completer` 交回，因為 error zone 裡建立的 future 出錯時傳不到 zone 外，外面的 await 會永遠等不到。
+2. 每個等 `flutter_adb` 的地方都加逾時：`connect` 10 秒、`open` 跟指令同為 20 秒、`disconnect` 和逾時後的 `sendClose` 各 2 秒。
+
+**驗證**（模擬器）：等待中關掉無線偵錯 → `adb socket error error=SocketException`（不再是 Zone uncaught）→ 重試失敗 → `adb disconnect failed error=TimeoutException` → App 自己重新打開無線偵錯並 `adb connected`；之後「切換版本」能正常結束並重新開始。
+
+**順帶發現**：模擬器還原 App 資料備份時連 `FlutterSecureKeyStorage.xml` 一起還原，金鑰庫對不上，新配對的金鑰在連線時被 adbd 拒絕（logcat：`CERTIFICATE_VERIFY_FAILED`）。刪掉 `shared_prefs/FlutterSecureKeyStorage.xml` 後重新配對就好。之後還原備份不要包含 `FlutterSecure*.xml`。
