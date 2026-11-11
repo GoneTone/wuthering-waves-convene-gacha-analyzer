@@ -55,8 +55,15 @@ jobs:
         run: flutter analyze
 
       # 圖例版面測試要載入 SDK 附的 Roboto 量實際字寬；flutter test 不會下載 material_fonts，要先 precache。
+      # 快取還原的 SDK 可能留著 material_fonts.stamp 卻沒有字型檔，precache 會以為已下載而跳過，所以缺檔時先刪 stamp。
       - name: Download Material fonts
-        run: flutter precache --universal --no-android --no-ios --no-web --no-linux --no-windows --no-macos --no-fuchsia
+        run: |
+          fonts="$FLUTTER_ROOT/bin/cache/artifacts/material_fonts"
+          if ! ls "$fonts" 2>/dev/null | grep -qi '^roboto-regular\.ttf$'; then
+            rm -f "$FLUTTER_ROOT/bin/cache/material_fonts.stamp"
+          fi
+          flutter precache --universal --no-android --no-ios --no-web --no-linux --no-windows --no-macos --no-fuchsia
+          ls "$fonts" | grep -i roboto-regular
 
       - name: Test
         run: flutter test
