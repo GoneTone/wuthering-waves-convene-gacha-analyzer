@@ -129,7 +129,7 @@ void main() {
   group('compact columns with the real phone font', () {
     // 測試預設字型每個字都是正方形，量不出實機寬度；載入 SDK 附的 Roboto（Android 預設字型）。
     setUpAll(() async {
-      // Linux 區分大小寫，檔名大小寫依 SDK 版本可能不同，不寫死。
+      // 各平台 SDK 的檔名大小寫不同（Linux 是 Roboto-Regular.ttf、Windows 是小寫），Linux 又區分大小寫，不寫死。
       final dir = Directory(
         '${Platform.environment['FLUTTER_ROOT']}/bin/cache/artifacts/material_fonts',
       );

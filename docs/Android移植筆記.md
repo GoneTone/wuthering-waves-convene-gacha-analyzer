@@ -637,6 +637,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 外殼動畫用 `TweenAnimationBuilder` 時，側欄、標題列、內容區要在 builder 外先建好再傳進去，動畫期間只重建高度。
 - **排版雷**：
   - 精簡圖例的件數欄、百分比欄若照字寬抓得太剛好，「100.00%」在預設字級就會斷成兩行（Roboto 14px 寬 55dp，欄寬 54）。只有一種稀有度或類型的小卡池最常遇到。現在件數欄 44、百分比欄 58，並隨字級縮放。
+  - 這類寬度問題要用實際字型量：測試預設字型每個字都是正方形，量不出來。`distribution_legend_test.dart` 載入 SDK 內附的 Roboto（`$FLUTTER_ROOT/bin/cache/artifacts/material_fonts/`）。**檔名大小寫各平台不同**：Windows 的 SDK 是 `roboto-regular.ttf`，GitHub Actions（Linux）是 `Roboto-Regular.ttf`，而 Linux 區分大小寫，寫死小寫在 CI 會找不到檔案（2026-11-11 PR CI 失敗）。測試改成在資料夾裡不分大小寫比對檔名。`flutter test` 前不需要 `flutter precache`，CI 上字型檔本來就在。`tool/generate_splash_branding.py` 也寫死小寫檔名，只在 Windows 跑沒問題，要在 Linux 跑得一起改。
   - 精簡圖例空間不夠時，件數和百分比移到第二行並靠右。Flutter 現成元件做不到「名稱靠左、數字靠右」：`OverflowBar` 會整列一起對齊；`LayoutBuilder` 放在 `IntrinsicHeight` 裡會丟例外。所以另寫一個兩個子元件的 `RenderBox`，固有尺寸、乾排版、實際排版共用同一條「放不放得下」的規則，並支援由右至左。
   - 「各卡池最高稀有度件數」的上下兩行版面若用 `Row[Flexible(名稱), Expanded(件數)]`，兩者各分一半寬度。名稱短時，用不完的那一半不會讓給件數，而是留在最右邊，於是右緣參差不齊。改用 `MainAxisAlignment.spaceBetween` 搭配兩個 `Flexible`。寬版的件數欄也改成靠右。
   - **整頁的空狀態要填滿剩下的高度再置中**（2026-11-09）：卡池頁的「此卡池無紀錄」原本放在標題下的 `SizedBox(height: 320)` 裡，只在那 320 裡置中，下方空一大塊，手機橫向（800×360）還溢出 29 像素。改成 `Expanded(child: EmptyState.noRecords(...))`，和「尚未同步」的 `noSyncPageBody` 同一種寫法；`phone_layout_pages_test` 在直向、橫向、電腦三種尺寸檢查內容中心落在標題以下區域的正中央。卡片裡的空訊息（篩選無結果、時間軸無某稀有度、圓餅無資料）本來就各自包 `Center`，總覽頁的區塊空狀態是跟著捲動的小框，都不用改。
