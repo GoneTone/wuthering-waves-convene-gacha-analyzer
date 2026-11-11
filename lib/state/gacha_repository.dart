@@ -274,6 +274,7 @@ class GachaRepository extends Notifier<GachaState> {
   }) async {
     if (_isUpdating) return; // 防止重入
     _isUpdating = true;
+    final done = _updateDone = Completer<void>();
     _cancelTriggered = false;
     _afterPairing = afterPairing;
     _wirelessLeftOn = false;
@@ -411,6 +412,7 @@ class GachaRepository extends Notifier<GachaState> {
       _activeCancellable = null;
       _cancelTriggered = false;
       _isUpdating = false;
+      done.complete();
     }
   }
 
@@ -494,6 +496,18 @@ class GachaRepository extends Notifier<GachaState> {
       ref.read(isAndroidProvider)
       ? _runAndroidWait(isFallback: isFallback)
       : _runMitm(isFallback: isFallback);
+
+  /// 清掉記住的鳴潮版本、結束這次更新，等它真的結束後重新開始，讓玩家重新選版本。
+  ///
+  /// 連線中斷時進行中的讀取可能要等逾時才停，不能只等固定秒數，否則重新開始會被防重入擋掉。
+  Future<void> switchGameVersion() async {
+    _androidLog.info('game switch requested');
+    await ref.read(settingsProvider.notifier).setGamePackage(null);
+    final running = _updateDone?.future;
+    await cancelCapture();
+    await running;
+    if (ref.mounted) await update();
+  }
 
   /// Android 裝了多個版本的鳴潮時，記下玩家選的 [package] 並重新判斷讀取方式。
   Future<void> selectGame(String package) async {
@@ -970,6 +984,9 @@ class GachaRepository extends Notifier<GachaState> {
 
   /// 防 re-entrancy 旗標，update 進行中為 true。
   bool _isUpdating = false;
+
+  /// 最近一次 [_runUpdate] 結束時完成。
+  Completer<void>? _updateDone;
 
   /// 使用者觸發取消時設為 true，避免將 ClientException 誤判為錯誤。
   bool _cancelTriggered = false;

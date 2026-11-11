@@ -349,6 +349,46 @@ void main() {
     await done;
   });
 
+  test(
+    'switching version waits for the slow cancel, then asks again',
+    () async {
+      // 連線中斷時進行中的讀取要等逾時才停；只等固定秒數的話，重新開始會被防重入擋掉。
+      final ready = _Ready(games: [wuwaSamsungPackage, wuwaGlobalPackage]);
+      resolver.results
+        ..add(ready.outcome)
+        ..add(
+          () => const LogAccessBlocked(
+            LogAccessUnavailable.chooseGame,
+            games: [wuwaGlobalPackage, wuwaSamsungPackage],
+          ),
+        );
+      final r = await repo();
+      await container
+          .read(settingsProvider.notifier)
+          .setGamePackage(wuwaSamsungPackage);
+      final first = r.update();
+      await waitUntil(() => watch.hits.isNotEmpty);
+      final gate = watch.cancelGate = Completer<void>();
+
+      final switching = r.switchGameVersion();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(resolver.calls, hasLength(1), reason: 'still cancelling');
+      expect(container.read(settingsProvider).gamePackage, isNull);
+
+      gate.complete();
+      await first;
+      await waitUntil(
+        () =>
+            (progress() as WaitingForCapture?)?.logAccessUnavailable ==
+            LogAccessUnavailable.chooseGame,
+      );
+      expect(resolver.calls, hasLength(2));
+      expect(resolver.calls[1].game, isNull);
+      await r.cancelCapture();
+      await switching;
+    },
+  );
+
   test('blocked: root denial is shown in the waiting state', () async {
     resolver.results.add(
       () => const LogAccessBlocked(

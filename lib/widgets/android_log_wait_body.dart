@@ -9,7 +9,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_acce
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/wuwa_game_package.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/manual_credential_dialog.dart';
@@ -82,16 +81,6 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
     // 以免被它的 popUntil 一起關掉。
     await Future<void>.delayed(Duration.zero);
     if (nav.mounted) unawaited(openLogAccessSetup(nav.context));
-  }
-
-  /// 清掉記住的版本後結束這次更新再重新開始，讓玩家重新選版本。
-  Future<void> _switchGame() async {
-    final container = ProviderScope.containerOf(context);
-    final repo = ref.read(gachaRepositoryProvider.notifier);
-    await ref.read(settingsProvider.notifier).setGamePackage(null);
-    await repo.cancelCapture();
-    await _untilIdle(container);
-    await repo.update();
   }
 
   /// 等到沒有進行中的更新（最多 5 秒）。
@@ -256,7 +245,9 @@ class _AndroidLogWaitBodyState extends ConsumerState<AndroidLogWaitBody> {
             style: theme.textTheme.bodySmall,
           ),
           TextButton(
-            onPressed: _switchGame,
+            onPressed: ref
+                .read(gachaRepositoryProvider.notifier)
+                .switchGameVersion,
             child: Text(l.actionSwitchGameVersion),
           ),
         ],

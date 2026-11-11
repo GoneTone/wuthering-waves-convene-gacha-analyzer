@@ -34,11 +34,11 @@ class _Repo extends GachaRepository {
   @override
   Future<void> selectGame(String package) async => selected.add(package);
 
-  /// update 被呼叫的次數。
-  int updates = 0;
+  /// switchGameVersion 被呼叫的次數。
+  int switches = 0;
 
   @override
-  Future<void> update({bool afterPairing = false}) async => updates++;
+  Future<void> switchGameVersion() async => switches++;
 
   @override
   Future<void> cancelCapture() async {
@@ -164,9 +164,8 @@ void main() {
       findsOneWidget,
     );
     await tester.tap(find.text(l.actionSwitchGameVersion));
-    await tester.pumpAndSettle();
-    expect(repo.cancels, 1);
-    expect(repo.updates, 1);
+    await tester.pump();
+    expect(repo.switches, 1);
   });
 
   testWidgets('choose game lists every installed version', (tester) async {
