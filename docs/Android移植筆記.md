@@ -461,6 +461,8 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 - 只放傳統 `ic_launcher.png` 的話，新版啟動器會把它縮小放進白底圓形。`tool/generate_app_icons.dart` 另外產生 `mipmap-*/ic_launcher_foreground.png`，`mipmap-anydpi-v26/ic_launcher.xml` 指向前景與 `@color/ic_launcher_background`。
 - 主體幾乎佔滿原圖、背景又是漸層，去背不可靠，所以前景層是**整張圖縮進中央 72dp 可見區，外圍用邊緣像素延伸到 108dp**，啟動器做視差位移時也不會露出接縫。比例用圓形與方圓形遮罩的預覽圖決定。
+- Play 商店圖示（512×512）也由同一支工具輸出到 `docs/images/play-store/icon-512.png`。Play 要求含 alpha 的 32 位元 PNG，所以要轉成 4 通道，原圖不透明也一樣。
+- 主題圖片（1024×500）由 `tool/generate_feature_graphic.py` 產生，四種商店語言各一張。圖示底色是中間暗、四角亮的漸層，用柔邊遮罩貼進背景會看到方框，所以和前景層同樣的做法：圖示原樣貼上，外圍用邊緣像素延伸。
 - 配對通知的小圖示沿用 `R.mipmap.ic_launcher`。Android 8.0 把自適應圖示當通知小圖示有已知崩潰，但無線偵錯配對只在 Android 11 以上出現，碰不到。
 
 ### 39. 系統自動備份要排除加密儲存（通用）

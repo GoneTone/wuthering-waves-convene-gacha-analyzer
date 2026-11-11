@@ -91,11 +91,14 @@ void main() {
     ..writeAsBytesSync(img.encodePng(_circle(_resize(source, 640))));
   stdout.writeln('✓ $splashIconPath  640x640');
 
-  // Play 商店圖示（Play 會自己套圓角遮罩，所以維持滿版）；上架資料不公開，輸出到不進版控的 private/。
-  const playIconPath = 'private/play-store/icon-512.png';
+  // Play 商店圖示（Play 會自己套圓角遮罩，所以維持滿版）；Play 要求 32 位元 PNG（含 alpha）。
+  // 主題圖片由 tool/generate_feature_graphic.py 以這張圖產生，換圖後要一起重跑。
+  const playIconPath = 'docs/images/play-store/icon-512.png';
   File(playIconPath)
     ..createSync(recursive: true)
-    ..writeAsBytesSync(img.encodePng(_resize(source, 512)));
+    ..writeAsBytesSync(
+      img.encodePng(_resize(source, 512).convert(numChannels: 4)),
+    );
   stdout.writeln('✓ $playIconPath  512x512');
 }
 
