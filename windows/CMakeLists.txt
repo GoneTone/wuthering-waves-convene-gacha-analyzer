@@ -126,6 +126,11 @@ install(PROGRAMS "${CAPTURE_HELPER_EXE}"
 install(FILES "${WINDIVERT_DIR}/WinDivert.dll" "${WINDIVERT_DIR}/WinDivert64.sys"
   DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
+# WinDivert 是 LGPLv3／GPLv2 雙授權，散布時要附上授權全文。
+install(FILES "${CAPTURE_HELPER_DIR}/windivert/LICENSE"
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  RENAME "WinDivert-LICENSE.txt"
+  COMPONENT Runtime)
 
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/windows/")
