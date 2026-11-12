@@ -136,23 +136,17 @@ void main() {
     return _top(tester, _sectionTitle(Icons.star_outline)) - timelineBottom;
   }
 
-  testWidgets('手機直向進頁即載入兩個位置，位置 3 在時間軸之下、5★ 一覽之上', (tester) async {
+  testWidgets('手機直向進頁即載入兩個位置，位置 3 在時間軸正上方', (tester) async {
     setUpContainer(banners: {'1': _records(25)});
     await pumpPage(tester);
     expect(loader.calls(NativeAdPlacement.bannerList), 1);
     expect(loader.calls(NativeAdPlacement.bannerMid), 1);
 
-    final timelineBottom = _bottom(tester, _timelineCard);
     final mid = fakeNativeViewOf(NativeAdPlacement.bannerMid);
     await _scrollTo(tester, mid);
-    // 卡片之間一律 m；廣告下方接區塊標題，維持段落間距 xl。
-    expect(_top(tester, mid) - timelineBottom, AppSpacing.m);
-    final midBottom = _bottom(tester, mid);
-    await _scrollTo(tester, _sectionTitle(Icons.star_outline));
-    expect(
-      _top(tester, _sectionTitle(Icons.star_outline)) - midBottom,
-      AppSpacing.xl,
-    );
+    // 卡片之間一律 m；時間軸下方接區塊標題，維持段落間距 xl。
+    expect(_top(tester, _timelineCard) - _bottom(tester, mid), AppSpacing.m);
+    expect(await timelineToFiveStarGap(tester), AppSpacing.xl);
 
     await _scrollTo(tester, fakeNativeViewOf(NativeAdPlacement.bannerList));
     expect(fakeNativeViewOf(NativeAdPlacement.bannerList), findsOneWidget);
@@ -220,6 +214,20 @@ void main() {
     await pumpPage(tester, size: const Size(1000, 800));
     expect(loader.calls(NativeAdPlacement.bannerList), 0);
     expect(loader.calls(NativeAdPlacement.bannerMid), 1);
+  });
+
+  testWidgets('三欄寬度：時間軸與圓餅同列，位置 3 放在整列下方', (tester) async {
+    setUpContainer(banners: {'1': _records(25)});
+    await pumpPage(tester, size: const Size(1280, 800));
+    final mid = fakeNativeViewOf(NativeAdPlacement.bannerMid);
+    await _scrollTo(tester, mid);
+    expect(_top(tester, mid) - _bottom(tester, _timelineCard), AppSpacing.m);
+    final midBottom = _bottom(tester, mid);
+    await _scrollTo(tester, _sectionTitle(Icons.star_outline));
+    expect(
+      _top(tester, _sectionTitle(Icons.star_outline)) - midBottom,
+      AppSpacing.xl,
+    );
   });
 
   testWidgets('內容寬度不足 320 時兩個都不載入、不多間距', (tester) async {

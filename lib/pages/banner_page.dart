@@ -341,7 +341,13 @@ class _BannerPageState extends ConsumerState<BannerPage> {
                         stats: stats,
                         layout: layout,
                       );
-                      return Wrap(
+                      final adBlock = midAd == null
+                          ? null
+                          : NativeAdBlock(
+                              ad: midAd,
+                              placement: NativeAdPlacement.bannerMid,
+                            );
+                      final row = Wrap(
                         spacing: AppSpacing.m,
                         runSpacing: AppSpacing.m,
                         children: [
@@ -372,6 +378,9 @@ class _BannerPageState extends ConsumerState<BannerPage> {
                                 ),
                               ),
                             ),
+                          // 時間軸獨佔一列時，廣告放在它上方；三欄時時間軸和圓餅同列，廣告改放整列下方。
+                          if (adBlock != null && !wide)
+                            SizedBox(width: c.maxWidth, child: adBlock),
                           // 除了電腦版三欄同列需與圓餅卡等高，時間軸都獨佔一列：撐滿寬、高度依內容。
                           SizedBox(
                             width: wide ? tileWidth : c.maxWidth,
@@ -398,16 +407,18 @@ class _BannerPageState extends ConsumerState<BannerPage> {
                           ),
                         ],
                       );
+                      if (adBlock == null || !wide) return row;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          row,
+                          const SizedBox(height: AppSpacing.m),
+                          adBlock,
+                        ],
+                      );
                     },
                   ),
 
-                  if (midAd != null) ...[
-                    const SizedBox(height: AppSpacing.m),
-                    NativeAdBlock(
-                      ad: midAd,
-                      placement: NativeAdPlacement.bannerMid,
-                    ),
-                  ],
                   const SizedBox(height: AppSpacing.xl),
                   if (fiveStarItems.isNotEmpty) ...[
                     InlineSectionTitle(
