@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "שפות זמינות",
   "contributorsHelpTranslate": "השפה שלכם לא זמינה? עזרו לנו לתרגם!",
   "contributorsProjectLicense": "רישיון הפרויקט",
+  "contributorsOpenSourceLicenses": "רישיונות קוד פתוח",
   "pityRank": "פיטי {star}",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, one{עוד משיכה אחת עד הפיטי} other{עוד {n} משיכות עד הפיטי}}",

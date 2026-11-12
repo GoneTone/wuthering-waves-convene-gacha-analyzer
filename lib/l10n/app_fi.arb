@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Saatavilla olevat kielet",
   "contributorsHelpTranslate": "Eikö kieltäsi löydy? Auta meitä kääntämään!",
   "contributorsProjectLicense": "Projektin lisenssi",
+  "contributorsOpenSourceLicenses": "Avoimen lähdekoodin lisenssit",
   "pityRank": "{star}-pity",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, =1{1 veto takuuseen} other{{n} vetoa takuuseen}}",

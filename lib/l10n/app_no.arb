@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Tilgjengelige språk",
   "contributorsHelpTranslate": "Finnes ikke språket ditt? Hjelp oss å oversette!",
   "contributorsProjectLicense": "Prosjektlisens",
+  "contributorsOpenSourceLicenses": "Lisenser for åpen kildekode",
   "pityRank": "{star}-pity",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n} trekk til garantert",

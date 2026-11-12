@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Beschikbare talen",
   "contributorsHelpTranslate": "Is je taal er niet bij? Help ons met vertalen!",
   "contributorsProjectLicense": "Projectlicentie",
+  "contributorsOpenSourceLicenses": "Opensourcelicenties",
   "pityRank": "{star}-pity",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, =1{Nog 1 pull tot gegarandeerd} other{Nog {n} pulls tot gegarandeerd}}",

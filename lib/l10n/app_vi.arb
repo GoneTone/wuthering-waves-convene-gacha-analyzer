@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Ngôn ngữ hỗ trợ",
   "contributorsHelpTranslate": "Chưa có ngôn ngữ bạn muốn? Hãy giúp chúng tôi dịch!",
   "contributorsProjectLicense": "Giấy phép dự án",
+  "contributorsOpenSourceLicenses": "Giấy phép nguồn mở",
   "pityRank": "Bảo hiểm {star}",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "Còn {n} lượt đến bảo hiểm",

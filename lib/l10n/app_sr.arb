@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Доступни језици",
   "contributorsHelpTranslate": "Нема вашег језика? Помозите нам да преведемо!",
   "contributorsProjectLicense": "Лиценца пројекта",
+  "contributorsOpenSourceLicenses": "Лиценце отвореног кода",
   "pityRank": "Гаранција {star}",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, one{Још {n} извлачење до гаранције} few{Још {n} извлачења до гаранције} other{Још {n} извлачења до гаранције}}",

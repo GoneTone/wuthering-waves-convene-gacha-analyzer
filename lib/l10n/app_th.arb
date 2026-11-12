@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "ภาษาที่รองรับ",
   "contributorsHelpTranslate": "ไม่มีภาษาที่คุณต้องการ? มาช่วยกันแปลเถอะ!",
   "contributorsProjectLicense": "สัญญาอนุญาตของโปรเจกต์",
+  "contributorsOpenSourceLicenses": "สัญญาอนุญาตโอเพนซอร์ส",
   "pityRank": "การันตี {star}",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "อีก {n} ครั้งถึงการันตี",

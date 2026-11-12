@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Dostupné jazyky",
   "contributorsHelpTranslate": "Chybí váš jazyk? Pomozte nám s překladem!",
   "contributorsProjectLicense": "Licence projektu",
+  "contributorsOpenSourceLicenses": "Licence open source",
   "pityRank": "Pity {star}",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, one{Do garance zbývá {n} tah} few{Do garance zbývají {n} tahy} many{Do garance zbývá {n} tahu} other{Do garance zbývá {n} tahů}}",

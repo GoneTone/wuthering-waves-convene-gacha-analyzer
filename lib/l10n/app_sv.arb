@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Tillgängliga språk",
   "contributorsHelpTranslate": "Saknas ditt språk? Hjälp oss att översätta!",
   "contributorsProjectLicense": "Projektlicens",
+  "contributorsOpenSourceLicenses": "Licenser för öppen källkod",
   "pityRank": "{star}-pity",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, =1{1 pull kvar till garanti} other{{n} pulls kvar till garanti}}",

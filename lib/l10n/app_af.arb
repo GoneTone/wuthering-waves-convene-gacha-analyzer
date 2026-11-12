@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Beskikbare tale",
   "contributorsHelpTranslate": "Nie in jou voorkeurtaal beskikbaar nie? Help ons om dit te vertaal!",
   "contributorsProjectLicense": "Projeklisensie",
+  "contributorsOpenSourceLicenses": "Oopbronlisensies",
   "pityRank": "{star}-pity",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, one{Nog {n} trek tot gewaarborg} other{Nog {n} trekke tot gewaarborg}}",

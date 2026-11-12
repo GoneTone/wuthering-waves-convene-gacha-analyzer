@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Dostępne języki",
   "contributorsHelpTranslate": "Brak Twojego języka? Pomóż nam w tłumaczeniu!",
   "contributorsProjectLicense": "Licencja projektu",
+  "contributorsOpenSourceLicenses": "Licencje open source",
   "pityRank": "Pity {star}",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, one{{n} losowanie do gwarancji} few{{n} losowania do gwarancji} many{{n} losowań do gwarancji} other{{n} losowania do gwarancji}}",

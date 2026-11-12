@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Verfügbare Sprachen",
   "contributorsHelpTranslate": "Deine Sprache fehlt? Hilf uns beim Übersetzen!",
   "contributorsProjectLicense": "Projektlizenz",
+  "contributorsOpenSourceLicenses": "Open-Source-Lizenzen",
   "pityRank": "{star}-Pity",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, =1{Noch 1 Ziehung bis zur Garantie} other{Noch {n} Ziehungen bis zur Garantie}}",

@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Mevcut diller",
   "contributorsHelpTranslate": "Dilinizde mevcut değil mi? Çeviriye yardım edin!",
   "contributorsProjectLicense": "Proje Lisansı",
+  "contributorsOpenSourceLicenses": "Açık kaynak lisansları",
   "pityRank": "{star} garantisi",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "Garantiye {n} çekiliş kaldı",

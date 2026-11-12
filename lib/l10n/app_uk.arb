@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Доступні мови",
   "contributorsHelpTranslate": "Немає вашої мови? Допоможіть нам із перекладом!",
   "contributorsProjectLicense": "Ліцензія проєкту",
+  "contributorsOpenSourceLicenses": "Ліцензії з відкритим кодом",
   "pityRank": "Гарант {star}",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, one{До гаранта {n} крутка} few{До гаранта {n} крутки} many{До гаранта {n} круток} other{До гаранта {n} крутки}}",

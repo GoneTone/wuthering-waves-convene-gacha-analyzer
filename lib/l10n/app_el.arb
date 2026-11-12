@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Διαθέσιμες γλώσσες",
   "contributorsHelpTranslate": "Δεν βρίσκετε τη γλώσσα σας; Βοηθήστε μας να μεταφράσουμε!",
   "contributorsProjectLicense": "Άδεια χρήσης έργου",
+  "contributorsOpenSourceLicenses": "Άδειες χρήσης ανοιχτού κώδικα",
   "pityRank": "Pity {star}",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, =1{1 τράβηγμα ως το εγγυημένο} other{{n} τραβήγματα ως το εγγυημένο}}",

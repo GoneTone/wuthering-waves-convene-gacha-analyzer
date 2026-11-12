@@ -180,6 +180,7 @@
   "contributorsTranslatedLanguages": "Limbi disponibile",
   "contributorsHelpTranslate": "Nu este disponibil în limba preferată? Ajutați-ne să îl traducem!",
   "contributorsProjectLicense": "Licența proiectului",
+  "contributorsOpenSourceLicenses": "Licențe open source",
   "pityRank": "Pity {star}",
   "pityCurrent": "{current} / {threshold}",
   "pityDistance": "{n, plural, one{Încă {n} tragere până la garanție} few{Încă {n} trageri până la garanție} other{Încă {n} de trageri până la garanție}}",

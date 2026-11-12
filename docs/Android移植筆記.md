@@ -941,3 +941,20 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 **工具**：上面的步驟都寫在 `tool/capture_store_screenshots.py`（事前準備見檔頭：匯入資料、遮蔽 UID、配對無線偵錯、裝好遊戲空殼套件），例如 `python tool/capture_store_screenshots.py --langs en --devices phone tablet-10`，拍完會自動還原模擬器設定。平板與 Chromebook 的側欄座標是寫死的，側欄改版要重量。
 
 **成品**：`docs/images/play-store/screenshots/<語言>/<裝置>/1–8.png`（語言 `zh-TW`、`en`、`ja`、`zh-CN`，和主題圖片一致；裝置 `phone`、`tablet-7`、`tablet-10`、`chromebook`）。README 的 Android 段落直接引用其中的 `phone` 與 `tablet-10`，不再另存一套；Windows 截圖仍在 `docs/images/<語言>/windows/`。
+
+## 十七、開放原始碼授權
+
+### 55. 授權頁只用 Flutter 內建的：Android 原生套件的授權外掛會弄壞 CMake 建置（通用，2026-11-12）
+
+**做法**：貢獻者頁「專案授權」區塊下方加一顆「開放原始碼授權」按鈕（`contributorsOpenSourceLicenses`，31 語），按下去開 Flutter 內建的 `showLicensePage`。
+- 傳 `useRootNavigator: true` 才會蓋住整個畫面；不傳的話開在內容區裡，上方帳號列和下方「最後更新」都還在。
+- 名稱、圖示、版本是 Flutter 固定排的，三者之間沒有間距，圖示要自己包 `Padding`。「Powered by Flutter」是寫死的，沒有參數可以拿掉。
+- 版本傳 `appVersionProvider`，和設定頁「關於」的版本一致。
+- Flutter 的授權頁除了 Dart 套件，也包含引擎內建的原生程式庫（angle、boringssl、abseil-cpp 等），不用另外處理。
+
+**沒加的部分**：Rust crate（`rust/`、`rust_capture_helper/`）與 Android 原生 Gradle 套件（AndroidX、Play 服務、AdMob）不會自動出現在 Flutter 的授權頁。評估後決定不加：
+- Android 原生套件原本打算用 Google 的 `oss-licenses-plugin`。0.12.0 起官方支援 AGP 9.1，但 **0.11.0 以後會把建置 classpath 的 `protobuf-java` 升到 4.x**（AGP 用 3.25.5）。只要有套件用 CMake（例如 `jni`），release 建置就在 `configureCMake*` 失敗：`Failed making field 'java.lang.ref.Reference#referent' accessible`。原因是 AGP 設定 CMake 時用 Gson 把 protobuf 物件轉成 JSON 寫 log，protobuf 4 的物件裡有 JDK 17 不讓反射的欄位。已知問題：https://github.com/google/play-services-plugins/issues/466
+- 繞過方法：在 `settings.gradle.kts` 的 `buildscript` 加 `classpath("com.google.protobuf:protobuf-java") { version { strictly("3.25.5") } }`。外掛宣告在 `settings.gradle.kts`，所以限制也要放在那裡，放在根目錄 `build.gradle.kts` 沒效果。實測可以建置，外掛產生 221 筆授權。但這是靠鎖死 AGP 內部相依的版本，之後升級 AGP 可能又壞，所以沒採用。等 issue 修好可以再評估。
+- Rust crate 可以用 `build.rs` 讀 `Cargo.lock` 自動收集，沒有副作用，但成本中等，這次先不做。
+
+**WinDivert（只有 Windows）**：WinDivert 是 LGPLv3／GPLv2 雙授權，隨安裝檔散布時必須附授權全文。官方 v2.2.2 的 `LICENSE` 放在 `rust_capture_helper/windivert/LICENSE`，`windows/CMakeLists.txt` 安裝成 `WinDivert-LICENSE.txt`，和 `WinDivert.dll` 放在同一個資料夾；安裝檔打包整個 Release 資料夾，會一起帶進去。升級 WinDivert 時要一起換這個檔案。
