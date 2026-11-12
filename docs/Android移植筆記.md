@@ -958,3 +958,25 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 - Rust crate 可以用 `build.rs` 讀 `Cargo.lock` 自動收集，沒有副作用，但成本中等，這次先不做。
 
 **WinDivert（只有 Windows）**：WinDivert 是 LGPLv3／GPLv2 雙授權，隨安裝檔散布時必須附授權全文。官方 v2.2.2 的 `LICENSE` 放在 `rust_capture_helper/windivert/LICENSE`，`windows/CMakeLists.txt` 安裝成 `WinDivert-LICENSE.txt`，和 `WinDivert.dll` 放在同一個資料夾；安裝檔打包整個 Release 資料夾，會一起帶進去。升級 WinDivert 時要一起換這個檔案。
+
+## 十八、README
+
+### 56. README 的文字要跟著改：很多段落原本只寫了電腦版（通用，2026-11-12）
+
+加了 Android 版之後，README 很多地方原本只寫了電腦版的做法，放到 Android 版會變成錯的。四種語言要一起改，用詞照該語言 ARB 的官方用語（例如「無線偵錯」「ワイヤレスデバッグ」「无线调试」）。
+
+**一定要改的**：
+- **「請放心」段**：原本寫「不會讀取或竄改任何遊戲檔案與記憶體」，但 Android 版要讀遊戲的 log 檔，這句就不成立了。這段在講帳號安全，寫錯容易被質疑，改成「不竄改遊戲檔案、不讀取也不竄改遊戲記憶體；Windows 版只攔截那一條請求，Android 版只讀取遊戲的 log 檔」。
+- **開頭的原理段**：原本只講攔截程式、UAC、根憑證。改成「Windows 版的原理是...」，後面另起一段寫 Android 版：讀 log 檔、三種讀取方式（root、直接讀取、無線偵錯），以及讀完就中斷連線、App 自己打開的無線偵錯會關回去。
+- **使用方式**：分成 Windows、Android 兩小節。
+- **前置需求**：拿掉「目前僅支援 Windows」，補上 Android Studio（Android SDK）；「開發模式執行」與「編譯生產版」補 Android 的指令（APK／AAB 的輸出位置，以及沒有 `android/key.properties` 時用 debug 金鑰簽署）。
+
+**容易漏掉的寫法**：
+- 雲端同步寫「在多台電腦間同步」→「多台裝置」。
+- 資料「存放在您的電腦內」→「裝置內」；「攔到的查詢參數」「重新攔截」→「取得」。
+- 「啟動時自動檢查新版本」：Play 版是透過 Play 商店更新，要註明。
+- 功能列表新增「支援 Windows 與 Android」，以及「Android 版有 AdMob 原生廣告、Windows 版沒有」。廣告要在 README 寫清楚，算是對使用者的透明度。
+
+**功能描述要對照實際 UI**：這次順便發現分享圖寫的「自動複製到剪貼簿」早就不是這樣了，實際上是對話框讓使用者選「複製圖片」或「儲存圖片」，Android 還多一顆系統分享。改 README 時把每一條功能描述都對照現在的畫面看一次。
+
+**要等上架後才能改的**：「下載軟體」段的 Google Play 連結，以及註明防毒軟體那段只適用 Windows 版。

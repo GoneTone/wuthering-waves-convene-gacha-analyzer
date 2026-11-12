@@ -4,13 +4,15 @@
 
 [![Crowdin](https://badges.crowdin.net/wuthering-waves-convene-gacha-analyzer/localized.svg)](https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer)
 
-I have developed a utility for analyzing convene history, where all data and numbers are well-organized in a convenient manner.
+A utility/app for analyzing convene history, with all data and numbers well-organized in a convenient manner.
 
-When you press *Update*, the utility starts a local interception helper (running only on your computer; it requires administrator privileges, so you'll see a one-time UAC prompt — click Yes) and automatically installs a locally generated root certificate. It then redirects Wuthering Waves' convene-record page request to the official convene history API to your local machine for parsing, so it can capture that one request. You therefore need to open the convene record page in the game *after* pressing *Update*, so the request can be captured. The captured request is parsed for the parameters needed to query your convene records, which are then used to call the official API. Interception only runs during the update and stops immediately once done, restoring your network state.
+On Windows, when you press *Update*, the utility starts a local interception helper (running only on your computer; it requires administrator privileges, so you'll see a one-time UAC prompt — click Yes) and automatically installs a locally generated root certificate. It then redirects Wuthering Waves' convene-record page request to the official convene history API to your local machine for parsing, so it can capture that one request. You therefore need to open the convene record page in the game *after* pressing *Update*, so the request can be captured. The captured request is parsed for the parameters needed to query your convene records, which are then used to call the official API. Interception only runs during the update and stops immediately once done, restoring your network state.
 
-The first time you press *Update*, the utility loads your full convene history, which may take a while. The data is then stored locally so you don't have to wait again on the next launch. To pull new records, just press *Update*: the utility remembers the previously captured parameters and reuses them as long as they're still valid, so you don't have to repeat the capture every time. If the captured parameters have expired, the utility will ask you to open the convene record page in the game again to re-capture.
+The Android version can't intercept network traffic, so it reads the log file that Wuthering Waves writes and finds the convene history URL there. Android doesn't let apps read other apps' files directly, so depending on the device it reads the file via root, direct file access (Android 10 or earlier), or the system's built-in *Wireless debugging*. When using Wireless debugging, it disconnects as soon as it's done reading, and if the app turned Wireless debugging on, it turns it back off.
 
-Rest assured: this utility does not read or modify any game file or game memory, and does not affect how the game runs. It only intercepts and parses that single request to the official convene history API to obtain the query parameters; all other traffic passes through untouched. So there is no risk of being banned for using it. If you have been banned, it was likely for a different reason. Please do not blame us, thanks.
+The first time you press *Update*, the utility loads your full convene history, which may take a while. The data is then stored locally so you don't have to wait again on the next launch. To pull new records, just press *Update*: the utility remembers the previously obtained parameters and reuses them as long as they're still valid, so you don't have to obtain them again every time. If the captured parameters have expired, the utility will ask you to open the convene record page in the game again to get new ones.
+
+Rest assured: this utility does not modify any game file, does not read or modify game memory, and does not affect how the game runs. On Windows it only intercepts and parses that single request to the official convene history API to obtain the query parameters, and all other traffic passes through untouched; on Android it only reads the game's log file. So there is no risk of being banned for using it. If you have been banned, it was likely for a different reason. Please do not blame us, thanks.
 
 Posts:
 - 巴哈姆特 (Bahamut): <https://forum.gamer.com.tw/C.php?bsn=74934&snA=17364>
@@ -34,14 +36,24 @@ The utility may trigger anti-virus software during installation and execution. T
 
 ## How to Use
 
+### Windows
+
 1. Launch Wuthering Waves (don't open the convene record page yet).
 2. Open this utility and press *Update*. The utility will start a local interception helper (a one-time UAC administrator prompt will appear — click Yes) and wait for the request.
 3. Switch back to the game and open *Convene → Convene Records* to view the convene record page.
 4. Once captured, the utility automatically stops the interception, restores your network state, and starts fetching your data. To update again later, just repeat step 2 — the captured URL will be reused if still valid.
 
+### Android
+
+1. The first time you press *Update*, the app walks you through setting up how it reads the game's log file. Rooted devices and devices on Android 10 or earlier read it directly; other devices use the system's built-in *Wireless debugging*: pair once by following the on-screen steps, and from then on the app turns Wireless debugging on and off by itself.
+2. After pressing *Update*, switch to the game and open *Convene → Convene Records* to view the convene record page.
+3. Once the app finds the URL in the game's log file, it starts fetching your data automatically.
+4. If Wireless debugging isn't available (for example, when you're not on Wi‑Fi), you can enter the convene history URL manually instead.
+
 ## Features
 
-- Auto-intercepts the convene-record page request to the official convene history API via a local interception helper and a self-signed root certificate — no need to paste URLs by hand
+- Runs on Windows and Android
+- Gets the convene history URL automatically — no need to paste URLs by hand: on Windows it intercepts the convene-record page request to the official convene history API via a local interception helper and a self-signed root certificate; on Android it reads the game's log file (via root, direct file access, or Wireless debugging)
 - Supports the Global server (CN server not supported yet)
 - Covers all 12 convene types: Featured Resonator Convene, Featured Weapon Convene, Standard Resonator Convene, Standard Weapon Convene, Beginner Convene, Beginner's Choice Convene, New Voyage Resonator Convene, New Voyage Weapon Convene, Collab Resonator Convene, Collab Weapon Convene, Reverb Resonator Convene, Reverb Weapon Convene
 - Multi-account (UID) management: custom aliases, drag-to-reorder, one-click switching
@@ -57,14 +69,15 @@ The utility may trigger anti-virus software during installation and execution. T
 - Convene history table: multi-column sort, keyword search (by name), rarity and item-type filters, pagination
 - Auto-fetched item icons (from the encore.moe API): characters, weapons, and items all have icons, shown in the table, timelines, and the 5★ overview
 - Click any item for details: characters show the introduction, element, weapon type, and switchable Outfit and Convene artwork (the Convene art is captured live from encore's rendered canvas on your machine and cached — no artwork is redistributed); weapons show their description and weapon type
-- Generate a share image in one click (dark / light theme, full UID or first-3-digits mask), automatically copied to the clipboard and optionally saved as a PNG file
+- Generate a share image in one click (dark / light theme, full UID or first-3-digits mask), then copy it to the clipboard or save it as a PNG file; on Android you can also share it directly through the system share sheet
 - Export / Import accounts as JSON
-- Cloud sync: link your own Google account to automatically back up convene records to your Google Drive and keep multiple computers in sync; deleting an account can optionally remove it from the cloud data too
+- Cloud sync: link your own Google account to automatically back up convene records to your Google Drive and keep multiple devices in sync; deleting an account can optionally remove it from the cloud data too
 - Dark / Light theme toggle
 - Multi-language ([help us translate](https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer))
 - Optional UID masking in the UI (first 3 digits only) for added privacy
-- Automatic update check on launch, with a manual trigger in Settings
+- Automatic update check on launch, with a manual trigger in Settings (the Android version updates through Google Play)
 - All data stays on your machine by default — nothing is uploaded; cloud sync is opt-in and backs up only to your own Google Drive
+- The Android version shows AdMob native ads (consent is requested first in regions that require it); the Windows version has no ads
 
 ## Supported Third-Party Import Platforms
 
@@ -116,7 +129,7 @@ Besides importing this utility's own backup files, you can also import convene h
 
 ### Prerequisites
 
-- Windows only for now
+- Build the Windows version on Windows; the Android version also needs [Android Studio](https://developer.android.com/studio) (Android SDK)
 - [Flutter SDK](https://docs.flutter.dev/install) (latest stable)
 - [Rust toolchain](https://rustup.rs/) (stable)
 - Run `flutter doctor` and install anything it flags as missing
@@ -134,7 +147,8 @@ Rust is compiled automatically by `rust_builder/`'s cargokit during `flutter run
 ### Run in development mode
 
 ```bash
-flutter run -d windows
+flutter run -d windows        # Windows
+flutter run -d <device id>    # Android device or emulator (find the ID with flutter devices)
 ```
 
 ### Cloud sync credentials (optional)
@@ -200,11 +214,24 @@ Generated files live in `lib/src/rust/`.
 
 ### Build for release
 
+Windows:
+
 ```bash
 flutter build windows --release
 ```
 
 Output: `build\windows\x64\runner\Release\`
+
+Android:
+
+```bash
+flutter build apk --release        # APK for direct install
+flutter build appbundle --release  # AAB for Google Play upload
+```
+
+Output: `build/app/outputs/flutter-apk/app-release.apk`, `build/app/outputs/bundle/release/app-release.aab`
+
+To sign with your own key, fill in `storeFile`, `storePassword`, `keyAlias` and `keyPassword` in `android/key.properties` (git-ignored); without that file the build is signed with the debug key.
 
 ### Run tests
 
