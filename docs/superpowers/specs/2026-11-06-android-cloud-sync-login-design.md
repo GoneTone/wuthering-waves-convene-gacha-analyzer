@@ -102,7 +102,7 @@ Logger 沿用 `cloudsync.auth`／`cloudsync.sync`，英文：連結開始／成�
 
 ### 5.6 Google Cloud Console（使用者已完成）
 
-- Android 用戶端已建在桌面用戶端同一個專案：套件名稱 `tw.reh.wuwa.gacha`，SHA-1 `F8:09:DC:34:0C:1C:D5:92:C5:0A:44:8E:0B:DB:1C:96:8D:30:08:1B`（debug 金鑰）。
+- Android 用戶端已建在桌面用戶端同一個專案：套件名稱 `tw.reh.wuwa.gacha`，登記的是 debug 金鑰的 SHA-1。
 - **子專案 7 待辦**：上傳金鑰與 Play 應用程式簽署金鑰的 SHA-1 都要補登記，否則 Play 版會出現設定錯誤。
 
 ## 六、驗收

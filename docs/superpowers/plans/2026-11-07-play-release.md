@@ -307,7 +307,7 @@ Expected: `✓ Built ...app-release.aab`
 
 Run: `fvm flutter build appbundle --release --build-name 1.9.0-rc.1 --build-number 1090001`
 Run: `keytool -printcert -jarfile build/app/outputs/bundle/release/app-release.aab`
-Expected: 憑證指紋是測試金鑰的指紋，不是 debug 金鑰的 `F8:09:DC:...`。驗證後刪掉暫時的 `key.properties` 與測試金鑰，`git status` 不可出現它們。
+Expected: 憑證指紋是測試金鑰的指紋，不是 debug 金鑰的指紋。驗證後刪掉暫時的 `key.properties` 與測試金鑰，`git status` 不可出現它們。
 
 - [ ] **Step 3: 寫 `release-android.yml` 並檢查語法**
 

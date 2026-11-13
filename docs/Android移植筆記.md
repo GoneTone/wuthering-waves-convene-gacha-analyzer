@@ -373,7 +373,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 ### 32. 簽章指紋要逐把登記（通用）
 
 - Android 用戶端以「套件名稱＋SHA-1」辨識 App，同一個 App 可能有三把金鑰，每把都要在 Android 用戶端登記一筆：
-  - 開發用 debug 金鑰：`F8:09:DC:34:0C:1C:D5:92:C5:0A:44:8E:0B:DB:1C:96:8D:30:08:1B`（`~/.android/debug.keystore`，已登記）。
+  - 開發用 debug 金鑰（`~/.android/debug.keystore`，已登記）。
   - **上傳金鑰、Play 應用程式簽署金鑰：已在子專案 7 補登記**（見 #36；Play 簽署金鑰的 SHA-1 在 Play Console 查）。只登記 debug 金鑰時實機測試一切正常，但從 Play 下載的版本授權會失敗（Play 版實測顯示「授權失敗」）。依套件原始碼推論，錯誤會是 `GoogleSignInException(unknownError, "SDK reported an exception: 10: ...")`（Play 服務狀態碼 10 = `DEVELOPER_ERROR`），狀態碼本身未從 log 確認。
 
 ### 33. 實機驗收結果（2026-11-06）
@@ -564,7 +564,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - **等待擷取**：每秒輪詢 Client.log 增量，解碼都在主 isolate。約六成時間花在 `Uint8List.fromList([...carry, ...decode])`：spread 逐位元組裝進可成長的 `List<int>`，非常慢。其餘是 XOR 解碼、UTF-8 解碼與網址比對。
   - **下載卡池**：總覽頁、卡池頁 `ref.watch(gachaRepositoryProvider)` 訂閱整個狀態，每換一池更新一次 `progress`，就整頁重算統計與時間軸，約每秒一次、每次 10～25 ms。
 - **處理**
-  - `PollingClientLogWatch` 把「接上 carry、解碼、找最新憑證」整段移到背景 isolate（`_scanInBackground`），串接改用 `BytesBuilder`。背景 isolate 的 log 不會進 App log，被拒網址的原因由背景交回，在主 isolate 寫 warning。
+  - `PollingClientLogWatch` 把「接上 carry、解碼、找最新憑證」整段移到背景 isolate（現在是 `_backInBackground` 以 `Isolate.run` 執行 `_scanBackChunk`，見第 51 條），串接改用 `BytesBuilder`。背景 isolate 的 log 不會進 App log，被拒網址的原因由背景交回，在主 isolate 寫 warning。
   - 兩頁改用 `select` 只訂閱 `activeData` 與 `isBootstrapping`。紀錄在全部卡池抓完才一次替換 `byUid`，所以整個更新只重算一次。**其他頁面要讀 repository 狀態時，也要用 `select`，不要訂閱整個狀態**。
   - `phone_layout_pages_test` 鎖住：只改進度（`clearProgress()` 產生新狀態物件）時，兩頁不會重建（以 `debugOnRebuildDirtyWidget` 計數）。
   - 剩下的 14.2 ms 是開 App 後第一次讀語言對照表（之後走 `LangCatalogService` 的 memo）：`LangCatalogStorage.load` 改在背景 isolate 讀檔並解析 JSON。
@@ -900,7 +900,7 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 
 **限制**：
 - 「前往 Google Play」固定開 Google Play 的鳴潮頁面；沒有 Play 商店的裝置按了沒反應，只會記 `openExternalUrl: cannot launch`。
-- Play 的套件可見性政策頁（Console Help「QUERY_ALL_PACKAGES」）只規範這個權限，沒提到用 MAIN／LAUNCHER `<queries>` 取得可見性，只有「能用較窄的方式就要用」的通則。我們只比對 `com.kurogame.wutheringwaves` 開頭、清單不離開 Kotlin，但沒有政策明文保證；要保守的話可以拿掉 `<intent>` 和 `queryIntentActivities`，只留已知版本的 `<package>`（Google Play 版、Galaxy Store 版照常可用，新的商店版本就要改版才認得）。
+- Play 的套件可見性政策頁（Console Help「QUERY_ALL_PACKAGES」）只規範這個權限，沒提到用 MAIN／LAUNCHER `<queries>` 取得可見性，只有「能用較窄的方式就要用」的通則。我們只比對 `com.kurogame.wutheringwaves` 開頭、清單不離開 Kotlin，但沒有政策明文保證；要保守的話可以拿掉 `<intent>` 和 `queryIntentActivities`，只留已知版本的 `<package>`（Google Play 版、Galaxy Store 版照常可用，新的商店版本就要改版才認得）。2026-11-13 決定保留 MAIN／LAUNCHER `<queries>` 送審；審核如果對此有疑慮，再改成只留已知版本的 `<package>`。
 
 ### 53. 無線偵錯斷線後的 `Broken pipe` 與取消卡住（通用，2026-11-11）
 
