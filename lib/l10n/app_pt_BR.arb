@@ -1,5 +1,5 @@
 {
-  "@@locale": "pt_BR",
+  "@@locale": "pt-BR",
   "localeNativeName": "Português (Brasil)",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "Tradução: {translator}",
