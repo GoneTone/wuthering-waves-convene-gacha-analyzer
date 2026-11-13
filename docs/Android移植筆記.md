@@ -950,7 +950,7 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 
 **工具**：上面的步驟都寫在 `tool/capture_store_screenshots.py`（事前準備見檔頭：匯入資料、遮蔽 UID、配對無線偵錯、裝好遊戲空殼套件），例如 `python tool/capture_store_screenshots.py --langs en --devices phone tablet-10`，拍完會自動還原模擬器設定。平板與 Chromebook 的側欄座標是寫死的，側欄改版要重量。
 
-**成品**：`docs/images/play-store/screenshots/<語言>/<裝置>/1–8.png`（語言 `zh-TW`、`en`、`ja`、`zh-CN`，和主題圖片一致；裝置 `phone`、`tablet-7`、`tablet-10`、`chromebook`）。README 的 Android 段落直接引用其中的 `phone` 與 `tablet-10`，不再另存一套；Windows 截圖仍在 `docs/images/<語言>/windows/`。
+**成品**：`docs/images/play-store/screenshots/<語言>/<裝置>/1–8.png`（語言 `zh-TW`、`en`、`ja`、`zh-CN`，和主題圖片一致；裝置 `phone`、`tablet-7`、`tablet-10`、`chromebook`）。README 的 Android 段落直接引用其中的 `phone` 與 `tablet-10`，不再另存一套；Windows 截圖仍在 `docs/images/<語言>/windows/`。Windows 截圖的順序和商店截圖一致（綜合 → 角色活動 → 武器活動 → 物品詳情 → 分享圖設定 → 分享圖 → 等待開啟記錄頁 → 設定，檔名 1–8 就是顯示順序；Windows 沒有單獨的 5★ 時間軸，多一張分享圖）。重拍或新增截圖時兩邊要一起調整（2026-11-14 補調）。
 
 ## 十七、開放原始碼授權
 

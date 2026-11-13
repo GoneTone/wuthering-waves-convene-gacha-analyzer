@@ -90,13 +90,13 @@ Besides importing this utility's own backup files, you can also import convene h
 
 ### Windows
 
-![Waiting for the Convene Records page](docs/images/en/windows/1.png)
-![Overview page](docs/images/en/windows/2.png)
-![Character Event Convene page](docs/images/en/windows/3.png)
-![Weapon Event Convene page](docs/images/en/windows/4.png)
+![Overview page](docs/images/en/windows/1.png)
+![Character Event Convene page](docs/images/en/windows/2.png)
+![Weapon Event Convene page](docs/images/en/windows/3.png)
+![Item details](docs/images/en/windows/4.png)
 ![Share image options](docs/images/en/windows/5.png)
 ![Share image](docs/images/en/windows/6.png)
-![Item details](docs/images/en/windows/7.png)
+![Waiting for the Convene Records page](docs/images/en/windows/7.png)
 ![Settings page](docs/images/en/windows/8.png)
 
 ### Android phone

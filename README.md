@@ -90,13 +90,13 @@ Android 版無法攔截連線，改為讀取鳴潮自己寫下的 log 檔，從�
 
 ### Windows
 
-![等待在遊戲中開啟喚取記錄頁](docs/images/zh-Hant/windows/1.png)
-![綜合數據頁](docs/images/zh-Hant/windows/2.png)
-![角色活動喚取頁](docs/images/zh-Hant/windows/3.png)
-![武器活動喚取頁](docs/images/zh-Hant/windows/4.png)
+![綜合數據頁](docs/images/zh-Hant/windows/1.png)
+![角色活動喚取頁](docs/images/zh-Hant/windows/2.png)
+![武器活動喚取頁](docs/images/zh-Hant/windows/3.png)
+![物品詳情顯示](docs/images/zh-Hant/windows/4.png)
 ![分享圖生成設定](docs/images/zh-Hant/windows/5.png)
 ![分享圖](docs/images/zh-Hant/windows/6.png)
-![物品詳情顯示](docs/images/zh-Hant/windows/7.png)
+![等待在遊戲中開啟喚取記錄頁](docs/images/zh-Hant/windows/7.png)
 ![設定頁](docs/images/zh-Hant/windows/8.png)
 
 ### Android 手機

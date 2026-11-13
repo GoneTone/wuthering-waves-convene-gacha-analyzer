@@ -90,13 +90,13 @@ Android 版は通信を傍受できないため、鳴潮が書き出すログフ
 
 ### Windows
 
-![ゲームで集音履歴ページが開かれるのを待機](docs/images/ja-JP/windows/1.png)
-![総合データページ](docs/images/ja-JP/windows/2.png)
-![共鳴者集音（イベント）ページ](docs/images/ja-JP/windows/3.png)
-![武器集音（イベント）ページ](docs/images/ja-JP/windows/4.png)
+![総合データページ](docs/images/ja-JP/windows/1.png)
+![共鳴者集音（イベント）ページ](docs/images/ja-JP/windows/2.png)
+![武器集音（イベント）ページ](docs/images/ja-JP/windows/3.png)
+![アイテム詳細の表示](docs/images/ja-JP/windows/4.png)
 ![シェア画像の生成設定](docs/images/ja-JP/windows/5.png)
 ![シェア画像](docs/images/ja-JP/windows/6.png)
-![アイテム詳細の表示](docs/images/ja-JP/windows/7.png)
+![ゲームで集音履歴ページが開かれるのを待機](docs/images/ja-JP/windows/7.png)
 ![設定ページ](docs/images/ja-JP/windows/8.png)
 
 ### Android スマートフォン

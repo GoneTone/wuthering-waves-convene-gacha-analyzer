@@ -90,13 +90,13 @@ Android 版无法拦截连接，改为读取鸣潮自己写入的 log 文件，�
 
 ### Windows
 
-![等待在游戏中打开唤取记录页](docs/images/zh-Hans/windows/1.png)
-![综合数据页](docs/images/zh-Hans/windows/2.png)
-![角色活动唤取页](docs/images/zh-Hans/windows/3.png)
-![武器活动唤取页](docs/images/zh-Hans/windows/4.png)
+![综合数据页](docs/images/zh-Hans/windows/1.png)
+![角色活动唤取页](docs/images/zh-Hans/windows/2.png)
+![武器活动唤取页](docs/images/zh-Hans/windows/3.png)
+![物品详情显示](docs/images/zh-Hans/windows/4.png)
 ![分享图生成设置](docs/images/zh-Hans/windows/5.png)
 ![分享图](docs/images/zh-Hans/windows/6.png)
-![物品详情显示](docs/images/zh-Hans/windows/7.png)
+![等待在游戏中打开唤取记录页](docs/images/zh-Hans/windows/7.png)
 ![设置页](docs/images/zh-Hans/windows/8.png)
 
 ### Android 手机
