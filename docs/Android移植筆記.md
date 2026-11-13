@@ -166,7 +166,7 @@ Android 回報的語言帶 script code，格式是 `zh-Hant-TW`（Windows 是 `z
 - **Windows 建置**：
   - `flutter_inappwebview_windows` 在建置時會用 **NuGet** 下載 WIL 和 CppWinRT。開發機要先安裝（`winget install Microsoft.NuGet`）；GitHub Actions 的 `windows-latest` 已經內建。
   - 它的 CMakeLists 同樣會觸發 CMP0175 警告，`windows/CMakeLists.txt` 裡的 `set(CMAKE_POLICY_DEFAULT_CMP0175 OLD)` 要保留。
-  - 原本為了 `webview_windows` 在 `scripts/build_installer/build_release.ps1` 用 `CL` 注入 `_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS`，現在可以拿掉，因為新套件沒有用到 `<experimental/coroutine>`，release 建置已驗證通過。
+  - **`scripts/build_installer/build_release.ps1` 用 `CL` 注入 `_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS` 這段不能拿掉**（2026-11-13 更正）：原本以為只有 `webview_windows` 需要，換套件時刪了，本機 release 建置也過了，但合併後 GitHub Actions 的 Windows 建置失敗（`C2338: STL1011`）。原因是 `flutter_inappwebview_windows` 用 C++17 編譯並 include CppWinRT 的 `winrt/base.h`，它在 C++17 下會引用 `<experimental/coroutine>`；runner 的新版 MSVC（VS 18／MSVC 14.51）把這個從警告升成錯誤，本機較舊的 MSVC 只是警告。**教訓：拿掉建置 workaround 前，要確認 CI 的工具鏈也驗證過，本機能過不算數。**
 - 延遲初始化已驗證：Windows App 啟動後閒置時，沒有任何屬於本 App 的 `msedgewebview2.exe`。
 - **WebView2 資料資料夾一定要自己指定（Windows）**：`flutter_inappwebview_windows` 沒有傳 `WebViewEnvironment` 時，會用 `userDataFolder = nullptr`，WebView2 就把資料寫在**執行檔旁邊**（`<exe>.WebView2`）。安裝在 `Program Files` 的版本沒有寫入權限，WebView2 啟動會失敗，功能就靜靜地消失了。開發時從 `build` 資料夾執行一切正常，所以測不出來。**處理**：用 `WebViewEnvironment.create(settings: WebViewEnvironmentSettings(userDataFolder: <getApplicationCacheDirectory()>/webview2))` 建立環境，傳給 `HeadlessInAppWebView(webViewEnvironment: ...)`，dispose 時一起釋放。舊的 `webview_windows` 預設就放在使用者可寫的位置，所以以前沒遇過這個問題。
 

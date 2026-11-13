@@ -95,6 +95,13 @@ if ($LASTEXITCODE -ne 0) { throw "flutter pub get failed" }
 
 Write-Host ""
 Write-Host "==> flutter build windows --release" -ForegroundColor Green
+# flutter_inappwebview_windows 用 C++17 編譯並 include CppWinRT 的 winrt/base.h，後者在 C++17 下
+# 會引用已棄用的 <experimental/coroutine>；新版 MSVC（VS 18 / MSVC 14.51）把它從警告升級成
+# 硬錯誤（C2338 / STL1011）。在 plugin 上游修正前，透過 MSVC 的 CL 環境變數全域注入官方建議的抑制巨集。
+$SilenceCoroutine = '/D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS'
+$env:CL = if ($env:CL) { "$env:CL $SilenceCoroutine" } else { $SilenceCoroutine }
+Write-Host "CL=$env:CL" -ForegroundColor DarkGray
+
 # 雲端同步 OAuth 憑證不進 repo（會被 GitHub push protection 攔），改由建置時
 # dart-define 注入：本機放 git-ignored 的 secrets/cloud_sync_defines.json，
 # CI 於建置前由 repo secrets 產生同一路徑檔案。檔案不存在時照常建置，
