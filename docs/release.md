@@ -17,7 +17,7 @@
    - 點 **"Run workflow"**（CI 固定以 `master` 為發版基準）
 
 2. **等 CI 跑完**
-   - 觸發 workflow：`release`，依序跑兩個 job：`build-windows`（安裝檔＋GitHub Release 草稿）→ `build-android`（建置同一個 commit，AAB 上傳到 Play 內部測試軌道）
+   - 觸發 workflow：`release`，先跑 `prepare`（驗證 tag、推版本號 commit），再同時跑 `build-windows`（安裝檔＋GitHub Release 草稿）與 `build-android`（建置同一個 commit，AAB 上傳到 Play 內部測試軌道）
    - Actions 頁面看 run 結果（run name = release tag）
    - Android 的後續步驟（升級正式版、填「新功能」）見本機 `private/play-store/README.md`
 
@@ -38,7 +38,7 @@
 | Workflow fail：tag 名不符 | 用正確 tag 重新 Run workflow（若已建草稿先刪草稿） |
 | Workflow fail：build / ISCC 失敗 | 看 step log；修代碼 push 到 master 後重新 Run workflow |
 | Workflow 成功但 release 沒 exe | 從 workflow run 下載 artifact (`windows-installer-X.Y.Z+N`)，手動拖到草稿 |
-| 只有 `build-android` 失敗 | Windows 草稿已建好不受影響；修好 secrets 或 Play 設定後，在該 run 頁面按 **"Re-run failed jobs"**，只重跑 Android（仍建置原本的 commit） |
+| 只有 `build-windows` 或 `build-android` 其中一個失敗 | 另一個平台照常完成，不受影響；修好後在該 run 頁面按 **"Re-run failed jobs"**，只重跑失敗的那個（仍建置原本的 commit）。要改程式碼才能修好時，修好推上 master 後重新 Run workflow |
 
 ## 注意事項
 

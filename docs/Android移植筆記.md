@@ -411,7 +411,8 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 - `android/app/build.gradle.kts` 讀 `android/key.properties`（`android/.gitignore` 已排除它與 `*.jks`）；檔案不存在時 release 退回 debug 金鑰，`flutter run --release` 照常能用。
 - Gradle Kotlin DSL 裡寫 `java.util.Properties()` 會編不過：`java` 被解析成 Gradle 的 `java` 擴充。要在檔頭 `import java.util.Properties`。
-- **Windows 與 Android 在同一份 `release.yml`**：觸發一次、輸入一個 tag，`build-android` 以 `needs: build-windows` 等 Windows 跑完，並 checkout Windows 記下的發版 commit（job output `release_sha`），兩邊一定建置同一份程式碼。原本分成兩份流程，要觸發兩次、順序不能錯，而且 Android 抓的是執行當下的 master，兩次之間有人推 commit 就會建出不同版本。Android 失敗不影響已建好的 Windows 草稿，修好後按「Re-run failed jobs」只重跑 Android。
+- **Windows 與 Android 在同一份 `release.yml`**：觸發一次、輸入一個 tag，`prepare` job 先改版本號並推回 master，輸出發版 commit（job output `release_sha`）；`build-windows` 與 `build-android` 都 `needs: prepare`、checkout 同一個 commit 同時建置，兩邊一定建置同一份程式碼。原本分成兩份流程，要觸發兩次、順序不能錯，而且 Android 抓的是執行當下的 master，兩次之間有人推 commit 就會建出不同版本。
+- **兩個平台不要串在一起**（2026-11-13 改）：最早是 `build-android` 以 `needs: build-windows` 等 Windows 推完版本號。第一次用 CI 發 rc.21 時 Windows 建置失敗，Android 就整個被跳過。改成 `prepare` 加兩個平行 job 後，一邊失敗另一邊照常完成，修好後按「Re-run failed jobs」只重跑失敗的那邊（`prepare` 的 output 會沿用，仍建置同一個 commit）。改版本號的步驟移到 Linux runner 跑（runner 內建 `pwsh`，腳本不用改）。
 - Android job：缺任何一個金鑰或服務帳戶 secret 就失敗；建置後再用 `keytool -printcert -jarfile` 檢查 AAB，若是 debug 金鑰簽的就失敗。上傳用 `r0adkll/upload-google-play`，只上 internal 軌道、不填「新功能」。
 - **從來沒推出過任何版本的 App，API 只能建立 draft 狀態的版本**（錯誤訊息「Only releases with status draft may be created on draft app」）。第一版本來就要在 Play Console 手動上傳，手動上傳後在 Console 推出（內部測試也算），之後 CI 就固定送 `completed`，不提供 draft 選項：內部測試只有測試名單看得到，直接推出才能在升級正式版前，用手機從 Play 收到經 Play 簽署的版本，先確認 Google 登入等依賴簽章的功能。
 - secrets 一覽與每次發版步驟見本機的 `private/play-store/README.md`。

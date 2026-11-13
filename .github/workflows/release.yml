@@ -1,9 +1,9 @@
 name: release
 run-name: release ${{ inputs.tag }}
 
-# 同一個 tag 一次發 Windows 與 Android：先建 Windows 安裝檔、推版本號 commit、建 GitHub Release 草稿，
-# Android 再建置同一個 commit，把 AAB 上傳到 Play 的內部測試軌道。
-# Android 失敗不影響已建好的 Windows 草稿，修好後在 run 頁面按「Re-run failed jobs」只重跑 Android。
+# 同一個 tag 一次發 Windows 與 Android：prepare 先推版本號 commit，Windows（安裝檔＋GitHub Release 草稿）
+# 與 Android（AAB 上傳到 Play 的內部測試軌道）再同時建置這個 commit。
+# 兩個平台互不影響，其中一邊失敗時，修好後在 run 頁面按「Re-run failed jobs」只重跑失敗的那邊（仍建置同一個 commit）。
 # Play 的「新功能」由維護者在 Play Console 升級正式版時手動填寫。
 # 預覽版（-rc.N）只留在內部測試，不要升級正式版（App 內查 GitHub 更新說明時會略過預覽版）。
 
@@ -27,27 +27,87 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  # 只負責驗證 tag、改版本號並推回 master；兩個平台都建置這裡輸出的 commit。
+  prepare:
+    runs-on: ubuntu-latest
 
     permissions:
       contents: write
 
     outputs:
       release_sha: ${{ steps.release_sha.outputs.sha }}
-
-    env:
-      WINDOWS_SIGN_PFX_BASE64: ${{ secrets.WINDOWS_SIGN_PFX_BASE64 }}
-      WINDOWS_SIGN_PASSWORD:   ${{ secrets.WINDOWS_SIGN_PASSWORD }}
+      pubspec_version: ${{ steps.version.outputs.pubspec_version }}
 
     steps:
-      # === A. Checkout target branch ================================
       - name: Checkout target branch
         uses: actions/checkout@v7
         with:
           ref: master
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Parse tag & rewrite pubspec
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ inputs.tag }}"
+          if ($tag -notmatch '^v(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?)$') {
+            throw "tag '$tag' does not match vX.Y.Z[-prerelease]"
+          }
+          $semver = $Matches[1]
+          $buildNumber = ${{ github.run_number }}
+          $pubspecVersion = "$semver+$buildNumber"
+
+          $content = Get-Content pubspec.yaml -Raw -Encoding UTF8
+          $updated = [regex]::Replace($content, '(?m)^version:\s*\S+', "version: $pubspecVersion", 1)
+
+          if ($updated -eq $content) {
+            "VERSION_CHANGED=false" | Out-File $env:GITHUB_ENV -Append
+          } else {
+            Set-Content pubspec.yaml -Value $updated -Encoding UTF8 -NoNewline
+            "VERSION_CHANGED=true" | Out-File $env:GITHUB_ENV -Append
+          }
+          "SEMVER=$semver" | Out-File $env:GITHUB_ENV -Append
+          "pubspec_version=$pubspecVersion" | Out-File $env:GITHUB_OUTPUT -Append
+
+      - name: Commit pubspec bump
+        if: env.VERSION_CHANGED == 'true'
+        shell: pwsh
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml
+          git commit -m "chore(release): bump version to v${{ env.SEMVER }} [skip ci]"
+          git push origin HEAD:master
+
+      - name: Capture release commit SHA
+        id: release_sha
+        shell: pwsh
+        run: |
+          $sha = (git rev-parse HEAD).Trim()
+          "sha=$sha" | Out-File $env:GITHUB_OUTPUT -Append
+          Write-Host "Release commit SHA: $sha"
+
+  build-windows:
+    needs: prepare
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    env:
+      WINDOWS_SIGN_PFX_BASE64: ${{ secrets.WINDOWS_SIGN_PFX_BASE64 }}
+      WINDOWS_SIGN_PASSWORD:   ${{ secrets.WINDOWS_SIGN_PASSWORD }}
+      RELEASE_SHA:     ${{ needs.prepare.outputs.release_sha }}
+      PUBSPEC_VERSION: ${{ needs.prepare.outputs.pubspec_version }}
+
+    steps:
+      # === A. Checkout release commit ===============================
+      - name: Checkout release commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.release_sha }}
+          fetch-depth: 0
 
       # === B. Toolchain =============================================
       - name: Setup Flutter
@@ -76,50 +136,7 @@ jobs:
           if (-not $iscc) { throw "ISCC.exe not on PATH after chocolatey install" }
           Write-Host "ISCC: $($iscc.Source)"
 
-      # === C. Version injection =====================================
-      - name: Parse tag & rewrite pubspec
-        shell: pwsh
-        run: |
-          $tag = "${{ inputs.tag }}"
-          if ($tag -notmatch '^v(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?)$') {
-            throw "tag '$tag' does not match vX.Y.Z[-prerelease]"
-          }
-          $semver = $Matches[1]
-          $buildNumber = ${{ github.run_number }}
-          $pubspecVersion = "$semver+$buildNumber"
-
-          $content = Get-Content pubspec.yaml -Raw -Encoding UTF8
-          $updated = [regex]::Replace($content, '(?m)^version:\s*\S+', "version: $pubspecVersion", 1)
-
-          if ($updated -eq $content) {
-            "VERSION_CHANGED=false" | Out-File $env:GITHUB_ENV -Append
-          } else {
-            Set-Content pubspec.yaml -Value $updated -Encoding UTF8 -NoNewline
-            "VERSION_CHANGED=true" | Out-File $env:GITHUB_ENV -Append
-          }
-          "PUBSPEC_VERSION=$pubspecVersion" | Out-File $env:GITHUB_ENV -Append
-          "SEMVER=$semver" | Out-File $env:GITHUB_ENV -Append
-
-      - name: Commit pubspec bump
-        if: env.VERSION_CHANGED == 'true'
-        shell: pwsh
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pubspec.yaml
-          git commit -m "chore(release): bump version to v${{ env.SEMVER }} [skip ci]"
-          git push origin HEAD:master
-
-      - name: Capture release commit SHA
-        id: release_sha
-        shell: pwsh
-        run: |
-          $sha = (git rev-parse HEAD).Trim()
-          "RELEASE_SHA=$sha" | Out-File $env:GITHUB_ENV -Append
-          "sha=$sha" | Out-File $env:GITHUB_OUTPUT -Append
-          Write-Host "Release commit SHA: $sha"
-
-      # === D. Build =================================================
+      # === C. Build =================================================
       # 雲端同步 OAuth 憑證不進 repo，由 repo secrets 於建置前寫成
       # dart-define-from-file 輸入檔（缺 secrets 時跳過，僅該功能停用）。
       - name: Write cloud sync defines from secrets
@@ -155,9 +172,9 @@ jobs:
           "INSTALLER_PATH=$exe" | Out-File $env:GITHUB_ENV -Append
           "INSTALLER_NAME=$($candidates[0].Name)" | Out-File $env:GITHUB_ENV -Append
 
-      # === E. Sign (skip, structure 內嵌於 build_release.ps1) ==========
+      # === D. Sign (skip, structure 內嵌於 build_release.ps1) ==========
 
-      # === F. Create or update release draft ========================
+      # === E. Create or update release draft ========================
       - name: Create or update release draft
         shell: pwsh
         env:
@@ -193,7 +210,7 @@ jobs:
             gh release edit "$tag" --notes-file $bodyFile
           }
 
-      # === G. Workflow artifact (debug fallback) ====================
+      # === F. Workflow artifact (debug fallback) ====================
       - name: Upload installer as workflow artifact
         if: always()
         uses: actions/upload-artifact@v7
@@ -203,7 +220,7 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      # === H. Step summary ==========================================
+      # === G. Step summary ==========================================
       - name: Write step summary
         if: success()
         shell: pwsh
@@ -223,16 +240,16 @@ jobs:
           "@ | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 
   build-android:
-    needs: build-windows
+    needs: prepare
     runs-on: ubuntu-latest
 
     steps:
       # === A. Checkout ==============================================
-      # 建置 Windows 發版用的同一個 commit（含版本號 commit），不取執行當下的 master。
+      # 建置 prepare 推出的版本號 commit（與 Windows 同一個），不取執行當下的 master。
       - name: Checkout release commit
         uses: actions/checkout@v7
         with:
-          ref: ${{ needs.build-windows.outputs.release_sha }}
+          ref: ${{ needs.prepare.outputs.release_sha }}
 
       # === B. Toolchain =============================================
       - name: Setup Java
