@@ -4,7 +4,7 @@
 
 [![Crowdin](https://badges.crowdin.net/wuthering-waves-convene-gacha-analyzer/localized.svg)](https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer)
 
-A utility/app for analyzing convene history, with all data and numbers well-organized in a convenient manner.
+A convene history analyzer for Windows and Android, with all data and numbers well-organized in a convenient manner.
 
 On Windows, when you press *Update*, the utility starts a local interception helper (running only on your computer; it requires administrator privileges, so you'll see a one-time UAC prompt — click Yes) and automatically installs a locally generated root certificate. It then redirects Wuthering Waves' convene-record page request to the official convene history API to your local machine for parsing, so it can capture that one request. You therefore need to open the convene record page in the game *after* pressing *Update*, so the request can be captured. The captured request is parsed for the parameters needed to query your convene records, which are then used to call the official API. Interception only runs during the update and stops immediately once done, restoring your network state.
 

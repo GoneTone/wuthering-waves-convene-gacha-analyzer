@@ -4,7 +4,7 @@
 
 [![Crowdin](https://badges.crowdin.net/wuthering-waves-convene-gacha-analyzer/localized.svg)](https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer)
 
-一套用來分析喚取卡池歷史記錄的軟體/APP，一開啟各種數據清清楚楚，不用再手動計算啦！
+一套用來分析喚取卡池歷史記錄的軟體，支援 Windows 與 Android，一開啟各種數據清清楚楚，不用再手動計算啦！
 
 Windows 版的原理是按下「更新資料」後，會在本機啟動一個只跑在您電腦上的攔截程式（需要系統管理員權限，因此會跳出一次 UAC 確認，請按「是」），並自動安裝一張本機產生的根憑證；接著把鳴潮喚取記錄頁面對官方喚取歷史 API 的那一條請求重導向到本機解析，藉此攔下該請求。所以要在按下更新後再到遊戲內開啟喚取記錄才能攔到，攔到後解析出查詢喚取記錄所需的參數，這些參數會用於官方喚取相關的 API。攔截只在更新期間進行，完成後立即停止並還原網路狀態。
 
