@@ -74,6 +74,17 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.base_sha }}
 
+      # runner 的工作目錄是 D:\a\<repo>\<repo>，Rust 1.100 起 Cargo 的中間產物目錄更深，
+      # super_native_extensions 的 proc-macro DLL 路徑超過 MSVC 連結器的 260 字元上限（LNK1104）。
+      # 改在短的實體路徑 D:\s 建一份 worktree 來建置（約縮短 80 字元）。
+      # 不能用 subst 掛成磁碟機根目錄：專案路徑變成 W:\ 時，Flutter 產生的建置設定被結尾的 \ 弄壞，
+      # flutter_assemble 以 255 結束（Setting current working directory failed, path = 'W:;FLUTTER_TARGET=...'）。
+      - name: Create short-path worktree
+        shell: pwsh
+        run: |
+          git worktree add --detach D:\s HEAD
+          if ($LASTEXITCODE -ne 0) { throw "git worktree add failed" }
+
       # === B. Toolchain =============================================
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -104,6 +115,7 @@ jobs:
       # === C. Version (local only; publish commits the same change) ===
       - name: Rewrite pubspec version
         shell: pwsh
+        working-directory: D:\s
         run: |
           $content = Get-Content pubspec.yaml -Raw -Encoding UTF8
           $updated = [regex]::Replace($content, '(?m)^version:\s*\S+', "version: $env:PUBSPEC_VERSION", 1)
@@ -115,6 +127,7 @@ jobs:
       # dart-define-from-file 輸入檔（缺 secrets 時跳過，僅該功能停用）。
       - name: Write cloud sync defines from secrets
         shell: pwsh
+        working-directory: D:\s
         env:
           CLOUD_SYNC_CLIENT_ID: ${{ secrets.CLOUD_SYNC_CLIENT_ID }}
           CLOUD_SYNC_CLIENT_SECRET: ${{ secrets.CLOUD_SYNC_CLIENT_SECRET }}
@@ -130,19 +143,14 @@ jobs:
             Write-Host "::warning::CLOUD_SYNC_CLIENT_ID/SECRET secrets not set; cloud sync will be disabled in this release build"
           }
 
-      # runner 的工作目錄是 D:\a\<repo>\<repo>，Rust 1.100 起 Cargo 的中間產物目錄更深，
-      # super_native_extensions 的 proc-macro DLL 路徑超過 MSVC 連結器的 260 字元上限（LNK1104）。
-      # 用 subst 掛成 W: 再建置，路徑縮短約 80 字元；產物仍寫在同一個實體目錄。
       - name: Build Windows installer
         shell: pwsh
-        run: |
-          subst W: "$env:GITHUB_WORKSPACE"
-          if ($LASTEXITCODE -ne 0) { throw "subst W: failed" }
-          Set-Location W:\
-          .\scripts\build_installer\build_release.ps1
+        working-directory: D:\s
+        run: .\scripts\build_installer\build_release.ps1
 
       - name: Check single installer
         shell: pwsh
+        working-directory: D:\s
         run: |
           $candidates = @(Get-ChildItem build\installer\*.exe -ErrorAction SilentlyContinue)
           if ($candidates.Count -ne 1) {
@@ -156,7 +164,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: windows-installer-${{ env.PUBSPEC_VERSION }}
-          path: build/installer/*.exe
+          path: D:/s/build/installer/*.exe
           retention-days: 30
           if-no-files-found: error
 
