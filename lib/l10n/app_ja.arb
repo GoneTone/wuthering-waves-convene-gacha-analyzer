@@ -1,14 +1,14 @@
 {
   "@@locale": "ja",
   "localeNativeName": "日本語",
+  "localeTranslator": "<a href=\"https://home.gamer.com.tw/homeindex.php?owner=XMoiswnX\">世界へいわ</a>、<a href=\"https://claude.com/claude-code\">Claude Code</a>",
+  "localeTranslatorLabel": "翻訳者：{translator}",
   "@localeNativeName": {
     "description": "Native name of this locale, shown in language picker."
   },
-  "localeTranslator": "<a href=\"https://home.gamer.com.tw/homeindex.php?owner=XMoiswnX\">世界へいわ</a>、<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "@localeTranslator": {
     "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
   },
-  "localeTranslatorLabel": "翻訳者：{translator}",
   "@localeTranslatorLabel": {
     "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
     "placeholders": {
@@ -115,6 +115,13 @@
   "uidActiveSuffix": "（使用中）",
   "emptyNoSyncTitle": "まだデータが同期されていません",
   "emptyNoSyncMessage": "右上の {icon} から開始してください",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "この集音に記録がありません",
   "emptyNoFilterMatch": "条件に一致する記録がありません",
   "emptyNoGachaRecords": "集音の記録がまだありません",
@@ -617,9 +624,39 @@
   "pagerLast": "最後のページ",
   "pagerJumpTitle": "ページへ移動",
   "pagerJumpLabel": "ページ番号（{min}–{max}）",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "現在 {page} ページ目（全 {total} 件）",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "移動",
   "pagerJumpInvalid": "{min}–{max} のページ番号を入力してください",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "現在のアカウントのデータを削除",
   "settingsClearAll": "すべてのデータを削除",
   "settingsRefetchItemImagesTitle": "アイテム画像を強制再取得",
@@ -1437,14 +1474,18 @@
   "@settingsUnpairLeftover": {
     "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "settingsUnpairLeftoverAlso": "システムの「ワイヤレスデバッグ → ペア設定済みのデバイス」にも「{name}」が残っています。タップすると削除できます。",
   "@settingsUnpairLeftoverAlso": {
     "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "progressCredentialReady": "集音履歴の URL を取得しました。アプリに戻ると集音履歴の取得を開始します。",
