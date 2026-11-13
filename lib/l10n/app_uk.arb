@@ -3,6 +3,20 @@
   "localeNativeName": "Українська",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "Переклад: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "Аналізатор скликань Wuthering Waves",
   "actionUpdate": "Оновити",
   "actionCancel": "Скасувати",
@@ -40,24 +54,94 @@
   "navSectionGacha": "Convene",
   "footerNotSynced": "Не синхронізовано",
   "footerLastUpdated": "Оновлено: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "Щойно",
   "relativeSecondsAgo": "{count, plural, one{{count} секунду тому} few{{count} секунди тому} many{{count} секунд тому} other{{count} секунди тому}}",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count, plural, one{{count} хвилину тому} few{{count} хвилини тому} many{{count} хвилин тому} other{{count} хвилини тому}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count, plural, one{{count} годину тому} few{{count} години тому} many{{count} годин тому} other{{count} години тому}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count, plural, one{{count} день тому} few{{count} дні тому} many{{count} днів тому} other{{count} дня тому}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count, plural, one{{count} місяць тому} few{{count} місяці тому} many{{count} місяців тому} other{{count} місяця тому}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count, plural, one{{count} рік тому} few{{count} роки тому} many{{count} років тому} other{{count} року тому}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "Змінити акаунт",
   "uidNotSynced": "Не синхронізовано",
   "uidActiveSuffix": " (активний)",
   "emptyNoSyncTitle": "Дані ще не завантажено",
   "emptyNoSyncMessage": "Натисніть {icon} у правому верхньому куті, щоб почати",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "У цьому банері немає записів",
   "emptyNoFilterMatch": "Немає записів, що відповідають фільтру",
   "emptyNoGachaRecords": "Записів скликань поки немає",
   "statsTotal": "Усього круток",
   "statsRankCount": "Усього {star}",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "{rate}% від загальної кількості",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "Розподіл за рідкістю",
   "statsItemTypeDistribution": "Розподіл за типом",
   "statsNoData": "Немає даних",
@@ -70,12 +154,40 @@
   "tableKind": "Тип",
   "tableRarity": "Рідкість",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "Усього",
   "tableMainPity": "Гарант",
   "tableSortButton": "Сортування: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "Сортування: за замовчуванням",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "Сортувати за",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "Круток після останнього {star}",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "За спаданням",
   "sortDirectionAsc": "За зростанням",
   "sortHintClickToSort": "Натисніть, щоб відсортувати",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "Відкрийте Wuthering Waves → Convene → Convene Records",
   "progressFallbackHint": "(Попередні дані перехоплення застаріли. Відкрийте сторінку Convene Records ще раз.)",
   "progressCaptureUnavailableHint": "Не вдалося запустити помічник перехоплення (можливо, запит дозволів Windows було відхилено). Зараз пошук ведеться лише за лог-файлом гри. Відкрийте сторінку Convene Records у грі.",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "Не вдалося запустити помічник перехоплення (можливо, запит дозволів Windows було відхилено), а папку гри не знайдено. Натисніть «Вибрати папку гри» нижче, щоб указати її вручну, або скасуйте, знову натисніть «Оновити» і виберіть «Так» у запиті дозволів.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "Відкрили сторінку Convene Records, але нічого не відбувається?",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "Історію скликань не виявлено",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "Не вдалося знайти папку гри Wuthering Waves. Якщо вказати її, застосунок зможе отримувати URL історії скликань і з лог-файлу гри.",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "Використовується папка гри: {path}. Якщо шлях неправильний (наприклад, установлено кілька копій гри), натисніть «Вибрати знову».",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "Папку гри збережено. Поверніться в гру й ще раз відкрийте сторінку Convene Records.",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "У цій папці не знайдено лог-файлу гри. Виберіть папку «Wuthering Waves Game».",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "Вибрати папку гри",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "Вибрати знову",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "Завантаження: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "Банер {index} з {total}, нових: {count}",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "{count, plural, one{Додано {count} новий запис} few{Додано {count} нові записи} many{Додано {count} нових записів} other{Додано {count} нового запису}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, one{Завантажено {count} зображення предмета} few{Завантажено {count} зображення предметів} many{Завантажено {count} зображень предметів} other{Завантажено {count} зображення предметів}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ Часткова помилка: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, one{Імпортовано {accounts} акаунт} few{Імпортовано {accounts} акаунти} many{Імпортовано {accounts} акаунтів} other{Імпортовано {accounts} акаунта}}: нових {added}, уже було {duplicate}",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ Часткова помилка імпорту: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "Завантаження зображень предметів {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "Завантаження даних предметів {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "Не вдалося отримати записи навіть після повторного перехоплення. Можливо, сервер тимчасово недоступний — спробуйте пізніше.",
   "errorNoRecords": "У цього акаунта поки немає записів скликань",
   "errorNetwork": "Помилка мережевого з’єднання. Перевірте підключення і спробуйте знову.",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "Огляд скликань",
   "pageBannerRecordList": "Список записів",
   "rarityOverviewTitle": "Огляд {star}",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "Налаштування",
   "settingsAppearance": "Вигляд",
   "settingsThemeSystem": "Як у системі",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "Перетворити мову даних зараз",
   "settingsDataLanguageUnifying": "Перетворення...",
   "settingsDataLanguageUnifyDone": "Перетворено: {converted}, відновлено ID: {backfilled}, не вдалося перетворити: {unresolved}.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "Не вдалося перетворити, дані не змінено. Перевірте підключення і спробуйте знову.",
   "settingsDataManagement": "Керування даними",
   "settingsGameDir": "Папка гри",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "Знайдено автоматично: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "Указано вручну: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "Папку гри не знайдено",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "Скинути",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "Хмарна синхронізація",
   "cloudSyncIntro": "Прив’яжіть акаунт Google, щоб записи скликань автоматично зберігалися на Google Drive і синхронізувалися між пристроями.",
   "cloudSyncUnconfigured": "У цій збірці не налаштовано облікові дані Google OAuth, хмарна синхронізація недоступна.",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "Браузер відкрито. Завершіть авторизацію в браузері...",
   "cloudSyncAwaitingConsentAndroid": "Завершіть авторизацію у вікні Google...",
   "cloudSyncLinkedAs": "Прив’язано: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "Автосинхронізація",
   "cloudSyncAutoToggleHint": "Синхронізація під час запуску застосунку та після зміни даних. Якщо вимкнено, можна синхронізувати вручну.",
   "cloudSyncNow": "Синхронізувати",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "Від’єднати",
   "cloudSyncUnlinkConfirmBody": "Синхронізацію буде припинено. Локальні дані та хмарна копія збережуться.",
   "cloudSyncLastSynced": "Остання синхронізація: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "Ще не синхронізовано",
   "cloudSyncErrorNetwork": "Помилка синхронізації: проблема з мережею. Повторна спроба відбудеться автоматично.",
   "cloudSyncErrorBusy": "Синхронізацію відкладено: триває оновлення або імпорт. Повторна спроба відбудеться автоматично.",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "Приховувати UID в інтерфейсі",
   "settingsMaskUidInUiHint": "Якщо ввімкнено, UID в інтерфейсі та списку акаунтів показується лише першими 3 цифрами, решту приховано (наприклад, 123•••••). Зручно для стримів і демонстрації екрана. Не впливає на зображення для поширення, експортовані файли та вікно підтвердження видалення.",
   "settingsAdPrivacyOptions": "Параметри конфіденційності реклами",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "Змініть згоду на показ персоналізованої реклами.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "Про застосунок",
   "settingsOtherGamesTitle": "Версії для інших ігор",
   "settingsOtherGamesGenshin": "Genshin Impact",
   "settingsOtherGamesFuture": "Можливо, згодом з’являться й інші ігри...",
   "settingsAboutVersion": "Версія {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "Учасники",
   "contributorsSubtitle": "Особлива подяка всім, хто допомагав у розробці цього застосунку!",
   "contributorsProjectLeader": "Керівник проєкту",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "Ліцензія проєкту",
   "contributorsOpenSourceLicenses": "Ліцензії з відкритим кодом",
   "pityRank": "Гарант {star}",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "{n, plural, one{До гаранта {n} крутка} few{До гаранта {n} крутки} many{До гаранта {n} круток} other{До гаранта {n} крутки}}",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "{n, plural, one{Гарант близько! Залишилася {n} крутка} few{Гарант близько! Залишилося {n} крутки} many{Гарант близько! Залишилося {n} круток} other{Гарант близько! Залишилося {n} крутки}}",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "Скоро гарант",
   "pityNoMainRarity": "{star} ще не було",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "У середньому {n} крутки",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "Немає записів {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n, plural, one{{n} крутка} few{{n} крутки} many{{n} круток} other{{n} крутки}}",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "Пощастило",
   "luckTierAverage": "Середньо",
   "luckTierUnlucky": "Не пощастило",
   "timelineNowLabel": "Зараз",
   "timelineNowPulls": "{n, plural, one{{n} крутка} few{{n} крутки} many{{n} круток} other{{n} крутки}}",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "{n, plural, one{{n} крутка після останнього {star}} few{{n} крутки після останнього {star}} many{{n} круток після останнього {star}} other{{n} крутки після останнього {star}}}",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "{n, plural, one{{n} крутка після останнього {star} в усіх банерах} few{{n} крутки після останнього {star} в усіх банерах} many{{n} круток після останнього {star} в усіх банерах} other{{n} крутки після останнього {star} в усіх банерах}}",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{month} / {year}",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "Прокрутити ліворуч",
   "timelineScrollRight": "Прокрутити праворуч",
   "timelineLoadMore": "Показати ще (залишилося {n})",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "Будь-яка рідкість",
   "filterRarityRankOnly": "Лише {star}",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "Усі типи",
   "filterSearchHint": "Пошук за назвою...",
   "filterClear": "Скинути фільтри",
@@ -210,35 +624,150 @@
   "pagerLast": "Остання",
   "pagerJumpTitle": "Перейти до сторінки",
   "pagerJumpLabel": "Сторінка ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "Зараз сторінка {page} · записів: {total}",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "Перейти",
   "pagerJumpInvalid": "Введіть номер сторінки від {min} до {max}",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "Видалити дані поточного акаунта",
   "settingsClearAll": "Видалити всі дані",
   "settingsRefetchItemImagesTitle": "Примусово перезавантажити зображення предметів",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "Записів скликань поки немає, нічого перезавантажувати",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "Примусово перезавантажити зображення предметів",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "Увесь локальний кеш зображень предметів буде видалено, а іконки персонажів завантажаться заново. Детальні зображення завантажаться, коли ви наступного разу відкриєте відомості про предмет. Залежно від кількості предметів це може зайняти кілька хвилин і потребувати трафіку.",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "Почати перезавантаження",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "Дані предметів",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "Заново завантажити актуальні відомості про всі предмети (опис, список зображень тощо), зберігши вже завантажені зображення. Нові зображення завантажаться, коли ви відкриєте відомості про предмет.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "Оновити дані предметів",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "Записів скликань поки немає, нічого оновлювати",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "Оновити дані предметів?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "Відомості про всі предмети буде завантажено заново, уже завантажені зображення збережуться. Нові зображення завантажаться, коли ви відкриєте відомості. Оновити зараз?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "Почати оновлення",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, one{Оновлено дані {count} предмета} few{Оновлено дані {count} предметів} many{Оновлено дані {count} предметів} other{Оновлено дані {count} предмета}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, one{Завантажено {count} зображення предмета} few{Завантажено {count} зображення предметів} many{Завантажено {count} зображень предметів} other{Завантажено {count} зображення предметів}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, one{Видалено застарілі мовні дані {count} предмета} few{Видалено застарілі мовні дані {count} предметів} many{Видалено застарілі мовні дані {count} предметів} other{Видалено застарілі мовні дані {count} предмета}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "Кеш зображень",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "Усього",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "Іконки",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "Детальні зображення",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "Підрахунок...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "Не вдалося визначити розмір кешу",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "Очистити детальні зображення",
   "confirmClearGalleryCacheTitle": "Очистити детальні зображення?",
   "confirmClearGalleryCacheBody": "Буде видалено близько {size} детальних зображень предметів, кеш іконок збережеться. Зображення завантажаться знову, коли ви наступного разу відкриєте відомості про предмет.",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "Очистити",
   "settingsImageCacheClearGalleryFailed": "Не вдалося очистити детальні зображення",
   "settingsExportData": "Експорт даних",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "Показувати повний UID на зображенні",
   "shareImageShowFullUidHint": "Якщо вимкнено, видно лише перші 3 цифри, решту приховано символом •",
   "shareImageUpdatedAt": "Оновлено {time}",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "Скопійовано в буфер обміну",
   "shareImageSaved": "Збережено: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "Не вдалося скопіювати в буфер обміну",
   "shareImageFailed": "Не вдалося створити зображення",
   "shareImageGenerating": "Створення зображення...",
   "exportDialogSuccessTitle": "Експорт виконано",
   "exportDialogFailedTitle": "Помилка експорту",
   "settingsExportFailed": "Помилка експорту: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "Експортовано в {path}",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "Підтвердження імпорту",
   "settingsImportConfirmIntro": "Буде імпортовано акаунтів: {accounts} (усього записів: {records}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "Наведені нижче акаунти буде об’єднано з локальними даними, наявні записи не видаляться:",
   "settingsImportConfirmNoConflict": "Конфліктів даних немає.",
   "settingsImportConfirmPreserveFooter": "Інші акаунти ({uids}) збережуться.",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "Неправильний формат файлу або файл пошкоджено",
   "importReasonIncompatibleVersion": "Версія даних у цій резервній копії несумісна з поточним застосунком, імпорт неможливий",
   "importReasonUnreadable": "Не вдалося прочитати файл",
   "importReasonForeignApp": "Цей файл експортовано не цим застосунком",
   "importReasonNotPlatformFile": "Цей файл не є коректним експортом {platform}",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "Не вдалося записати файл. Перевірте місце збереження та права доступу",
   "settingsImportFailed": "Помилка імпорту: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "Виберіть акаунти для експорту",
   "settingsImportSelectTitle": "Виберіть акаунти для імпорту",
   "settingsImportMergeBadge": "Об’єднання",
   "accountsPickerSelectAll": "Вибрати всі",
   "accountRecordCount": "{n, plural, one{{n} запис} few{{n} записи} many{{n} записів} other{{n} запису}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Підтвердження",
   "confirmClearActiveBody": "Усі записи скликань для UID {uid} буде остаточно видалено. Для підтвердження введіть UID:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "Записи скликань усіх акаунтів буде остаточно видалено. Для підтвердження введіть DELETE:",
   "confirmDelete": "Видалити",
   "confirmImport": "Імпортувати",
@@ -290,6 +892,13 @@
   "confirmContinue": "Продовжити",
   "accountListEmpty": "Акаунтів поки немає",
   "accountLastUpdated": "Оновлено {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "Активний",
   "accountSetActive": "Зробити активним",
   "accountRemove": "Видалити",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "Перетягніть, щоб змінити порядок",
   "loadingBootstrap": "Завантаження...",
   "timelineTopRarityTitle": "Хронологія {star} ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "Найвища рідкість за банерами",
   "bannerTopRarityPullsSinceLast": "{n, plural, one{{n} крутка після останнього {star}} few{{n} крутки після останнього {star}} many{{n} круток після останнього {star}} other{{n} крутки після останнього {star}}}",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "Доступна нова версія {version}",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "Дата випуску: {date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "Завантажити",
   "updateButtonUpdate": "Оновити",
   "updateNotesUnavailable": "Список змін зараз недоступний. Докладніше — у Google Play.",
   "updateDownloadingMessage": "Завантаження оновлення...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "Оновлення завантажено",
   "updateRestartAction": "Перезапустити",
   "updateInAppUnavailable": "Зараз неможливо оновитися в застосунку. Оновіть його через Google Play.",
@@ -320,134 +966,532 @@
   "updateChecking": "Перевірка...",
   "updateAlreadyLatest": "У вас найновіша версія",
   "updateCheckFailed": "Не вдалося перевірити оновлення: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "Не вдалося підключитися. Перевірте мережу",
   "updateErrorTimeout": "Час очікування минув",
   "updateErrorRateLimited": "Ліміт запитів GitHub API вичерпано, спробуйте пізніше",
   "updateErrorServer": "Помилка сервера (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "Неочікуваний формат відповіді",
   "updateErrorPlay": "Не вдалося зв’язатися з Google Play, або застосунок установлено не з Google Play",
   "currentReleaseTitle": "Зміни в поточній версії",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "Список змін для {version} не знайдено",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "Відкрити на GitHub",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "Перейти до релізів на GitHub",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "Список змін",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "Не вдалося очистити кеш зображень предметів: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "Журнали налагодження",
+  "@settingsLogs": {},
   "settingsLogsHint": "Якщо виникли проблеми, експортуйте журнали, щоб допомогти розробникам розібратися.",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "Повідомити про проблему",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "Експортувати журнали",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "Відкрити папку журналів",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "Видалити всі журнали",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "Журнали експортовано: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "Помилка експорту журналів: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "Усі файли в папці logs/ буде остаточно видалено. Якщо вони потрібні для звіту про помилку, спершу експортуйте їх. Для підтвердження введіть CLEAR.",
   "galleryIllustrationLabel": "Образ",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "Скликання",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "Іконка",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "Назад",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "Далі",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "Прокрутити вниз",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "Не вдалося завантажити зображення",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "Повторити",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "Копіювати зображення",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "Зберегти зображення",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "Завантажити зображення знову",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "Зображення збережено в {path}",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "Не вдалося зберегти зображення",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "Зображення скопійовано в буфер обміну",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "Не вдалося скопіювати зображення",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "Закрити перегляд зображення",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "Збільшити",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "Зменшити",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "Відкрити на encore.moe",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "Ввести URL історії скликань вручну",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "Введення URL історії скликань вручну",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "Вставте URL історії скликань або будь-який текст, що його містить.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "Вставте URL...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "Вставити з буфера обміну",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "Вибрати файл Client.log",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "Як отримати URL?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "URL історії скликань не знайдено",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "У цьому файлі немає URL історії скликань. Спершу відкрийте сторінку Convene Records у грі, потім виберіть файл знову.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "Спосіб 1: режим польоту\n1. У грі відкрийте екран Convene\n2. Увімкніть режим польоту й натисніть «Convene Records»\n3. Сторінка не завантажиться: довге натискання → «Вибрати все» → «Копіювати»\n4. Вимкніть режим польоту й вставте весь текст сюди\n\nСпосіб 2: у вас уже є файл Client.log\nНатисніть «Вибрати файл Client.log», і застосунок сам знайде URL.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "Вибір файлу Client.log\n1. Відкрийте сторінку Convene Records у грі\n2. Натисніть «Вибрати файл Client.log». Він розташований тут:\nПапка гри\\Client\\Saved\\Logs\\Client.log\n\nURL з іншого інструмента\nURL, отриманий за допомогою інструментів на кшталт WuWa Tracker, можна вставити напряму.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "URL містить облікові дані вашого акаунта. Не публікуйте його. Через деякий час він перестає діяти.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "OK",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "Очікування, поки ви відкриєте сторінку Convene Records у грі...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "Підготовка до читання лог-файлу гри...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "Не вдається автоматично отримати URL історії скликань",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "Читання лог-файлу гри ще не налаштовано. Після одноразового налаштування він читатиметься автоматично під час кожного оновлення.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "Бездротове налагодження працює лише через Wi‑Fi. Підключіться до Wi‑Fi і поверніться — застосунок продовжить автоматично. Також можна ввести URL вручну.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "Root виявлено, але цьому застосунку не надано root-доступ. Щоб читати лог через root, дозвольте застосунок у менеджері root (наприклад, у списку Superuser у Magisk) і поверніться — застосунок повторить спробу автоматично.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "Не вдалося підключитися до бездротового налагодження. Можливо, підключення застаріло — виконайте його знову.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "Пристрій не дозволяє цьому застосунку ввімкнути бездротове налагодження. Увімкніть його на сторінці «Бездротове налагодження» і поверніться — застосунок продовжить автоматично.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "Цю мережу Wi‑Fi ще не дозволено для бездротового налагодження. Натисніть «Дозволити» в системному запиті (позначте «Завжди дозволяти в цій мережі», щоб він більше не з’являвся), і застосунок продовжить автоматично. Якщо ви закрили запит, натисніть «Повторити».",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "Для читання лог-файлу гри потрібен дозвіл на доступ до сховища.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "На цьому пристрої неможливо автоматично прочитати лог-файл гри. Введіть URL вручну.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "Відкрити Wuthering Waves",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "Відкрити бездротове налагодження",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "Надати дозвіл",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "З’єднання з бездротовим налагодженням втрачено, повторне підключення... Якщо воно не відновиться, перевірте Wi‑Fi або введіть URL вручну.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "Бездротове налагодження досі ввімкнено. Його можна вимкнути в налаштуваннях системи.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "Налаштувати",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "Підключити знову",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "Читання лог-файлу гри",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "Навіщо це потрібно?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "Android не дозволяє застосункам напряму читати файли інших застосунків. Цей застосунок використовує вбудовану функцію «Бездротове налагодження», щоб прочитати лог-файл Wuthering Waves і отримати з нього URL історії скликань.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "Що робить застосунок",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• Читає лише лог-файл Wuthering Waves\n• Одразу після читання від’єднується, а бездротове налагодження вимикає, якщо його увімкнув цей застосунок\n• Надає собі дозвіл умикати й вимикати бездротове налагодження, щоб не потрібно було налаштовувати його знову\n• Це можна скасувати будь-коли в налаштуваннях",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "Вимоги",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 або новіший, Wi‑Fi, дозволені сповіщення",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "Почати налаштування",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "Ввести URL вручну",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "Підключення бездротового налагодження",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. Увімкніть параметри розробника",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. Відкрийте в налаштуваннях системи розділ «Про телефон» (або «Про планшет»)\n2. Знайдіть «Номер збірки» й натисніть на нього 7 разів\n3. Коли з’явиться повідомлення «Тепер ви розробник!», поверніться до цього застосунку",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "Відкрити «Про телефон»",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. Параметри розробника ввімкнено",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. Дозвольте сповіщення",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "Код підключення вводиться в сповіщенні, тому дозвольте цьому застосунку показувати сповіщення.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "Дозволити сповіщення",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "Відкрити налаштування сповіщень",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. Сповіщення дозволено",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. Підключення",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. Натисніть кнопку нижче, щоб відкрити «Бездротове налагодження»\n2. Увімкніть «Використовувати бездротове налагодження» й натисніть «Підключити пристрій за допомогою коду»\n3. Проведіть униз від верхнього краю екрана й у сповіщенні цього застосунку введіть 6-значний код, показаний на екрані підключення в «Бездротовому налагодженні»",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "Очікування введення коду підключення в сповіщенні...\nВведіть його, поки екран підключення в «Бездротовому налагодженні» ще відкритий.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "Знову відкрити бездротове налагодження",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "Підключення...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "Підключено, залишився один крок",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "На вашому пристрої є додаткове обмеження безпеки. Увімкніть ще один параметр, щоб застосунок міг автоматично вмикати й вимикати бездротове налагодження.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "Як це ввімкнути",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. Відкрийте «Параметри розробника»\n2. Знайдіть перемикач, пов’язаний із безпекою налагодження через USB або контролем дозволів, і ввімкніть його, наприклад:\n• Xiaomi: «Налагодження USB (налаштування безпеки)»\n• OPPO / realme: «Вимкнути моніторинг дозволів»\n3. Переконайтеся, що бездротове налагодження ввімкнено, потім поверніться й натисніть «Повторити»",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "Відкрити «Параметри розробника»",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "Повторити",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "Пропустити (вмикати бездротове налагодження вручну під час кожного оновлення)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "Готово",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "Відтепер під час оновлення лог читатиметься автоматично. Більше нічого налаштовувати не потрібно.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "Після натискання «Оновити» увімкніть бездротове налагодження, коли з’явиться запит.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "Повертаємося й починаємо оновлення...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "Доступ до лог-файлу гри",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "Спосіб",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "Прямий доступ",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "Бездротове налагодження",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "Не налаштовано",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "Підключення",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "Підключено",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "Підключено (бездротове налагодження потрібно вмикати вручну)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "Повторити надання дозволу",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "Налаштувати",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "Видалити підключення",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "Видалити підключення?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "Ключ підключення цього застосунку буде видалено, а в застосунку буде відкликано дозвіл керувати бездротовим налагодженням. Щоб знову користуватися бездротовим налагодженням, потрібно буде підключитися заново.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "Підключення видалено",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "Ключ підключення цього застосунку видалено, і в нього відкликано дозвіл вмикати й вимикати бездротове налагодження.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "Ключ підключення видалено",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "Ключ підключення цього застосунку видалено, але цього разу не вдалося підключитися до бездротового налагодження, тому дозвіл вмикати й вимикати його не відкликано.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "Без підключення застосунок цим дозволом не користується. Щоб відкликати його повністю, підключіться до Wi‑Fi, знову виконайте підключення, а потім ще раз видаліть його.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "У системному списку «Бездротове налагодження» → «Підключені пристрої» і далі буде «{name}». Він більше не може підключитися, тож його можна залишити; щоб видалити, торкніться його й видаліть.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "У системному списку «Бездротове налагодження» → «Підключені пристрої» також лишається «{name}»; торкніться його, щоб видалити.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "URL історії скликань отримано. Завантаження історії скликань почнеться, коли ви повернетеся до застосунку.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "Поділитися",
   "shareFailed": "Не вдалося поділитися",
   "dialogSaveAsTitle": "Зберегти як",
@@ -456,10 +1500,37 @@
   "actionSave": "Зберегти",
   "settingsLogsShare": "Поділитися журналами",
   "logUnavailableGameNotInstalled": "Глобальну версію Wuthering Waves не знайдено на цьому пристрої. Після встановлення поверніться сюди — гру буде виявлено автоматично.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "Перевірити знову",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "На цьому пристрої встановлено кілька версій Wuthering Waves. Яку з них читати?",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "Версія з Google Play",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "Версія з Galaxy Store",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "Версія Wuthering Waves: {name}",
-  "actionSwitchGameVersion": "Змінити версію"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "Змінити версію",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }
