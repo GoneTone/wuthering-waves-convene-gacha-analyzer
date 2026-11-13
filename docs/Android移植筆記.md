@@ -412,9 +412,13 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 
 - `android/app/build.gradle.kts` 讀 `android/key.properties`（`android/.gitignore` 已排除它與 `*.jks`）；檔案不存在時 release 退回 debug 金鑰，`flutter run --release` 照常能用。
 - Gradle Kotlin DSL 裡寫 `java.util.Properties()` 會編不過：`java` 被解析成 Gradle 的 `java` 擴充。要在檔頭 `import java.util.Properties`。
-- **Windows 與 Android 在同一份 `release.yml`**：觸發一次、輸入一個 tag，`prepare` job 先改版本號並推回 master，輸出發版 commit（job output `release_sha`）；`build-windows` 與 `build-android` 都 `needs: prepare`、checkout 同一個 commit 同時建置，兩邊一定建置同一份程式碼。原本分成兩份流程，要觸發兩次、順序不能錯，而且 Android 抓的是執行當下的 master，兩次之間有人推 commit 就會建出不同版本。
-- **兩個平台不要串在一起**（2026-11-13 改）：最早是 `build-android` 以 `needs: build-windows` 等 Windows 推完版本號。第一次用 CI 發 rc.21 時 Windows 建置失敗，Android 就整個被跳過。改成 `prepare` 加兩個平行 job 後，一邊失敗另一邊照常完成，修好後按「Re-run failed jobs」只重跑失敗的那邊（`prepare` 的 output 會沿用，仍建置同一個 commit）。改版本號的步驟移到 Linux runner 跑（runner 內建 `pwsh`，腳本不用改）。
-- Android job：缺任何一個金鑰或服務帳戶 secret 就失敗；建置後再用 `keytool -printcert -jarfile` 檢查 AAB，若是 debug 金鑰簽的就失敗。上傳用 `r0adkll/upload-google-play`，只上 internal 軌道、不填「新功能」。
+- **Windows 與 Android 在同一份 `release.yml`**：觸發一次、輸入一個 tag，兩個平台一定建置同一份程式碼。原本分成兩份流程，要觸發兩次、順序不能錯，而且 Android 抓的是執行當下的 master，兩次之間有人推 commit 就會建出不同版本。
+- **兩個平台都建置成功才發佈**（2026-11-13 改成四個 job）：
+  - `prepare`：驗證 tag、算出版本號（`<semver>+<run 編號>`），記下要建置的 master commit（output `base_sha`），不推任何東西。
+  - `build-windows`、`build-android`：都 `needs: prepare`，checkout `base_sha` 同時建置；Windows 只在 runner 上改 pubspec 的版本號，Android 用 `--build-name`／`--build-number`。產物存成 workflow artifact。
+  - `publish`：`needs` 兩個 build，兩邊都成功才執行：把同樣的版本號改動 commit 到 `base_sha` 上推回 master、建 GitHub Release 草稿並附上安裝檔、上傳 AAB 到 Play。建置期間 master 被推了別的 commit 時推送會失敗（非 fast-forward），要重新 Run workflow；重跑 `publish` 時若上次已推好版本號 commit 就沿用。
+  - **演進過程**：最早 `build-android` 以 `needs: build-windows` 等 Windows 推完版本號，第一次用 CI 發 rc.21 時 Windows 建置失敗，Android 整個被跳過。改成平行後，第二次 rc.21 變成 Android 已上傳 Play、Windows 卻失敗：Play 的版本代碼用掉了，GitHub 沒有對應版本，同一個 tag 也不能再重跑（版本代碼重複）。所以改成「建置」與「發佈」分開，任一邊建置失敗就什麼都不發佈，修好後按「Re-run failed jobs」只重跑失敗的那邊，`publish` 會接著跑。
+- Android job：缺任何一個金鑰或服務帳戶 secret 就失敗；建置後再用 `keytool -printcert -jarfile` 檢查 AAB，若是 debug 金鑰簽的就失敗。上傳用 `r0adkll/upload-google-play`，只上 internal 軌道、不填「新功能」。軌道參數要用 `tracks`（逗號分隔），`track` 已棄用，用了會出現警告。
 - **從來沒推出過任何版本的 App，API 只能建立 draft 狀態的版本**（錯誤訊息「Only releases with status draft may be created on draft app」）。第一版本來就要在 Play Console 手動上傳，手動上傳後在 Console 推出（內部測試也算），之後 CI 就固定送 `completed`，不提供 draft 選項：內部測試只有測試名單看得到，直接推出才能在升級正式版前，用手機從 Play 收到經 Play 簽署的版本，先確認 Google 登入等依賴簽章的功能。
 - secrets 一覽與每次發版步驟見本機的 `private/play-store/README.md`。
 - **首次上架實際走過的流程與坑**（2026-11-09）：
@@ -425,11 +429,12 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - **`adb install` 會裝進手機上所有使用者空間**（私人空間、廠商的分身空間等）。只在主要空間解除安裝後，Play 會以「其他使用者已經在這裝置安裝不相容版本」拒絕安裝；要用 `adb shell pm uninstall --user <id> <套件>` 逐一清掉（`pm list users` 看有哪些空間）。之後本機測試版一律 `adb install --user 0`。
   - 服務帳戶在 Play Console 只給「查看應用程式資訊（唯讀）」與「將應用程式發布至測試群組」，**不給「發布正式版」**：CI 就算出錯也發不到正式版。Cloud 端不給任何專案角色，只要啟用 Google Play Android Developer API。
   - 2023 年 11 月之後註冊的個人開發者帳號，發正式版前要先跑 12 人、連續 14 天的封閉測試（本專案帳號不受此限）。
-- **rc 版手動發、正式版走 CI**：rc 在本機建 AAB 後用 `tool/play_upload_internal.py <服務帳戶 JSON> <aab> <版本名稱> [--notes-en <英文版本資訊>]` 上傳並推出到內部測試（`--notes-en` 會填 `en-US` 的「新功能」；只靠 `cryptography` 簽 JWT 換權杖，不需要 Google 的 API 套件；流程是建立編輯 → 上傳 → 設定 internal 版本為 completed → 提交，失敗會刪掉編輯）。手動上傳過的 rc 已用掉版本代碼，CI 的 `release.yml` 只拿來發正式版 tag，不會撞號。第一次用它上傳成功，也順便證明服務帳戶權限正確（CI 用同一個帳戶）。
+- **rc 與正式版都走 CI**（2026-11-13 起，從 rc.21 開始）：Actions 的 `release` 輸入 `vX.Y.Z-rc.N` 並勾選 prerelease，Android 直接推出到內部測試（內測只有開發者自己，不必先在模擬器實跑，推出後用手機從 Play 更新確認即可）。**同一個 tag 不能重跑整個 workflow**：版本代碼由 tag 算出，Play 已有的代碼不能再上傳；Android 已經上傳過時要換下一個 rc 編號。
+- **以前 rc 是手動發**（rc.1～rc.20）：rc 在本機建 AAB 後用 `tool/play_upload_internal.py <服務帳戶 JSON> <aab> <版本名稱> [--notes-en <英文版本資訊>]` 上傳並推出到內部測試（`--notes-en` 會填 `en-US` 的「新功能」；只靠 `cryptography` 簽 JWT 換權杖，不需要 Google 的 API 套件；流程是建立編輯 → 上傳 → 設定 internal 版本為 completed → 提交，失敗會刪掉編輯）。手動上傳過的 rc 已用掉版本代碼，CI 要用比它們大的 rc 編號。這個工具現在只在 CI 不能用時備用。第一次用它上傳成功，也順便證明服務帳戶權限正確（CI 用同一個帳戶）。
 - 修改 workflow 後用 actionlint 檢查（`go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/*.yml`）。
 - **actionlint 抓到 `ci.yml` 的既有問題**：自動提交 ARB 正規化的步驟把 `${{ github.head_ref }}` 直接拼進 shell，分支名稱裡的 `$(...)` 會被當成指令執行。改成 `env: HEAD_REF: ${{ github.head_ref }}`，指令裡用 `"$HEAD_REF"`。原神版的 `ci.yml` 是同一份底稿，要一起檢查。
 - **內部測試不用審核**：推出後通常幾分鐘內測試人員就能更新（第一次發布後的測試連結可能要等幾小時）；升級到正式版才進入審核。
-- **上傳前一定要實際啟動一次正式版**（2026-11-10，rc.10 一啟動就閃退）：除錯版不做 R8 程式碼縮減，正式版才會；新加的依賴（這次是廣告 SDK）若有反射或舊的保留規則，只有正式版會壞。在模擬器跑除錯版、或只做靜態檢查（看 Manifest、`libapp.so`）都抓不到。流程：用和 AAB 相同的參數建 `flutter build apk --release`，裝到模擬器啟動，`adb logcat -b crash` 沒有東西、App 停在首頁，才建 AAB 上傳。不要裝到自己的手機：手機上是 Play 簽署的版本，本機簽章不同，必須先解除安裝，資料會被清掉。
+- **本機手動上傳前一定要實際啟動一次正式版**（2026-11-10，rc.10 一啟動就閃退；CI 發的 rc 改成推出後用手機確認，見上面）：除錯版不做 R8 程式碼縮減，正式版才會；新加的依賴（這次是廣告 SDK）若有反射或舊的保留規則，只有正式版會壞。在模擬器跑除錯版、或只做靜態檢查（看 Manifest、`libapp.so`）都抓不到。流程：用和 AAB 相同的參數建 `flutter build apk --release`，裝到模擬器啟動，`adb logcat -b crash` 沒有東西、App 停在首頁，才建 AAB 上傳。不要裝到自己的手機：手機上是 Play 簽署的版本，本機簽章不同，必須先解除安裝，資料會被清掉。
   - **要看廣告等需要資料的畫面時**（2026-11-10，rc.12／rc.13）：正式版不能 `run-as`，沒辦法直接塞資料。做法：先用 `adb exec-out run-as <package> tar cf - -C /data/data/<package> app_flutter shared_prefs files > 備份.tar` 備份除錯版的資料；把 `files/gacha_data/<uid>.records.json` 包成匯出格式（`{"schema_version":2,"app":"wuthering_waves_convene_gacha_analyzer",...,"accounts":[紀錄檔內容]}`）推到 `/sdcard/Download`，正式版從設定頁「匯入資料」選它；驗完移除正式版、裝回除錯版，`cat 備份.tar | adb exec-in run-as <package> tar xf - -C /data/data/<package>` 還原。Git Bash 要加 `MSYS_NO_PATHCONV=1`。
 
 ### 36. 簽章指紋：每把金鑰各建一筆 Android 用戶端（通用）

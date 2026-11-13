@@ -1,9 +1,11 @@
 name: release
 run-name: release ${{ inputs.tag }}
 
-# 同一個 tag 一次發 Windows 與 Android：prepare 先推版本號 commit，Windows（安裝檔＋GitHub Release 草稿）
-# 與 Android（AAB 上傳到 Play 的內部測試軌道）再同時建置這個 commit。
-# 兩個平台互不影響，其中一邊失敗時，修好後在 run 頁面按「Re-run failed jobs」只重跑失敗的那邊（仍建置同一個 commit）。
+# 同一個 tag 一次發 Windows 與 Android，兩個平台都建置成功才發佈：
+#   prepare：驗證 tag、算出版本號，記下要建置的 master commit（不推任何東西）。
+#   build-windows／build-android：同時建置該 commit（版本號只在 runner 上改），產物存成 workflow artifact。
+#   publish：兩邊都成功才執行，推版本號 commit 到 master、建 GitHub Release 草稿、上傳 AAB 到 Play 內部測試軌道。
+# 任一邊建置失敗時什麼都不發佈；修好後在 run 頁面按「Re-run failed jobs」只重跑失敗的那邊，成功後 publish 會接著跑。
 # Play 的「新功能」由維護者在 Play Console 升級正式版時手動填寫。
 # 預覽版（-rc.N）只留在內部測試，不要升級正式版（App 內查 GitHub 更新說明時會略過預覽版）。
 
@@ -27,15 +29,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # 只負責驗證 tag、改版本號並推回 master；兩個平台都建置這裡輸出的 commit。
   prepare:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     outputs:
-      release_sha: ${{ steps.release_sha.outputs.sha }}
+      base_sha: ${{ steps.version.outputs.base_sha }}
+      semver: ${{ steps.version.outputs.semver }}
       pubspec_version: ${{ steps.version.outputs.pubspec_version }}
 
     steps:
@@ -43,10 +42,8 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: master
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Parse tag & rewrite pubspec
+      - name: Parse tag
         id: version
         shell: pwsh
         run: |
@@ -55,59 +52,27 @@ jobs:
             throw "tag '$tag' does not match vX.Y.Z[-prerelease]"
           }
           $semver = $Matches[1]
-          $buildNumber = ${{ github.run_number }}
-          $pubspecVersion = "$semver+$buildNumber"
-
-          $content = Get-Content pubspec.yaml -Raw -Encoding UTF8
-          $updated = [regex]::Replace($content, '(?m)^version:\s*\S+', "version: $pubspecVersion", 1)
-
-          if ($updated -eq $content) {
-            "VERSION_CHANGED=false" | Out-File $env:GITHUB_ENV -Append
-          } else {
-            Set-Content pubspec.yaml -Value $updated -Encoding UTF8 -NoNewline
-            "VERSION_CHANGED=true" | Out-File $env:GITHUB_ENV -Append
-          }
-          "SEMVER=$semver" | Out-File $env:GITHUB_ENV -Append
-          "pubspec_version=$pubspecVersion" | Out-File $env:GITHUB_OUTPUT -Append
-
-      - name: Commit pubspec bump
-        if: env.VERSION_CHANGED == 'true'
-        shell: pwsh
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pubspec.yaml
-          git commit -m "chore(release): bump version to v${{ env.SEMVER }} [skip ci]"
-          git push origin HEAD:master
-
-      - name: Capture release commit SHA
-        id: release_sha
-        shell: pwsh
-        run: |
           $sha = (git rev-parse HEAD).Trim()
-          "sha=$sha" | Out-File $env:GITHUB_OUTPUT -Append
-          Write-Host "Release commit SHA: $sha"
+          "semver=$semver" | Out-File $env:GITHUB_OUTPUT -Append
+          "pubspec_version=$semver+${{ github.run_number }}" | Out-File $env:GITHUB_OUTPUT -Append
+          "base_sha=$sha" | Out-File $env:GITHUB_OUTPUT -Append
+          Write-Host "Base commit: $sha"
 
   build-windows:
     needs: prepare
     runs-on: windows-latest
 
-    permissions:
-      contents: write
-
     env:
       WINDOWS_SIGN_PFX_BASE64: ${{ secrets.WINDOWS_SIGN_PFX_BASE64 }}
       WINDOWS_SIGN_PASSWORD:   ${{ secrets.WINDOWS_SIGN_PASSWORD }}
-      RELEASE_SHA:     ${{ needs.prepare.outputs.release_sha }}
       PUBSPEC_VERSION: ${{ needs.prepare.outputs.pubspec_version }}
 
     steps:
-      # === A. Checkout release commit ===============================
-      - name: Checkout release commit
+      # === A. Checkout ==============================================
+      - name: Checkout base commit
         uses: actions/checkout@v7
         with:
-          ref: ${{ needs.prepare.outputs.release_sha }}
-          fetch-depth: 0
+          ref: ${{ needs.prepare.outputs.base_sha }}
 
       # === B. Toolchain =============================================
       - name: Setup Flutter
@@ -136,7 +101,16 @@ jobs:
           if (-not $iscc) { throw "ISCC.exe not on PATH after chocolatey install" }
           Write-Host "ISCC: $($iscc.Source)"
 
-      # === C. Build =================================================
+      # === C. Version (local only; publish commits the same change) ===
+      - name: Rewrite pubspec version
+        shell: pwsh
+        run: |
+          $content = Get-Content pubspec.yaml -Raw -Encoding UTF8
+          $updated = [regex]::Replace($content, '(?m)^version:\s*\S+', "version: $env:PUBSPEC_VERSION", 1)
+          Set-Content pubspec.yaml -Value $updated -Encoding UTF8 -NoNewline
+          Write-Host "pubspec version: $env:PUBSPEC_VERSION"
+
+      # === D. Build =================================================
       # 雲端同步 OAuth 憑證不進 repo，由 repo secrets 於建置前寫成
       # dart-define-from-file 輸入檔（缺 secrets 時跳過，僅該功能停用）。
       - name: Write cloud sync defines from secrets
@@ -167,96 +141,39 @@ jobs:
           Set-Location W:\
           .\scripts\build_installer\build_release.ps1
 
-      - name: Locate installer
+      - name: Check single installer
         shell: pwsh
         run: |
           $candidates = @(Get-ChildItem build\installer\*.exe -ErrorAction SilentlyContinue)
-          if ($candidates.Count -eq 0) { throw "No *.exe found in build\installer" }
-          if ($candidates.Count -gt 1) {
-            throw "Multiple *.exe found in build\installer (expected exactly 1):`n$($candidates.FullName -join "`n")"
-          }
-          $exe = $candidates[0].FullName
-          "INSTALLER_PATH=$exe" | Out-File $env:GITHUB_ENV -Append
-          "INSTALLER_NAME=$($candidates[0].Name)" | Out-File $env:GITHUB_ENV -Append
-
-      # === D. Sign (skip, structure 內嵌於 build_release.ps1) ==========
-
-      # === E. Create or update release draft ========================
-      - name: Create or update release draft
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $tag = "${{ inputs.tag }}"
-          # inputs.prerelease 是 workflow_dispatch boolean，interpolation 後一律是字串 "true"/"false"，故用字串比較
-          # --json/--jq 同時偵測 release 是否存在並取得 draft 狀態，順帶把 view 的 stdout 收進變數不污染 log
-          $isDraft = gh release view "$tag" --json isDraft --jq '.isDraft' 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            if ($isDraft -ne "true") {
-              throw "Release '$tag' already exists and is PUBLISHED; refusing to overwrite its assets."
-            }
-            Write-Host "Draft '$tag' already exists; refreshing target to $env:RELEASE_SHA and re-uploading installer with --clobber"
-            gh release edit "$tag" --target "$env:RELEASE_SHA"
-            gh release upload "$tag" "$env:INSTALLER_PATH" --clobber
-          } else {
-            Write-Host "Creating draft release '$tag' targeting $env:RELEASE_SHA"
-            $createArgs = @("$tag", "$env:INSTALLER_PATH", "--draft", "--title", "$tag", "--generate-notes", "--target", "$env:RELEASE_SHA")
-            if ("${{ inputs.prerelease }}" -eq "true") { $createArgs += "--prerelease" }
-            gh release create @createArgs
-
-            # 在自動產生的 What's Changed 上下用 `---` 包夾，並於底部附上固定文案
-            # （翻譯邀請／防毒說明，維護於 .github/release-footer.md）。
-            # 上方分隔線預留給維護者編輯 draft 時手動補上的版本說明文案，使最終結構為：
-            #   [手動版本說明]\n\n---\n\n## What's Changed ...\n\n---\n\n[footer]
-            # ConvertFrom-Json 取 body 為單一字串，避免 pwsh 把多行 stdout 切成陣列。
-            # TrimEnd 去掉上游可能帶的尾換行，確保與 `---` 之間固定剛好一個空行。
-            $generated = (gh release view "$tag" --json body | ConvertFrom-Json).body.TrimEnd()
-            $footer = Get-Content .github/release-footer.md -Raw -Encoding UTF8
-            $bodyFile = Join-Path $env:RUNNER_TEMP "release_body.md"
-            Set-Content -Path $bodyFile -Value "---`n`n$generated`n`n---`n`n$footer" -Encoding UTF8 -NoNewline
-            gh release edit "$tag" --notes-file $bodyFile
+          if ($candidates.Count -ne 1) {
+            throw "Expected exactly 1 *.exe in build\installer, found $($candidates.Count):`n$($candidates.FullName -join "`n")"
           }
 
-      # === F. Workflow artifact (debug fallback) ====================
-      - name: Upload installer as workflow artifact
-        if: always()
+      # === E. Sign (skip, structure 內嵌於 build_release.ps1) ==========
+
+      # === F. Artifact ==============================================
+      - name: Upload installer
         uses: actions/upload-artifact@v7
         with:
           name: windows-installer-${{ env.PUBSPEC_VERSION }}
           path: build/installer/*.exe
           retention-days: 30
-          if-no-files-found: warn
-
-      # === G. Step summary ==========================================
-      - name: Write step summary
-        if: success()
-        shell: pwsh
-        run: |
-          $exe = "${{ env.INSTALLER_PATH }}"
-          $size = [math]::Round((Get-Item $exe).Length / 1MB, 2)
-          $sha  = (Get-FileHash $exe -Algorithm SHA256).Hash
-          @"
-          ## Release ${{ inputs.tag }}
-
-          - **Pubspec version**: ${{ env.PUBSPEC_VERSION }}
-          - **Installer**: ``${{ env.INSTALLER_NAME }}``
-          - **Size**: $size MB
-          - **SHA-256**: ``$sha``
-          - **Release commit**: ``${{ env.RELEASE_SHA }}``
-          - **Draft created**: ✓ — review and Publish manually
-          "@ | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          if-no-files-found: error
 
   build-android:
     needs: prepare
     runs-on: ubuntu-latest
 
+    outputs:
+      version_code: ${{ steps.version_code.outputs.version_code }}
+
     steps:
       # === A. Checkout ==============================================
-      # 建置 prepare 推出的版本號 commit（與 Windows 同一個），不取執行當下的 master。
-      - name: Checkout release commit
+      # 與 Windows 建置同一個 commit，不取執行當下的 master。
+      - name: Checkout base commit
         uses: actions/checkout@v7
         with:
-          ref: ${{ needs.prepare.outputs.release_sha }}
+          ref: ${{ needs.prepare.outputs.base_sha }}
 
       # === B. Toolchain =============================================
       - name: Setup Java
@@ -282,15 +199,17 @@ jobs:
       # === C. Version code ==========================================
       # tag 不合法時 CLI 以非 0 結束碼離開，流程直接失敗。
       - name: Compute version code
+        id: version_code
         env:
           TAG: ${{ inputs.tag }}
         run: |
           out="$(dart run tool/android_version_code.dart "$TAG")"
           echo "$out"
           echo "$out" | grep -E '^(VERSION_CODE|BUILD_NAME)=' >> "$GITHUB_ENV"
+          echo "$out" | sed -n 's/^VERSION_CODE=/version_code=/p' >> "$GITHUB_OUTPUT"
 
       # === D. Secrets ===============================================
-      # 缺任何一個簽章或上傳 secret 就失敗，絕不退回 debug 金鑰簽章。
+      # 缺任何一個簽章 secret 就失敗，絕不退回 debug 金鑰簽章。
       - name: Restore upload key
         env:
           ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
@@ -364,45 +283,163 @@ jobs:
             exit 1
           fi
 
-      # === F. Upload to Play ========================================
-      - name: Upload to Play internal track
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: tw.reh.wuwa.gacha
-          releaseFiles: build/app/outputs/bundle/release/app-release.aab
-          releaseName: ${{ inputs.tag }}
-          tracks: internal
-          # 直接推出給內部測試人員；Play 只在 App 從沒推出過任何版本時要求 draft，第一版由維護者手動上傳並推出。
-          status: completed
-
-      # === G. Artifact & cleanup ====================================
-      - name: Upload bundle as workflow artifact
-        if: always()
+      # === F. Artifact & cleanup ====================================
+      - name: Upload bundle
         uses: actions/upload-artifact@v7
         with:
-          name: android-bundle-${{ env.BUILD_NAME }}
+          name: android-bundle-${{ needs.prepare.outputs.pubspec_version }}
           path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 30
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Remove signing material
         if: always()
         run: rm -f android/upload.jks android/key.properties secrets/cloud_sync_defines.json secrets/ads_defines.json
 
-      - name: Write step summary
-        if: success()
-        env:
-          TAG: ${{ inputs.tag }}
+  # 只在兩個平台都建置成功時執行（needs 預設要求全部成功）。
+  publish:
+    needs: [prepare, build-windows, build-android]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    env:
+      BASE_SHA: ${{ needs.prepare.outputs.base_sha }}
+      SEMVER: ${{ needs.prepare.outputs.semver }}
+      PUBSPEC_VERSION: ${{ needs.prepare.outputs.pubspec_version }}
+      VERSION_CODE: ${{ needs.build-android.outputs.version_code }}
+
+    steps:
+      # === A. Version bump commit ===================================
+      - name: Checkout base commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.base_sha }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 建置用的是 base commit；這裡把同樣的版本號改動 commit 到它上面再推回 master。
+      # master 在建置期間被推了別的 commit 時推送會失敗（非 fast-forward），要重新 Run workflow。
+      # 重跑 publish 時若上次已推好版本號 commit，就直接沿用。
+      - name: Commit and push pubspec bump
+        id: release_sha
+        shell: pwsh
         run: |
-          aab=build/app/outputs/bundle/release/app-release.aab
-          {
-            echo "## Android release $TAG"
-            echo
-            echo "- **Version name**: $BUILD_NAME"
-            echo "- **Version code**: $VERSION_CODE"
-            echo "- **Size**: $(du -h "$aab" | cut -f1)"
-            echo "- **SHA-256**: \`$(sha256sum "$aab" | cut -d' ' -f1)\`"
-            echo "- **Play track**: internal (completed)"
-            echo "- Next: fill in \"What's new\" and promote to production in Play Console (stable tags only)"
-          } >> "$GITHUB_STEP_SUMMARY"
+          git fetch origin master
+          $remote = (git rev-parse origin/master).Trim()
+          $remoteVersion = (git show origin/master:pubspec.yaml | Select-String -Pattern '^version:\s*(\S+)').Matches[0].Groups[1].Value
+          if ($remote -ne $env:BASE_SHA -and $remoteVersion -eq $env:PUBSPEC_VERSION -and (git rev-parse "origin/master~1").Trim() -eq $env:BASE_SHA) {
+            Write-Host "Version bump already pushed in a previous attempt: $remote"
+            $sha = $remote
+          } else {
+            $content = Get-Content pubspec.yaml -Raw -Encoding UTF8
+            $updated = [regex]::Replace($content, '(?m)^version:\s*\S+', "version: $env:PUBSPEC_VERSION", 1)
+            if ($updated -ne $content) {
+              Set-Content pubspec.yaml -Value $updated -Encoding UTF8 -NoNewline
+              git config user.name  "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git add pubspec.yaml
+              git commit -m "chore(release): bump version to v$env:SEMVER [skip ci]"
+            }
+            git push origin HEAD:master
+            if ($LASTEXITCODE -ne 0) { throw "push to master failed (master moved since the build started?)" }
+            $sha = (git rev-parse HEAD).Trim()
+          }
+          "RELEASE_SHA=$sha" | Out-File $env:GITHUB_ENV -Append
+          Write-Host "Release commit SHA: $sha"
+
+      # === B. Artifacts =============================================
+      - name: Download installer
+        uses: actions/download-artifact@v7
+        with:
+          name: windows-installer-${{ env.PUBSPEC_VERSION }}
+          path: artifacts/windows
+
+      - name: Download bundle
+        uses: actions/download-artifact@v7
+        with:
+          name: android-bundle-${{ env.PUBSPEC_VERSION }}
+          path: artifacts/android
+
+      - name: Locate installer
+        shell: pwsh
+        run: |
+          $candidates = @(Get-ChildItem artifacts/windows/*.exe)
+          if ($candidates.Count -ne 1) { throw "Expected exactly 1 installer, found $($candidates.Count)" }
+          "INSTALLER_PATH=$($candidates[0].FullName)" | Out-File $env:GITHUB_ENV -Append
+          "INSTALLER_NAME=$($candidates[0].Name)" | Out-File $env:GITHUB_ENV -Append
+
+      # === C. GitHub Release draft ==================================
+      - name: Create or update release draft
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ inputs.tag }}"
+          # inputs.prerelease 是 workflow_dispatch boolean，interpolation 後一律是字串 "true"/"false"，故用字串比較
+          # --json/--jq 同時偵測 release 是否存在並取得 draft 狀態，順帶把 view 的 stdout 收進變數不污染 log
+          $isDraft = gh release view "$tag" --json isDraft --jq '.isDraft' 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            if ($isDraft -ne "true") {
+              throw "Release '$tag' already exists and is PUBLISHED; refusing to overwrite its assets."
+            }
+            Write-Host "Draft '$tag' already exists; refreshing target to $env:RELEASE_SHA and re-uploading installer with --clobber"
+            gh release edit "$tag" --target "$env:RELEASE_SHA"
+            gh release upload "$tag" "$env:INSTALLER_PATH" --clobber
+          } else {
+            Write-Host "Creating draft release '$tag' targeting $env:RELEASE_SHA"
+            $createArgs = @("$tag", "$env:INSTALLER_PATH", "--draft", "--title", "$tag", "--generate-notes", "--target", "$env:RELEASE_SHA")
+            if ("${{ inputs.prerelease }}" -eq "true") { $createArgs += "--prerelease" }
+            gh release create @createArgs
+
+            # 在自動產生的 What's Changed 上下用 `---` 包夾，並於底部附上固定文案
+            # （翻譯邀請／防毒說明，維護於 .github/release-footer.md）。
+            # 上方分隔線預留給維護者編輯 draft 時手動補上的版本說明文案，使最終結構為：
+            #   [手動版本說明]\n\n---\n\n## What's Changed ...\n\n---\n\n[footer]
+            # ConvertFrom-Json 取 body 為單一字串，避免 pwsh 把多行 stdout 切成陣列。
+            # TrimEnd 去掉上游可能帶的尾換行，確保與 `---` 之間固定剛好一個空行。
+            $generated = (gh release view "$tag" --json body | ConvertFrom-Json).body.TrimEnd()
+            $footer = Get-Content .github/release-footer.md -Raw -Encoding UTF8
+            $bodyFile = Join-Path $env:RUNNER_TEMP "release_body.md"
+            Set-Content -Path $bodyFile -Value "---`n`n$generated`n`n---`n`n$footer" -Encoding UTF8 -NoNewline
+            gh release edit "$tag" --notes-file $bodyFile
+          }
+
+      # === D. Upload to Play ========================================
+      - name: Upload to Play internal track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: tw.reh.wuwa.gacha
+          releaseFiles: artifacts/android/app-release.aab
+          releaseName: ${{ inputs.tag }}
+          tracks: internal
+          # 直接推出給內部測試人員；Play 只在 App 從沒推出過任何版本時要求 draft，第一版由維護者手動上傳並推出。
+          status: completed
+
+      # === E. Step summary ==========================================
+      - name: Write step summary
+        shell: pwsh
+        run: |
+          $exe = $env:INSTALLER_PATH
+          $aab = "artifacts/android/app-release.aab"
+          @"
+          ## Release ${{ inputs.tag }}
+
+          - **Release commit**: ``$env:RELEASE_SHA``
+          - **Pubspec version**: $env:PUBSPEC_VERSION
+
+          ### Windows
+          - **Installer**: ``$env:INSTALLER_NAME``
+          - **Size**: $([math]::Round((Get-Item $exe).Length / 1MB, 2)) MB
+          - **SHA-256**: ``$((Get-FileHash $exe -Algorithm SHA256).Hash)``
+          - **Draft created**: ✓ — review and Publish manually
+
+          ### Android
+          - **Version code**: $env:VERSION_CODE
+          - **Size**: $([math]::Round((Get-Item $aab).Length / 1MB, 2)) MB
+          - **SHA-256**: ``$((Get-FileHash $aab -Algorithm SHA256).Hash)``
+          - **Play track**: internal (completed)
+          - Next: fill in "What's new" and promote to production in Play Console (stable tags only)
+          "@ | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
