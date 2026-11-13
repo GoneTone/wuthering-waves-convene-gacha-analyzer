@@ -3,6 +3,20 @@
   "localeNativeName": "Suomi",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "Kääntäjä: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "Wuthering Waves Convene -analysaattori",
   "actionUpdate": "Päivitä",
   "actionCancel": "Peruuta",
@@ -40,24 +54,94 @@
   "navSectionGacha": "Convene",
   "footerNotSynced": "Ei synkronoitu",
   "footerLastUpdated": "Päivitetty viimeksi: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "Juuri nyt",
   "relativeSecondsAgo": "{count, plural, =1{1 sekunti sitten} other{{count} sekuntia sitten}}",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count, plural, =1{1 minuutti sitten} other{{count} minuuttia sitten}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count, plural, =1{1 tunti sitten} other{{count} tuntia sitten}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count, plural, =1{1 päivä sitten} other{{count} päivää sitten}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count, plural, =1{1 kuukausi sitten} other{{count} kuukautta sitten}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count, plural, =1{1 vuosi sitten} other{{count} vuotta sitten}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "Vaihda tiliä",
   "uidNotSynced": "Ei synkronoitu",
   "uidActiveSuffix": " (aktiivinen)",
   "emptyNoSyncTitle": "Tietoja ei ole vielä synkronoitu",
   "emptyNoSyncMessage": "Aloita napauttamalla {icon} oikeassa yläkulmassa",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "Tällä bannerilla ei ole tapahtumia",
   "emptyNoFilterMatch": "Suodatinta vastaavia tapahtumia ei ole",
   "emptyNoGachaRecords": "Convene-historiaa ei vielä ole",
   "statsTotal": "Vetoja yhteensä",
   "statsRankCount": "{star}-määrä",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "{rate} % kaikista",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "Harvinaisuusjakauma",
   "statsItemTypeDistribution": "Tyyppijakauma",
   "statsNoData": "Ei tietoja",
@@ -70,12 +154,40 @@
   "tableKind": "Tyyppi",
   "tableRarity": "Harvinaisuus",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "Yht.",
   "tableMainPity": "Pity",
   "tableSortButton": "Lajittelu: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "Lajittelu: oletus",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "Lajitteluperuste",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "Vedot edellisen {star} jälkeen",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "Laskeva",
   "sortDirectionAsc": "Nouseva",
   "sortHintClickToSort": "Lajittele napsauttamalla",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "Avaa Wuthering Waves → Convene → Convene Records",
   "progressFallbackHint": "(Edellinen sieppaus on vanhentunut. Avaa Convene Records -sivu uudelleen.)",
   "progressCaptureUnavailableHint": "Sieppausapuria ei voitu käynnistää (Windowsin käyttöoikeuskehote on ehkä hylätty). Haetaan nyt vain pelin lokitiedostosta. Avaa pelissä Convene Records -sivu.",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "Sieppausapuria ei voitu käynnistää (Windowsin käyttöoikeuskehote on ehkä hylätty), eikä pelikansiota löytynyt. Valitse kansio itse painamalla alta ”Valitse pelikansio”, tai peruuta, paina uudelleen ”Päivitä” ja valitse käyttöoikeuskehotteessa ”Kyllä”.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "Avasitko Convene Records -sivun, mutta mitään ei tapahdu?",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "Convene-historiaa ei havaittu",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "Wuthering Wavesin pelikansiota ei löytynyt. Kun valitset sen, työkalu voi hakea Convene-historian URL-osoitteen myös pelin lokitiedostosta.",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "Käytössä oleva pelikansio: {path}. Jos polku on väärä (esimerkiksi jos pelistä on asennettu useampi kopio), paina ”Valitse uudelleen”.",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "Pelikansio tallennettu. Palaa peliin ja avaa Convene Records vielä kerran.",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "Tästä kansiosta ei löytynyt pelin lokitiedostoa. Valitse kansio ”Wuthering Waves Game”.",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "Valitse pelikansio",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "Valitse uudelleen",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "Haetaan: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "Banneri {index} / {total}, {count, plural, =1{1 uusi} other{{count} uutta}}",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "{count, plural, =1{Lisättiin 1 uusi tapahtuma} other{Lisättiin {count} uutta tapahtumaa}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, =1{Ladattiin {count} esinekuva} other{Ladattiin {count} esinekuvaa}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ Osittain epäonnistui: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, =1{Tuotiin 1 tili} other{Tuotiin {accounts} tiliä}}: {added, plural, =1{1 uusi} other{{added} uutta}}, {duplicate} oli jo olemassa",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ Tuonti epäonnistui osittain: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "Ladataan esineiden kuvia {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "Haetaan esineiden tietoja {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "Tapahtumia ei saatu haettua uudelleensieppauksenkaan jälkeen. Palvelin voi olla tilapäisesti poissa käytöstä – yritä myöhemmin uudelleen.",
   "errorNoRecords": "Tällä tilillä ei ole vielä Convene-historiaa",
   "errorNetwork": "Verkkoyhteys epäonnistui. Tarkista yhteys ja yritä uudelleen.",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "Convene-yleiskatsaus",
   "pageBannerRecordList": "Tapahtumaluettelo",
   "rarityOverviewTitle": "{star} – yleiskatsaus",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "Asetukset",
   "settingsAppearance": "Ulkoasu",
   "settingsThemeSystem": "Järjestelmän mukaan",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "Muunna tietojen kieli nyt",
   "settingsDataLanguageUnifying": "Muunnetaan...",
   "settingsDataLanguageUnifyDone": "Muunnettiin {converted}, palautettiin {backfilled, plural, =1{1 tunnus} other{{backfilled} tunnusta}}, {unresolved} ei voitu muuntaa.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "Muunnos epäonnistui, tietoja ei muutettu. Tarkista yhteys ja yritä uudelleen.",
   "settingsDataManagement": "Tietojen hallinta",
   "settingsGameDir": "Pelikansio",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "Tunnistettu automaattisesti: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "Asetettu manuaalisesti: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "Pelikansiota ei löytynyt",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "Tyhjennä",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "Pilvisynkronointi",
   "cloudSyncIntro": "Yhdistä Google-tilisi, niin Convene-historia varmuuskopioidaan automaattisesti Google Driveen ja pidetään synkronoituna useilla laitteilla.",
   "cloudSyncUnconfigured": "Tähän versioon ei ole määritetty Google OAuth -tunnuksia, joten pilvisynkronointi ei ole käytettävissä.",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "Selain avattiin. Viimeistele valtuutus selaimessa...",
   "cloudSyncAwaitingConsentAndroid": "Viimeistele valtuutus Googlen ikkunassa...",
   "cloudSyncLinkedAs": "Yhdistetty: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "Automaattinen synkronointi",
   "cloudSyncAutoToggleHint": "Synkronoi automaattisesti, kun sovellus käynnistyy ja tiedot muuttuvat. Manuaalinen synkronointi on käytettävissä myös, kun tämä on pois päältä.",
   "cloudSyncNow": "Synkronoi nyt",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "Poista yhdistäminen",
   "cloudSyncUnlinkConfirmBody": "Synkronointi lopetetaan. Sekä paikalliset tiedot että pilvivarmuuskopio säilytetään.",
   "cloudSyncLastSynced": "Synkronoitu viimeksi: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "Ei vielä synkronoitu",
   "cloudSyncErrorNetwork": "Synkronointi epäonnistui verkko-ongelman vuoksi. Yritetään automaattisesti uudelleen.",
   "cloudSyncErrorBusy": "Synkronointia lykättiin, koska päivitys tai tuonti on käynnissä. Yritetään automaattisesti uudelleen.",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "Peitä UID käyttöliittymässä",
   "settingsMaskUidInUiHint": "Kun asetus on päällä, käyttöliittymän ja tililuettelon UID-tunnuksista näytetään vain kolme ensimmäistä numeroa ja loput peitetään (esim. 123•••••). Hyödyllinen striimatessa tai näyttöä jaettaessa. Ei vaikuta jakokuviin, vietyihin tiedostoihin eikä poiston vahvistusikkunaan.",
   "settingsAdPrivacyOptions": "Mainosten yksityisyysasetukset",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "Muuta, suostutko henkilökohtaisten mainosten näyttämiseen.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "Tietoja",
   "settingsOtherGamesTitle": "Versiot muille peleille",
   "settingsOtherGamesGenshin": "Genshin Impact",
   "settingsOtherGamesFuture": "Muita pelejä saatetaan tukea tulevaisuudessa...",
   "settingsAboutVersion": "Versio {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "Tekijät",
   "contributorsSubtitle": "Erityiskiitos kaikille, jotka ovat osallistuneet tämän ohjelman kehitykseen!",
   "contributorsProjectLeader": "Projektin ylläpitäjä",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "Projektin lisenssi",
   "contributorsOpenSourceLicenses": "Avoimen lähdekoodin lisenssit",
   "pityRank": "{star}-pity",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "{n, plural, =1{1 veto takuuseen} other{{n} vetoa takuuseen}}",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "{n, plural, =1{Takuu lähellä! 1 veto jäljellä} other{Takuu lähellä! {n} vetoa jäljellä}}",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "Takuu pian",
   "pityNoMainRarity": "Ei vielä {star}",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "Keskim. {n} vetoa",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "Ei {star}-tapahtumia",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n, plural, =1{1 veto} other{{n} vetoa}}",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "Onnekas",
   "luckTierAverage": "Keskiverto",
   "luckTierUnlucky": "Epäonninen",
   "timelineNowLabel": "Nyt",
   "timelineNowPulls": "{n, plural, =1{1 veto} other{{n} vetoa}}",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "{n, plural, =1{1 veto edellisestä {star}} other{{n} vetoa edellisestä {star}}}",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "{n, plural, =1{1 veto edellisestä {star} kaikilla bannereilla} other{{n} vetoa edellisestä {star} kaikilla bannereilla}}",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{month} / {year}",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "Vieritä vasemmalle",
   "timelineScrollRight": "Vieritä oikealle",
   "timelineLoadMore": "Lataa lisää ({n} jäljellä)",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "Kaikki harvinaisuudet",
   "filterRarityRankOnly": "Vain {star}",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "Kaikki tyypit",
   "filterSearchHint": "Hae nimellä...",
   "filterClear": "Tyhjennä suodattimet",
@@ -210,35 +624,150 @@
   "pagerLast": "Viimeinen",
   "pagerJumpTitle": "Siirry sivulle",
   "pagerJumpLabel": "Sivu ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "Sivu {page} · {total} tapahtumaa",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "Siirry",
   "pagerJumpInvalid": "Anna sivu väliltä {min}–{max}",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "Tyhjennä nykyisen tilin tiedot",
   "settingsClearAll": "Tyhjennä kaikki tiedot",
   "settingsRefetchItemImagesTitle": "Hae esineiden kuvat uudelleen",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "Convene-historiaa ei vielä ole, ei mitään haettavaa",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "Hae esineiden kuvat uudelleen",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "Tämä tyhjentää koko paikallisen esinekuvien välimuistin ja lataa hahmojen kuvakkeet uudelleen. Yksityiskohtakuvat ladataan tarvittaessa, kun avaat esineen tiedot seuraavan kerran. Esineiden määrästä riippuen tämä voi kestää muutaman minuutin ja kuluttaa dataa.",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "Aloita uudelleenhaku",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "Esineiden tiedot",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "Hakee uusimmat tiedot kaikille esineille (kuvaus, kuvaluettelo jne.) ja säilyttää jo ladatut kuvat. Uudet kuvat ladataan, kun avaat kyseisen esineen tiedot.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "Päivitä esineiden tiedot",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "Convene-historiaa ei vielä ole, ei mitään päivitettävää",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "Päivitetäänkö esineiden tiedot?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "Tämä hakee kaikkien esineiden tiedot uudelleen ja säilyttää jo ladatut kuvat. Uudet kuvat ladataan, kun avaat tiedot. Päivitetäänkö nyt?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "Aloita päivitys",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, =1{Päivitettiin {count} esineen tiedot} other{Päivitettiin {count} esineen tiedot}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, =1{Ladattiin {count} esinekuva} other{Ladattiin {count} esinekuvaa}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, =1{Siivottiin vanhentuneen kielen tiedot {count} esineeltä} other{Siivottiin vanhentuneen kielen tiedot {count} esineeltä}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "Kuvavälimuisti",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "Yhteensä",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "Kuvakkeet",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "Yksityiskohtakuvat",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "Lasketaan...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "Välimuistin kokoa ei voitu lukea",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "Tyhjennä yksityiskohtakuvat",
   "confirmClearGalleryCacheTitle": "Tyhjennetäänkö yksityiskohtakuvat?",
   "confirmClearGalleryCacheBody": "Noin {size} esineiden yksityiskohtakuvia poistetaan. Kuvakevälimuisti säilytetään. Kuvat ladataan uudelleen, kun avaat esineen tiedot seuraavan kerran.",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "Tyhjennä",
   "settingsImageCacheClearGalleryFailed": "Yksityiskohtakuvien tyhjentäminen epäonnistui",
   "settingsExportData": "Vie tiedot",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "Näytä koko UID kuvassa",
   "shareImageShowFullUidHint": "Kun asetus on pois päältä, näytetään vain kolme ensimmäistä numeroa ja loput peitetään merkillä •",
   "shareImageUpdatedAt": "Päivitetty {time}",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "Kopioitu leikepöydälle",
   "shareImageSaved": "Tallennettu: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "Leikepöydälle kopioiminen epäonnistui",
   "shareImageFailed": "Jakokuvan luominen epäonnistui",
   "shareImageGenerating": "Luodaan kuvaa...",
   "exportDialogSuccessTitle": "Vienti onnistui",
   "exportDialogFailedTitle": "Vienti epäonnistui",
   "settingsExportFailed": "Vienti epäonnistui: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "Viety kohteeseen {path}",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "Vahvista tuonti",
   "settingsImportConfirmIntro": "{accounts, plural, =1{Tuodaan 1 tili} other{Tuodaan {accounts} tiliä}} (yhteensä {records, plural, =1{1 tapahtuma} other{{records} tapahtumaa}}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "Seuraavat tilit yhdistetään paikallisiin tietoihin. Olemassa olevia tapahtumia ei poisteta:",
   "settingsImportConfirmNoConflict": "Ei tietoristiriitoja.",
   "settingsImportConfirmPreserveFooter": "Muut olemassa olevat tilit ({uids}) säilytetään.",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "Tiedostomuoto on virheellinen tai tiedosto on vioittunut",
   "importReasonIncompatibleVersion": "Tämän varmuuskopion tietoversio ei ole yhteensopiva sovelluksen kanssa, eikä sitä voi tuoda",
   "importReasonUnreadable": "Tiedostoa ei voitu lukea",
   "importReasonForeignApp": "Tätä tiedostoa ei ole viety tällä sovelluksella",
   "importReasonNotPlatformFile": "Tämä tiedosto ei ole kelvollinen {platform} -vientitiedosto",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "Tiedostoa ei voitu kirjoittaa. Tarkista tallennussijainti ja käyttöoikeudet",
   "settingsImportFailed": "Tuonti epäonnistui: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "Valitse vietävät tilit",
   "settingsImportSelectTitle": "Valitse tuotavat tilit",
   "settingsImportMergeBadge": "Yhdistä",
   "accountsPickerSelectAll": "Valitse kaikki",
   "accountRecordCount": "{n, plural, =1{1 tapahtuma} other{{n} tapahtumaa}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Vahvista",
   "confirmClearActiveBody": "Tämä poistaa pysyvästi kaiken Convene-historian UID:ltä {uid}. Vahvista kirjoittamalla UID:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "Tämä poistaa pysyvästi kaikkien tilien Convene-historian. Vahvista kirjoittamalla DELETE:",
   "confirmDelete": "Poista",
   "confirmImport": "Tuo",
@@ -290,6 +892,13 @@
   "confirmContinue": "Jatka",
   "accountListEmpty": "Ei vielä tilejä",
   "accountLastUpdated": "Päivitetty viimeksi {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "Aktiivinen",
   "accountSetActive": "Aseta aktiiviseksi",
   "accountRemove": "Poista",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "Järjestä vetämällä",
   "loadingBootstrap": "Ladataan...",
   "timelineTopRarityTitle": "{star}-aikajana ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "Korkeimman harvinaisuuden määrä bannereittain",
   "bannerTopRarityPullsSinceLast": "{n, plural, =1{1 veto edellisestä {star}} other{{n} vetoa edellisestä {star}}}",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "Uusi versio {version} on saatavilla",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "Julkaistu {date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "Lataa",
   "updateButtonUpdate": "Päivitä",
   "updateNotesUnavailable": "Julkaisutiedot eivät ole juuri nyt saatavilla. Katso lisätiedot Google Playsta.",
   "updateDownloadingMessage": "Ladataan päivitystä...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "Päivitys on ladattu",
   "updateRestartAction": "Käynnistä uudelleen",
   "updateInAppUnavailable": "Sovelluksen sisäinen päivitys ei ole juuri nyt mahdollinen. Päivitä Google Playn kautta.",
@@ -320,134 +966,532 @@
   "updateChecking": "Tarkistetaan...",
   "updateAlreadyLatest": "Käytössäsi on uusin versio",
   "updateCheckFailed": "Päivitysten tarkistus epäonnistui: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "Yhteyttä ei voitu muodostaa. Tarkista verkkoyhteys",
   "updateErrorTimeout": "Pyyntö aikakatkaistiin",
   "updateErrorRateLimited": "GitHub API -kiintiö on käytetty loppuun. Yritä myöhemmin uudelleen",
   "updateErrorServer": "Palvelinvirhe (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "Odottamaton vastausmuoto",
   "updateErrorPlay": "Google Playhin ei saatu yhteyttä, tai tätä kopiota ei ole asennettu Google Playsta",
   "currentReleaseTitle": "Nykyisen version julkaisutiedot",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "Version {version} julkaisutietoja ei löytynyt",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "Näytä GitHubissa",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "Siirry GitHub Releases -sivulle",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "Näytä julkaisutiedot",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "Esinekuvien välimuistin tyhjentäminen epäonnistui: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "Vianmäärityslokit",
+  "@settingsLogs": {},
   "settingsLogsHint": "Jos kohtaat ongelmia, vie lokit ja auta kehittäjiä selvittämään vika.",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "Ilmoita ongelmasta",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "Vie lokit",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "Avaa lokikansio",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "Tyhjennä kaikki lokit",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "Lokit viety: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "Lokien vienti epäonnistui: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "Tämä poistaa pysyvästi kaikki logs/-kansion tiedostot. Vie ne ensin, jos tarvitset niitä vikailmoituksiin. Vahvista kirjoittamalla CLEAR.",
   "galleryIllustrationLabel": "Asu",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "Convene",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "Kuvake",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "Edellinen",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "Seuraava",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "Vieritä alas",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "Kuvan lataaminen epäonnistui",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "Yritä uudelleen",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "Kopioi kuva",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "Tallenna kuva",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "Hae kuva uudelleen",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "Kuva tallennettu kohteeseen {path}",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "Kuvan tallentaminen epäonnistui",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "Kuva kopioitu leikepöydälle",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "Kuvan kopioiminen epäonnistui",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "Sulje kuvan esikatselu",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "Lähennä",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "Loitonna",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "Näytä sivustolla encore.moe",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "Syötä Convene-historian URL-osoite manuaalisesti",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "Syötä Convene-historian URL-osoite manuaalisesti",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "Liitä Convene-historian URL-osoite tai mikä tahansa teksti, joka sisältää sen.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "Liitä URL...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "Liitä leikepöydältä",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "Valitse Client.log-tiedosto",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "Miten saan URL-osoitteen?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "Convene-historian URL-osoitetta ei löytynyt",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "Tiedostossa ei ole Convene-historian URL-osoitetta. Avaa ensin Convene Records pelissä ja valitse tiedosto sitten uudelleen.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "Tapa 1: Lentokonetila\n1. Siirry pelissä Convene-näkymään\n2. Kytke lentokonetila päälle ja napauta Convene Records\n3. Sivu ei lataudu: paina pitkään → Valitse kaikki → Kopioi\n4. Kytke lentokonetila pois ja liitä koko teksti tähän\n\nTapa 2: Sinulla on jo Client.log-tiedosto\nNapauta ”Valitse Client.log-tiedosto”, niin sovellus etsii URL-osoitteen puolestasi.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "Valitse Client.log-tiedosto\n1. Avaa Convene Records pelissä\n2. Napauta ”Valitse Client.log-tiedosto”. Se sijaitsee täällä:\nPelikansio\\Client\\Saved\\Logs\\Client.log\n\nURL toisesta työkalusta\nWuWa Trackerin kaltaisilla työkaluilla saadun URL-osoitteen voi liittää suoraan.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "URL-osoite sisältää tilisi tunnistetiedot. Älä jaa sitä julkisesti. Se vanhenee jonkin ajan kuluttua.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "OK",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "Odotetaan, että avaat pelissä Convene Records -sivun...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "Valmistellaan pelin lokitiedoston lukemista...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "Convene-historian URL-osoitetta ei voi hakea automaattisesti",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "Pelin lokitiedoston lukemista ei ole vielä määritetty. Kertaluonteisen määrityksen jälkeen se luetaan automaattisesti jokaisella päivityksellä.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "Langaton virheenkorjaus toimii vain Wi‑Fi-verkossa. Yhdistä Wi‑Fi-verkkoon ja palaa, niin sovellus jatkaa automaattisesti. Voit myös syöttää URL-osoitteen manuaalisesti.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "Root löytyi, mutta tälle sovellukselle ei ole myönnetty root-oikeuksia. Jos haluat lukea rootilla, salli sovellus root-hallintasovelluksessa (esimerkiksi Magiskin Superuser-luettelossa) ja palaa sitten. Sovellus yrittää automaattisesti uudelleen.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "Langattomaan virheenkorjaukseen ei saatu yhteyttä. Laitepari on ehkä vanhentunut. Muodosta laitepari uudelleen.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "Laitteesi ei salli tämän sovelluksen ottaa langatonta virheenkorjausta käyttöön. Ota se käyttöön Langaton virheenkorjaus -sivulla ja palaa, niin sovellus jatkaa automaattisesti.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "Tätä Wi‑Fi-verkkoa ei ole vielä sallittu langattomalle virheenkorjaukselle. Napauta järjestelmän kehotteessa Salli (valitse ”Salli aina tässä verkossa”, niin kysymys ei toistu), niin sovellus jatkaa automaattisesti. Jos suljit kehotteen, napauta Yritä uudelleen.",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "Pelin lokitiedoston lukemiseen tarvitaan tallennustilan käyttöoikeus.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "Tämä laite ei pysty lukemaan pelin lokitiedostoa automaattisesti. Syötä URL-osoite manuaalisesti.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "Avaa Wuthering Waves",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "Avaa Langaton virheenkorjaus",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "Myönnä käyttöoikeus",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "Yhteys langattomaan virheenkorjaukseen katkesi, yhdistetään uudelleen... Jos yhteys ei palaa, tarkista Wi‑Fi tai syötä URL-osoite manuaalisesti.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "Langaton virheenkorjaus on yhä päällä. Voit poistaa sen käytöstä järjestelmän asetuksista.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "Määritä",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "Muodosta laitepari uudelleen",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "Pelin lokitiedoston lukeminen",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "Miksi tätä tarvitaan?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "Android ei salli sovellusten lukea muiden sovellusten tiedostoja suoraan. Tämä sovellus käyttää sisäänrakennettua langatonta virheenkorjausta Wuthering Wavesin lokitiedoston lukemiseen ja hakee siitä Convene-historian URL-osoitteen.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "Mitä sovellus tekee",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• Lukee vain Wuthering Wavesin lokitiedoston\n• Katkaisee yhteyden heti lukemisen jälkeen ja poistaa langattoman virheenkorjauksen käytöstä, jos tämä sovellus otti sen käyttöön\n• Myöntää itselleen oikeuden ottaa langaton virheenkorjaus käyttöön ja poistaa se käytöstä, joten määritystä ei tarvitse tehdä uudelleen\n• Voit poistaa tämän milloin tahansa asetuksista",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "Vaatimukset",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 tai uudempi, Wi‑Fi, ilmoitukset sallittu",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "Aloita määritys",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "Syötä URL-osoite mieluummin manuaalisesti",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "Langattoman virheenkorjauksen laitepari",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. Ota kehittäjäasetukset käyttöön",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. Avaa järjestelmän asetuksista Tietoja-sivu (esimerkiksi ”Tietoja puhelimesta” tai ”Tietoja tabletista”)\n2. Etsi ”Koontiversion numero” ja napauta sitä 7 kertaa\n3. Kun näet ilmoituksen ”Olet nyt kehittäjä!”, palaa tähän sovellukseen",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "Avaa Tietoja-sivu",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. Kehittäjäasetukset ovat käytössä",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. Salli ilmoitukset",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "Syötät laiteparikoodin ilmoitukseen, joten salli tämän sovelluksen näyttää ilmoituksia.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "Salli ilmoitukset",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "Avaa ilmoitusasetukset",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. Ilmoitukset sallittu",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. Muodosta laitepari",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. Avaa Langaton virheenkorjaus alla olevalla painikkeella\n2. Ota käyttöön ”Käytä langatonta virheenkorjausta” ja napauta ”Muodosta laitepari laiteparikoodilla”\n3. Pyyhkäise alas näytön yläreunasta ja syötä tämän sovelluksen ilmoitukseen 6-numeroinen laiteparikoodi, joka näkyy langattoman virheenkorjauksen laiteparinäytöllä",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "Odotetaan, että syötät laiteparikoodin ilmoitukseen...\nSyötä se, kun langattoman virheenkorjauksen laiteparinäkymä on vielä auki.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "Avaa Langaton virheenkorjaus uudelleen",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "Muodostetaan laiteparia...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "Laitepari muodostettu – vielä yksi vaihe",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "Laitteessasi on ylimääräinen suojausrajoitus. Ota käyttöön vielä yksi asetus, jotta sovellus voi ottaa langattoman virheenkorjauksen automaattisesti käyttöön ja poistaa sen käytöstä.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "Näin otat sen käyttöön",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. Avaa kehittäjäasetukset\n2. Etsi USB-virheenkorjauksen suojaukseen tai käyttöoikeuksien valvontaan liittyvä kytkin ja ota se käyttöön, esimerkiksi:\n• Xiaomi: ”USB-virheenkorjaus (suojausasetukset)”\n• OPPO / realme: ”Poista käyttöoikeuksien valvonta käytöstä”\n3. Varmista, että langaton virheenkorjaus on käytössä, palaa ja napauta Yritä uudelleen",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "Avaa kehittäjäasetukset",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "Yritä uudelleen",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "Ohita (ota langaton virheenkorjaus itse käyttöön jokaisella päivityksellä)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "Valmista",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "Tästä lähtien Päivitä lukee lokin automaattisesti. Muita määrityksiä ei tarvita.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "Kun napautat Päivitä, ota langaton virheenkorjaus käyttöön pyydettäessä.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "Palataan ja aloitetaan päivitys...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "Pelin lokitiedoston käyttö",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "Tapa",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "Suora käyttö",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "Langaton virheenkorjaus",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "Ei määritetty",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "Laitepari",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "Laitepari muodostettu",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "Laitepari muodostettu (ota langaton virheenkorjaus käyttöön manuaalisesti)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "Yritä käyttöoikeutta uudelleen",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "Määritä",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "Poista laitepari",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "Poistetaanko laitepari?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "Tämä poistaa tämän sovelluksen laitepariavaimen ja peruu sovelluksen oikeuden ottaa langaton virheenkorjaus käyttöön ja poistaa se käytöstä. Langattoman virheenkorjauksen myöhempi käyttö vaatii uuden laiteparin.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "Laitepari poistettu",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "Sovelluksen laiteparin avain poistettiin ja sen oikeus ottaa langaton virheenkorjaus käyttöön ja poistaa se käytöstä peruttiin.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "Laiteparin avain poistettu",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "Sovelluksen laiteparin avain poistettiin, mutta langattomaan virheenkorjaukseen ei tällä kertaa saatu yhteyttä, joten oikeutta ottaa se käyttöön ja poistaa käytöstä ei peruttu.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "Sovellus ei käytä tätä oikeutta, kun laiteparia ei ole. Jos haluat perua sen kokonaan, yhdistä Wi‑Fi-verkkoon, muodosta laitepari uudelleen ja poista se sitten taas.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "Järjestelmän luettelossa Langaton virheenkorjaus → Pariliitetyt laitteet näkyy edelleen ”{name}”. Se ei voi enää muodostaa yhteyttä, joten voit jättää sen; jos haluat poistaa sen, napauta sitä ja poista se.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "Järjestelmän luettelossa Langaton virheenkorjaus → Pariliitetyt laitteet näkyy myös edelleen ”{name}”; voit poistaa sen napauttamalla sitä.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "Convene-historian URL-osoite löytyi. Convene-historian haku alkaa, kun palaat tähän sovellukseen.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "Jaa",
   "shareFailed": "Jakaminen epäonnistui",
   "dialogSaveAsTitle": "Tallenna nimellä",
@@ -456,10 +1500,37 @@
   "actionSave": "Tallenna",
   "settingsLogsShare": "Jaa lokit",
   "logUnavailableGameNotInstalled": "Wuthering Wavesin maailmanlaajuista versiota ei löytynyt tästä laitteesta. Palaa tänne asennuksen jälkeen, niin peli tunnistetaan automaattisesti.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "Tarkista uudelleen",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "Tähän laitteeseen on asennettu useampi kuin yksi Wuthering Waves -versio. Mikä niistä luetaan?",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "Google Play -versio",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "Galaxy Store -versio",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "Wuthering Waves -versio: {name}",
-  "actionSwitchGameVersion": "Vaihda versiota"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "Vaihda versiota",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }
