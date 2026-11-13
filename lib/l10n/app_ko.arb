@@ -3,6 +3,20 @@
   "localeNativeName": "한국어",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "번역: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "명조: 워더링 웨이브 튜닝 분석기",
   "actionUpdate": "업데이트",
   "actionCancel": "취소",
@@ -40,24 +54,94 @@
   "navSectionGacha": "튜닝",
   "footerNotSynced": "동기화 안 됨",
   "footerLastUpdated": "마지막 업데이트: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "방금 전",
   "relativeSecondsAgo": "{count}초 전",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count}분 전",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count}시간 전",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count}일 전",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count}개월 전",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count}년 전",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "계정 전환",
   "uidNotSynced": "동기화 안 됨",
   "uidActiveSuffix": " (사용 중)",
   "emptyNoSyncTitle": "아직 동기화된 데이터가 없습니다",
   "emptyNoSyncMessage": "오른쪽 위의 {icon}을(를) 눌러 시작하세요",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "이 배너에는 기록이 없습니다",
   "emptyNoFilterMatch": "현재 필터와 일치하는 기록이 없습니다",
   "emptyNoGachaRecords": "아직 튜닝 기록이 없습니다",
   "statsTotal": "총 튜닝 횟수",
   "statsRankCount": "{star} 획득 수",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "전체의 {rate}%",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "등급 분포",
   "statsItemTypeDistribution": "유형 분포",
   "statsNoData": "데이터 없음",
@@ -70,12 +154,40 @@
   "tableKind": "유형",
   "tableRarity": "등급",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "누적",
   "tableMainPity": "천장",
   "tableSortButton": "정렬: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "정렬: 기본",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "정렬 기준",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "마지막 {star} 이후 튜닝 횟수",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "내림차순",
   "sortDirectionAsc": "오름차순",
   "sortHintClickToSort": "클릭하여 정렬",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "명조 실행 → 튜닝 → 튜닝 기록을 열어 주세요",
   "progressFallbackHint": "(이전 캡처가 만료되었습니다. 튜닝 기록 페이지를 다시 열어 주세요.)",
   "progressCaptureUnavailableHint": "캡처 도우미를 시작할 수 없습니다(Windows 권한 요청이 거부되었을 수 있습니다). 지금은 게임 로그 파일에서만 감지합니다. 게임에서 튜닝 기록 페이지를 열어 주세요.",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "캡처 도우미를 시작할 수 없으며(Windows 권한 요청이 거부되었을 수 있습니다), 게임 폴더도 찾지 못했습니다. 아래의 “게임 폴더 선택”을 눌러 직접 지정하거나, 취소 후 “업데이트”를 다시 누르고 권한 요청에서 “예”를 선택하세요.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "튜닝 기록을 열었는데 반응이 없나요?",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "튜닝 기록이 감지되지 않음",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "명조 게임 폴더를 찾지 못했습니다. 폴더를 선택하면 게임 로그 파일에서도 튜닝 기록 URL을 가져올 수 있습니다.",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "사용 중인 게임 폴더: {path}. 경로가 올바르지 않다면(예: 게임이 여러 개 설치된 경우) “다시 선택”을 누르세요.",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "게임 폴더를 저장했습니다. 게임으로 돌아가 튜닝 기록을 한 번 더 열어 주세요.",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "이 폴더에서 게임 로그 파일을 찾지 못했습니다. “Wuthering Waves Game” 폴더를 선택해 주세요.",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "게임 폴더 선택",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "다시 선택",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "가져오는 중: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "배너 {index} / {total}, 새 기록 {count}건",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "새 기록 {count}건을 추가했습니다",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, other{아이템 이미지 {count}개를 다운로드했습니다}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ 일부 실패: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, other{계정 {accounts}개를 가져왔습니다}}: 신규 {added}건, 기존 {duplicate}건",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ 일부 가져오기 실패: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "아이템 이미지 다운로드 중 {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "아이템 데이터 가져오는 중 {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "다시 캡처했지만 기록을 가져오지 못했습니다. 서버가 일시적으로 응답하지 않을 수 있습니다. 잠시 후 다시 시도해 주세요.",
   "errorNoRecords": "이 계정에는 아직 튜닝 기록이 없습니다",
   "errorNetwork": "네트워크 연결에 실패했습니다. 연결 상태를 확인한 후 다시 시도해 주세요.",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "튜닝 개요",
   "pageBannerRecordList": "기록 목록",
   "rarityOverviewTitle": "{star} 목록",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "설정",
   "settingsAppearance": "화면",
   "settingsThemeSystem": "시스템 설정 따르기",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "지금 데이터 언어 변환",
   "settingsDataLanguageUnifying": "변환 중...",
   "settingsDataLanguageUnifyDone": "{converted}건 변환, ID {backfilled}건 복구, {unresolved}건은 변환하지 못했습니다.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "변환에 실패했습니다. 데이터는 변경되지 않았습니다. 연결을 확인한 후 다시 시도해 주세요.",
   "settingsDataManagement": "데이터 관리",
   "settingsGameDir": "게임 폴더",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "자동 감지: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "직접 지정: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "게임 폴더를 찾지 못했습니다",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "지우기",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "클라우드 동기화",
   "cloudSyncIntro": "Google 계정을 연결하면 튜닝 기록을 Google Drive에 자동으로 백업하고 여러 기기 간에 동기화합니다.",
   "cloudSyncUnconfigured": "이 빌드에는 Google OAuth 인증 정보가 설정되어 있지 않아 클라우드 동기화를 사용할 수 없습니다.",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "브라우저를 열었습니다. 브라우저에서 인증을 완료해 주세요...",
   "cloudSyncAwaitingConsentAndroid": "Google 창에서 인증을 완료해 주세요...",
   "cloudSyncLinkedAs": "연결됨: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "자동 동기화",
   "cloudSyncAutoToggleHint": "앱 시작 시와 데이터 변경 후 자동으로 동기화합니다. 꺼도 수동 동기화는 사용할 수 있습니다.",
   "cloudSyncNow": "지금 동기화",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "연결 해제",
   "cloudSyncUnlinkConfirmBody": "동기화가 중지됩니다. 로컬 데이터와 클라우드 백업은 모두 유지됩니다.",
   "cloudSyncLastSynced": "마지막 동기화: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "아직 동기화하지 않음",
   "cloudSyncErrorNetwork": "동기화 실패: 네트워크 문제입니다. 자동으로 다시 시도합니다.",
   "cloudSyncErrorBusy": "동기화 보류: 업데이트 또는 가져오기가 진행 중입니다. 자동으로 다시 시도합니다.",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "화면에서 UID 가리기",
   "settingsMaskUidInUiHint": "켜면 화면과 계정 목록의 UID가 앞 3자리만 표시되고 나머지는 가려집니다(예: 123•••••). 방송이나 화면 공유 시 유용합니다. 공유 이미지, 내보낸 파일, 삭제 확인 창에는 적용되지 않습니다.",
   "settingsAdPrivacyOptions": "광고 개인정보 보호 옵션",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "맞춤 광고 표시에 대한 동의 여부를 변경합니다.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "정보",
   "settingsOtherGamesTitle": "다른 게임용 버전",
   "settingsOtherGamesGenshin": "원신",
   "settingsOtherGamesFuture": "앞으로 더 많은 게임을 지원할 수도 있습니다...",
   "settingsAboutVersion": "버전 {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "기여자",
   "contributorsSubtitle": "이 소프트웨어 개발에 기여해 주신 다음 분들께 특별히 감사드립니다!",
   "contributorsProjectLeader": "프로젝트 관리자",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "프로젝트 라이선스",
   "contributorsOpenSourceLicenses": "오픈소스 라이선스",
   "pityRank": "{star} 천장",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "확정까지 {n}회",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "확정 임박! {n}회 남음",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "곧 확정",
   "pityNoMainRarity": "아직 {star} 없음",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "평균 {n}회",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "{star} 기록 없음",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n}회",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "행운",
   "luckTierAverage": "보통",
   "luckTierUnlucky": "불운",
   "timelineNowLabel": "현재",
   "timelineNowPulls": "{n}회",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "마지막 {star} 이후 {n}회",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "배너 통합 마지막 {star} 이후 {n}회",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{year}년 {month}월",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "왼쪽으로 스크롤",
   "timelineScrollRight": "오른쪽으로 스크롤",
   "timelineLoadMore": "더 보기 ({n}개 남음)",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "모든 등급",
   "filterRarityRankOnly": "{star}만",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "모든 유형",
   "filterSearchHint": "이름 검색...",
   "filterClear": "필터 지우기",
@@ -210,35 +624,150 @@
   "pagerLast": "마지막",
   "pagerJumpTitle": "페이지 이동",
   "pagerJumpLabel": "페이지 ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "현재 {page}페이지 · 총 {total}건",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "이동",
   "pagerJumpInvalid": "{min}–{max} 사이의 페이지를 입력하세요",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "현재 계정 데이터 삭제",
   "settingsClearAll": "모든 데이터 삭제",
   "settingsRefetchItemImagesTitle": "아이템 이미지 강제로 다시 받기",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "아직 튜닝 기록이 없어 다시 받을 항목이 없습니다",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "아이템 이미지 강제로 다시 받기",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "로컬 아이템 이미지 캐시를 모두 지우고 캐릭터 아이콘을 다시 다운로드합니다. 상세 이미지는 다음에 아이템 상세 정보를 열 때 필요한 만큼 다운로드됩니다. 아이템 수에 따라 몇 분 정도의 시간과 데이터가 소요될 수 있습니다.",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "다시 받기 시작",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "아이템 데이터",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "모든 아이템의 최신 상세 정보(소개, 이미지 목록 등)를 다시 가져옵니다. 이미 받은 이미지는 유지되며, 새로 추가된 이미지는 해당 아이템의 상세 정보를 열 때 다운로드됩니다.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "아이템 데이터 업데이트",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "아직 튜닝 기록이 없어 업데이트할 항목이 없습니다",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "아이템 데이터를 업데이트할까요?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "모든 아이템의 상세 정보를 다시 가져옵니다. 이미 받은 이미지는 유지되며, 새로 추가된 이미지는 상세 정보를 열 때 다운로드됩니다. 지금 업데이트할까요?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "업데이트 시작",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, other{아이템 {count}개의 데이터를 업데이트했습니다}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, other{아이템 이미지 {count}개를 다운로드했습니다}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, other{아이템 {count}개의 이전 언어 데이터를 정리했습니다}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "이미지 캐시",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "전체",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "아이콘",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "상세 이미지",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "계산 중...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "캐시 크기를 읽을 수 없습니다",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "상세 이미지 삭제",
   "confirmClearGalleryCacheTitle": "상세 이미지를 삭제할까요?",
   "confirmClearGalleryCacheBody": "아이템 상세 이미지 약 {size}가 삭제되며, 아이콘 캐시는 유지됩니다. 다음에 아이템 상세 정보를 열 때 다시 다운로드됩니다.",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "삭제",
   "settingsImageCacheClearGalleryFailed": "상세 이미지를 삭제하지 못했습니다",
   "settingsExportData": "데이터 내보내기",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "이미지에 전체 UID 표시",
   "shareImageShowFullUidHint": "끄면 앞 3자리만 표시되고 나머지는 •로 가려집니다",
   "shareImageUpdatedAt": "{time} 업데이트",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "클립보드에 복사했습니다",
   "shareImageSaved": "저장됨: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "클립보드에 복사하지 못했습니다",
   "shareImageFailed": "공유 이미지를 만들지 못했습니다",
   "shareImageGenerating": "이미지 생성 중...",
   "exportDialogSuccessTitle": "내보내기 완료",
   "exportDialogFailedTitle": "내보내기 실패",
   "settingsExportFailed": "내보내기 실패: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "{path}(으)로 내보냈습니다",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "가져오기 확인",
   "settingsImportConfirmIntro": "계정 {accounts}개(총 {records}건)를 가져옵니다:",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "다음 계정은 로컬 데이터와 병합되며, 기존 기록은 삭제되지 않습니다:",
   "settingsImportConfirmNoConflict": "데이터 충돌이 없습니다.",
   "settingsImportConfirmPreserveFooter": "다른 기존 계정({uids})은 유지됩니다.",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "파일 형식이 올바르지 않거나 파일이 손상되었습니다",
   "importReasonIncompatibleVersion": "이 백업의 데이터 버전이 현재 앱과 호환되지 않아 가져올 수 없습니다",
   "importReasonUnreadable": "파일을 읽을 수 없습니다",
   "importReasonForeignApp": "이 앱에서 내보낸 파일이 아닙니다",
   "importReasonNotPlatformFile": "올바른 {platform} 내보내기 파일이 아닙니다",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "파일을 쓸 수 없습니다. 저장 위치와 권한을 확인해 주세요",
   "settingsImportFailed": "가져오기 실패: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "내보낼 계정 선택",
   "settingsImportSelectTitle": "가져올 계정 선택",
   "settingsImportMergeBadge": "병합",
   "accountsPickerSelectAll": "모두 선택",
   "accountRecordCount": "{n}건",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "확인",
   "confirmClearActiveBody": "UID {uid}의 모든 튜닝 기록이 영구적으로 삭제됩니다. 확인하려면 UID를 입력하세요:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "모든 계정의 튜닝 기록이 영구적으로 삭제됩니다. 확인하려면 DELETE를 입력하세요:",
   "confirmDelete": "삭제",
   "confirmImport": "가져오기",
@@ -290,6 +892,13 @@
   "confirmContinue": "계속",
   "accountListEmpty": "아직 계정이 없습니다",
   "accountLastUpdated": "마지막 업데이트 {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "사용 중",
   "accountSetActive": "사용 계정으로 설정",
   "accountRemove": "삭제",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "드래그하여 순서 변경",
   "loadingBootstrap": "불러오는 중...",
   "timelineTopRarityTitle": "{star} 타임라인 ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "배너별 최고 등급 획득 수",
   "bannerTopRarityPullsSinceLast": "마지막 {star} 이후 {n}회",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "새 버전 {version} 출시",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "출시일: {date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "다운로드",
   "updateButtonUpdate": "업데이트",
   "updateNotesUnavailable": "지금은 릴리스 노트를 불러올 수 없습니다. 자세한 내용은 Google Play에서 확인하세요.",
   "updateDownloadingMessage": "업데이트를 다운로드하는 중...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "업데이트를 다운로드했습니다",
   "updateRestartAction": "다시 시작",
   "updateInAppUnavailable": "지금은 앱에서 업데이트할 수 없습니다. Google Play에서 업데이트해 주세요.",
@@ -320,134 +966,532 @@
   "updateChecking": "확인 중...",
   "updateAlreadyLatest": "최신 버전을 사용 중입니다",
   "updateCheckFailed": "업데이트 확인 실패: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "연결할 수 없습니다. 네트워크를 확인해 주세요",
   "updateErrorTimeout": "요청 시간이 초과되었습니다",
   "updateErrorRateLimited": "GitHub API 사용 한도를 초과했습니다. 잠시 후 다시 시도해 주세요",
   "updateErrorServer": "서버 오류 (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "예상하지 못한 응답 형식입니다",
   "updateErrorPlay": "Google Play에 연결할 수 없거나, Google Play에서 설치한 앱이 아닙니다",
   "currentReleaseTitle": "현재 버전 릴리스 노트",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "{version}의 릴리스 노트를 찾을 수 없습니다",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "GitHub에서 보기",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "GitHub Releases 페이지로 이동",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "릴리스 노트 보기",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "아이템 이미지 캐시를 지우지 못했습니다: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "디버그 로그",
+  "@settingsLogs": {},
   "settingsLogsHint": "문제가 발생하면 로그를 내보내 개발자의 원인 파악을 도와주세요.",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "문제 신고",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "로그 내보내기",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "로그 폴더 열기",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "모든 로그 삭제",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "로그를 내보냈습니다: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "로그 내보내기 실패: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "logs/ 안의 모든 파일이 영구적으로 삭제됩니다. 문제 신고에 필요하다면 먼저 내보내세요. 확인하려면 CLEAR를 입력하세요.",
   "galleryIllustrationLabel": "의상",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "튜닝",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "아이콘",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "이전",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "다음",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "아래로 스크롤",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "이미지를 불러오지 못했습니다",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "다시 시도",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "이미지 복사",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "이미지 저장",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "이미지 다시 받기",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "이미지를 {path}에 저장했습니다",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "이미지를 저장하지 못했습니다",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "이미지를 클립보드에 복사했습니다",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "이미지를 복사하지 못했습니다",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "이미지 미리보기 닫기",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "확대",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "축소",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "encore.moe에서 보기",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "튜닝 기록 URL 직접 입력",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "튜닝 기록 URL 직접 입력",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "튜닝 기록 URL 또는 URL이 포함된 텍스트를 붙여 넣으세요.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "URL 붙여 넣기...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "클립보드에서 붙여 넣기",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "Client.log 파일 선택",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "URL은 어떻게 얻나요?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "튜닝 기록 URL을 찾지 못했습니다",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "이 파일에 튜닝 기록 URL이 없습니다. 먼저 게임에서 튜닝 기록을 연 다음 다시 선택해 주세요.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "방법 1: 비행기 모드\n1. 게임에서 튜닝 화면으로 이동합니다\n2. 비행기 모드를 켠 다음 튜닝 기록을 누릅니다\n3. 페이지가 로드되지 않으면 길게 누르기 → 모두 선택 → 복사\n4. 비행기 모드를 끄고 전체 텍스트를 여기에 붙여 넣습니다\n\n방법 2: Client.log 파일이 이미 있는 경우\n“Client.log 파일 선택”을 누르면 앱이 URL을 찾아 줍니다.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "Client.log 파일 선택\n1. 게임에서 튜닝 기록을 엽니다\n2. “Client.log 파일 선택”을 누릅니다. 파일 위치:\n게임 폴더\\Client\\Saved\\Logs\\Client.log\n\n다른 도구에서 얻은 URL\nWuWa Tracker 등의 도구로 얻은 URL은 그대로 붙여 넣으면 됩니다.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "URL에는 계정 인증 정보가 포함되어 있으니 공개적으로 공유하지 마세요. 일정 시간이 지나면 만료됩니다.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "확인",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "게임에서 튜닝 기록 페이지를 열 때까지 기다리는 중...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "게임 로그 파일을 읽을 준비 중...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "튜닝 기록 URL을 자동으로 가져올 수 없음",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "게임 로그 파일 읽기가 아직 설정되지 않았습니다. 한 번만 설정하면 이후 업데이트할 때마다 자동으로 읽습니다.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "무선 디버깅은 Wi‑Fi에서만 작동합니다. Wi‑Fi에 연결한 후 돌아오면 자동으로 계속됩니다. URL을 직접 입력할 수도 있습니다.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "루트가 감지되었지만 이 앱에 루트 권한이 허용되지 않았습니다. 루트로 읽으려면 루트 관리자(예: Magisk의 슈퍼유저 목록)에서 이 앱을 허용한 후 돌아오세요. 앱이 자동으로 다시 시도합니다.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "무선 디버깅에 연결하지 못했습니다. 페어링이 만료되었을 수 있으니 다시 페어링해 주세요.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "이 기기에서는 앱이 무선 디버깅을 켤 수 없습니다. 무선 디버깅 화면에서 직접 켠 후 돌아오면 자동으로 계속됩니다.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "이 Wi‑Fi 네트워크는 아직 무선 디버깅이 허용되지 않았습니다. 시스템 팝업에서 허용을 누르면(“이 네트워크에서 항상 허용”을 체크하면 다시 묻지 않습니다) 자동으로 계속됩니다. 팝업을 닫았다면 다시 시도를 누르세요.",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "게임 로그 파일을 읽으려면 저장공간 권한이 필요합니다.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "이 기기에서는 게임 로그 파일을 자동으로 읽을 수 없습니다. URL을 직접 입력해 주세요.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "명조 열기",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "무선 디버깅 열기",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "권한 허용",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "무선 디버깅 연결이 끊겨 다시 연결하는 중입니다... 복구되지 않으면 Wi‑Fi를 확인하거나 URL을 직접 입력해 주세요.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "무선 디버깅이 아직 켜져 있습니다. 시스템 설정에서 끌 수 있습니다.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "설정",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "다시 페어링",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "게임 로그 파일 읽기",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "왜 필요한가요?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "Android에서는 앱이 다른 앱의 파일을 직접 읽을 수 없습니다. 이 앱은 기본 제공되는 무선 디버깅 기능으로 명조의 로그 파일을 읽어 튜닝 기록 URL을 가져옵니다.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "이 앱이 하는 일",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• 명조의 로그 파일만 읽습니다\n• 읽은 직후 연결을 끊고, 이 앱이 무선 디버깅을 켰다면 다시 끕니다\n• 무선 디버깅을 켜고 끄는 권한을 스스로 부여하므로 다시 설정할 필요가 없습니다\n• 설정에서 언제든지 해제할 수 있습니다",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "필요 조건",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 이상, Wi‑Fi, 알림 허용",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "설정 시작",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "대신 URL 직접 입력",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "무선 디버깅 페어링",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. 개발자 옵션 켜기",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. 시스템 설정에서 정보 화면을 엽니다(예: “휴대전화 정보” 또는 “태블릿 정보”)\n2. “빌드 번호”를 찾아 7번 누릅니다\n3. “개발자가 되었습니다”라는 메시지가 나타나면 이 앱으로 돌아옵니다",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "정보 화면 열기",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. 개발자 옵션이 켜져 있습니다",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. 알림 허용",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "페어링 코드는 알림에서 입력하므로 이 앱의 알림을 허용해 주세요.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "알림 허용",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "알림 설정 열기",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. 알림이 허용되었습니다",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. 페어링",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. 아래 버튼을 눌러 무선 디버깅을 엽니다\n2. “무선 디버깅 사용”을 켜고 “페어링 코드로 기기 페어링”을 누릅니다\n3. 화면 위에서 아래로 스와이프한 다음, 이 앱의 알림에 무선 디버깅 페어링 화면에 표시된 6자리 페어링 코드를 입력합니다",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "알림에 페어링 코드를 입력하기를 기다리는 중...\n무선 디버깅의 페어링 화면이 열려 있는 동안 입력하세요.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "무선 디버깅 다시 열기",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "페어링 중...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "페어링 완료, 한 단계 남았습니다",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "이 기기에는 추가 보안 제한이 있습니다. 앱이 무선 디버깅을 자동으로 켜고 끌 수 있도록 옵션을 하나 더 켜 주세요.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "켜는 방법",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. 개발자 옵션을 엽니다\n2. USB 디버깅 보안 또는 권한 모니터링 관련 스위치를 찾아 켭니다. 예:\n• Xiaomi: “USB 디버깅(보안 설정)”\n• OPPO / realme: “권한 모니터링 사용 중지”\n3. 무선 디버깅이 켜져 있는지 확인한 후 돌아와서 다시 시도를 누릅니다",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "개발자 옵션 열기",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "다시 시도",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "건너뛰기 (업데이트할 때마다 무선 디버깅을 직접 켜기)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "설정 완료",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "이제부터 업데이트하면 로그를 자동으로 읽습니다. 더 이상 설정할 필요가 없습니다.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "업데이트를 누른 후 안내가 나오면 무선 디버깅을 켜 주세요.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "돌아가서 업데이트를 시작하는 중...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "게임 로그 파일 접근",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "방식",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "루트",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "직접 접근",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "무선 디버깅",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "설정 안 됨",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "페어링",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "페어링됨",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "페어링됨 (무선 디버깅 직접 켜기)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "권한 다시 시도",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "설정",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "페어링 해제",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "페어링을 해제할까요?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "이 앱의 페어링 키를 삭제하고 이 앱의 무선 디버깅 전환 권한을 제거합니다. 나중에 무선 디버깅을 사용하려면 다시 페어링해야 합니다.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "페어링을 해제했습니다",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "이 앱의 페어링 키를 삭제하고 무선 디버깅 전환 권한을 제거했습니다.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "페어링 키를 삭제했습니다",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "이 앱의 페어링 키를 삭제했지만, 이번에는 무선 디버깅에 연결하지 못해 무선 디버깅 전환 권한은 제거하지 못했습니다.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "페어링하지 않은 동안에는 이 앱이 이 권한을 사용하지 않습니다. 완전히 제거하려면 Wi‑Fi에 연결해 다시 페어링한 뒤 한 번 더 해제하세요.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "시스템의 무선 디버깅 → 페어링된 기기 목록에 '{name}'이(가) 남아 있습니다. 더 이상 연결할 수 없으므로 그대로 두어도 됩니다. 삭제하려면 탭해서 삭제하세요.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "시스템의 무선 디버깅 → 페어링된 기기 목록에도 '{name}'이(가) 남아 있습니다. 탭해서 삭제할 수 있습니다.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "튜닝 기록 URL을 가져왔습니다. 이 앱으로 돌아오면 튜닝 기록 가져오기를 시작합니다.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "공유",
   "shareFailed": "공유할 수 없습니다",
   "dialogSaveAsTitle": "다른 이름으로 저장",
@@ -456,10 +1500,37 @@
   "actionSave": "저장",
   "settingsLogsShare": "로그 공유",
   "logUnavailableGameNotInstalled": "이 기기에서 글로벌 서버 명조를 찾을 수 없습니다. 설치한 뒤 여기로 돌아오면 자동으로 다시 감지합니다.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "다시 감지",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "이 기기에 명조가 여러 버전 설치되어 있습니다. 어느 버전의 기록을 읽을까요?",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "Google Play 버전",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "Galaxy Store 버전",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "명조 버전: {name}",
-  "actionSwitchGameVersion": "버전 전환"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "버전 전환",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }
