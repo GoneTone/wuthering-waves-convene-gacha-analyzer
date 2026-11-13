@@ -156,9 +156,16 @@ jobs:
             Write-Host "::warning::CLOUD_SYNC_CLIENT_ID/SECRET secrets not set; cloud sync will be disabled in this release build"
           }
 
+      # runner 的工作目錄是 D:\a\<repo>\<repo>，Rust 1.100 起 Cargo 的中間產物目錄更深，
+      # super_native_extensions 的 proc-macro DLL 路徑超過 MSVC 連結器的 260 字元上限（LNK1104）。
+      # 用 subst 掛成 W: 再建置，路徑縮短約 80 字元；產物仍寫在同一個實體目錄。
       - name: Build Windows installer
         shell: pwsh
-        run: .\scripts\build_installer\build_release.ps1
+        run: |
+          subst W: "$env:GITHUB_WORKSPACE"
+          if ($LASTEXITCODE -ne 0) { throw "subst W: failed" }
+          Set-Location W:\
+          .\scripts\build_installer\build_release.ps1
 
       - name: Locate installer
         shell: pwsh
@@ -365,7 +372,7 @@ jobs:
           packageName: tw.reh.wuwa.gacha
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           releaseName: ${{ inputs.tag }}
-          track: internal
+          tracks: internal
           # 直接推出給內部測試人員；Play 只在 App 從沒推出過任何版本時要求 draft，第一版由維護者手動上傳並推出。
           status: completed
 

@@ -92,6 +92,7 @@ pub cache 在 C 槽、專案在 E 槽時，Kotlin 增量編譯會失敗（`this 
 
 `flutter_inappwebview_windows` 在很深的目錄（例如 `AppData\Local\Temp\...\scratchpad\...`）建置時，會出現「無法開啟包含檔案」和 `Invalid argument` 錯誤。這是路徑超過長度上限造成的。
 **處理**：專案放在短一點的路徑，或用 `subst X: <長路徑>` 掛成磁碟機代號再建置（換路徑後要先刪掉 `build/windows`，否則 CMake 快取還會指向舊路徑）。
+**GitHub Actions 也會中**（2026-11-13）：runner 的工作目錄是 `D:\a\<repo>\<repo>`，比本機長。Rust 升到 1.100 後（推測是 Cargo 把中間產物放得更深），`super_native_extensions` 的 proc-macro DLL 路徑變成 267 字元，連結失敗（`LNK1104: cannot open file ...\cargokit_build\release\build\irondash_message_channel_derive\<hash>\out\...dll`）。v1.8.1 用 Rust 1.99.1 時沒事，本機路徑短也沒事。`release.yml` 的 Windows 建置步驟改成先 `subst W:` 掛工作目錄再從 `W:\` 建置。
 
 ### 10. App 圖示（通用）
 
