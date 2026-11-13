@@ -3,6 +3,20 @@
   "localeNativeName": "ภาษาไทย",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "ผู้แปล: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "ตัววิเคราะห์การอัญเชิญ Wuthering Waves",
   "actionUpdate": "อัปเดต",
   "actionCancel": "ยกเลิก",
@@ -40,24 +54,94 @@
   "navSectionGacha": "การอัญเชิญ",
   "footerNotSynced": "ยังไม่ได้ซิงค์",
   "footerLastUpdated": "อัปเดตล่าสุด: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "เมื่อสักครู่",
   "relativeSecondsAgo": "{count} วินาทีที่แล้ว",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count} นาทีที่แล้ว",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count} ชั่วโมงที่แล้ว",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count} วันที่แล้ว",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count} เดือนที่แล้ว",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count} ปีที่แล้ว",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "สลับบัญชี",
   "uidNotSynced": "ยังไม่ได้ซิงค์",
   "uidActiveSuffix": " (ใช้งานอยู่)",
   "emptyNoSyncTitle": "ยังไม่มีข้อมูลที่ซิงค์",
   "emptyNoSyncMessage": "แตะ {icon} ที่มุมขวาบนเพื่อเริ่มต้น",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "แบนเนอร์นี้ยังไม่มีบันทึก",
   "emptyNoFilterMatch": "ไม่มีบันทึกที่ตรงกับตัวกรองปัจจุบัน",
   "emptyNoGachaRecords": "ยังไม่มีบันทึกการอัญเชิญ",
   "statsTotal": "อัญเชิญทั้งหมด",
   "statsRankCount": "จำนวน {star}",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "{rate}% ของทั้งหมด",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "การกระจายตามความหายาก",
   "statsItemTypeDistribution": "การกระจายตามประเภท",
   "statsNoData": "ไม่มีข้อมูล",
@@ -70,12 +154,40 @@
   "tableKind": "ประเภท",
   "tableRarity": "ความหายาก",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "สะสม",
   "tableMainPity": "การันตี",
   "tableSortButton": "เรียง: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "เรียง: ค่าเริ่มต้น",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "เรียงตาม",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "จำนวนครั้งนับจาก {star} ล่าสุด",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "มากไปน้อย",
   "sortDirectionAsc": "น้อยไปมาก",
   "sortHintClickToSort": "คลิกเพื่อเรียง",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "เปิด Wuthering Waves → หน้าอัญเชิญ → บันทึกการอัญเชิญ",
   "progressFallbackHint": "(การดักจับครั้งก่อนหมดอายุแล้ว โปรดเปิดหน้าบันทึกการอัญเชิญอีกครั้ง)",
   "progressCaptureUnavailableHint": "ไม่สามารถเริ่มตัวช่วยดักจับได้ (คุณอาจปฏิเสธคำขอสิทธิ์ของ Windows) ตอนนี้จะตรวจจับจากไฟล์ล็อกของเกมเท่านั้น โปรดเปิดหน้าบันทึกการอัญเชิญในเกม",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "ไม่สามารถเริ่มตัวช่วยดักจับได้ (คุณอาจปฏิเสธคำขอสิทธิ์ของ Windows) และไม่พบโฟลเดอร์เกม กด “เลือกโฟลเดอร์เกม” ด้านล่างเพื่อกำหนดเอง หรือยกเลิกแล้วกด “อัปเดต” อีกครั้งและเลือก “ใช่” ในคำขอสิทธิ์",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "เปิดบันทึกการอัญเชิญแล้วแต่ไม่มีอะไรเกิดขึ้น?",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "ตรวจไม่พบบันทึกการอัญเชิญ",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "ไม่พบโฟลเดอร์เกม Wuthering Waves เมื่อเลือกโฟลเดอร์แล้ว เครื่องมือนี้จะรับ URL บันทึกการอัญเชิญจากไฟล์ล็อกของเกมได้ด้วย",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "โฟลเดอร์เกมที่ใช้อยู่: {path} หากพาธนี้ไม่ถูกต้อง (เช่น ติดตั้งเกมไว้มากกว่าหนึ่งชุด) ให้กด “เลือกใหม่”",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "บันทึกโฟลเดอร์เกมแล้ว กลับไปที่เกมแล้วเปิดบันทึกการอัญเชิญอีกครั้ง",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "ไม่พบไฟล์ล็อกของเกมในโฟลเดอร์นี้ โปรดเลือกโฟลเดอร์ “Wuthering Waves Game”",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "เลือกโฟลเดอร์เกม",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "เลือกใหม่",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "กำลังดึงข้อมูล: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "แบนเนอร์ {index} / {total} ใหม่ {count} รายการ",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "เพิ่มบันทึกการอัญเชิญใหม่ {count} รายการ",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, other{ดาวน์โหลดรูปไอเทม {count} รูปแล้ว}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ ล้มเหลวบางส่วน: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, other{นำเข้า {accounts} บัญชีแล้ว}}: ใหม่ {added} รายการ มีอยู่แล้ว {duplicate} รายการ",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ นำเข้าล้มเหลวบางส่วน: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "กำลังดาวน์โหลดรูปไอเทม {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "กำลังดึงข้อมูลไอเทม {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "ดักจับใหม่แล้วแต่ยังดึงบันทึกการอัญเชิญไม่ได้ เซิร์ฟเวอร์อาจไม่พร้อมใช้งานชั่วคราว โปรดลองอีกครั้งในภายหลัง",
   "errorNoRecords": "บัญชีนี้ยังไม่มีบันทึกการอัญเชิญ",
   "errorNetwork": "เชื่อมต่อเครือข่ายไม่สำเร็จ โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "ภาพรวมการอัญเชิญ",
   "pageBannerRecordList": "รายการบันทึก",
   "rarityOverviewTitle": "ภาพรวม {star}",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "การตั้งค่า",
   "settingsAppearance": "รูปลักษณ์",
   "settingsThemeSystem": "ตามระบบ",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "แปลงภาษาของข้อมูลตอนนี้",
   "settingsDataLanguageUnifying": "กำลังแปลง...",
   "settingsDataLanguageUnifyDone": "แปลงแล้ว {converted} รายการ กู้คืน ID {backfilled} รายการ แปลงไม่ได้ {unresolved} รายการ",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "แปลงไม่สำเร็จ ข้อมูลไม่มีการเปลี่ยนแปลง โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
   "settingsDataManagement": "การจัดการข้อมูล",
   "settingsGameDir": "โฟลเดอร์เกม",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "ตรวจพบอัตโนมัติ: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "กำหนดเอง: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "ไม่พบโฟลเดอร์เกม",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "ล้าง",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "ซิงค์คลาวด์",
   "cloudSyncIntro": "เชื่อมต่อบัญชี Google เพื่อสำรองบันทึกการอัญเชิญไปยัง Google Drive โดยอัตโนมัติ และซิงค์ข้อมูลระหว่างหลายอุปกรณ์",
   "cloudSyncUnconfigured": "บิลด์นี้ไม่ได้ตั้งค่าข้อมูลรับรอง Google OAuth จึงใช้การซิงค์คลาวด์ไม่ได้",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "เปิดเบราว์เซอร์แล้ว โปรดให้สิทธิ์ให้เสร็จในเบราว์เซอร์...",
   "cloudSyncAwaitingConsentAndroid": "โปรดให้สิทธิ์ให้เสร็จในหน้าต่าง Google...",
   "cloudSyncLinkedAs": "เชื่อมต่อแล้ว: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "ซิงค์อัตโนมัติ",
   "cloudSyncAutoToggleHint": "ซิงค์อัตโนมัติเมื่อเปิดแอปและหลังข้อมูลเปลี่ยนแปลง หากปิดไว้ยังซิงค์ด้วยตนเองได้",
   "cloudSyncNow": "ซิงค์ตอนนี้",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "ยกเลิกการเชื่อมต่อ",
   "cloudSyncUnlinkConfirmBody": "การซิงค์จะหยุดลง ทั้งข้อมูลในเครื่องและข้อมูลสำรองบนคลาวด์จะยังคงอยู่",
   "cloudSyncLastSynced": "ซิงค์ล่าสุด: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "ยังไม่เคยซิงค์",
   "cloudSyncErrorNetwork": "ซิงค์ไม่สำเร็จ: มีปัญหาเครือข่าย จะลองใหม่โดยอัตโนมัติ",
   "cloudSyncErrorBusy": "เลื่อนการซิงค์: กำลังอัปเดตหรือนำเข้าข้อมูลอยู่ จะลองใหม่โดยอัตโนมัติ",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "ซ่อน UID ในหน้าแอป",
   "settingsMaskUidInUiHint": "เมื่อเปิดใช้ UID ในหน้าแอปและรายการบัญชีจะแสดงเฉพาะ 3 หลักแรก ส่วนที่เหลือถูกซ่อน (เช่น 123•••••) เหมาะสำหรับสตรีมหรือแชร์หน้าจอ รูปที่แชร์ ไฟล์ที่ส่งออก และหน้าต่างยืนยันการลบจะไม่ได้รับผลกระทบ",
   "settingsAdPrivacyOptions": "ตัวเลือกความเป็นส่วนตัวของโฆษณา",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "เปลี่ยนการยินยอมให้แสดงโฆษณาที่ปรับให้เหมาะกับคุณ",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "เกี่ยวกับ",
   "settingsOtherGamesTitle": "เวอร์ชันสำหรับเกมอื่น",
   "settingsOtherGamesGenshin": "Genshin Impact",
   "settingsOtherGamesFuture": "อาจรองรับเกมอื่นเพิ่มเติมในอนาคต...",
   "settingsAboutVersion": "เวอร์ชัน {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "ผู้ร่วมพัฒนา",
   "contributorsSubtitle": "ขอขอบคุณเป็นพิเศษแก่ทุกท่านต่อไปนี้ที่ร่วมพัฒนาซอฟต์แวร์นี้!",
   "contributorsProjectLeader": "ผู้ดูแลโปรเจกต์",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "สัญญาอนุญาตของโปรเจกต์",
   "contributorsOpenSourceLicenses": "สัญญาอนุญาตโอเพนซอร์ส",
   "pityRank": "การันตี {star}",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "อีก {n} ครั้งถึงการันตี",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "ใกล้การันตีแล้ว! เหลืออีก {n} ครั้ง",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "ใกล้การันตี",
   "pityNoMainRarity": "ยังไม่ได้ {star}",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "เฉลี่ย {n} ครั้ง",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "ไม่มีบันทึก {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n} ครั้ง",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "ดวงดี",
   "luckTierAverage": "ปานกลาง",
   "luckTierUnlucky": "ดวงไม่ดี",
   "timelineNowLabel": "ปัจจุบัน",
   "timelineNowPulls": "{n} ครั้ง",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "{n} ครั้งนับจาก {star} ล่าสุด",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "{n} ครั้งนับจาก {star} ล่าสุดในทุกแบนเนอร์",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{month} / {year}",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "เลื่อนไปทางซ้าย",
   "timelineScrollRight": "เลื่อนไปทางขวา",
   "timelineLoadMore": "โหลดเพิ่ม (เหลือ {n})",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "ทุกความหายาก",
   "filterRarityRankOnly": "เฉพาะ {star}",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "ทุกประเภท",
   "filterSearchHint": "ค้นหาชื่อ...",
   "filterClear": "ล้างตัวกรอง",
@@ -210,35 +624,150 @@
   "pagerLast": "ท้ายสุด",
   "pagerJumpTitle": "ไปที่หน้า",
   "pagerJumpLabel": "หน้า ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "อยู่หน้า {page} · ทั้งหมด {total} รายการ",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "ไป",
   "pagerJumpInvalid": "ใส่หมายเลขหน้าระหว่าง {min}–{max}",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "ล้างข้อมูลบัญชีปัจจุบัน",
   "settingsClearAll": "ล้างข้อมูลทั้งหมด",
   "settingsRefetchItemImagesTitle": "บังคับดึงรูปไอเทมใหม่",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "ยังไม่มีบันทึกการอัญเชิญ จึงไม่มีอะไรให้ดึงใหม่",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "บังคับดึงรูปไอเทมใหม่",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "การดำเนินการนี้จะล้างแคชรูปไอเทมในเครื่องทั้งหมดและดาวน์โหลดไอคอนเรโซเนเตอร์ใหม่ รูปรายละเอียดจะดาวน์โหลดเมื่อจำเป็นในครั้งถัดไปที่เปิดรายละเอียดไอเทม อาจใช้เวลาและแบนด์วิดท์หลายนาทีขึ้นอยู่กับจำนวนไอเทม",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "เริ่มดึงใหม่",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "ข้อมูลไอเทม",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "ดึงรายละเอียดล่าสุดของไอเทมทั้งหมด (คำแนะนำ รายการรูป ฯลฯ) ใหม่ โดยเก็บรูปที่ดาวน์โหลดแล้วไว้ รูปที่เพิ่มเข้ามาใหม่จะดาวน์โหลดเมื่อเปิดรายละเอียดของไอเทมนั้น",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "อัปเดตข้อมูลไอเทม",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "ยังไม่มีบันทึกการอัญเชิญ จึงไม่มีอะไรให้อัปเดต",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "อัปเดตข้อมูลไอเทม?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "การดำเนินการนี้จะดึงรายละเอียดของไอเทมทั้งหมดใหม่ โดยเก็บรูปที่ดาวน์โหลดแล้วไว้ รูปที่เพิ่มเข้ามาใหม่จะดาวน์โหลดเมื่อเปิดรายละเอียด อัปเดตตอนนี้เลยไหม?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "เริ่มอัปเดต",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, other{อัปเดตข้อมูลไอเทม {count} รายการแล้ว}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, other{ดาวน์โหลดรูปไอเทม {count} รูปแล้ว}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, other{ล้างข้อมูลภาษาเก่าของไอเทม {count} รายการแล้ว}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "แคชรูปภาพ",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "ทั้งหมด",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "ไอคอน",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "รูปรายละเอียด",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "กำลังคำนวณ...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "อ่านขนาดแคชไม่ได้",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "ล้างรูปรายละเอียด",
   "confirmClearGalleryCacheTitle": "ล้างรูปรายละเอียด?",
   "confirmClearGalleryCacheBody": "รูปรายละเอียดไอเทมประมาณ {size} จะถูกลบ ส่วนแคชไอคอนจะยังอยู่ รูปจะดาวน์โหลดใหม่เมื่อเปิดรายละเอียดไอเทมครั้งถัดไป",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "ล้าง",
   "settingsImageCacheClearGalleryFailed": "ล้างรูปรายละเอียดไม่สำเร็จ",
   "settingsExportData": "ส่งออกข้อมูล",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "แสดง UID เต็มบนรูป",
   "shareImageShowFullUidHint": "เมื่อปิดไว้ จะแสดงเฉพาะ 3 หลักแรก ส่วนที่เหลือซ่อนด้วย •",
   "shareImageUpdatedAt": "อัปเดตเมื่อ {time}",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "คัดลอกไปยังคลิปบอร์ดแล้ว",
   "shareImageSaved": "บันทึกแล้ว: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "คัดลอกไปยังคลิปบอร์ดไม่สำเร็จ",
   "shareImageFailed": "สร้างรูปสำหรับแชร์ไม่สำเร็จ",
   "shareImageGenerating": "กำลังสร้างรูป...",
   "exportDialogSuccessTitle": "ส่งออกสำเร็จ",
   "exportDialogFailedTitle": "ส่งออกไม่สำเร็จ",
   "settingsExportFailed": "ส่งออกไม่สำเร็จ: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "ส่งออกไปที่ {path} แล้ว",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "ยืนยันการนำเข้า",
   "settingsImportConfirmIntro": "กำลังจะนำเข้า {accounts} บัญชี (รวม {records} รายการ):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "บัญชีต่อไปนี้จะถูกรวมกับข้อมูลในเครื่อง โดยบันทึกเดิมจะไม่ถูกลบ:",
   "settingsImportConfirmNoConflict": "ไม่มีข้อมูลขัดแย้งกัน",
   "settingsImportConfirmPreserveFooter": "บัญชีอื่นที่มีอยู่ ({uids}) จะยังคงอยู่",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "รูปแบบไฟล์ไม่ถูกต้องหรือไฟล์เสียหาย",
   "importReasonIncompatibleVersion": "เวอร์ชันข้อมูลของไฟล์สำรองนี้ไม่เข้ากันกับแอปปัจจุบัน จึงนำเข้าไม่ได้",
   "importReasonUnreadable": "อ่านไฟล์ไม่ได้",
   "importReasonForeignApp": "ไฟล์นี้ไม่ได้ส่งออกจากแอปนี้",
   "importReasonNotPlatformFile": "ไฟล์นี้ไม่ใช่ไฟล์ส่งออกของ {platform} ที่ถูกต้อง",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "เขียนไฟล์ไม่ได้ โปรดตรวจสอบตำแหน่งที่บันทึกและสิทธิ์",
   "settingsImportFailed": "นำเข้าไม่สำเร็จ: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "เลือกบัญชีที่จะส่งออก",
   "settingsImportSelectTitle": "เลือกบัญชีที่จะนำเข้า",
   "settingsImportMergeBadge": "รวม",
   "accountsPickerSelectAll": "เลือกทั้งหมด",
   "accountRecordCount": "{n} รายการ",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "ยืนยัน",
   "confirmClearActiveBody": "การดำเนินการนี้จะลบบันทึกการอัญเชิญทั้งหมดของ UID {uid} อย่างถาวร พิมพ์ UID เพื่อยืนยัน:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "การดำเนินการนี้จะลบบันทึกการอัญเชิญของทุกบัญชีอย่างถาวร พิมพ์ DELETE เพื่อยืนยัน:",
   "confirmDelete": "ลบ",
   "confirmImport": "นำเข้า",
@@ -290,6 +892,13 @@
   "confirmContinue": "ดำเนินการต่อ",
   "accountListEmpty": "ยังไม่มีบัญชี",
   "accountLastUpdated": "อัปเดตล่าสุด {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "ใช้งานอยู่",
   "accountSetActive": "ตั้งเป็นบัญชีที่ใช้งาน",
   "accountRemove": "ลบ",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "ลากเพื่อจัดลำดับ",
   "loadingBootstrap": "กำลังโหลด...",
   "timelineTopRarityTitle": "ไทม์ไลน์ {star} ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "จำนวนความหายากสูงสุดของแต่ละแบนเนอร์",
   "bannerTopRarityPullsSinceLast": "{n} ครั้งนับจาก {star} ล่าสุด",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "มีเวอร์ชันใหม่ {version}",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "เผยแพร่เมื่อ {date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "ดาวน์โหลด",
   "updateButtonUpdate": "อัปเดต",
   "updateNotesUnavailable": "ไม่สามารถแสดงบันทึกประจำรุ่นได้ในขณะนี้ ดูรายละเอียดได้ที่ Google Play",
   "updateDownloadingMessage": "กำลังดาวน์โหลดอัปเดต...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "ดาวน์โหลดอัปเดตแล้ว",
   "updateRestartAction": "รีสตาร์ท",
   "updateInAppUnavailable": "อัปเดตในแอปไม่ได้ในขณะนี้ โปรดอัปเดตจาก Google Play",
@@ -320,134 +966,532 @@
   "updateChecking": "กำลังตรวจสอบ...",
   "updateAlreadyLatest": "คุณใช้เวอร์ชันล่าสุดอยู่แล้ว",
   "updateCheckFailed": "ตรวจหาอัปเดตไม่สำเร็จ: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "เชื่อมต่อไม่ได้ โปรดตรวจสอบเครือข่าย",
   "updateErrorTimeout": "คำขอหมดเวลา",
   "updateErrorRateLimited": "โควตา GitHub API หมดแล้ว โปรดลองอีกครั้งในภายหลัง",
   "updateErrorServer": "เซิร์ฟเวอร์ผิดพลาด (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "รูปแบบการตอบกลับไม่ถูกต้อง",
   "updateErrorPlay": "เชื่อมต่อ Google Play ไม่ได้ หรือแอปนี้ไม่ได้ติดตั้งจาก Google Play",
   "currentReleaseTitle": "บันทึกประจำรุ่นปัจจุบัน",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "ไม่พบบันทึกประจำรุ่นของ {version}",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "ดูบน GitHub",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "ไปที่หน้า GitHub Releases",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "ดูบันทึกประจำรุ่น",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "ล้างแคชรูปไอเทมไม่สำเร็จ: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "ล็อกดีบัก",
+  "@settingsLogs": {},
   "settingsLogsHint": "หากพบปัญหา ส่งออกล็อกเพื่อช่วยให้นักพัฒนาตรวจสอบได้",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "รายงานปัญหา",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "ส่งออกล็อก",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "เปิดโฟลเดอร์ล็อก",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "ล้างล็อกทั้งหมด",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "ส่งออกล็อกแล้ว: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "ส่งออกล็อกไม่สำเร็จ: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "การดำเนินการนี้จะลบไฟล์ทั้งหมดใน logs/ อย่างถาวร หากต้องใช้สำหรับรายงานปัญหา โปรดส่งออกก่อน พิมพ์ CLEAR เพื่อยืนยัน",
   "galleryIllustrationLabel": "ชุด",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "การอัญเชิญ",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "ไอคอน",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "ก่อนหน้า",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "ถัดไป",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "เลื่อนลง",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "โหลดรูปไม่สำเร็จ",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "ลองอีกครั้ง",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "คัดลอกรูป",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "บันทึกรูป",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "ดึงรูปใหม่",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "บันทึกรูปไปที่ {path} แล้ว",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "บันทึกรูปไม่สำเร็จ",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "คัดลอกรูปไปยังคลิปบอร์ดแล้ว",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "คัดลอกรูปไม่สำเร็จ",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "ปิดตัวอย่างรูป",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "ซูมเข้า",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "ซูมออก",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "ดูบน encore.moe",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "ป้อน URL บันทึกการอัญเชิญด้วยตนเอง",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "ป้อน URL บันทึกการอัญเชิญด้วยตนเอง",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "วาง URL บันทึกการอัญเชิญ หรือข้อความใดก็ได้ที่มี URL นั้นอยู่",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "วาง URL...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "วางจากคลิปบอร์ด",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "เลือกไฟล์ Client.log",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "จะหา URL ได้อย่างไร?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "ไม่พบ URL บันทึกการอัญเชิญ",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "ไม่มี URL บันทึกการอัญเชิญในไฟล์นี้ โปรดเปิดบันทึกการอัญเชิญในเกมก่อน แล้วเลือกไฟล์อีกครั้ง",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "วิธีที่ 1: โหมดเครื่องบิน\n1. ในเกม ไปที่หน้าอัญเชิญ\n2. เปิดโหมดเครื่องบิน แล้วแตะบันทึกการอัญเชิญ\n3. เมื่อหน้าโหลดไม่ขึ้น: กดค้าง → เลือกทั้งหมด → คัดลอก\n4. ปิดโหมดเครื่องบิน แล้ววางข้อความทั้งหมดที่นี่\n\nวิธีที่ 2: มีไฟล์ Client.log อยู่แล้ว\nแตะ “เลือกไฟล์ Client.log” แล้วแอปจะหา URL ให้",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "เลือกไฟล์ Client.log\n1. เปิดบันทึกการอัญเชิญในเกม\n2. แตะ “เลือกไฟล์ Client.log” ไฟล์อยู่ที่:\nโฟลเดอร์เกม\\Client\\Saved\\Logs\\Client.log\n\nURL จากเครื่องมืออื่น\nURL ที่ได้จากเครื่องมืออย่าง WuWa Tracker สามารถวางได้โดยตรง",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "URL นี้มีข้อมูลรับรองบัญชีของคุณ อย่าแชร์แบบสาธารณะ และจะหมดอายุเมื่อผ่านไปสักระยะ",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "ตกลง",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "กำลังรอให้คุณเปิดหน้าบันทึกการอัญเชิญในเกม...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "กำลังเตรียมอ่านไฟล์ล็อกของเกม...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "รับ URL บันทึกการอัญเชิญอัตโนมัติไม่ได้",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "ยังไม่ได้ตั้งค่าการอ่านไฟล์ล็อกของเกม ตั้งค่าเพียงครั้งเดียว แล้วทุกครั้งที่อัปเดตจะอ่านให้อัตโนมัติ",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "การแก้ไขข้อบกพร่องแบบไร้สายใช้ได้เฉพาะบน Wi‑Fi เชื่อมต่อ Wi‑Fi แล้วกลับมา แอปจะดำเนินการต่อโดยอัตโนมัติ หรือจะป้อน URL ด้วยตนเองก็ได้",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "พบสิทธิ์ root แต่แอปนี้ไม่ได้รับสิทธิ์ root หากต้องการอ่านด้วย root ให้อนุญาตแอปนี้ในตัวจัดการ root (เช่น รายการ Superuser ของ Magisk) แล้วกลับมา แอปจะลองใหม่โดยอัตโนมัติ",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "เชื่อมต่อการแก้ไขข้อบกพร่องแบบไร้สายไม่ได้ การจับคู่อาจหมดอายุ โปรดจับคู่ใหม่",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "อุปกรณ์ของคุณไม่อนุญาตให้แอปนี้เปิดการแก้ไขข้อบกพร่องแบบไร้สาย โปรดเปิดเองในหน้าการแก้ไขข้อบกพร่องแบบไร้สายแล้วกลับมา แอปจะดำเนินการต่อโดยอัตโนมัติ",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "เครือข่าย Wi‑Fi นี้ยังไม่ได้รับอนุญาตสำหรับการแก้ไขข้อบกพร่องแบบไร้สาย แตะอนุญาตในหน้าต่างของระบบ (ติ๊ก “อนุญาตในเครือข่ายนี้เสมอ” เพื่อไม่ให้ถามอีก) แล้วแอปจะดำเนินการต่อโดยอัตโนมัติ หากปิดหน้าต่างไปแล้ว ให้แตะลองอีกครั้ง",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "ต้องใช้สิทธิ์พื้นที่เก็บข้อมูลเพื่ออ่านไฟล์ล็อกของเกม",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "อุปกรณ์นี้อ่านไฟล์ล็อกของเกมอัตโนมัติไม่ได้ โปรดป้อน URL ด้วยตนเอง",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "เปิด Wuthering Waves",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "เปิดการแก้ไขข้อบกพร่องแบบไร้สาย",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "ให้สิทธิ์",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "การเชื่อมต่อการแก้ไขข้อบกพร่องแบบไร้สายขาดหาย กำลังเชื่อมต่อใหม่... หากไม่กลับมา โปรดตรวจสอบ Wi‑Fi หรือป้อน URL ด้วยตนเอง",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "การแก้ไขข้อบกพร่องแบบไร้สายยังเปิดอยู่ คุณปิดได้ในการตั้งค่าระบบ",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "ตั้งค่า",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "จับคู่ใหม่",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "อ่านไฟล์ล็อกของเกม",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "ทำไมต้องตั้งค่านี้?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "Android ไม่อนุญาตให้แอปอ่านไฟล์ของแอปอื่นโดยตรง แอปนี้จึงใช้ฟีเจอร์การแก้ไขข้อบกพร่องแบบไร้สายที่มีในระบบเพื่ออ่านไฟล์ล็อกของ Wuthering Waves และนำ URL บันทึกการอัญเชิญออกมา",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "สิ่งที่แอปนี้ทำ",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• อ่านเฉพาะไฟล์ล็อกของ Wuthering Waves\n• ตัดการเชื่อมต่อทันทีหลังอ่านเสร็จ และปิดการแก้ไขข้อบกพร่องแบบไร้สายหากแอปนี้เป็นผู้เปิดไว้\n• ให้สิทธิ์ตัวเองในการเปิดและปิดการแก้ไขข้อบกพร่องแบบไร้สาย เพื่อที่คุณจะไม่ต้องตั้งค่าใหม่\n• ยกเลิกได้ทุกเมื่อในการตั้งค่า",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "สิ่งที่ต้องมี",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 ขึ้นไป, Wi‑Fi, อนุญาตการแจ้งเตือน",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "เริ่มตั้งค่า",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "ป้อน URL ด้วยตนเองแทน",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "จับคู่การแก้ไขข้อบกพร่องแบบไร้สาย",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. เปิดตัวเลือกสำหรับนักพัฒนาแอป",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. เปิดหน้าเกี่ยวกับในการตั้งค่าระบบ (เช่น “เกี่ยวกับโทรศัพท์” หรือ “เกี่ยวกับแท็บเล็ต”)\n2. หา “หมายเลขบิลด์” แล้วแตะ 7 ครั้ง\n3. เมื่อเห็นข้อความ “ตอนนี้คุณเป็นนักพัฒนาซอฟต์แวร์แล้ว” ให้กลับมาที่แอปนี้",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "เปิดหน้าเกี่ยวกับ",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. เปิดตัวเลือกสำหรับนักพัฒนาแอปแล้ว",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. อนุญาตการแจ้งเตือน",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "คุณจะต้องป้อนรหัสจับคู่ในการแจ้งเตือน จึงต้องอนุญาตให้แอปนี้แสดงการแจ้งเตือน",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "อนุญาตการแจ้งเตือน",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "เปิดการตั้งค่าการแจ้งเตือน",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. อนุญาตการแจ้งเตือนแล้ว",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. จับคู่",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. แตะปุ่มด้านล่างเพื่อเปิดการแก้ไขข้อบกพร่องแบบไร้สาย\n2. เปิด “ใช้การแก้ไขข้อบกพร่องแบบไร้สาย” แล้วแตะ “จับคู่อุปกรณ์ด้วยรหัสการจับคู่”\n3. ปัดลงจากด้านบนของหน้าจอ แล้วป้อนรหัสการจับคู่ 6 หลักที่แสดงบนหน้าจอจับคู่ของการแก้ไขข้อบกพร่องแบบไร้สายในการแจ้งเตือนของแอปนี้",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "กำลังรอให้คุณป้อนรหัสจับคู่ในการแจ้งเตือน...\nป้อนรหัสขณะที่หน้าจับคู่ในการแก้ไขข้อบกพร่องแบบไร้สายยังเปิดอยู่",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "เปิดการแก้ไขข้อบกพร่องแบบไร้สายอีกครั้ง",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "กำลังจับคู่...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "จับคู่แล้ว เหลืออีกหนึ่งขั้นตอน",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "อุปกรณ์ของคุณมีข้อจำกัดด้านความปลอดภัยเพิ่มเติม โปรดเปิดอีกหนึ่งตัวเลือกเพื่อให้แอปนี้เปิดและปิดการแก้ไขข้อบกพร่องแบบไร้สายได้โดยอัตโนมัติ",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "วิธีเปิด",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. เปิดตัวเลือกสำหรับนักพัฒนาแอป\n2. หาสวิตช์ที่เกี่ยวกับความปลอดภัยของการแก้ไขข้อบกพร่อง USB หรือการตรวจสอบสิทธิ์ แล้วเปิด เช่น:\n• Xiaomi: “การแก้ไขข้อบกพร่อง USB (การตั้งค่าความปลอดภัย)”\n• OPPO / realme: “ปิดใช้งานการตรวจสอบสิทธิ์”\n3. ตรวจสอบว่าการแก้ไขข้อบกพร่องแบบไร้สายเปิดอยู่ แล้วกลับมาแตะลองอีกครั้ง",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "เปิดตัวเลือกสำหรับนักพัฒนาแอป",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "ลองอีกครั้ง",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "ข้าม (เปิดการแก้ไขข้อบกพร่องแบบไร้สายเองทุกครั้งที่อัปเดต)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "เรียบร้อยแล้ว",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "จากนี้ไป การอัปเดตจะอ่านล็อกให้อัตโนมัติ ไม่ต้องตั้งค่าอีก",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "เมื่อแตะอัปเดต ให้เปิดการแก้ไขข้อบกพร่องแบบไร้สายเมื่อระบบขอ",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "กำลังกลับไปเริ่มอัปเดต...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "การเข้าถึงไฟล์ล็อกของเกม",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "วิธีการ",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "เข้าถึงโดยตรง",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "การแก้ไขข้อบกพร่องแบบไร้สาย",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "ยังไม่ได้ตั้งค่า",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "การจับคู่",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "จับคู่แล้ว",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "จับคู่แล้ว (เปิดการแก้ไขข้อบกพร่องแบบไร้สายเอง)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "ลองขอสิทธิ์อีกครั้ง",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "ตั้งค่า",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "ยกเลิกการจับคู่",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "ยกเลิกการจับคู่?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "การดำเนินการนี้จะลบคีย์การจับคู่ของแอปนี้ และเพิกถอนสิทธิ์ของแอปนี้ในการเปิดปิดการแก้ไขข้อบกพร่องแบบไร้สาย หากต้องการใช้การแก้ไขข้อบกพร่องแบบไร้สายในภายหลัง จะต้องจับคู่ใหม่",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "ยกเลิกการจับคู่แล้ว",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "ลบคีย์การจับคู่ของแอปนี้แล้ว และเพิกถอนสิทธิ์ในการเปิดปิดการแก้ไขข้อบกพร่องแบบไร้สายแล้ว",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "ลบคีย์การจับคู่แล้ว",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "ลบคีย์การจับคู่ของแอปนี้แล้ว แต่ครั้งนี้เชื่อมต่อการแก้ไขข้อบกพร่องแบบไร้สายไม่ได้ จึงยังไม่ได้เพิกถอนสิทธิ์ในการเปิดปิดการแก้ไขข้อบกพร่องแบบไร้สาย",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "แอปนี้จะไม่ใช้สิทธิ์นี้ขณะที่ยังไม่ได้จับคู่ หากต้องการเพิกถอนทั้งหมด ให้เชื่อมต่อ Wi‑Fi แล้วจับคู่ใหม่ จากนั้นยกเลิกการจับคู่อีกครั้ง",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "รายการ การแก้ไขข้อบกพร่องแบบไร้สาย → อุปกรณ์ที่จับคู่ ของระบบจะยังแสดง \"{name}\" อยู่ อุปกรณ์นี้เชื่อมต่อไม่ได้แล้ว จึงปล่อยไว้ได้ หากต้องการนำออก ให้แตะแล้วลบ",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "รายการ การแก้ไขข้อบกพร่องแบบไร้สาย → อุปกรณ์ที่จับคู่ ของระบบยังแสดง \"{name}\" อยู่ด้วย แตะเพื่อลบได้",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "ได้ URL บันทึกการอัญเชิญแล้ว จะเริ่มดึงบันทึกการอัญเชิญเมื่อคุณกลับมาที่แอปนี้",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "แชร์",
   "shareFailed": "แชร์ไม่ได้",
   "dialogSaveAsTitle": "บันทึกเป็น",
@@ -456,10 +1500,37 @@
   "actionSave": "บันทึก",
   "settingsLogsShare": "แชร์ล็อก",
   "logUnavailableGameNotInstalled": "ไม่พบ Wuthering Waves เวอร์ชันสากลในอุปกรณ์นี้ เมื่อติดตั้งแล้วให้กลับมาที่นี่ ระบบจะตรวจหาให้อัตโนมัติ",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "ตรวจหาอีกครั้ง",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "อุปกรณ์นี้มี Wuthering Waves ติดตั้งอยู่มากกว่าหนึ่งเวอร์ชัน ต้องการอ่านบันทึกจากเวอร์ชันใด",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "เวอร์ชัน Google Play",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "เวอร์ชัน Galaxy Store",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "เวอร์ชัน Wuthering Waves: {name}",
-  "actionSwitchGameVersion": "สลับเวอร์ชัน"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "สลับเวอร์ชัน",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }
