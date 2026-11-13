@@ -1,7 +1,10 @@
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart'
+    as file_access;
 import 'package:wuthering_waves_convene_gacha_analyzer/services/game_dir_locator.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
@@ -31,7 +34,13 @@ Future<GameDirPickOutcome> pickAndSaveGameDir(
 }) async {
   final locator = ref.read(gameDirLocatorProvider);
   final settings = ref.read(settingsProvider.notifier);
-  final picked = await (pickDirectory ?? getDirectoryPath)();
+  final picked =
+      await (pickDirectory ??
+          () => file_access.pickDirectory(
+            dialogTitle: AppLocalizations.of(
+              ref.context,
+            )!.dialogSelectFolderTitle,
+          ))();
   if (picked == null) return GameDirPickOutcome.cancelled;
   final dir = await locator.normalize(picked);
   if (dir == null) {

@@ -95,7 +95,10 @@
   "uidActiveSuffix": "（活躍）",
 
   "emptyNoSyncTitle": "尚未同步任何資料",
-  "emptyNoSyncMessage": "點右上「更新資料」開始",
+  "emptyNoSyncMessage": "點右上 {icon} 開始",
+  "@emptyNoSyncMessage": {
+    "placeholders": { "icon": { "type": "String" } }
+  },
   "emptyNoRecords": "此卡池無紀錄",
   "emptyNoFilterMatch": "沒有符合條件的紀錄",
   "emptyNoGachaRecords": "尚無喚取記錄",
@@ -118,7 +121,7 @@
   "kindWeapon": "武器",
   "kindItem": "道具",
 
-  "tableTime": "時間",
+  "tableTime": "喚取時間",
   "tableName": "名稱",
   "tableKind": "類型",
   "tableRarity": "稀有度",
@@ -128,6 +131,23 @@
   },
   "tableTotalIndex": "總抽數",
   "tableMainPity": "保底內",
+  "tableSortButton": "排序：{column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
+  "tableSortDefault": "排序：預設",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
+  "tableSortSheetTitle": "排序方式",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "距上一次 {star} 的抽數",
   "@tableMainPityTooltip": {
     "placeholders": { "star": { "type": "String" } }
@@ -136,15 +156,15 @@
   "sortDirectionAsc": "升序",
   "sortHintClickToSort": "點擊排序",
 
-  "progressPreparing": "準備中…",
-  "progressPreparingHint": "正在準備資料來源…",
-  "progressWaiting": "等待攔截…",
-  "progressFetching": "抓取中…",
+  "progressPreparing": "準備中...",
+  "progressPreparingHint": "正在準備資料來源...",
+  "progressWaiting": "等待攔截...",
+  "progressFetching": "抓取中...",
   "progressDone": "更新完成",
   "progressFailed": "失敗",
   "progressOpenGameHint": "請開啟鳴潮 → 喚取 → 喚取記錄",
   "progressFallbackHint": "（先前的擷取已失效，需重新攔截）",
-  "progressCaptureUnavailableHint": "無法啟動攔截程式（可能是 Windows 權限提示被拒絕），改為只從遊戲記錄檔偵測。請開啟喚取記錄。",
+  "progressCaptureUnavailableHint": "無法啟動攔截程式（可能是 Windows 權限提示被拒絕），改為只從遊戲 log 檔偵測。請在遊戲中開啟喚取記錄頁。",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
   },
@@ -160,7 +180,7 @@
   "@gameDirHelpTitle": {
     "description": "Title of the detection help dialog shown when the convene record is not detected"
   },
-  "gameDirHelpNotFound": "找不到鳴潮的遊戲資料夾。選擇遊戲資料夾後，本工具也能改從遊戲記錄檔讀取喚取記錄。",
+  "gameDirHelpNotFound": "找不到鳴潮的遊戲資料夾。選擇遊戲資料夾後，本工具也能改從遊戲 log 檔取得喚取記錄網址。",
   "@gameDirHelpNotFound": {
     "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
   },
@@ -173,7 +193,7 @@
   "@gameDirHelpReopen": {
     "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
   },
-  "gameDirInvalid": "這個資料夾裡找不到遊戲記錄檔，請選擇「Wuthering Waves Game」資料夾。",
+  "gameDirInvalid": "這個資料夾裡找不到遊戲 log 檔，請選擇「Wuthering Waves Game」資料夾。",
   "@gameDirInvalid": {
     "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
   },
@@ -300,10 +320,11 @@
     "description": "Button that clears the manually set game folder"
   },
   "settingsCloudSync": "雲端同步",
-  "cloudSyncIntro": "連結 Google 帳號後，喚取紀錄會自動備份到你的 Google 雲端硬碟，並在多台電腦間同步。",
+  "cloudSyncIntro": "連結 Google 帳號後，喚取記錄會自動備份到你的 Google 雲端硬碟，並在多台裝置間同步。",
   "cloudSyncUnconfigured": "此建置未設定 Google OAuth 憑證，雲端同步無法使用。",
   "cloudSyncLink": "連結 Google 帳號",
   "cloudSyncAwaitingConsent": "已開啟瀏覽器，請在瀏覽器完成授權...",
+  "cloudSyncAwaitingConsentAndroid": "請在 Google 視窗完成授權...",
   "cloudSyncLinkedAs": "已連結：{email}",
   "@cloudSyncLinkedAs": {"placeholders": {"email": {"type": "String"}}},
   "cloudSyncAutoToggle": "自動同步",
@@ -330,6 +351,14 @@
   "settingsPrivacySectionTitle": "隱私",
   "settingsMaskUidInUi": "遮蔽介面中的 UID",
   "settingsMaskUidInUiHint": "開啟後，畫面與帳號清單中的 UID 會以前 3 碼搭配 • 顯示（例如 123•••••），適合實況或螢幕分享時使用。分享圖、匯出檔案、刪除確認框不受影響。",
+  "settingsAdPrivacyOptions": "廣告隱私權選項",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
+  "settingsAdPrivacyOptionsHint": "變更是否同意顯示個人化廣告。",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "關於",
   "settingsOtherGamesTitle": "其他遊戲版本",
   "settingsOtherGamesGenshin": "原神",
@@ -347,6 +376,7 @@
   "contributorsTranslatedLanguages": "已翻譯語言",
   "contributorsHelpTranslate": "沒有您的語言嗎？協助我們翻譯！",
   "contributorsProjectLicense": "專案授權",
+  "contributorsOpenSourceLicenses": "開放原始碼授權",
 
   "pityRank": "{star} 保底",
   "@pityRank": {
@@ -429,11 +459,46 @@
     "placeholders": { "star": { "type": "String" } }
   },
   "filterKindAll": "全部類型",
-  "filterSearchHint": "搜尋名稱…",
+  "filterSearchHint": "搜尋名稱...",
   "filterClear": "清除篩選",
 
   "pagerFirst": "首頁",
   "pagerLast": "末頁",
+  "pagerJumpTitle": "前往頁數",
+  "pagerJumpLabel": "頁碼（{min}–{max}）",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "pagerJumpCurrent": "目前在第 {page} 頁，共 {total} 筆",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pagerJumpGo": "前往",
+  "pagerJumpInvalid": "請輸入 {min}–{max} 的頁碼",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
 
   "settingsClearActive": "清除目前帳號資料",
   "settingsClearAll": "清除所有資料",
@@ -442,7 +507,7 @@
   "@settingsRefetchItemImagesTitle": {
     "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
   },
-  "settingsRefetchItemImagesEmpty": "尚無喚取紀錄，無物品可重抓",
+  "settingsRefetchItemImagesEmpty": "尚無喚取記錄，無物品可重抓",
   "@settingsRefetchItemImagesEmpty": {
     "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
   },
@@ -470,7 +535,7 @@
   "@settingsRefreshItemDataTitle": {
     "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
   },
-  "settingsRefreshItemDataEmpty": "尚無喚取紀錄，無法更新物品資料",
+  "settingsRefreshItemDataEmpty": "尚無喚取記錄，無法更新物品資料",
   "@settingsRefreshItemDataEmpty": {
     "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
   },
@@ -518,7 +583,7 @@
   "@settingsImageCacheGallery": {
     "description": "Label for gallery cache size (large detail images shown in item dialog)."
   },
-  "settingsImageCacheCalculating": "計算中…",
+  "settingsImageCacheCalculating": "計算中...",
   "@settingsImageCacheCalculating": {
     "description": "Loading placeholder while scanning cache size."
   },
@@ -609,11 +674,11 @@
   },
 
   "confirmTitle": "確認操作",
-  "confirmClearActiveBody": "這會永久刪除 UID {uid} 的所有喚取紀錄。輸入 UID 確認：",
+  "confirmClearActiveBody": "這會永久刪除 UID {uid} 的所有喚取記錄。輸入 UID 確認：",
   "@confirmClearActiveBody": {
     "placeholders": { "uid": { "type": "String" } }
   },
-  "confirmClearAllBody": "這會永久刪除所有帳號的喚取紀錄。輸入 DELETE 確認：",
+  "confirmClearAllBody": "這會永久刪除所有帳號的喚取記錄。輸入 DELETE 確認：",
   "confirmDelete": "刪除",
   "confirmImport": "匯入",
   "confirmExport": "匯出",
@@ -630,9 +695,12 @@
   "accountAdd": "新增帳號",
   "accountAliasLabel": "別名",
   "accountAliasHint": "為此帳號取一個好記的名稱",
+  "accountAliasNone": "未設定別名",
+  "accountActionEditAlias": "編輯別名",
+  "accountEditAliasTitle": "編輯別名",
   "accountDragHandleTooltip": "拖曳排序",
 
-  "loadingBootstrap": "載入中…",
+  "loadingBootstrap": "載入中...",
 
   "timelineTopRarityTitle": "{star} 時間軸 ({n})",
   "@timelineTopRarityTitle": {
@@ -660,10 +728,20 @@
     "placeholders": { "date": { "type": "String" } }
   },
   "updateButtonDownload": "前往下載",
+  "updateButtonUpdate": "更新",
+  "updateNotesUnavailable": "目前無法取得更新內容，詳情請見 Google Play。",
+  "updateDownloadingMessage": "正在下載新版本...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
+  "updateDownloadedMessage": "新版本已下載完成",
+  "updateRestartAction": "重新啟動",
+  "updateInAppUnavailable": "目前無法在 App 內更新，請到 Google Play 更新。",
+  "updateOpenPlayStore": "前往 Google Play",
   "updateButtonSkip": "跳過此版本",
   "updateButtonLater": "稍後再說",
   "updateCheckButton": "檢查更新",
-  "updateChecking": "檢查中…",
+  "updateChecking": "檢查中...",
   "updateAlreadyLatest": "已是最新版本",
   "updateCheckFailed": "檢查更新失敗：{reason}",
   "@updateCheckFailed": {
@@ -677,6 +755,7 @@
     "placeholders": { "status": { "type": "String" } }
   },
   "updateErrorFormat": "回應格式異常",
+  "updateErrorPlay": "無法連線到 Google Play，或此版本不是從 Google Play 安裝",
   "currentReleaseTitle": "目前版本的更新內容",
   "@currentReleaseTitle": {
     "description": "Title of the dialog showing release notes for the currently installed version."
@@ -707,7 +786,7 @@
   },
   "settingsLogs": "Logs 偵錯",
   "@settingsLogs": {},
-  "settingsLogsHint": "遇到問題時，可匯出 log 給開發者協助排查。",
+  "settingsLogsHint": "遇到問題時，可匯出 logs 給開發者協助排查。",
   "@settingsLogsHint": {},
   "settingsLogsReport": "回報問題",
   "@settingsLogsReport": {},
@@ -750,6 +829,11 @@
   "galleryNextTab": "下一個",
   "@galleryNextTab": {
     "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
+
+  "detailScrollDown": "往下捲動",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
   },
 
   "galleryLazyLoadFailed": "圖片載入失敗",
@@ -810,5 +894,404 @@
   "actionViewOnEncore": "在 encore.moe 查看",
   "@actionViewOnEncore": {
     "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
+  "progressManualInputLink": "手動輸入喚取記錄網址",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
+  "manualCredentialTitle": "手動輸入喚取記錄網址",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
+  "manualCredentialHint": "貼上喚取記錄的網址，或包含網址的整段文字。",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
+  "manualCredentialFieldHint": "貼上網址...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
+  "manualCredentialPaste": "從剪貼簿貼上",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
+  "manualCredentialPickLog": "選擇 Client.log 檔案",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
+  "manualCredentialHowTo": "如何取得網址？",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
+  "manualCredentialNotFound": "找不到喚取記錄網址",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
+  "manualCredentialNotFoundInLog": "這個檔案裡找不到喚取記錄網址，請先在遊戲開啟喚取記錄再選一次。",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
+  "manualCredentialHelpAndroid": "方法一：飛航模式\n1. 在遊戲進到「喚取」畫面\n2. 開啟飛航模式，再點「喚取記錄」\n3. 頁面會顯示載入失敗：長按 → 全選 → 複製\n4. 關閉飛航模式，回來貼上整段文字\n\n方法二：已有 Client.log 檔案\n按「選擇 Client.log 檔案」，本程式會自動找出網址。",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
+  "manualCredentialHelpWindows": "選擇 Client.log 檔案\n1. 在遊戲開啟「喚取記錄」\n2. 按「選擇 Client.log 檔案」，位置在：\n遊戲資料夾\\Client\\Saved\\Logs\\Client.log\n\n其他工具取得的網址\n例如 WuWa Tracker 取得的網址，可以直接貼上。",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
+  "manualCredentialWarning": "網址含有帳號憑證，請勿公開分享。網址過一段時間會失效。",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
+  "manualCredentialSubmit": "確定",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
+  "progressWaitingLog": "等待在遊戲中開啟喚取記錄頁...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
+  "progressCheckingLogAccess": "正在準備讀取遊戲 log 檔...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
+  "progressLogUnavailableTitle": "無法自動取得喚取記錄網址",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
+  "logUnavailableNotPaired": "尚未設定讀取遊戲 log 檔的方式。設定一次之後，每次更新都會自動讀取。",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
+  "logUnavailableNoWifi": "無線偵錯只能在連上 Wi‑Fi 時使用。連上 Wi‑Fi 後回到本 App 就會自動繼續，也可以改用手動輸入網址。",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
+  "logRootDeniedHint": "偵測到 root，但本 App 沒有取得 root 授權。如果要用 root 讀取，請到 root 工具（例如 Magisk 的「超級使用者」）允許本 App，回到本 App 就會自動重試。",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
+  "logUnavailableAdbFailed": "連不上無線偵錯。可能是配對已失效，請重新配對。",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
+  "logUnavailableWirelessOff": "你的裝置不允許本 App 自動開啟無線偵錯。請在無線偵錯頁打開開關，再回到本 App，就會自動繼續。",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
+  "logUnavailableNetworkNotAllowed": "這個 Wi‑Fi 還沒允許無線偵錯。請在系統視窗按「允許」（勾選「一律允許透過這個網路執行」之後就不會再問），就會自動繼續。如果已經關掉視窗，請按「重試」。",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
+  "logUnavailableStorage": "需要儲存空間權限才能讀取遊戲 log 檔。",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
+  "logUnavailableUnsupported": "這台裝置無法自動讀取遊戲 log 檔，請改用手動輸入網址。",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
+  "actionOpenGame": "開啟鳴潮",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
+  "actionOpenWirelessDebugging": "前往無線偵錯",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
+  "actionRegrantStorage": "重新授權",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
+  "progressLogConnectionLost": "與無線偵錯的連線中斷，正在重新連線...如果一直無法恢復，請確認 Wi‑Fi 是否連線，或改用手動輸入網址。",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
+  "progressWirelessLeftOnHint": "無線偵錯仍是開啟的，可以到系統設定自行關閉。",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
+  "actionSetupLogAccess": "設定讀取方式",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
+  "actionRepair": "重新配對",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
+  "setupTitle": "讀取遊戲 log 檔",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
+  "setupWhyTitle": "為什麼需要這個設定？",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
+  "setupWhyBody": "Android 不允許 App 直接讀取其他 App 的檔案。本 App 會透過系統內建的「無線偵錯」，讀取鳴潮的 log 檔，從中取得喚取記錄網址。",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
+  "setupWhatTitle": "本 App 會做什麼",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
+  "setupWhatBody": "・只讀取鳴潮的 log 檔\n・讀完立刻中斷連線；無線偵錯若是本 App 打開的，會一併關閉\n・授權自己開關無線偵錯，之後不用再設定\n・可以隨時在設定頁解除",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
+  "setupNeedTitle": "使用條件",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
+  "setupNeedBody": "Android 11 以上、連上 Wi‑Fi、允許通知",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
+  "setupStart": "開始設定",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
+  "setupUseManual": "改用手動輸入網址",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
+  "setupPairTitle": "配對無線偵錯",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
+  "setupStepDevOptions": "1. 開啟開發人員選項",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
+  "setupStepDevOptionsBody": "1. 開啟系統「設定」的「關於」頁面（例如「關於手機」或「關於平板電腦」）\n2. 找到「版本號碼」，連點 7 次\n3. 看到「你已成為開發人員」後回到本 App",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
+  "setupOpenAbout": "開啟「關於」頁面",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
+  "setupStepDevOptionsDone": "1. 開發人員選項已開啟",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
+  "setupStepNotifications": "2. 允許通知",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
+  "setupStepNotificationsBody": "配對碼要從通知輸入，請允許本 App 顯示通知。",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
+  "setupAllowNotifications": "允許通知",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
+  "setupOpenNotificationSettings": "前往通知設定",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
+  "setupStepNotificationsDone": "2. 已允許通知",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
+  "setupStepPair": "3. 配對",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
+  "setupStepPairBody": "1. 按下方按鈕，會跳到「無線偵錯」\n2. 打開「使用無線偵錯功能」，點「使用配對碼配對裝置」\n3. 從螢幕頂端往下拉，在本 App 的通知中，輸入「無線偵錯」配對畫面上顯示的 6 位數配對碼",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
+  "setupWaitingCode": "等待你在通知輸入配對碼...\n配對碼要在「無線偵錯」的配對畫面開著時輸入。",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
+  "setupOpenWirelessAgain": "再次前往無線偵錯",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
+  "setupPairing": "配對中...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
+  "setupGrantFailedTitle": "配對成功，但還差一步",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
+  "setupGrantFailedBody": "你的裝置有額外的安全性限制，需要再開啟一個選項，本 App 才能自動開關無線偵錯。",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
+  "setupGrantHowTitle": "開啟方式",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
+  "setupGrantHowBody": "1. 到「開發人員選項」\n2. 找到與 USB 偵錯安全性或權限監控有關的開關並打開，例如：\n・小米：「USB 偵錯（安全性設定）」\n・OPPO／realme：「停用權限監控」\n3. 確認無線偵錯是開著的，再回到本 App 按「重試」",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
+  "setupOpenDeveloperOptions": "前往開發人員選項",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
+  "setupRetry": "重試",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
+  "setupSkipGrant": "略過（每次更新時手動開啟無線偵錯）",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
+  "setupDoneTitle": "設定完成",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
+  "setupDoneBody": "之後按「更新資料」都會自動讀取，不用再設定。",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
+  "setupDoneManualBody": "之後按「更新資料」時，請依提示開啟無線偵錯。",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
+  "setupDoneReturning": "即將返回並開始更新...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
+  "settingsLogAccess": "讀取遊戲 log 檔",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
+  "settingsLogAccessMethod": "讀取方式",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
+  "logAccessMethodRoot": "root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
+  "logAccessMethodLegacy": "直接讀取",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
+  "logAccessMethodWireless": "無線偵錯",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
+  "logAccessMethodNone": "尚未設定",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
+  "settingsPairingStatus": "配對狀態",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
+  "settingsPaired": "已配對",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
+  "settingsPairedManual": "已配對（需手動開啟無線偵錯）",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
+  "settingsRetryGrant": "重試授權",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
+  "settingsSetupLogAccess": "設定",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
+  "settingsUnpair": "解除配對",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
+  "settingsUnpairConfirmTitle": "解除配對？",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
+  "settingsUnpairConfirmBody": "解除配對會刪除本 App 的配對金鑰，並收回本 App 開關無線偵錯的權限。之後要再使用無線偵錯，需要重新配對。",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
+  "settingsUnpairDone": "已解除配對",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
+  "settingsUnpairDoneBody": "已刪除本 App 的配對金鑰，並收回「開關無線偵錯」的權限。",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
+  "settingsUnpairUnreachableTitle": "已刪除配對金鑰",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
+  "settingsUnpairUnreachableBody": "已刪除本 App 的配對金鑰，但這次連不上無線偵錯，「開關無線偵錯」的權限還沒收回。",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
+  "settingsUnpairUnreachableRevokeHint": "未配對時本 App 不會使用這個權限；想完全收回，可以連上 Wi‑Fi 後重新配對，再解除一次。",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
+  "settingsUnpairLeftover": "系統「無線偵錯」的配對清單裡還會留著「{name}」。這筆配對已經無法再連線，可以不用理會；想移除的話，點選它即可刪除。",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsUnpairLeftoverAlso": "系統「無線偵錯」的配對清單裡也還留著「{name}」，點選它即可刪除。",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "progressCredentialReady": "已取得喚取記錄網址，回到本 App 後就會開始抓取喚取記錄。",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
+  "actionShare": "分享",
+  "shareFailed": "無法分享",
+  "dialogSaveAsTitle": "另存新檔",
+  "dialogOpenTitle": "開啟",
+  "dialogSelectFolderTitle": "選取資料夾",
+  "actionSave": "儲存",
+  "settingsLogsShare": "分享 logs",
+  "logUnavailableGameNotInstalled": "這台裝置上找不到國際服鳴潮，裝好後回到這裡會自動重新偵測。",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
+  "actionRedetectGame": "重新偵測",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
+  "logChooseGameVersion": "這台裝置裝了多個版本的鳴潮，要讀取哪一個版本的記錄？",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
+  "gameVersionGooglePlay": "Google Play 版",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
+  "gameVersionGalaxyStore": "Galaxy Store 版",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
+  "progressGameVersion": "鳴潮版本：{name}",
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "切換版本",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
   }
 }

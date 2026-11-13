@@ -1,0 +1,130 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_source.dart';
+
+/// 回傳固定字串輸出的 [ShellExec]。
+ShellExec _out(String text) =>
+    (_) async => Uint8List.fromList(utf8.encode(text));
+
+/// 測試用的 log 路徑。
+const _path = '/a/Client.log';
+
+void main() {
+  late Directory tmp;
+
+  setUp(() => tmp = Directory.systemTemp.createTempSync('client_log_source'));
+  tearDown(() => tmp.deleteSync(recursive: true));
+
+  test('read command quotes path and uses 1-based tail offset', () {
+    expect(
+      clientLogReadCommand('/a/Client.log', 0, 10),
+      "tail -c +1 '/a/Client.log' | head -c 10",
+    );
+    expect(
+      clientLogReadCommand('/a/Client.log', 99, 5),
+      "tail -c +100 '/a/Client.log' | head -c 5",
+    );
+  });
+
+  test('probe command quotes path and asks for size and header hash', () {
+    expect(
+      clientLogProbeCommand('/a/Client.log'),
+      r"""s=$(stat -c %s '/a/Client.log' 2>/dev/null) && echo "$s $(head -c 48 '/a/Client.log' | md5sum)" || echo 0""",
+    );
+  });
+
+  test('read command rejects quote in path and bad ranges', () {
+    expect(() => clientLogReadCommand("/a/x'y", 0, 1), throwsArgumentError);
+    expect(() => clientLogReadCommand('/a', -1, 1), throwsArgumentError);
+    expect(() => clientLogReadCommand('/a', 0, 0), throwsArgumentError);
+    expect(() => clientLogProbeCommand("/a/x'y"), throwsArgumentError);
+  });
+
+  test('shell probe parses size and header hash', () async {
+    for (final (out, length, id) in [
+      (
+        '1234 ebf6516b4690d5e1590b561d3505b8ad  -\n',
+        1234,
+        'ebf6516b4690d5e1590b561d3505b8ad',
+      ),
+      // 檔頭還沒寫完整：跟本機來源一樣不給識別，免得檔頭寫完時被當成換檔。
+      ('20 d41d8cd98f00b204e9800998ecf8427e  -\n', 20, null),
+      // 檔案不存在時指令只印 0：沒有識別，代表無法判斷。
+      ('0\n', 0, null),
+    ]) {
+      final p = await ShellLogSource(exec: _out(out), path: _path).probe();
+      expect((p.length, p.id), (length, id), reason: out);
+    }
+  });
+
+  test(
+    'shell probe throws on empty or garbled output instead of reporting 0',
+    () async {
+      // 回 0 會被監看當成 log 輪替而從頭重讀整個檔；丟例外則只是這一輪讀取失敗。
+      for (final out in ['', 'stat: weird\n']) {
+        await expectLater(
+          ShellLogSource(exec: _out(out), path: _path).probe(),
+          throwsFormatException,
+          reason: out,
+        );
+      }
+    },
+  );
+
+  test('shell probe sends the probe command for its path', () async {
+    final sent = <String>[];
+    final src = ShellLogSource(
+      exec: (c) async {
+        sent.add(c);
+        return Uint8List.fromList(utf8.encode('7 1\n'));
+      },
+      path: _path,
+    );
+    await src.probe();
+    expect(sent.single, clientLogProbeCommand(_path));
+  });
+
+  test('shell read sends the read command and returns raw bytes', () async {
+    final sent = <String>[];
+    final src = ShellLogSource(
+      exec: (c) async {
+        sent.add(c);
+        return Uint8List.fromList([1, 2, 3]);
+      },
+      path: _path,
+    );
+    expect(await src.read(5, 3), [1, 2, 3]);
+    expect(sent.single, clientLogReadCommand(_path, 5, 3));
+  });
+
+  test('local file source: missing file has length 0 and no id', () async {
+    final p = await LocalFileLogSource('${tmp.path}/nope.log').probe();
+    expect((p.length, p.id), (0, null));
+  });
+
+  test('local file source identifies the file by its header', () async {
+    final f = File('${tmp.path}/Client.log');
+    final src = LocalFileLogSource(f.path);
+    // 檔頭還不夠長時無法判斷。
+    f.writeAsStringSync('Log file open');
+    expect((await src.probe()).id, isNull);
+    f.writeAsStringSync('Log file open, [2026.11.05-18.04.55]\r\n${'x' * 40}');
+    final first = await src.probe();
+    expect(first.id, isNotNull);
+    // 附加內容不改變識別；換成另一個時間開的新檔才會變。
+    f.writeAsStringSync('more', mode: FileMode.append);
+    expect((await src.probe()).id, first.id);
+    f.writeAsStringSync('Log file open, [2026.11.05-19.00.00]\r\n${'x' * 40}');
+    expect((await src.probe()).id, isNot(first.id));
+  });
+
+  test('local file source reads the requested range', () async {
+    final f = File('${tmp.path}/Client.log')..writeAsBytesSync([9, 8, 7, 6, 5]);
+    final src = LocalFileLogSource(f.path);
+    expect((await src.probe()).length, 5);
+    expect(await src.read(1, 3), [8, 7, 6]);
+  });
+}

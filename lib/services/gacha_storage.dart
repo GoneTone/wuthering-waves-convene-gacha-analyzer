@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:logging/logging.dart';
 
@@ -26,8 +27,8 @@ class GachaStorage {
   /// `<applicationSupportDirectory>/gacha_data/`，main.dart 創建後傳入。
   final Directory baseDir;
 
-  /// 回傳 [playerId] 對應的記錄檔路徑。
-  File _recordsFile(String playerId) =>
+  /// 回傳 [playerId] 對應的記錄檔路徑（雲端同步匯出會在背景 isolate 直接讀它）。
+  File recordsFile(String playerId) =>
       File('${baseDir.path}/$playerId$_recordsSuffix');
 
   /// 回傳 [playerId] 對應的憑證檔路徑。
@@ -43,7 +44,7 @@ class GachaStorage {
   /// 即足以區分。遇此情形時跳過該檔並 log warning、回 null，**不可 rethrow**（否則
   /// 殘留舊檔會讓整個 App 開不起來，spec D2）。
   Future<BannerStorage?> load(String playerId) async {
-    final f = _recordsFile(playerId);
+    final f = recordsFile(playerId);
     if (!await f.exists()) return null;
     try {
       final text = await f.readAsString();
@@ -64,8 +65,8 @@ class GachaStorage {
   Future<void> save(BannerStorage data) async {
     try {
       await _atomicWrite(
-        _recordsFile(data.playerId),
-        jsonEncode(data.toJson()),
+        recordsFile(data.playerId),
+        await _encodeInBackground(data),
       );
       final total = data.banners.values.fold<int>(0, (a, b) => a + b.length);
       _log.fine('saved playerId=${sanitizeUid(data.playerId)} records=$total');
@@ -122,7 +123,7 @@ class GachaStorage {
 
   /// 刪除 [playerId] 的所有本地資料（記錄檔 + 憑證檔）。
   Future<void> delete(String playerId) async {
-    final f = _recordsFile(playerId);
+    final f = recordsFile(playerId);
     if (await f.exists()) await f.delete();
     await deleteCapturedCredential(playerId);
     _log.info('delete playerId=${sanitizeUid(playerId)}');
@@ -147,3 +148,9 @@ class GachaStorage {
     await tmp.rename(target.path); // atomic on same volume
   }
 }
+
+/// 在背景 isolate 把 [data] 編成 JSON：大帳號的 jsonEncode 在主 isolate 實機量到數十毫秒。
+///
+/// 送過去的物件複製仍在主 isolate，但比整份編碼便宜得多；寫成 top-level 讓閉包只抓參數。
+Future<String> _encodeInBackground(BannerStorage data) =>
+    Isolate.run(() => jsonEncode(data.toJson()));

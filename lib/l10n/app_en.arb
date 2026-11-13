@@ -62,7 +62,7 @@
     }
   },
   "relativeNow": "Just now",
-  "relativeSecondsAgo": "{count} seconds ago",
+  "relativeSecondsAgo": "{count, plural, =1{1 second ago} other{{count} seconds ago}}",
   "@relativeSecondsAgo": {
     "placeholders": {
       "count": {
@@ -70,7 +70,7 @@
       }
     }
   },
-  "relativeMinutesAgo": "{count} minutes ago",
+  "relativeMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
   "@relativeMinutesAgo": {
     "placeholders": {
       "count": {
@@ -78,7 +78,7 @@
       }
     }
   },
-  "relativeHoursAgo": "{count} hours ago",
+  "relativeHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
   "@relativeHoursAgo": {
     "placeholders": {
       "count": {
@@ -86,7 +86,7 @@
       }
     }
   },
-  "relativeDaysAgo": "{count} days ago",
+  "relativeDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
   "@relativeDaysAgo": {
     "placeholders": {
       "count": {
@@ -94,7 +94,7 @@
       }
     }
   },
-  "relativeMonthsAgo": "{count} months ago",
+  "relativeMonthsAgo": "{count, plural, =1{1 month ago} other{{count} months ago}}",
   "@relativeMonthsAgo": {
     "placeholders": {
       "count": {
@@ -102,7 +102,7 @@
       }
     }
   },
-  "relativeYearsAgo": "{count} years ago",
+  "relativeYearsAgo": "{count, plural, =1{1 year ago} other{{count} years ago}}",
   "@relativeYearsAgo": {
     "placeholders": {
       "count": {
@@ -114,7 +114,7 @@
   "uidNotSynced": "Not synced",
   "uidActiveSuffix": " (active)",
   "emptyNoSyncTitle": "No data synced yet",
-  "emptyNoSyncMessage": "Click \"Update\" in the top right to start",
+  "emptyNoSyncMessage": "Tap {icon} in the top right to start",
   "emptyNoRecords": "No records for this banner",
   "emptyNoFilterMatch": "No records match the current filter",
   "emptyNoGachaRecords": "No Convene records yet",
@@ -139,10 +139,10 @@
   "statsItemTypeDistribution": "Type Distribution",
   "statsNoData": "No data",
   "kindUnknown": "Unknown",
-  "kindCharacter": "Character",
+  "kindCharacter": "Resonator",
   "kindWeapon": "Weapon",
   "kindItem": "Item",
-  "tableTime": "Time",
+  "tableTime": "Convene Time",
   "tableName": "Name",
   "tableKind": "Type",
   "tableRarity": "Rarity",
@@ -156,6 +156,23 @@
   },
   "tableTotalIndex": "Total",
   "tableMainPity": "Pity",
+  "tableSortButton": "Sort: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
+  "tableSortDefault": "Sort: default",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
+  "tableSortSheetTitle": "Sort by",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "Pulls since the last {star}",
   "@tableMainPityTooltip": {
     "placeholders": {
@@ -167,15 +184,15 @@
   "sortDirectionDesc": "Descending",
   "sortDirectionAsc": "Ascending",
   "sortHintClickToSort": "Click to sort",
-  "progressPreparing": "Preparing…",
-  "progressPreparingHint": "Preparing data source…",
-  "progressWaiting": "Waiting for capture…",
-  "progressFetching": "Fetching…",
+  "progressPreparing": "Preparing...",
+  "progressPreparingHint": "Preparing data source...",
+  "progressWaiting": "Waiting for capture...",
+  "progressFetching": "Fetching...",
   "progressDone": "Update complete",
   "progressFailed": "Failed",
-  "progressOpenGameHint": "Open Wuthering Waves → Convene → Convene History",
-  "progressFallbackHint": "(The previous capture expired. Please reopen the Convene History page.)",
-  "progressCaptureUnavailableHint": "Couldn't start the capture helper (the Windows permission prompt may have been declined). Now detecting from the game's log file only. Please open Convene History.",
+  "progressOpenGameHint": "Open Wuthering Waves → Convene → Convene Records",
+  "progressFallbackHint": "(The previous capture expired. Please reopen the Convene Records page.)",
+  "progressCaptureUnavailableHint": "Couldn't start the capture helper (the Windows permission prompt may have been declined). Now detecting from the game's log file only. Please open the Convene Records page in the game.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
   },
@@ -183,7 +200,7 @@
   "@progressCaptureUnavailableNoGameDirHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
   },
-  "progressNotDetectedLink": "Opened Convene History but nothing happens?",
+  "progressNotDetectedLink": "Opened Convene Records but nothing happens?",
   "@progressNotDetectedLink": {
     "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
   },
@@ -191,7 +208,7 @@
   "@gameDirHelpTitle": {
     "description": "Title of the detection help dialog shown when the convene record is not detected"
   },
-  "gameDirHelpNotFound": "Couldn't find the Wuthering Waves game folder. Once you choose it, this tool can also read the convene history from the game's log file.",
+  "gameDirHelpNotFound": "Couldn't find the Wuthering Waves game folder. Once you choose it, this tool can also get the convene history URL from the game's log file.",
   "@gameDirHelpNotFound": {
     "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
   },
@@ -204,7 +221,7 @@
       }
     }
   },
-  "gameDirHelpReopen": "Game folder saved. Go back to the game and open Convene History once more.",
+  "gameDirHelpReopen": "Game folder saved. Go back to the game and open Convene Records once more.",
   "@gameDirHelpReopen": {
     "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
   },
@@ -242,7 +259,7 @@
       }
     }
   },
-  "progressDoneSummary": "Added {count} new records",
+  "progressDoneSummary": "{count, plural, =1{Added 1 new record} other{Added {count} new records}}",
   "@progressDoneSummary": {
     "placeholders": {
       "count": {
@@ -341,7 +358,7 @@
   "settingsDataLanguageUnset": "Not set (no conversion)",
   "settingsDataLanguageUnify": "Convert data language now",
   "settingsDataLanguageUnifying": "Converting...",
-  "settingsDataLanguageUnifyDone": "Converted {converted}, recovered {backfilled} IDs, {unresolved} could not be converted.",
+  "settingsDataLanguageUnifyDone": "Converted {converted}, recovered {backfilled, plural, =1{1 ID} other{{backfilled} IDs}}, {unresolved} could not be converted.",
   "@settingsDataLanguageUnifyDone": {
     "placeholders": {
       "converted": {
@@ -388,10 +405,14 @@
     "description": "Button that clears the manually set game folder"
   },
   "settingsCloudSync": "Cloud sync",
-  "cloudSyncIntro": "Link your Google account to automatically back up convene records to your Google Drive and keep multiple computers in sync.",
+  "cloudSyncIntro": "Link your Google account to automatically back up convene records to your Google Drive and keep multiple devices in sync.",
   "cloudSyncUnconfigured": "This build has no Google OAuth credentials configured; cloud sync is unavailable.",
   "cloudSyncLink": "Link Google account",
   "cloudSyncAwaitingConsent": "Browser opened. Please finish authorization in your browser...",
+  "cloudSyncAwaitingConsentAndroid": "Please finish authorization in the Google window...",
+  "@cloudSyncAwaitingConsentAndroid": {
+    "description": "Hint shown on Android while the Google account/consent sheet is open"
+  },
   "cloudSyncLinkedAs": "Linked: {email}",
   "@cloudSyncLinkedAs": {
     "placeholders": {
@@ -430,6 +451,14 @@
   "settingsPrivacySectionTitle": "Privacy",
   "settingsMaskUidInUi": "Mask UID in interface",
   "settingsMaskUidInUiHint": "When on, UIDs in the interface and account list show the first 3 digits with the rest masked (e.g. 123•••••). Useful for streaming or screen sharing. Share images, exported files, and the delete confirmation dialog are not affected.",
+  "settingsAdPrivacyOptions": "Ad privacy options",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
+  "settingsAdPrivacyOptionsHint": "Change whether you consent to seeing personalized ads.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "About",
   "settingsOtherGamesTitle": "Versions for Other Games",
   "settingsOtherGamesGenshin": "Genshin Impact",
@@ -451,6 +480,7 @@
   "contributorsTranslatedLanguages": "Available languages",
   "contributorsHelpTranslate": "Unavailable in your preferred languages? Help us translate it!",
   "contributorsProjectLicense": "Project License",
+  "contributorsOpenSourceLicenses": "Open source licenses",
   "pityRank": "{star} pity",
   "@pityRank": {
     "placeholders": {
@@ -470,7 +500,7 @@
       }
     }
   },
-  "pityDistance": "{n} pulls until guaranteed",
+  "pityDistance": "{n, plural, =1{1 pull until guaranteed} other{{n} pulls until guaranteed}}",
   "@pityDistance": {
     "placeholders": {
       "n": {
@@ -478,7 +508,7 @@
       }
     }
   },
-  "pityClose": "Close to guaranteed! {n} pulls left",
+  "pityClose": "{n, plural, =1{Close to guaranteed! 1 pull left} other{Close to guaranteed! {n} pulls left}}",
   "@pityClose": {
     "placeholders": {
       "n": {
@@ -511,7 +541,7 @@
       }
     }
   },
-  "timelineSinceLast": "{n} pulls",
+  "timelineSinceLast": "{n, plural, =1{1 pull} other{{n} pulls}}",
   "@timelineSinceLast": {
     "placeholders": {
       "n": {
@@ -523,7 +553,7 @@
   "luckTierAverage": "Average",
   "luckTierUnlucky": "Unlucky",
   "timelineNowLabel": "Now",
-  "timelineNowPulls": "{n} pulls",
+  "timelineNowPulls": "{n, plural, =1{1 pull} other{{n} pulls}}",
   "@timelineNowPulls": {
     "placeholders": {
       "n": {
@@ -531,7 +561,7 @@
       }
     }
   },
-  "timelineNowSinceLast": "{n} pulls since last {star}",
+  "timelineNowSinceLast": "{n, plural, =1{1 pull since last {star}} other{{n} pulls since last {star}}}",
   "@timelineNowSinceLast": {
     "placeholders": {
       "star": {
@@ -542,7 +572,7 @@
       }
     }
   },
-  "timelineNowSinceCrossPool": "{n} pulls since last {star} across banners",
+  "timelineNowSinceCrossPool": "{n, plural, =1{1 pull since last {star} across banners} other{{n} pulls since last {star} across banners}}",
   "@timelineNowSinceCrossPool": {
     "placeholders": {
       "star": {
@@ -584,10 +614,15 @@
     }
   },
   "filterKindAll": "All kinds",
-  "filterSearchHint": "Search name…",
+  "filterSearchHint": "Search name...",
   "filterClear": "Clear filters",
   "pagerFirst": "First",
   "pagerLast": "Last",
+  "pagerJumpTitle": "Go to page",
+  "pagerJumpLabel": "Page ({min}–{max})",
+  "pagerJumpCurrent": "Currently on page {page} · {total} records",
+  "pagerJumpGo": "Go",
+  "pagerJumpInvalid": "Enter a page from {min}–{max}",
   "settingsClearActive": "Clear current account data",
   "settingsClearAll": "Clear all data",
   "settingsRefetchItemImagesTitle": "Force re-fetch item images",
@@ -602,7 +637,7 @@
   "@confirmRefetchItemImagesTitle": {
     "description": "Title of the AlertDialog confirming the refetch action."
   },
-  "confirmRefetchItemImagesBody": "This will clear all local item image cache and re-download character icons. Detail images will be downloaded on demand next time you open the item detail. Depending on item count, this may take a few minutes of bandwidth and time.",
+  "confirmRefetchItemImagesBody": "This will clear all local item image cache and re-download Resonator icons. Detail images will be downloaded on demand next time you open the item detail. Depending on item count, this may take a few minutes of bandwidth and time.",
   "@confirmRefetchItemImagesBody": {
     "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
   },
@@ -681,7 +716,7 @@
   "@settingsImageCacheGallery": {
     "description": "Label for gallery cache size (large detail images shown in item dialog)."
   },
-  "settingsImageCacheCalculating": "Calculating…",
+  "settingsImageCacheCalculating": "Calculating...",
   "@settingsImageCacheCalculating": {
     "description": "Loading placeholder while scanning cache size."
   },
@@ -753,7 +788,7 @@
     }
   },
   "settingsImportConfirmTitle": "Import confirmation",
-  "settingsImportConfirmIntro": "About to import {accounts} accounts ({records} records total):",
+  "settingsImportConfirmIntro": "{accounts, plural, =1{About to import 1 account} other{About to import {accounts} accounts}} ({records, plural, =1{1 record} other{{records} records}} total):",
   "@settingsImportConfirmIntro": {
     "placeholders": {
       "accounts": {
@@ -799,7 +834,7 @@
   "settingsImportSelectTitle": "Select accounts to import",
   "settingsImportMergeBadge": "Merge",
   "accountsPickerSelectAll": "Select all",
-  "accountRecordCount": "{n} records",
+  "accountRecordCount": "{n, plural, =1{1 record} other{{n} records}}",
   "@accountRecordCount": {
     "placeholders": {
       "n": {
@@ -836,8 +871,11 @@
   "accountAdd": "Add account",
   "accountAliasLabel": "Alias",
   "accountAliasHint": "A friendly name for this account",
+  "accountAliasNone": "No alias set",
+  "accountActionEditAlias": "Edit alias",
+  "accountEditAliasTitle": "Edit alias",
   "accountDragHandleTooltip": "Drag to reorder",
-  "loadingBootstrap": "Loading…",
+  "loadingBootstrap": "Loading...",
   "timelineTopRarityTitle": "{star} Timeline ({n})",
   "@timelineTopRarityTitle": {
     "placeholders": {
@@ -850,7 +888,7 @@
     }
   },
   "bannerTopRarityCountTitle": "Highest rarity count per banner",
-  "bannerTopRarityPullsSinceLast": "{n} pulls since last {star}",
+  "bannerTopRarityPullsSinceLast": "{n, plural, =1{1 pull since last {star}} other{{n} pulls since last {star}}}",
   "@bannerTopRarityPullsSinceLast": {
     "placeholders": {
       "star": {
@@ -878,10 +916,20 @@
     }
   },
   "updateButtonDownload": "Download",
+  "updateButtonUpdate": "Update",
+  "updateNotesUnavailable": "Release notes are unavailable right now. See Google Play for details.",
+  "updateDownloadingMessage": "Downloading the update...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
+  "updateDownloadedMessage": "The update has been downloaded",
+  "updateRestartAction": "Restart",
+  "updateInAppUnavailable": "Can't update in the app right now. Please update from Google Play.",
+  "updateOpenPlayStore": "Open Google Play",
   "updateButtonSkip": "Skip this version",
   "updateButtonLater": "Later",
   "updateCheckButton": "Check for updates",
-  "updateChecking": "Checking…",
+  "updateChecking": "Checking...",
   "updateAlreadyLatest": "You're on the latest version",
   "updateCheckFailed": "Update check failed: {reason}",
   "@updateCheckFailed": {
@@ -903,6 +951,7 @@
     }
   },
   "updateErrorFormat": "Unexpected response format",
+  "updateErrorPlay": "Couldn't reach Google Play, or this copy wasn't installed from Google Play",
   "currentReleaseTitle": "Current release notes",
   "@currentReleaseTitle": {
     "description": "Title of the dialog showing release notes for the currently installed version."
@@ -939,7 +988,7 @@
   },
   "settingsLogs": "Debug logs",
   "@settingsLogs": {},
-  "settingsLogsHint": "If you run into issues, export the log to help developers investigate.",
+  "settingsLogsHint": "If you run into issues, export the logs to help developers investigate.",
   "@settingsLogsHint": {},
   "settingsLogsReport": "Report an issue",
   "@settingsLogsReport": {},
@@ -985,6 +1034,10 @@
   "galleryNextTab": "Next",
   "@galleryNextTab": {
     "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
+  "detailScrollDown": "Scroll down",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
   },
   "galleryLazyLoadFailed": "Image failed to load",
   "@galleryLazyLoadFailed": {
@@ -1042,5 +1095,425 @@
   "actionViewOnEncore": "View on encore.moe",
   "@actionViewOnEncore": {
     "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
+  "progressManualInputLink": "Enter convene history URL manually",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
+  "manualCredentialTitle": "Enter Convene History URL Manually",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
+  "manualCredentialHint": "Paste the convene history URL, or any text that contains it.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
+  "manualCredentialFieldHint": "Paste URL...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
+  "manualCredentialPaste": "Paste from clipboard",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
+  "manualCredentialPickLog": "Choose Client.log file",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
+  "manualCredentialHowTo": "How do I get the URL?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
+  "manualCredentialNotFound": "No Convene Records URL found",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
+  "manualCredentialNotFoundInLog": "No Convene Records URL in this file. Open Convene Records in the game first, then choose it again.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
+  "manualCredentialHelpAndroid": "Option 1: Airplane mode\n1. In the game, go to the Convene screen\n2. Turn on airplane mode, then tap Convene Records\n3. The page fails to load: long-press → Select all → Copy\n4. Turn off airplane mode and paste the whole text here\n\nOption 2: You already have a Client.log file\nTap \"Choose Client.log file\" and the app finds the URL for you.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
+  "manualCredentialHelpWindows": "Choose the Client.log file\n1. Open Convene Records in the game\n2. Tap \"Choose Client.log file\". It is located at:\nGame folder\\Client\\Saved\\Logs\\Client.log\n\nURL from another tool\nA URL obtained with tools such as WuWa Tracker can be pasted directly.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
+  "manualCredentialWarning": "The URL contains your account credentials. Don't share it publicly. It expires after a while.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
+  "manualCredentialSubmit": "OK",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
+  "progressWaitingLog": "Waiting for you to open the Convene Records page in the game...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
+  "progressCheckingLogAccess": "Getting ready to read the game log file...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
+  "progressLogUnavailableTitle": "Can't get the convene history URL automatically",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
+  "logUnavailableNotPaired": "Reading the game log file isn't set up yet. After a one-time setup, every update reads it automatically.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
+  "logUnavailableNoWifi": "Wireless debugging only works on Wi‑Fi. Connect to Wi‑Fi and come back; the app continues automatically. You can also enter the URL manually.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
+  "logRootDeniedHint": "Root was found, but this app wasn't granted root access. To read with root, allow this app in your root manager (for example Magisk's Superuser list), then come back; the app retries automatically.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
+  "logUnavailableAdbFailed": "Couldn't connect to wireless debugging. The pairing may have expired; please pair again.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
+  "logUnavailableWirelessOff": "Your device doesn't let this app turn on wireless debugging. Turn it on in the Wireless debugging page and come back; the app continues automatically.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
+  "logUnavailableNetworkNotAllowed": "This Wi‑Fi network isn't allowed for wireless debugging yet. Tap Allow in the system prompt (tick \"Always allow on this network\" so it won't ask again) and the app continues automatically. If you closed the prompt, tap Retry.",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
+  "logUnavailableStorage": "Storage permission is needed to read the game log file.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
+  "logUnavailableUnsupported": "This device can't read the game log file automatically. Please enter the URL manually.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
+  "actionOpenGame": "Open Wuthering Waves",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
+  "actionOpenWirelessDebugging": "Open Wireless debugging",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
+  "actionRegrantStorage": "Grant permission",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
+  "progressLogConnectionLost": "Lost the wireless debugging connection, reconnecting... If it doesn't recover, check your Wi‑Fi or enter the URL manually.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
+  "progressWirelessLeftOnHint": "Wireless debugging is still on. You can turn it off in system settings.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
+  "actionSetupLogAccess": "Set up",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
+  "actionRepair": "Pair again",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
+  "setupTitle": "Read Game Log File",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
+  "setupWhyTitle": "Why is this needed?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
+  "setupWhyBody": "Android doesn't let apps read other apps' files directly. This app uses the built-in Wireless debugging feature to read Wuthering Waves' log file and get the convene history URL from it.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
+  "setupWhatTitle": "What this app does",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
+  "setupWhatBody": "• Reads only Wuthering Waves' log file\n• Disconnects right after reading, and turns wireless debugging off if this app turned it on\n• Grants itself permission to turn wireless debugging on and off, so you don't need to set it up again\n• You can remove this at any time in Settings",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
+  "setupNeedTitle": "Requirements",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
+  "setupNeedBody": "Android 11 or later, Wi‑Fi, notifications allowed",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
+  "setupStart": "Start setup",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
+  "setupUseManual": "Enter the URL manually instead",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
+  "setupPairTitle": "Pair Wireless Debugging",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
+  "setupStepDevOptions": "1. Turn on Developer options",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
+  "setupStepDevOptionsBody": "1. Open the About page in system Settings (for example \"About phone\" or \"About tablet\")\n2. Find \"Build number\" and tap it 7 times\n3. When you see \"You are now a developer\", come back to this app",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
+  "setupOpenAbout": "Open About page",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
+  "setupStepDevOptionsDone": "1. Developer options are on",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
+  "setupStepNotifications": "2. Allow notifications",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
+  "setupStepNotificationsBody": "You'll enter the pairing code in a notification, so allow this app to show notifications.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
+  "setupAllowNotifications": "Allow notifications",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
+  "setupOpenNotificationSettings": "Open notification settings",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
+  "setupStepNotificationsDone": "2. Notifications allowed",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
+  "setupStepPair": "3. Pair",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
+  "setupStepPairBody": "1. Tap the button below to open Wireless debugging\n2. Turn on \"Use wireless debugging\" and tap \"Pair device with pairing code\"\n3. Swipe down from the top of the screen and, in this app's notification, enter the 6-digit pairing code shown on the Wireless debugging pairing screen",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
+  "setupWaitingCode": "Waiting for you to enter the pairing code in the notification...\nEnter it while the pairing screen in Wireless debugging is still open.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
+  "setupOpenWirelessAgain": "Open Wireless debugging again",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
+  "setupPairing": "Pairing...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
+  "setupGrantFailedTitle": "Paired, one more step",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
+  "setupGrantFailedBody": "Your device has an extra security restriction. Turn on one more option so this app can turn wireless debugging on and off automatically.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
+  "setupGrantHowTitle": "How to turn it on",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
+  "setupGrantHowBody": "1. Open Developer options\n2. Find the switch related to USB debugging security or permission monitoring and turn it on, for example:\n• Xiaomi: \"USB debugging (Security settings)\"\n• OPPO / realme: \"Disable permission monitoring\"\n3. Make sure wireless debugging is on, then come back and tap Retry",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
+  "setupOpenDeveloperOptions": "Open Developer options",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
+  "setupRetry": "Retry",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
+  "setupSkipGrant": "Skip (turn on wireless debugging yourself each update)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
+  "setupDoneTitle": "All set",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
+  "setupDoneBody": "From now on, Update reads the log automatically. No more setup needed.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
+  "setupDoneManualBody": "When you tap Update, turn on wireless debugging when asked.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
+  "setupDoneReturning": "Returning and starting the update...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
+  "settingsLogAccess": "Game Log File Access",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
+  "settingsLogAccessMethod": "Method",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
+  "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
+  "logAccessMethodLegacy": "Direct access",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
+  "logAccessMethodWireless": "Wireless debugging",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
+  "logAccessMethodNone": "Not set up",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
+  "settingsPairingStatus": "Pairing",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
+  "settingsPaired": "Paired",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
+  "settingsPairedManual": "Paired (turn on wireless debugging manually)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
+  "settingsRetryGrant": "Retry permission",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
+  "settingsSetupLogAccess": "Set up",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
+  "settingsUnpair": "Remove pairing",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
+  "settingsUnpairConfirmTitle": "Remove pairing?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
+  "settingsUnpairConfirmBody": "This deletes this app's pairing key and removes this app's permission to toggle wireless debugging. You'll need to pair again to use wireless debugging later.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
+  "settingsUnpairDone": "Pairing removed",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
+  "settingsUnpairDoneBody": "Deleted this app's pairing key and removed its permission to turn wireless debugging on and off.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
+  "settingsUnpairUnreachableTitle": "Pairing key deleted",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
+  "settingsUnpairUnreachableBody": "Deleted this app's pairing key, but couldn't connect to wireless debugging this time, so the permission to turn wireless debugging on and off hasn't been removed.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
+  "settingsUnpairUnreachableRevokeHint": "This app doesn't use that permission while unpaired. To remove it completely, connect to Wi‑Fi, pair again, then unpair once more.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
+  "settingsUnpairLeftover": "The system's Wireless debugging → Paired devices list will still show \"{name}\". It can no longer connect, so you can leave it; to remove it, tap it and delete it.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsUnpairLeftoverAlso": "The system's Wireless debugging → Paired devices list also still shows \"{name}\"; tap it to delete it.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "progressCredentialReady": "Got the convene history URL. Fetching your convene history starts when you return to this app.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
+  "actionShare": "Share",
+  "@actionShare": {
+    "description": "Share action label: share-image dialog, item image menus and the backup/log picker (Android): opens the system share sheet."
+  },
+  "shareFailed": "Couldn't share",
+  "@shareFailed": {
+    "description": "Shown when opening the system share sheet failed."
+  },
+  "dialogSaveAsTitle": "Save as",
+  "@dialogSaveAsTitle": {
+    "description": "Title of the system save-file dialog (desktop)."
+  },
+  "dialogOpenTitle": "Open",
+  "@dialogOpenTitle": {
+    "description": "Title of the system open-file dialog (desktop)."
+  },
+  "dialogSelectFolderTitle": "Select folder",
+  "@dialogSelectFolderTitle": {
+    "description": "Title of the system select-folder dialog (desktop)."
+  },
+  "actionSave": "Save",
+  "@actionSave": {
+    "description": "Save button in the backup account picker (Android) and similar save actions."
+  },
+  "settingsLogsShare": "Share logs",
+  "@settingsLogsShare": {
+    "description": "Button that shares the exported log bundle through the system share sheet (Android)."
+  },
+  "logUnavailableGameNotInstalled": "The global version of Wuthering Waves isn't installed on this device. Once it's installed, come back here and it will be detected automatically.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
+  "actionRedetectGame": "Check again",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
+  "logChooseGameVersion": "More than one version of Wuthering Waves is installed on this device. Which one should be read?",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
+  "gameVersionGooglePlay": "Google Play version",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
+  "gameVersionGalaxyStore": "Galaxy Store version",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
+  "progressGameVersion": "Wuthering Waves version: {name}",
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "Switch version",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
   }
 }

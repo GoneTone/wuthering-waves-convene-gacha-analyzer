@@ -6,6 +6,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.d
 import 'package:wuthering_waves_convene_gacha_analyzer/state/record_filter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/search_filter_bar.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/data/sortable_table.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   theme: buildDarkTheme(),
@@ -78,8 +79,8 @@ void main() {
     // 開 dropdown，確認顯示在地化標籤而非原始 key
     await tester.tap(find.byType(DropdownButton<String?>));
     await tester.pumpAndSettle();
-    // 測試環境預設英文：kindCharacter → 'Character'、kindWeapon → 'Weapon'
-    expect(find.text('Character'), findsWidgets);
+    // 測試環境預設英文：kindCharacter → 'Resonator'、kindWeapon → 'Weapon'
+    expect(find.text('Resonator'), findsWidgets);
     expect(find.text('Weapon'), findsWidgets);
     // 確認原始 key 字串不直接顯示在 dropdown 選項中
     expect(find.text(kItemKindCharacter), findsNothing);
@@ -103,7 +104,7 @@ void main() {
     await tester.tap(find.byType(DropdownButton<String?>));
     await tester.pumpAndSettle();
     // 測試環境英文下 kItemKindCharacter 顯示為「Character」；點最後一個（menu item）
-    final characterItems = find.text('Character');
+    final characterItems = find.text('Resonator');
     expect(characterItems, findsWidgets);
     await tester.tap(characterItems.last);
     await tester.pumpAndSettle();
@@ -127,5 +128,90 @@ void main() {
     await tester.tap(find.byType(DropdownButton<String?>));
     await tester.pumpAndSettle();
     expect(find.text('服裝'), findsWidgets);
+  });
+
+  for (final (width, want) in [(344.0, 344.0), (900.0, 240.0)]) {
+    testWidgets('search field spans the row on narrow widths ($width)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: width,
+              child: SearchFilterBar(
+                state: const RecordFilterState(
+                  filter: RecordFilter(),
+                  sort: null,
+                ),
+                availableItemTypes: const [kItemKindCharacter],
+                onFilterChanged: (_) {},
+                onClear: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byType(TextField)).width, want);
+    });
+  }
+
+  group('trailing', () {
+    /// 寬 [width] 的篩選列，尾端放排序按鈕。
+    Widget bar(double width, Locale locale) => MaterialApp(
+      theme: buildDarkTheme(),
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: width,
+            child: SearchFilterBar(
+              state: const RecordFilterState(
+                filter: RecordFilter(),
+                sort: null,
+              ),
+              availableItemTypes: const [kItemKindCharacter, kItemKindWeapon],
+              onFilterChanged: (_) {},
+              onClear: () {},
+              trailing: RecordSortButton(
+                sort: null,
+                mainRank: 5,
+                onTap: (_) {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    testWidgets('sits on the same row as the rarity dropdown at 360', (
+      tester,
+    ) async {
+      await tester.pumpWidget(bar(360, const Locale('zh')));
+      // Wrap 以垂直置中對齊同一列，所以中心 dy 相同才算同列。
+      expect(
+        tester.getCenter(find.byType(RecordSortButton)).dy,
+        tester.getCenter(find.byType(DropdownButton<RarityFilter>)).dy,
+      );
+    });
+
+    for (final locale in [
+      const Locale('en'),
+      const Locale('zh'),
+      const Locale('ja'),
+    ]) {
+      testWidgets('does not overflow at 1.3x text and width 320 ($locale)', (
+        tester,
+      ) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await tester.pumpWidget(bar(320, locale));
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 }

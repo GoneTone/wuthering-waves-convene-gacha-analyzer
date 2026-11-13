@@ -10,7 +10,7 @@ set(BINARY_NAME "wuthering_waves_convene_gacha_analyzer")
 # versions of CMake.
 cmake_policy(VERSION 3.14...3.25)
 
-# webview_windows 的 CMakeLists 用了 CMP0175（CMake ≥3.31）視為無效的
+# flutter_inappwebview_windows 的 CMakeLists 用了 CMP0175（CMake ≥3.31）視為無效的
 # add_custom_command(TARGET ... DEPENDS) 寫法，會跳「policy CMP0175 is not set」
 # 開發者警告。把該 policy 的子目錄預設設為 OLD（沿用既有寬鬆行為）以消除噪音；
 # 不影響建置產物。外掛屬 vendored 檔不手改，故在 app 端設預設讓它傳播到外掛子目錄。
@@ -125,6 +125,11 @@ install(PROGRAMS "${CAPTURE_HELPER_EXE}"
   COMPONENT Runtime)
 install(FILES "${WINDIVERT_DIR}/WinDivert.dll" "${WINDIVERT_DIR}/WinDivert64.sys"
   DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
+# WinDivert 是 LGPLv3／GPLv2 雙授權，散布時要附上授權全文。
+install(FILES "${CAPTURE_HELPER_DIR}/windivert/LICENSE"
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  RENAME "WinDivert-LICENSE.txt"
   COMPONENT Runtime)
 
 # Copy the native assets provided by the build.dart from all packages.

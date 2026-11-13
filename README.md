@@ -4,13 +4,15 @@
 
 [![Crowdin](https://badges.crowdin.net/wuthering-waves-convene-gacha-analyzer/localized.svg)](https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer)
 
-我開發了一套用來分析喚取卡池歷史記錄的軟體，一開啟各種數據清清楚楚，不用再手動計算啦！
+一套用來分析喚取卡池歷史記錄的軟體，支援 Windows 與 Android，一開啟各種數據清清楚楚，不用再手動計算啦！
 
-本軟體原理是按下「更新資料」後，會在本機啟動一個只跑在您電腦上的攔截程式（需要系統管理員權限，因此會跳出一次 UAC 確認，請按「是」），並自動安裝一張本機產生的根憑證；接著把鳴潮喚取記錄頁面對官方喚取歷史 API 的那一條請求重導向到本機解析，藉此攔下該請求。所以要在按下更新後再到遊戲內開啟喚取記錄才能攔到，攔到後解析出查詢喚取記錄所需的參數，這些參數會用於官方喚取相關的 API。攔截只在更新期間進行，完成後立即停止並還原網路狀態。
+Windows 版的原理是按下「更新資料」後，會在本機啟動一個只跑在您電腦上的攔截程式（需要系統管理員權限，因此會跳出一次 UAC 確認，請按「是」），並自動安裝一張本機產生的根憑證；接著把鳴潮喚取記錄頁面對官方喚取歷史 API 的那一條請求重導向到本機解析，藉此攔下該請求。所以要在按下更新後再到遊戲內開啟喚取記錄才能攔到，攔到後解析出查詢喚取記錄所需的參數，這些參數會用於官方喚取相關的 API。攔截只在更新期間進行，完成後立即停止並還原網路狀態。
 
-第一次按下「更新資料」會加載您完整的喚取歷史，這可能需要一些時間，完成後會將資料存放在您的電腦內，這樣下次開啟軟體就不用再花時間等待資料加載。之後想取得新資料按一下「更新資料」即可，軟體會記住先前攔到的查詢參數，能用就直接用、不用每次重新攔截；如果查詢參數過期，軟體會請您再到遊戲開一次喚取記錄頁面以重新攔取。
+Android 版無法攔截連線，改為讀取鳴潮自己寫下的 log 檔，從中找出喚取記錄網址。Android 不允許 App 直接讀取其他 App 的檔案，所以會依裝置狀況使用 root、直接讀取（Android 10 以下）或系統內建的「無線偵錯」來讀取。使用無線偵錯時讀完就會中斷連線，如果無線偵錯是本 App 打開的，也會一併關閉。
 
-請放心：本軟體不會讀取或竄改任何遊戲檔案與記憶體，也不影響遊戲本身的運作；只會在喚取記錄頁面開啟時，攔下並解析那一條對官方喚取歷史 API 的請求以取得查詢參數，其餘所有流量原樣放行、完全不碰。所以不會有被封鎖帳號的風險。如果有被封號，請思考您是不是其他原因被封鎖，不要怪罪我們。
+第一次按下「更新資料」會加載您完整的喚取歷史，這可能需要一些時間，完成後會將資料存放在您的裝置內，這樣下次開啟軟體就不用再花時間等待資料加載。之後想取得新資料按一下「更新資料」即可，軟體會記住先前取得的查詢參數，能用就直接用、不用每次重新取得；如果查詢參數過期，軟體會請您再到遊戲開一次喚取記錄頁面以重新取得。
+
+請放心：本軟體不會竄改任何遊戲檔案，也不會讀取或竄改遊戲記憶體，不影響遊戲本身的運作。Windows 版只會在喚取記錄頁面開啟時，攔下並解析那一條對官方喚取歷史 API 的請求以取得查詢參數，其餘所有流量原樣放行、完全不碰；Android 版只會讀取遊戲的 log 檔。所以不會有被封鎖帳號的風險。如果有被封號，請思考您是不是其他原因被封鎖，不要怪罪我們。
 
 文章：
 - 巴哈姆特：<https://forum.gamer.com.tw/C.php?bsn=74934&snA=17364>
@@ -34,14 +36,24 @@
 
 ## 使用方式
 
+### Windows
+
 1. 啟動鳴潮，先別開啟喚取記錄頁面。
 2. 開啟本軟體並按下「更新資料」，軟體會啟動本機攔截程式（會跳出一次 UAC 系統管理員確認，請按「是」）並等候攔截。
 3. 切回遊戲，到「喚取 → 喚取記錄」開啟喚取記錄頁面。
 4. 軟體攔到網址後會自動停止攔截、還原網路狀態並開始抓取資料；之後想再更新只要重複步驟 2，網址未過期就會直接套用。
 
+### Android
+
+1. 第一次按下「更新資料」時，App 會引導你設定讀取遊戲 log 檔的方式。有 root 或 Android 10 以下的裝置會直接讀取；其他裝置透過系統內建的「無線偵錯」，依畫面指示配對一次，之後 App 會自己開關無線偵錯。
+2. 按下「更新資料」後切到遊戲，到「喚取 → 喚取記錄」開啟喚取記錄頁面。
+3. App 從遊戲 log 檔找到網址後會自動開始抓取資料。
+4. 無法使用無線偵錯（例如沒有連上 Wi‑Fi）時，可以改用手動輸入喚取記錄網址。
+
 ## 功能與特色
 
-- 自動攔截鳴潮喚取記錄頁面對官方喚取歷史 API 的請求（透過本機攔截程式與自簽根憑證），不需手動貼網址
+- 支援 Windows 與 Android
+- 自動取得喚取記錄網址，不需手動貼網址：Windows 版攔截鳴潮喚取記錄頁面對官方喚取歷史 API 的請求（透過本機攔截程式與自簽根憑證）；Android 版讀取遊戲 log 檔（root、直接讀取或無線偵錯）
 - 支援國際服 (暫不支援中國服)
 - 涵蓋 12 種卡池：角色活動喚取、武器活動喚取、角色常駐喚取、武器常駐喚取、新手喚取、新手自選喚取、角色新旅喚取、武器新旅喚取、角色聯動喚取、武器聯動喚取、角色憶旅喚取、武器憶旅喚取
 - 多帳號 (UID) 管理：自訂別名、拖曳排序、一鍵切換
@@ -57,14 +69,15 @@
 - 歷史記錄表格：多欄排序、關鍵字搜尋（依名稱）、稀有度與物品類型篩選、分頁
 - 自動補上物品圖示（來源：encore.moe API）：角色、武器、道具皆有圖示，表格、時間軸與 5★ 一覽皆顯示對應圖示
 - 點擊物品開啟詳情：角色顯示簡介、元素、武器類型，以及可切換的「造型」與「喚取」立繪（喚取立繪於本機即時擷取 encore 已渲染畫面並快取，不重新散布美術）；武器顯示簡介與武器類型
-- 一鍵生成分享圖（可選深色 / 淺色主題、UID 全顯或只留前三碼遮罩），自動複製到剪貼簿，並可另存為 PNG 檔
+- 一鍵生成分享圖（可選深色 / 淺色主題、UID 全顯或只留前三碼遮罩），可複製到剪貼簿或另存為 PNG 檔，Android 版也能直接透過系統分享
 - 帳號資料匯出 / 匯入 JSON
-- 雲端同步：連結您自己的 Google 帳號後，喚取記錄自動備份到您的 Google 雲端硬碟，並在多台電腦間雙向同步；刪除帳號時可勾選一併從雲端移除
+- 雲端同步：連結您自己的 Google 帳號後，喚取記錄自動備份到您的 Google 雲端硬碟，並在多台裝置間雙向同步；刪除帳號時可勾選一併從雲端移除
 - 深色 / 淺色主題切換
 - 多國語言（[協助翻譯](https://crowdin.com/project/wuthering-waves-convene-gacha-analyzer)）
 - 可在設定開啟介面 UID 遮罩（只顯示前三碼），保護隱私
-- 啟動時自動檢查新版本，也可在設定頁手動觸發
+- 啟動時自動檢查新版本，也可在設定頁手動觸發（Android 版透過 Google Play 更新）
 - 所有資料預設留在本機、不上傳；雲端同步為選擇性功能，啟用後也只會備份到您自己的 Google 雲端硬碟
+- Android 版會顯示 AdMob 原生廣告（需要同意的地區會先徵求同意）；Windows 版沒有廣告
 
 ## 支援匯入的第三方平台
 
@@ -75,19 +88,48 @@
 
 ## 截圖
 
-![綜合數據頁](docs/images/zh-Hant/1.png)
-![角色活動喚取頁](docs/images/zh-Hant/2.png)
-![武器活動喚取頁](docs/images/zh-Hant/3.png)
-![設定頁](docs/images/zh-Hant/4.png)
-![分享圖生成設定](docs/images/zh-Hant/5.png)
-![分享圖](docs/images/zh-Hant/6.png)
-![物品詳情顯示](docs/images/zh-Hant/7.png)
+### Windows
+
+![等待在遊戲中開啟喚取記錄頁](docs/images/zh-Hant/windows/1.png)
+![綜合數據頁](docs/images/zh-Hant/windows/2.png)
+![角色活動喚取頁](docs/images/zh-Hant/windows/3.png)
+![武器活動喚取頁](docs/images/zh-Hant/windows/4.png)
+![分享圖生成設定](docs/images/zh-Hant/windows/5.png)
+![分享圖](docs/images/zh-Hant/windows/6.png)
+![物品詳情顯示](docs/images/zh-Hant/windows/7.png)
+![設定頁](docs/images/zh-Hant/windows/8.png)
+
+### Android 手機
+
+<p>
+<img src="docs/images/play-store/screenshots/zh-TW/phone/1.png" alt="綜合數據頁" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/2.png" alt="角色活動喚取頁" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/3.png" alt="5★ 時間軸與 5★ 一覽" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/4.png" alt="武器活動喚取頁" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/5.png" alt="物品詳情顯示" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/6.png" alt="分享圖生成設定" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/7.png" alt="等待在遊戲中開啟喚取記錄頁" width="24%">
+<img src="docs/images/play-store/screenshots/zh-TW/phone/8.png" alt="設定頁" width="24%">
+</p>
+
+### Android 平板
+
+<p>
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/1.png" alt="綜合數據頁" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/2.png" alt="角色活動喚取頁" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/3.png" alt="5★ 時間軸與 5★ 一覽" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/4.png" alt="武器活動喚取頁" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/5.png" alt="物品詳情顯示" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/6.png" alt="分享圖生成設定" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/7.png" alt="等待在遊戲中開啟喚取記錄頁" width="49%">
+<img src="docs/images/play-store/screenshots/zh-TW/tablet-10/8.png" alt="設定頁" width="49%">
+</p>
 
 ## 開發
 
 ### 前置需求
 
-- 目前僅支援 Windows
+- Windows 版要在 Windows 上建置；Android 版另需 [Android Studio](https://developer.android.com/studio)（Android SDK）
 - [Flutter SDK](https://docs.flutter.dev/install)（最新穩定版）
 - [Rust toolchain](https://rustup.rs/)（stable）
 - 執行 `flutter doctor`，依提示補齊缺少的工具
@@ -105,7 +147,8 @@ Rust 會在 `flutter run` / `flutter build` 時由 `rust_builder/` 的 cargokit 
 ### 開發模式執行
 
 ```bash
-flutter run -d windows
+flutter run -d windows        # Windows
+flutter run -d <device id>    # Android 實機或模擬器（ID 用 flutter devices 查）
 ```
 
 ### 雲端同步憑證（選用）
@@ -124,11 +167,34 @@ flutter run -d windows
    }
    ```
 
-3. 執行時帶入該檔（JetBrains IDE 可直接選內建的「main.dart (cloud sync)」執行設定；`build_release.ps1` 打包時會自動偵測）：
+3. 執行時帶入該檔（JetBrains IDE 可直接選內建的「main.dart (cloud sync + ads)」執行設定（會一併帶入下方的 `secrets/ads_defines.json`，兩個檔都要存在）；`build_release.ps1` 打包時會自動偵測）：
 
    ```bash
    flutter run -d windows --dart-define-from-file=secrets/cloud_sync_defines.json
    ```
+
+4. Android 沿用同一個 `secrets/cloud_sync_defines.json`，但要在**同一個** Google Cloud 專案再建立一個「**Android**」類型的 OAuth 用戶端：套件名稱填 `tw.reh.wuwa.gacha`，SHA-1 填簽署 APK 那把金鑰的指紋（開發用 debug 金鑰可用 `keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android` 查）。這個用戶端的 ID 不需要放進設定檔，Google 會用套件名稱和簽章比對。必須和電腦版用戶端在同一個專案，兩邊才會讀寫同一份同步檔。
+
+   ```bash
+   flutter run -d <裝置 ID> --dart-define-from-file=secrets/cloud_sync_defines.json
+   ```
+
+### 廣告 ID（選用，Android）
+
+Android 原生廣告的 AdMob ID 同樣在建置時注入，不寫進原始碼。要在自己的建置播正式廣告，在專案根目錄建立 `secrets/ads_defines.json`（已被 git 忽略），並和雲端同步設定檔一起帶入：
+
+```json
+{
+  "ADMOB_APP_ID": "ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy",
+  "ADMOB_NATIVE_UNIT_ID": "ca-app-pub-xxxxxxxxxxxxxxxx/wwwwwwwwww"
+}
+```
+
+```bash
+flutter run -d <device id> --dart-define-from-file=secrets/cloud_sync_defines.json --dart-define-from-file=secrets/ads_defines.json
+```
+
+沒有這個檔案、或非 release 建置時，一律使用 Google 官方測試廣告 ID，只會顯示測試廣告。
 
 ### Rust ↔ Dart 橋接程式碼產生
 
@@ -148,11 +214,24 @@ flutter_rust_bridge_codegen generate
 
 ### 編譯生產版
 
+Windows：
+
 ```bash
 flutter build windows --release
 ```
 
 輸出：`build\windows\x64\runner\Release\`
+
+Android：
+
+```bash
+flutter build apk --release        # 直接安裝用的 APK
+flutter build appbundle --release  # 上傳 Google Play 用的 AAB
+```
+
+輸出：`build/app/outputs/flutter-apk/app-release.apk`、`build/app/outputs/bundle/release/app-release.aab`
+
+要用自己的金鑰簽署，在 `android/key.properties`（已被 git 忽略）填入 `storeFile`、`storePassword`、`keyAlias`、`keyPassword`；沒有這個檔案時會用 debug 金鑰簽署。
 
 ### 執行測試
 

@@ -1,12 +1,14 @@
 import 'dart:io';
 
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
 
@@ -112,21 +114,25 @@ void main() {
   Future<void> openOverlay(
     WidgetTester tester, {
     String? suggestedFileName,
+    bool android = false,
   }) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: buildDarkTheme(),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Builder(
-          builder: (ctx) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => showZoomableImageOverlay(
-                ctx,
-                imageFile: imageFile,
-                suggestedFileName: suggestedFileName,
+      ProviderScope(
+        overrides: [isAndroidProvider.overrideWithValue(android)],
+        child: MaterialApp(
+          theme: buildDarkTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (ctx) => Scaffold(
+              body: ElevatedButton(
+                onPressed: () => showZoomableImageOverlay(
+                  ctx,
+                  imageFile: imageFile,
+                  suggestedFileName: suggestedFileName,
+                ),
+                child: const Text('open'),
               ),
-              child: const Text('open'),
             ),
           ),
         ),
@@ -184,19 +190,18 @@ void main() {
   });
 
   group('ZoomableImageOverlay InteractiveViewer wiring', () {
-    testWidgets(
-      'uses InteractiveViewer with scaleEnabled=false, panEnabled=true',
-      (tester) async {
-        await openOverlay(tester);
-        final iv = tester.widget<InteractiveViewer>(
-          find.byType(InteractiveViewer),
-        );
-        expect(iv.scaleEnabled, isFalse);
-        expect(iv.panEnabled, isTrue);
-        expect(iv.minScale, 1.0);
-        expect(iv.maxScale, 5.0);
-      },
-    );
+    testWidgets('uses InteractiveViewer with pinch zoom and pan enabled', (
+      tester,
+    ) async {
+      await openOverlay(tester);
+      final iv = tester.widget<InteractiveViewer>(
+        find.byType(InteractiveViewer),
+      );
+      expect(iv.scaleEnabled, isTrue);
+      expect(iv.panEnabled, isTrue);
+      expect(iv.minScale, 1.0);
+      expect(iv.maxScale, 5.0);
+    });
 
     testWidgets('initial transform is identity (scale = 1)', (tester) async {
       await openOverlay(tester);
@@ -228,6 +233,14 @@ void main() {
       final center = tester.getCenter(find.byType(InteractiveViewer));
       await sendWheel(tester, center, -100);
       expect(currentScale(tester), greaterThan(1.0));
+    });
+
+    testWidgets('one wheel step zooms exactly 1.1x', (tester) async {
+      // 開了雙指縮放後 InteractiveViewer 也會自己處理滾輪；不能和這裡的縮放疊加。
+      await openOverlay(tester);
+      final center = tester.getCenter(find.byType(InteractiveViewer));
+      await sendWheel(tester, center, -100);
+      expect(currentScale(tester), closeTo(1.1, 1e-6));
     });
 
     testWidgets('wheel down at fit stays at minScale', (tester) async {
@@ -288,7 +301,10 @@ void main() {
     testWidgets('from fit (scale=1), single tap goes to 2x', (tester) async {
       await openOverlay(tester);
       expect(currentScale(tester), 1.0);
-      await tester.tapAt(tester.getCenter(find.byType(InteractiveViewer)));
+      await tester.tapAt(
+        tester.getCenter(find.byType(InteractiveViewer)),
+        kind: PointerDeviceKind.mouse,
+      );
       await tester.pump(const Duration(milliseconds: 100));
       expect(currentScale(tester), closeTo(2.0, 1e-6));
     });
@@ -308,7 +324,7 @@ void main() {
         await tester.pump();
       }
       expect(currentScale(tester), greaterThan(2.5));
-      await tester.tapAt(center);
+      await tester.tapAt(center, kind: PointerDeviceKind.mouse);
       await tester.pump(const Duration(milliseconds: 100));
       expect(currentScale(tester), closeTo(1.0, 1e-6));
     });
@@ -323,12 +339,12 @@ void main() {
           ivRect.left + ivRect.width * 0.25,
           ivRect.top + ivRect.height * 0.25,
         );
-        await tester.tapAt(offCenter);
+        await tester.tapAt(offCenter, kind: PointerDeviceKind.mouse);
         await tester.pump(const Duration(milliseconds: 100));
         expect(currentScale(tester), closeTo(2.0, 1e-6));
 
         // 再單擊回 fit — matrix 必須是 identity（scale=1 AND translation=0）。
-        await tester.tapAt(offCenter);
+        await tester.tapAt(offCenter, kind: PointerDeviceKind.mouse);
         await tester.pump(const Duration(milliseconds: 100));
         expect(currentScale(tester), closeTo(1.0, 1e-6));
         final iv = tester.widget<InteractiveViewer>(
@@ -504,7 +520,10 @@ void main() {
     AppLocalizations loc(WidgetTester tester) =>
         AppLocalizations.of(tester.element(find.byType(ZoomableImageOverlay)))!;
 
-    tearDown(resetItemImageSaveSeams);
+    tearDown(() {
+      resetItemImageSaveSeams();
+      resetFileAccessSeams();
+    });
 
     /// 開 ... 選單並點選 [itemText]。
     /// itemImageEncoder seam 已換成同步回傳，故 pumpAndSettle 即可讓所有 future 完成。
@@ -520,7 +539,7 @@ void main() {
     ) async {
       var copyCalled = false;
       itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
-      itemImageClipboardWriter = (bytes) async {
+      pngClipboardWriter = (bytes) async {
         copyCalled = true;
         return true;
       };
@@ -535,28 +554,86 @@ void main() {
       'save calls picker with suggestedFileName and shows saved toast',
       (tester) async {
         String? capturedName;
-        String? writtenPath;
         final tmp = '${tempDir.path}/saved.png';
         itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
-        itemImageSaveLocationPicker = (name) async {
+        fileSaveDialog = (bytes, name, extension, mimeType, title) async {
           capturedName = name;
-          return FileSaveLocation(tmp);
-        };
-        itemImageFileWriter = (path, png) async {
-          writtenPath = path;
+          return tmp;
         };
         await openOverlay(tester, suggestedFileName: 'Char_Splash.png');
         final l = loc(tester);
         await pickMenu(tester, l.actionSaveImage);
         expect(capturedName, 'Char_Splash.png');
-        expect(writtenPath, tmp);
         expect(find.text(l.itemImageSavedTo(tmp)), findsOneWidget);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
+
+    testWidgets('save on Android shows the file name instead of a path', (
+      tester,
+    ) async {
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSaveDialog = (bytes, name, extension, mimeType, title) async =>
+          '/document/primary:Download/Char_Splash.png';
+      await openOverlay(
+        tester,
+        suggestedFileName: 'Char_Splash.png',
+        android: true,
+      );
+      final l = loc(tester);
+      await pickMenu(tester, l.actionSaveImage);
+      expect(find.text(l.itemImageSavedTo('Char_Splash.png')), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('item image menu offers share only on Android', (tester) async {
+      await openOverlay(tester, android: true);
+      final l = loc(tester);
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      expect(find.text(l.actionShare), findsOneWidget);
+    });
+
+    testWidgets('item image menu hides share on desktop', (tester) async {
+      await openOverlay(tester);
+      final l = loc(tester);
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      expect(find.text(l.actionShare), findsNothing);
+    });
+
+    testWidgets('sharing an item image sends a png named after the item', (
+      tester,
+    ) async {
+      String? name;
+      String? mime;
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSharer = (bytes, fileName, mimeType) async {
+        name = fileName;
+        mime = mimeType;
+      };
+      await openOverlay(
+        tester,
+        suggestedFileName: 'Char_Splash.png',
+        android: true,
+      );
+      final l = loc(tester);
+      await pickMenu(tester, l.actionShare);
+      expect(name, 'Char_Splash.png');
+      expect(mime, 'image/png');
+    });
+
+    testWidgets('item image share failure shows shareFailed', (tester) async {
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSharer = (_, _, _) async => throw Exception('boom');
+      await openOverlay(tester, android: true);
+      final l = loc(tester);
+      await pickMenu(tester, l.actionShare);
+      expect(find.text(l.shareFailed), findsOneWidget);
+    });
 
     testWidgets('save cancelled shows no toast', (tester) async {
       itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
-      itemImageSaveLocationPicker = (name) async => null;
+      fileSaveDialog = (bytes, name, extension, mimeType, title) async => null;
       await openOverlay(tester);
       final l = loc(tester);
       await pickMenu(tester, l.actionSaveImage);
@@ -568,7 +645,7 @@ void main() {
     ) async {
       String? capturedName;
       itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
-      itemImageSaveLocationPicker = (name) async {
+      fileSaveDialog = (bytes, name, extension, mimeType, title) async {
         capturedName = name;
         return null;
       };
@@ -591,14 +668,15 @@ void main() {
 
         // Image 外那層 GestureDetector 負責單擊縮放（onTapUp），並吸收 image
         // 像素上的點擊（不冒泡到外層的 close）。改成單擊後不再掛 onDoubleTap*。
-        final innerGd = tester.widget<GestureDetector>(
-          find
-              .ancestor(
+        // 最內層另有一個只處理觸控長按的 GestureDetector；這裡找負責單擊縮放的那一層。
+        final innerGd = tester
+            .widgetList<GestureDetector>(
+              find.ancestor(
                 of: find.byType(Image),
                 matching: find.byType(GestureDetector),
-              )
-              .first,
-        );
+              ),
+            )
+            .firstWhere((g) => g.onTapUp != null);
         expect(innerGd.behavior, HitTestBehavior.opaque);
         expect(innerGd.onTapUp, isNotNull);
         expect(innerGd.onDoubleTapDown, isNull);
@@ -644,5 +722,143 @@ void main() {
         expect(outerGd.onDoubleTapDown, isNull);
       },
     );
+  });
+
+  group('ZoomableImageOverlay touch', () {
+    AppLocalizations loc(WidgetTester tester) =>
+        AppLocalizations.of(tester.element(find.byType(ZoomableImageOverlay)))!;
+
+    Offset center(WidgetTester tester) =>
+        tester.getCenter(find.byType(InteractiveViewer));
+
+    testWidgets('pinch zooms in', (tester) async {
+      await openOverlay(tester);
+      final c = center(tester);
+      final g1 = await tester.startGesture(c - const Offset(20, 0), pointer: 1);
+      final g2 = await tester.startGesture(c + const Offset(20, 0), pointer: 2);
+      for (var i = 0; i < 5; i++) {
+        await g1.moveBy(const Offset(-20, 0));
+        await g2.moveBy(const Offset(20, 0));
+        await tester.pump();
+      }
+      await g1.up();
+      await g2.up();
+      await tester.pump();
+      expect(currentScale(tester), greaterThan(1.0));
+    });
+
+    testWidgets('single touch tap does nothing', (tester) async {
+      await openOverlay(tester);
+      await tester.tapAt(center(tester));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(currentScale(tester), 1.0);
+      expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+    });
+
+    testWidgets('double touch tap toggles zoom', (tester) async {
+      await openOverlay(tester);
+      final c = center(tester);
+      await tester.tapAt(c);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tapAt(c);
+      await tester.pump();
+      expect(currentScale(tester), closeTo(2.0, 1e-6));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tapAt(c);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tapAt(c);
+      await tester.pump();
+      expect(currentScale(tester), closeTo(1.0, 1e-6));
+    });
+
+    testWidgets('mouse click zooms immediately', (tester) async {
+      await openOverlay(tester);
+      await tester.tapAt(center(tester), kind: PointerDeviceKind.mouse);
+      await tester.pump();
+      expect(currentScale(tester), closeTo(2.0, 1e-6));
+    });
+
+    testWidgets('long press opens the image menu', (tester) async {
+      await openOverlay(tester);
+      final l = loc(tester);
+      await tester.longPressAt(center(tester));
+      await tester.pumpAndSettle();
+      expect(find.text(l.actionCopyImage), findsOneWidget);
+      expect(find.text(l.actionSaveImage), findsOneWidget);
+    });
+
+    testWidgets('mouse long press still zooms instead of opening the menu', (
+      tester,
+    ) async {
+      // 桌面行為不變：滑鼠按久一點放開仍是單擊縮放，不會跳出選單。
+      await openOverlay(tester);
+      final l = loc(tester);
+      await tester.longPressAt(center(tester), kind: PointerDeviceKind.mouse);
+      await tester.pumpAndSettle();
+      expect(find.text(l.actionCopyImage), findsNothing);
+      expect(currentScale(tester), closeTo(2.0, 1e-6));
+    });
+
+    testWidgets('swipe down closes when not zoomed', (tester) async {
+      await openOverlay(tester);
+      await tester.dragFrom(center(tester), const Offset(0, 200));
+      await tester.pumpAndSettle();
+      expect(find.byType(ZoomableImageOverlay), findsNothing);
+    });
+
+    testWidgets('swipe down pans when zoomed', (tester) async {
+      await openOverlay(tester);
+      await tester.tapAt(center(tester), kind: PointerDeviceKind.mouse);
+      await tester.pump();
+      await tester.dragFrom(center(tester), const Offset(0, 200));
+      await tester.pumpAndSettle();
+      expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+    });
+
+    testWidgets('mouse drag down does not close', (tester) async {
+      await openOverlay(tester);
+      await tester.dragFrom(
+        center(tester),
+        const Offset(0, 200),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+    });
+
+    testWidgets('rotating resets the zoom', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await openOverlay(tester);
+      await tester.tapAt(center(tester), kind: PointerDeviceKind.mouse);
+      await tester.pump();
+      expect(currentScale(tester), closeTo(2.0, 1e-6));
+      tester.view.physicalSize = const Size(800, 360);
+      await tester.pump();
+      await tester.pump();
+      expect(currentScale(tester), 1.0);
+    });
+
+    testWidgets('landscape notch keeps the image out of the cutout', (
+      tester,
+    ) async {
+      // showDialog 預設 useSafeArea，瀏海那一側的邊距要算在 8dp 之外。
+      tester.view.physicalSize = const Size(800, 360);
+      tester.view.devicePixelRatio = 1;
+      tester.view.padding = const FakeViewPadding(left: 44);
+      tester.view.viewPadding = const FakeViewPadding(left: 44);
+      addTearDown(tester.view.reset);
+      await openOverlay(tester);
+      expect(tester.getRect(find.byType(InteractiveViewer)).left, 44 + 8);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('phone padding is 8', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await openOverlay(tester);
+      expect(tester.getRect(find.byType(InteractiveViewer)).left, 8);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
   });
 }

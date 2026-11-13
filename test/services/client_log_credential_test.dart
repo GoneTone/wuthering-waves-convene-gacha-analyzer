@@ -42,4 +42,59 @@ void main() {
       expect(findConveneUrls(cn), isEmpty);
     });
   });
+
+  group('latestCredentialIn', () {
+    String url(String id) =>
+        '$host/aki/gacha/index.html#/record?svr_id=s&player_id=1&lang=en'
+        '&gacha_id=1&resources_id=r&record_id=$id';
+
+    // 飛航模式在遊戲內複製到的整段錯誤頁文字（帳號資料為假值）。
+    const airplaneText =
+        '網頁無法使用\n無法載入位於 '
+        'https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record'
+        '?svr_id=s1&player_id=700000001&lang=zh-Hant&gacha_id=100087&gacha_type=1'
+        '&svr_area=global&record_id=rec1&resources_id=res1&platform=Android '
+        '的網頁，原因如下：\n\nnet::ERR_NAME_NOT_RESOLVED';
+
+    test('從飛航模式複製的整段錯誤頁文字取出憑證', () {
+      final c = latestCredentialIn(airplaneText)!;
+      expect(c.recordId, 'rec1');
+      expect(c.playerId, '700000001');
+      expect(c.cardPoolId, 'res1');
+    });
+
+    test('網址後緊接全形標點仍能正確解析', () {
+      expect(latestCredentialIn('「${url('rec2')}」。')!.recordId, 'rec2');
+    });
+
+    test('多個網址取最新且合法的那個', () {
+      expect(
+        latestCredentialIn('${url('old')} ${url('new')}')!.recordId,
+        'new',
+      );
+      final bad = url('x').replaceAll('&record_id=x', '');
+      final rejected = <FormatException>[];
+      expect(
+        latestCredentialIn(
+          '${url('ok')}\n$bad',
+          onRejected: rejected.add,
+        )!.recordId,
+        'ok',
+      );
+      expect(rejected, hasLength(1));
+    });
+
+    test('沒有網址時回傳 null', () {
+      expect(latestCredentialIn('hello'), isNull);
+    });
+
+    test('Client.log 位元組會先解碼再找網址', () {
+      expect(
+        credentialFromClientLogBytes(
+          encodeClientLog('x ${url('r3')}\n'),
+        )!.recordId,
+        'r3',
+      );
+    });
+  });
 }

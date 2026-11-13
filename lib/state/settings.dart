@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_method.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/data_language.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
@@ -69,17 +70,22 @@ class SettingsNotifier extends Notifier<AppSettings> {
     await SettingsStorage.save(state);
   }
 
-  /// 設定指定 UID 的別名；[alias] 為 null 或空白時刪除別名。
+  /// 設定指定 UID 的別名；[alias] 為 null 或空白時刪除別名，與現值相同時不寫入。
   Future<void> setUidAlias(String uid, String? alias) async {
     final trimmed = alias?.trim();
+    final value = trimmed == null || trimmed.isEmpty ? null : trimmed;
+    if (state.uidAliases[uid] == value) return;
     final next = Map<String, String>.from(state.uidAliases);
-    if (trimmed == null || trimmed.isEmpty) {
+    if (value == null) {
       next.remove(uid);
     } else {
-      next[uid] = trimmed;
+      next[uid] = value;
     }
     state = state.copyWith(uidAliases: next);
     await SettingsStorage.save(state);
+    Logger('app.settings').info(
+      'uidAlias ${next.containsKey(uid) ? 'set' : 'cleared'} uid=${sanitizeUid(uid)}',
+    );
   }
 
   /// 更新 UID 排列順序並持久化。
@@ -106,6 +112,28 @@ class SettingsNotifier extends Notifier<AppSettings> {
           ? 'gameDir cleared'
           : 'gameDir set source=manual path=${sanitizeFsPath(dir)}',
     );
+  }
+
+  /// 記錄 Android 上次成功讀取遊戲記錄的方式並持久化；[method] 為 null 時清除（解除配對）。
+  Future<void> setLogAccessMethod(LogAccessMethod? method) async {
+    if (state.logAccessMethod == method) return;
+    state = state.copyWith(
+      logAccessMethod: method,
+      clearLogAccessMethod: method == null,
+    );
+    await SettingsStorage.save(state);
+    Logger('app.settings').info('logAccessMethod=${method?.name}');
+  }
+
+  /// 記錄 Android 選用的鳴潮套件並持久化；[package] 為 null 時清除（下次要重新選）。
+  Future<void> setGamePackage(String? package) async {
+    if (state.gamePackage == package) return;
+    state = state.copyWith(
+      gamePackage: package,
+      clearGamePackage: package == null,
+    );
+    await SettingsStorage.save(state);
+    Logger('app.settings').info('gamePackage=$package');
   }
 
   /// 切換「遮蔽介面 UID」設定並持久化；變更值同步寫入 log。

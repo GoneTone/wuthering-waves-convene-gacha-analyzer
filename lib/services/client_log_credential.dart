@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'dart:typed_data';
+
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 
 /// 比對國際服喚取記錄頁 URL（含 fragment 內的 query），遇 `"`、空白、`,` 即結束。
 final RegExp _conveneUrlPattern = RegExp(
@@ -20,3 +23,32 @@ Uint8List decodeClientLogBytes(Uint8List raw) {
 List<String> findConveneUrls(String text) => [
   for (final m in _conveneUrlPattern.allMatches(text)) m.group(0)!,
 ];
+
+/// 網址的第一個非 ASCII 字元（例如緊接在後的全形標點）之後都不屬於網址。
+final RegExp _nonAscii = RegExp(r'[^\x00-\x7F]');
+
+/// 從任意文字（log 片段、使用者貼上的整段錯誤訊息）找出最新且合法的喚取記錄憑證；沒有則回 null。
+///
+/// 由新到舊嘗試：最新一筆若被截斷或格式錯誤，仍可退回較早的有效 URL；每筆被拒時呼叫 [onRejected]。
+GachaCredential? latestCredentialIn(
+  String text, {
+  void Function(FormatException e)? onRejected,
+}) {
+  for (final url in findConveneUrls(text).reversed) {
+    final end = url.indexOf(_nonAscii);
+    try {
+      return GachaCredential.fromConveneUrl(
+        end < 0 ? url : url.substring(0, end),
+      );
+    } on FormatException catch (e) {
+      onRejected?.call(e);
+    }
+  }
+  return null;
+}
+
+/// 解碼整份 Client.log 原始位元組後，回傳其中最新且合法的喚取記錄憑證；沒有則回 null。
+GachaCredential? credentialFromClientLogBytes(Uint8List raw) =>
+    latestCredentialIn(
+      utf8.decode(decodeClientLogBytes(raw), allowMalformed: true),
+    );

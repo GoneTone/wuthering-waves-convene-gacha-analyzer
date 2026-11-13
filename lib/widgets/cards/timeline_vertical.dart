@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/timeline_entries.dart';
@@ -86,7 +87,12 @@ class TimelineVertical extends StatefulWidget {
 }
 
 /// [TimelineVertical] 的 State：管理分頁顯示數量 [_visibleCount]。
-class _TimelineVerticalState extends State<TimelineVertical> {
+class _TimelineVerticalState extends State<TimelineVertical>
+    with AutomaticKeepAliveClientMixin {
+  /// 放在按需建構的清單裡時，捲出畫面也保留本地狀態。
+  @override
+  bool get wantKeepAlive => true;
+
   /// 首次渲染顯示的最大條目數。
   static const int _initialPageSize = 10;
 
@@ -139,6 +145,7 @@ class _TimelineVerticalState extends State<TimelineVertical> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final theme = Theme.of(context);
     final tokens = theme.gacha;
     final l = AppLocalizations.of(context)!;
@@ -265,8 +272,8 @@ class _TimelineVerticalState extends State<TimelineVertical> {
           Stack(
             children: [
               // 背景軸線
-              Positioned(
-                left: _railLeft,
+              PositionedDirectional(
+                start: _railLeft,
                 top: 0,
                 bottom: 0,
                 width: 2,
@@ -395,11 +402,14 @@ class _EntryRow extends StatelessWidget {
             width: _monthColumnWidth,
             child: showMonthTag
                 ? Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.s, top: 4),
+                    padding: const EdgeInsetsDirectional.only(
+                      end: AppSpacing.s,
+                      top: 4,
+                    ),
                     child: Text(
                       l.timelineMonthLabel(year, month),
                       maxLines: 1,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.end,
                       style: TextStyle(
                         color: tokens.textSecondary,
                         fontSize: 11,
@@ -415,6 +425,7 @@ class _EntryRow extends StatelessWidget {
             message: entry.name,
             preferBelow: false,
             waitDuration: const Duration(milliseconds: 100),
+            triggerMode: tapTooltipTrigger(context),
             child: SizedBox(
               width: _haloSize,
               child: Center(
@@ -445,6 +456,7 @@ class _EntryRow extends StatelessWidget {
                     message: entry.name,
                     preferBelow: false,
                     waitDuration: const Duration(milliseconds: 100),
+                    triggerMode: tapTooltipTrigger(context),
                     child: Text.rich(
                       TextSpan(
                         style: TextStyle(

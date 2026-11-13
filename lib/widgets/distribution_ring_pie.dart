@@ -10,6 +10,9 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/distribution_lege
 /// 預設 chart slot (~244px) 內安全顯示。
 const double _kRingRadius = 75;
 
+/// 預設圓環直徑（邏輯像素），即 [_kRingRadius] 與 [_kCenterRadius] 的總和乘二。
+const double kDefaultRingDiameter = (_kRingRadius + _kCenterRadius) * 2;
+
 /// Pie 中心圓半徑（邏輯像素）。與 [_kRingRadius] 配合決定圓環寬度。
 const double _kCenterRadius = 40;
 
@@ -24,7 +27,11 @@ class DistributionRingPie extends StatelessWidget {
     required this.entries,
     required this.total,
     this.animationDuration = const Duration(milliseconds: 600),
+    this.diameter = kDefaultRingDiameter,
   });
+
+  /// 圓環直徑；小於預設時外徑與中心圓半徑等比縮小。
+  final double diameter;
 
   /// 各分段資料（顏色 + 數量）。
   final List<DistributionEntry> entries;
@@ -45,6 +52,7 @@ class DistributionRingPie extends StatelessWidget {
         child: Text(l.statsNoData, style: TextStyle(color: tokens.textMuted)),
       );
     }
+    final scale = diameter / kDefaultRingDiameter;
     final sections = <PieChartSectionData>[
       for (final e in entries)
         if (e.count > 0)
@@ -52,14 +60,14 @@ class DistributionRingPie extends StatelessWidget {
             showTitle: false,
             value: e.count.toDouble(),
             color: e.color,
-            radius: _kRingRadius,
+            radius: _kRingRadius * scale,
           ),
     ];
     return PieChart(
       PieChartData(
         sections: sections,
         sectionsSpace: 2,
-        centerSpaceRadius: _kCenterRadius,
+        centerSpaceRadius: _kCenterRadius * scale,
         pieTouchData: PieTouchData(enabled: false),
       ),
       duration: animationDuration,

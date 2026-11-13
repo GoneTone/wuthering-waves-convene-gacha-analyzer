@@ -11,12 +11,13 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_cache_usage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/encore_entry_text.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_html.dart';
@@ -24,7 +25,9 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/dialog_toast.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gallery_chip_bar.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/item_image_actions.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/scroll/scroll_affordance.dart';
 
 /// module-level logger，供 dialog 與其 tap target 共用。
 final _log = Logger('gacha.itemimage.detail');
@@ -65,8 +68,26 @@ class GachaItemDetailDialog extends ConsumerStatefulWidget {
 
 /// [GachaItemDetailDialog] 的 state：維護 chip 選中索引與各圖 lazy 下載狀態。
 class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
+  /// 手機橫向兩欄時左欄的寬度。
+  static const double _phoneDetailsWidth = 240;
+
+  /// 電腦版兩欄時左欄的寬度。
+  static const double _desktopDetailsWidth = 320;
+
+  /// 電腦版改用兩欄的最小視窗寬度；更窄時左欄加圖片放不下，維持單欄。
+  static const double _desktopTwoColumnMinWidth = 1000;
+
+  /// 水平滑動換圖的放手門檻：位移（dp）。
+  static const double _swipeDistance = 48;
+
+  /// 水平滑動換圖的放手門檻：速度（dp/s）。
+  static const double _swipeVelocity = 300;
+
   /// 當前選中 chip 的 index；超出範圍由 `clampedIndex` 收斂。
   int _selectedIndex = 0;
+
+  /// 本次水平拖曳累計的 dx。
+  double _swipeDx = 0;
 
   /// 每張圖的下載／載入狀態，key 為該圖本地 cache 檔絕對路徑。
   final Map<String, _ImageLoadState> _loadStates = {};
@@ -238,26 +259,9 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     }
   }
 
-  /// 圖片選單項目（複製圖片 / 儲存圖片 / --- / 重抓圖片）；右上角按鈕與右鍵選單共用。
+  /// 圖片選單項目（共用的複製／儲存／分享 + --- + 重抓圖片）；右上角按鈕與右鍵選單共用。
   List<PopupMenuEntry<String>> _imageMenuItems(AppLocalizations l) => [
-    PopupMenuItem(
-      value: 'copy',
-      child: ListTile(
-        dense: true,
-        contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.copy, size: 20),
-        title: Text(l.actionCopyImage),
-      ),
-    ),
-    PopupMenuItem(
-      value: 'save',
-      child: ListTile(
-        dense: true,
-        contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.save_alt, size: 20),
-        title: Text(l.actionSaveImage),
-      ),
-    ),
+    ...itemImageMenuItems(l, share: ref.read(isAndroidProvider)),
     const PopupMenuDivider(),
     PopupMenuItem(
       value: 'refetch',
@@ -270,19 +274,26 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     ),
   ];
 
-  /// 分派圖片選單選擇（按鈕與右鍵選單共用）：複製 / 儲存 / 重抓。
+  /// 分派圖片選單選擇（按鈕與右鍵選單共用）：重抓自己處理，其餘交給共用動作。
   void _onImageMenuSelected(String value, _ImageChipEntry current) {
-    switch (value) {
-      case 'copy':
-        unawaited(_copyImage(current));
-      case 'save':
-        unawaited(_saveImage(current));
-      case 'refetch':
-        _refetchEntry(current);
+    if (value == 'refetch') {
+      _refetchEntry(current);
+      return;
     }
+    unawaited(
+      runItemImageAction(
+        value,
+        file: current.file,
+        suggestedName: _suggestedFileName(current),
+        l: AppLocalizations.of(context)!,
+        toast: (message) {
+          if (mounted) _showSnack(message);
+        },
+      ),
+    );
   }
 
-  /// 圖片區右上角的溢出選單按鈕：複製圖片 / 儲存圖片 / --- / 重抓圖片。
+  /// 圖片區右上角的溢出選單按鈕：共用圖片動作 / --- / 重抓圖片。
   /// 沿用 lightbox X 鈕的半透明黑底圓鈕視覺；僅在圖片 ready 時疊在圖上顯示。
   Widget _buildImageMenu(BuildContext context, _ImageChipEntry current) {
     final l = AppLocalizations.of(context)!;
@@ -326,51 +337,57 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
     return '$safe.png';
   }
 
-  /// 複製目前圖片到剪貼簿：解碼成 PNG → 寫剪貼簿，結果以 toast 回報。
-  Future<void> _copyImage(_ImageChipEntry e) async {
-    final l = AppLocalizations.of(context)!;
-    final png = await encodeImageFileToPng(e.file);
-    if (!mounted) return;
-    if (png == null) {
-      _showSnack(l.itemImageCopyFailed);
-      return;
-    }
-    final ok = await copyImagePngToClipboard(png);
-    if (!mounted) return;
-    _showSnack(ok ? l.itemImageCopied : l.itemImageCopyFailed);
-  }
-
-  /// 儲存目前圖片：解碼成 PNG → 系統存檔對話框，結果以 toast 回報。
-  /// 使用者取消不提示；寫檔失敗提示失敗。
-  Future<void> _saveImage(_ImageChipEntry e) async {
-    final l = AppLocalizations.of(context)!;
-    final png = await encodeImageFileToPng(e.file);
-    if (!mounted) return;
-    if (png == null) {
-      _showSnack(l.itemImageSaveFailed);
-      return;
-    }
-    try {
-      final savedPath = await saveImagePng(
-        png,
-        suggestedName: _suggestedFileName(e),
-      );
-      if (!mounted || savedPath == null) return;
-      _showSnack(l.itemImageSavedTo(savedPath));
-    } catch (_) {
-      if (!mounted) return;
-      _showSnack(l.itemImageSaveFailed);
-    }
-  }
-
   /// 以共用 [showDialogToast] 在 dialog 之上顯示一則 toast（overlay entry，
   /// 不被 dialog 的 modal barrier 蓋住）。
   void _showSnack(String message) {
     showDialogToast(context, message);
   }
 
+  /// 放手時依位移（優先）或速度判斷左右滑換圖；到頭不循環，放手後直接換圖不跟手。
+  void _onSwipeEnd(DragEndDetails details, int index, int count) {
+    final velocity = details.velocity.pixelsPerSecond.dx;
+    final direction = _swipeDx.abs() >= _swipeDistance
+        ? _swipeDx.sign
+        : (velocity.abs() >= _swipeVelocity ? velocity.sign : 0);
+    // 往左滑看下一張，往右滑回上一張。
+    final next = index - direction.toInt();
+    if (direction == 0 || next < 0 || next >= count) return;
+    setState(() => _selectedIndex = next);
+  }
+
+  /// 圖片區：依當前 chip 狀態顯示內容（ready→可縮放圖／loading→spinner／failed→重試），
+  /// 外包左右滑換圖手勢，多於一張時底部疊頁點；[index]／[count] 為目前張數位置。
+  Widget _buildCurrentImageArea(
+    BuildContext context,
+    _ImageChipEntry current, {
+    required int index,
+    required int count,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragStart: (_) => _swipeDx = 0,
+      onHorizontalDragUpdate: (d) => _swipeDx += d.delta.dx,
+      onHorizontalDragEnd: (d) => _onSwipeEnd(d, index, count),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _buildImageState(context, current),
+          if (count > 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: AppSpacing.s,
+              child: IgnorePointer(
+                child: _PageDots(count: count, index: index),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   /// 依當前 chip 狀態顯示內容（ready→可縮放圖／loading→spinner／failed→重試）。
-  Widget _buildCurrentImageArea(BuildContext context, _ImageChipEntry current) {
+  Widget _buildImageState(BuildContext context, _ImageChipEntry current) {
     final theme = Theme.of(context);
     final tokens = theme.gacha;
     final l = AppLocalizations.of(context)!;
@@ -400,20 +417,31 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
                       current,
                     ),
                   ),
-                  child: Image.file(
-                    file,
-                    key: ValueKey(file.path),
-                    fit: BoxFit.contain,
-                    alignment: Alignment.center,
-                    gaplessPlayback: true,
-                    errorBuilder: (_, e, st) => const SizedBox.shrink(),
+                  // 觸控沒有右鍵，長按叫出同一個選單；滑鼠長按不算，放開仍是開啟看圖。
+                  child: GestureDetector(
+                    supportedDevices: kTouchLikeDevices,
+                    onLongPressStart: (details) => unawaited(
+                      _showImageContextMenu(
+                        context,
+                        details.globalPosition,
+                        current,
+                      ),
+                    ),
+                    child: Image.file(
+                      file,
+                      key: ValueKey(file.path),
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                      gaplessPlayback: true,
+                      errorBuilder: (_, e, st) => const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
             ),
-            Positioned(
+            PositionedDirectional(
               top: AppSpacing.s,
-              right: AppSpacing.s,
+              end: AppSpacing.s,
               child: _buildImageMenu(context, current),
             ),
           ],
@@ -477,23 +505,49 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
   /// AlertDialog 的 title 區，環境 [DefaultTextStyle] 是大行高的 titleTextStyle，
   /// 會讓單行說明文字在第一行上方多塞約 8px leading、換行時卻貼齊，造成「換行／不換
   /// 行」與標題的間距不一致。改用 bodyMedium 當 root 後，單行與多行皆貼齊（間距一致）。
-  Widget _detailHtml(ThemeData theme, String data) => DefaultTextStyle(
-    style: theme.textTheme.bodyMedium ?? const TextStyle(),
-    child: AppHtml(
-      data: stripEntryLinkTags(data),
-      style: _detailHtmlStyle(theme),
+  ///
+  /// 內容是 encore 的遊戲資料（中、英、日、韓等皆由左往右），固定由左往右排；否則在
+  /// 由右往左的介面語言下，句末標點會跑到行首。
+  Widget _detailHtml(ThemeData theme, String data) => Directionality(
+    textDirection: TextDirection.ltr,
+    child: DefaultTextStyle(
+      style: theme.textTheme.bodyMedium ?? const TextStyle(),
+      child: AppHtml(
+        data: stripEntryLinkTags(data),
+        style: _detailHtmlStyle(theme),
+      ),
     ),
   );
 
+  /// 詳情 HTML 區塊；[constrainHeight] 為 true 時限高 [maxHeight] 並自帶內層捲動（附捲動
+  /// 提示），false（兩欄）時完整展開、交給左欄整欄捲動。
+  Widget _detailHtmlBlock(
+    ThemeData theme,
+    String data, {
+    required double maxHeight,
+    required bool constrainHeight,
+  }) {
+    final html = _detailHtml(theme, data);
+    if (!constrainHeight) return html;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: _ScrollHintBox(child: html),
+    );
+  }
+
   /// 造型圖下方 caption：Name（標題）＋SubDecName（次標、弱色）＋BgDescription
-  /// （內文、含 HTML、過長捲動）。三者皆空則不繪。
-  Widget _buildSkinCaption(BuildContext context, ItemSkin skin) {
+  /// （內文、含 HTML；[constrainHeight] 為 true 時過長捲動）。三者皆空回 null。
+  Widget? _buildSkinCaption(
+    BuildContext context,
+    ItemSkin skin, {
+    required bool constrainHeight,
+  }) {
     final theme = Theme.of(context);
     final tokens = theme.gacha;
     final hasName = skin.name.trim().isNotEmpty;
     final hasSub = skin.subDecName.trim().isNotEmpty;
     final hasBg = skin.bgDescription.trim().isNotEmpty;
-    if (!hasName && !hasSub && !hasBg) return const SizedBox.shrink();
+    if (!hasName && !hasSub && !hasBg) return null;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.m),
       child: Column(
@@ -519,11 +573,11 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
           ],
           if (hasBg) ...[
             const SizedBox(height: AppSpacing.xs),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 96),
-              child: SingleChildScrollView(
-                child: _detailHtml(theme, skin.bgDescription),
-              ),
+            _detailHtmlBlock(
+              theme,
+              skin.bgDescription,
+              maxHeight: 96,
+              constrainHeight: constrainHeight,
             ),
           ],
         ],
@@ -659,145 +713,234 @@ class _GachaItemDetailDialogState extends ConsumerState<GachaItemDetailDialog> {
       });
     }
 
+    final size = MediaQuery.sizeOf(context);
+    final phoneLandscape =
+        phoneOrientationOf(context) == PhoneOrientation.landscape;
+    // 手機橫向高度不夠、電腦版寬度夠時都改左右兩欄，避免立繪被標題區擠扁。
+    final twoColumn =
+        phoneLandscape ||
+        (!isCompactLayout(context) && size.width >= _desktopTwoColumnMinWidth);
+
     final nameColor = switch (record.qualityLevel) {
       5 => tokens.fiveStar,
       4 => tokens.fourStar,
       _ => tokens.textPrimary,
     };
 
-    return AppDialog(
-      size: AppDialogSize.md,
-      maxHeight: 880,
-      title: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (iconFile != null) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              child: Image.file(
-                iconFile,
-                key: ValueKey('${iconFile.path}#$cacheRevision'),
-                width: 64,
-                height: 64,
-                fit: BoxFit.cover,
-                errorBuilder: (_, e, st) => const SizedBox.shrink(),
+    final header = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (iconFile != null) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: Image.file(
+              iconFile,
+              key: ValueKey('${iconFile.path}#$cacheRevision'),
+              width: 64,
+              height: 64,
+              fit: BoxFit.cover,
+              errorBuilder: (_, e, st) => const SizedBox.shrink(),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.m),
+        ],
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                record.name,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: nameColor,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (intro.trim().isNotEmpty)
+                Padding(
+                  // 名稱與簡介間留一點間距，避免兩者貼齊（2dp，無對應 token 故用字面值）。
+                  padding: const EdgeInsets.only(top: 2),
+                  child: _detailHtmlBlock(
+                    theme,
+                    intro,
+                    maxHeight: 120,
+                    constrainHeight: !twoColumn,
+                  ),
+                ),
+              if (_tagsFor(
+                l,
+                record,
+                elementName,
+                weaponTypeName,
+              ).isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.s),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final t in _tagsFor(
+                      l,
+                      record,
+                      elementName,
+                      weaponTypeName,
+                    ))
+                      Chip(
+                        label: Text(t),
+                        backgroundColor: tokens.textPrimary.withValues(
+                          alpha: 0.15,
+                        ),
+                        side: BorderSide.none,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppRadius.sm),
+                          ),
+                        ),
+                        labelStyle: theme.textTheme.bodySmall?.copyWith(
+                          color: tokens.textPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.s,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+    final caption = current?.skin == null
+        ? null
+        : _buildSkinCaption(
+            context,
+            current!.skin!,
+            constrainHeight: !twoColumn,
+          );
+    final chipBar = chipEntries.length > 1
+        ? GalleryChipBar(
+            labels: [for (final e in chipEntries) e.label],
+            selectedIndex: clampedIndex,
+            onSelected: (i) => setState(() => _selectedIndex = i),
+          )
+        : null;
+    final gallery = Column(
+      mainAxisSize: current != null ? MainAxisSize.max : MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 兩欄時沒有標題列，✕ 改放右欄頂列、接在頁籤列的 › 之後。
+        if (twoColumn)
+          Row(
+            children: [
+              Expanded(child: chipBar ?? const SizedBox.shrink()),
+              const AppDialogCloseButton(),
+            ],
+          )
+        else
+          ?chipBar,
+        if (chipBar != null) const SizedBox(height: AppSpacing.m),
+        if (current != null)
+          Expanded(
+            child: _buildCurrentImageArea(
+              context,
+              current,
+              index: clampedIndex,
+              count: chipEntries.length,
+            ),
+          ),
+        // 兩欄時造型說明放左欄，否則會把右欄的立繪擠扁。
+        if (caption != null && !twoColumn) caption,
+      ],
+    );
+    final actions = <Widget>[
+      TextButton.icon(
+        icon: const Icon(Icons.open_in_new, size: 18),
+        label: Text(l.actionViewOnEncore),
+        onPressed: () {
+          _log.info(
+            'open encore kind=${itemTypeKeyOf(record, index)} id=${record.resourceId}',
+          );
+          openExternalUrl(
+            Uri.parse(
+              encoreItemUrl(
+                kind: itemTypeKeyOf(record, index),
+                resourceId: record.resourceId,
+                lang: record.languageCode,
               ),
             ),
-            const SizedBox(width: AppSpacing.m),
-          ],
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record.name,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: nameColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (intro.trim().isNotEmpty)
-                  Padding(
-                    // 名稱與簡介間留一點間距，避免兩者貼齊（2dp，無對應 token 故用字面值）。
-                    padding: const EdgeInsets.only(top: 2),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 120),
-                      child: SingleChildScrollView(
-                        child: _detailHtml(theme, intro),
+          );
+        },
+      ),
+      FilledButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: Text(l.actionClose),
+      ),
+    ];
+
+    if (twoColumn) {
+      return AppDialog(
+        size: phoneLandscape ? AppDialogSize.lg : AppDialogSize.xl,
+        maxHeight: 880,
+        showCloseButton: false,
+        content: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              key: const ValueKey('detail-info-column'),
+              width: phoneLandscape ? _phoneDetailsWidth : _desktopDetailsWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    // 左欄全部內容同一個捲動區。
+                    child: _ScrollHintBox(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          header,
+                          if (caption != null) ...[
+                            // 上方留白與 caption 自帶的 top padding 對稱。
+                            Padding(
+                              padding: const EdgeInsets.only(top: AppSpacing.m),
+                              child: Divider(
+                                height: 1,
+                                color: tokens.borderSubtle,
+                              ),
+                            ),
+                            caption,
+                          ],
+                        ],
                       ),
                     ),
                   ),
-                if (_tagsFor(
-                  l,
-                  record,
-                  elementName,
-                  weaponTypeName,
-                ).isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.s),
                   Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      for (final t in _tagsFor(
-                        l,
-                        record,
-                        elementName,
-                        weaponTypeName,
-                      ))
-                        Chip(
-                          label: Text(t),
-                          backgroundColor: tokens.textPrimary.withValues(
-                            alpha: 0.15,
-                          ),
-                          side: BorderSide.none,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(AppRadius.sm),
-                            ),
-                          ),
-                          labelStyle: theme.textTheme.bodySmall?.copyWith(
-                            color: tokens.textPrimary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.s,
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                    ],
+                    alignment: WrapAlignment.end,
+                    spacing: AppSpacing.s,
+                    runSpacing: AppSpacing.xs,
+                    children: actions,
                   ),
                 ],
-              ],
-            ),
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: current != null ? MainAxisSize.max : MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (chipEntries.length > 1) ...[
-            GalleryChipBar(
-              labels: [for (final e in chipEntries) e.label],
-              selectedIndex: clampedIndex,
-              onSelected: (i) => setState(() => _selectedIndex = i),
-            ),
-            const SizedBox(height: AppSpacing.m),
-          ],
-          if (current != null)
-            Expanded(child: _buildCurrentImageArea(context, current)),
-          if (current?.skin != null) _buildSkinCaption(context, current!.skin!),
-        ],
-      ),
-      actions: [
-        TextButton.icon(
-          icon: const Icon(Icons.open_in_new, size: 18),
-          label: Text(l.actionViewOnEncore),
-          onPressed: () {
-            _log.info(
-              'open encore kind=${itemTypeKeyOf(record, index)} id=${record.resourceId}',
-            );
-            openExternalUrl(
-              Uri.parse(
-                encoreItemUrl(
-                  kind: itemTypeKeyOf(record, index),
-                  resourceId: record.resourceId,
-                  lang: record.languageCode,
-                ),
               ),
-            );
-          },
+            ),
+            const SizedBox(width: AppSpacing.l),
+            Expanded(child: gallery),
+          ],
         ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l.actionClose),
-        ),
-      ],
+      );
+    }
+
+    return AppDialog(
+      size: AppDialogSize.md,
+      maxHeight: 880,
+      title: header,
+      content: gallery,
+      actions: actions,
     );
   }
 }
@@ -813,6 +956,165 @@ List<String> _tagsFor(
   if (elementName.isNotEmpty) elementName,
   if (weaponTypeName.isNotEmpty) weaponTypeName,
 ];
+
+/// 可直向捲動的詳情區塊，附捲動提示：常駐捲軸，下方還有內容時疊底部漸層與「往下捲」圓鈕。
+///
+/// 兩欄的左欄與單欄限高的簡介／造型說明共用。高度跟著內容走（不撐滿上限），所以短內容
+/// 不會多出空白。
+class _ScrollHintBox extends StatefulWidget {
+  /// 建立 [_ScrollHintBox]。
+  const _ScrollHintBox({required this.child});
+
+  /// 要捲動的內容。
+  final Widget child;
+
+  @override
+  State<_ScrollHintBox> createState() => _ScrollHintBoxState();
+}
+
+/// [_ScrollHintBox] 的狀態：持有捲動控制器並追蹤是否還沒捲到底。
+class _ScrollHintBoxState extends State<_ScrollHintBox> {
+  /// 底部漸層提示的高度；需蓋得住其上的往下捲箭頭圓鈕。
+  static const double _fadeHeight = 40;
+
+  /// 內容的捲動控制器。
+  final ScrollController _controller = ScrollController();
+
+  /// true 時下方還有內容，疊底部漸層與往下捲圓鈕。
+  bool _hasMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_update);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// 依捲動位置更新 [_hasMore]：還沒捲到底才顯示提示。
+  void _update() {
+    if (!mounted || !_controller.hasClients) return;
+    final pos = _controller.position;
+    final hasMore = pos.pixels < pos.maxScrollExtent - 1;
+    if (hasMore != _hasMore) setState(() => _hasMore = hasMore);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).gacha;
+    // 內容尺寸變動（切換造型、Html 排版完成）不會觸發 controller listener，改靠
+    // metrics 通知重算。
+    return NotificationListener<ScrollMetricsNotification>(
+      onNotification: (_) {
+        _update();
+        return false;
+      },
+      child: Stack(
+        children: [
+          // 捲軸常駐才看得出可捲；關掉預設捲軸，免得電腦版再疊一條只在 hover／捲動時
+          // 才出現的。內容放不下時才畫 thumb。
+          ScrollConfiguration(
+            behavior: ScrollConfiguration.of(
+              context,
+            ).copyWith(scrollbars: false),
+            child: Scrollbar(
+              controller: _controller,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                controller: _controller,
+                // 右側讓出捲軸位置，thumb 不壓在文字上。
+                padding: const EdgeInsetsDirectional.only(end: AppSpacing.m),
+                child: widget.child,
+              ),
+            ),
+          ),
+          if (_hasMore) ...[
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: _fadeHeight,
+              child: IgnorePointer(
+                child: ScrollEdgeFade(side: ScrollSide.bottom),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Center(
+                child: ScrollArrowButton(
+                  icon: Icons.expand_more,
+                  tooltip: AppLocalizations.of(context)!.detailScrollDown,
+                  tokens: tokens,
+                  largeHitArea: true,
+                  onPressed: () => _controller.animateBy(
+                    _controller.position.viewportDimension * 0.8,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 圖片區底部的頁點：選中者寬 18、主色，其餘 6x6、白色；墊在半透明黑底膠囊上。
+class _PageDots extends StatelessWidget {
+  /// 建立 [_PageDots]。
+  const _PageDots({required this.count, required this.index});
+
+  /// 頁點總數（圖片張數）。
+  final int count;
+
+  /// 選中的頁點索引。
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // 頁點直接疊在圖上，深淺圖都要看得清楚：比照圖上 ⋮ 鈕用半透明黑底，不跟主題變。
+    return Center(
+      child: DecoratedBox(
+        key: const ValueKey('page-dots-scrim'),
+        decoration: ShapeDecoration(
+          color: Colors.black.withValues(alpha: 0.4),
+          shape: const StadiumBorder(),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < count; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: AnimatedContainer(
+                    key: ValueKey('page-dot-$i'),
+                    duration: const Duration(milliseconds: 150),
+                    width: i == index ? 18 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: i == index
+                          ? theme.colorScheme.primary
+                          : Colors.white70,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// chip 類別 — icon 永遠 ready（已快取），造型走 lazy，luckdraw 由 webview 擷取。
 enum _ChipKind {

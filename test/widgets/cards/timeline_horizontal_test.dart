@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,6 +15,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_horizontal.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_node.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 
 TimelineEntry _e(String name, String gachaType, int pulls, DateTime time) =>
@@ -275,6 +278,95 @@ void main() {
     expect(find.byIcon(Icons.chevron_right), findsNothing);
   });
 
+  testWidgets('drag cursor only shows over columns, not empty space', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) =>
+            const TimelineHorizontal(entries: [], targetRank: 5, nowPulls: 3),
+      ),
+    );
+    final mouse = await tester.createGesture(
+      kind: PointerDeviceKind.mouse,
+      pointer: 1,
+    );
+    addTearDown(mouse.removePointer);
+    final origin = tester.getTopLeft(find.byType(TimelineHorizontal));
+
+    await mouse.addPointer(location: origin + const Offset(45, 80));
+    await tester.pump();
+    expect(
+      RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(1),
+      SystemMouseCursors.resizeLeftRight,
+    );
+
+    await mouse.moveTo(origin + const Offset(500, 80));
+    await tester.pump();
+    expect(
+      RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(1),
+      SystemMouseCursors.basic,
+    );
+  });
+
+  testWidgets('only builds the columns near the viewport', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) =>
+            TimelineHorizontal(entries: manyEntries(300), targetRank: 5),
+      ),
+    );
+    expect(find.text('E299'), findsOneWidget);
+    expect(find.text('E0', skipOffstage: false), findsNothing);
+  });
+
+  testWidgets('scroll offset survives being scrolled out of a lazy list', (
+    tester,
+  ) async {
+    const listKey = Key('outer');
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildDarkTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: ListView(
+            key: listKey,
+            children: [
+              SizedBox(
+                height: 160,
+                child: TimelineHorizontal(
+                  entries: manyEntries(60),
+                  targetRank: 5,
+                ),
+              ),
+              const SizedBox(height: 5000),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.chevron_right));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.chevron_right));
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byKey(listKey), const Offset(0, -6000));
+    await tester.pumpAndSettle();
+    expect(find.byType(TimelineHorizontal), findsNothing);
+    await tester.drag(find.byKey(listKey), const Offset(0, 6000));
+    await tester.pumpAndSettle();
+
+    final scrollable = tester.state<ScrollableState>(
+      find.descendant(
+        of: find.byType(TimelineHorizontal),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    expect(scrollable.position.pixels, closeTo(180, 0.5));
+  });
+
   testWidgets('tap right arrow → scrolls by one column (90 px)', (
     tester,
   ) async {
@@ -363,7 +455,11 @@ void main() {
     },
   );
 
-  testWidgets('每欄名稱上方顯示 GachaItemIcon', (tester) async {
+  /// 呈現帶圖示的兩欄時間軸（夜蘭、納西妲），回傳其條目；[height] 為 null 時高度不受限（依內容）。
+  Future<List<TimelineEntry>> pumpIconTimeline(
+    WidgetTester tester, {
+    double? height = 240,
+  }) async {
     late Directory tempDir;
     await tester.runAsync(() async {
       tempDir = await Directory.systemTemp.createTemp('timeline_h_icon_test_');
@@ -416,13 +512,11 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
-            body: SizedBox(
-              width: 1000,
-              height: 160,
-              child: Builder(
-                builder: (ctx) {
-                  return TimelineHorizontal(entries: entries, targetRank: 5);
-                },
+            body: SingleChildScrollView(
+              child: SizedBox(
+                width: 1000,
+                height: height,
+                child: TimelineHorizontal(entries: entries, targetRank: 5),
               ),
             ),
           ),
@@ -430,8 +524,62 @@ void main() {
       ),
     );
     await tester.pump();
+    return entries;
+  }
 
+  testWidgets('每欄名稱上方顯示 GachaItemIcon', (tester) async {
+    final entries = await pumpIconTimeline(tester);
     expect(find.byType(GachaItemIcon), findsNWidgets(entries.length));
+  });
+
+  testWidgets('nodes with an icon above stay on the axis line', (tester) async {
+    await pumpIconTimeline(tester);
+    final axisY = tester.getCenter(find.byType(TimelineHorizontal)).dy;
+    for (final node in find.byType(TimelineNode).evaluate()) {
+      expect(
+        tester.getCenter(find.byWidget(node.widget)).dy,
+        closeTo(axisY, 1.5),
+      );
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  /// 時間軸背景軸線（2dp 高的 Container）。
+  Finder axisLine() => find.descendant(
+    of: find.byType(TimelineHorizontal),
+    matching: find.byWidgetPredicate(
+      (w) => w is Container && w.constraints?.maxHeight == 2,
+    ),
+  );
+
+  testWidgets('unbounded height leaves no blank band under the date row', (
+    tester,
+  ) async {
+    await pumpIconTimeline(tester, height: null);
+    final timeline = tester.getRect(find.byType(TimelineHorizontal));
+    final lowestText = find
+        .descendant(
+          of: find.byType(TimelineHorizontal),
+          matching: find.byType(RichText),
+        )
+        .evaluate()
+        .map((e) => tester.getRect(find.byWidget(e.widget)).bottom)
+        .reduce((a, b) => a > b ? a : b);
+    expect(timeline.bottom - lowestText, lessThanOrEqualTo(16));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('unbounded height keeps the nodes on the axis line', (
+    tester,
+  ) async {
+    await pumpIconTimeline(tester, height: null);
+    final axisY = tester.getCenter(axisLine()).dy;
+    for (final node in find.byType(TimelineNode).evaluate()) {
+      expect(
+        tester.getCenter(find.byWidget(node.widget)).dy,
+        closeTo(axisY, 1.5),
+      );
+    }
   });
 
   testWidgets('歐非色：40 抽名稱為 stateSuccess、70 抽為 stateDanger', (tester) async {
@@ -519,5 +667,32 @@ void main() {
       ),
       findsNothing,
     );
+  });
+
+  testWidgets('timeline scrolls with a finger drag', (tester) async {
+    final entries = [
+      for (var i = 19; i >= 0; i--)
+        _e(
+          'E$i',
+          '301',
+          60 + (19 - i),
+          DateTime(2025, 1, 1).add(Duration(days: i)),
+        ),
+    ];
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) => TimelineHorizontal(entries: entries, targetRank: 5),
+      ),
+    );
+    await tester.drag(find.byType(TimelineHorizontal), const Offset(-300, 0));
+    await tester.pumpAndSettle();
+    final state = tester.state<ScrollableState>(
+      find.descendant(
+        of: find.byType(TimelineHorizontal),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    expect(state.position.pixels, greaterThan(0));
+    expect(tester.takeException(), isNull);
   });
 }

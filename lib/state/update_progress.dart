@@ -1,3 +1,4 @@
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/update_error.dart';
 
 export 'package:wuthering_waves_convene_gacha_analyzer/state/update_error.dart';
@@ -18,18 +19,46 @@ class WaitingForCapture extends UpdateProgress {
   /// 建立 [WaitingForCapture]；[isFallback] 表示 recordId 全池失效後的二次（fallback）捕獲。
   const WaitingForCapture({
     this.isFallback = false,
+    this.checkingLogAccess = false,
     this.captureUnavailable = false,
     this.gameDirMissing = false,
+    this.logAccessUnavailable,
+    this.logConnectionLost = false,
+    this.credentialReady = false,
+    this.rootDenied = false,
+    this.gamePackage,
+    this.installedGames = const [],
   });
+
+  /// Android 正在讀取的鳴潮版本（套件名稱），「開啟鳴潮」開的就是它；還沒決定時為 null。
+  final String? gamePackage;
+
+  /// Android 手機上裝的鳴潮版本；選版本畫面列出它們，超過一個時等待畫面提供「切換版本」。
+  final List<String> installedGames;
 
   /// true 表示 recordId 全池失效後的二次捕獲（UI 顯示重新攔取提示）。
   final bool isFallback;
+
+  /// Android 正在判斷能不能自動讀取遊戲記錄；判斷完成前不引導玩家開遊戲，免得進遊戲後才發現要回來設定。
+  final bool checkingLogAccess;
 
   /// true 表示攔截程式沒能運作（例如 UAC 被拒），目前只靠遊戲 Client.log 偵測。
   final bool captureUnavailable;
 
   /// [captureUnavailable] 時是否也找不到遊戲資料夾（沒有 log 可讀，需請使用者選資料夾）。
   final bool gameDirMissing;
+
+  /// Android 沒有自動讀取遊戲記錄的方式時的原因（畫面改為只提供手動輸入）；可以自動讀取時為 null。
+  final LogAccessUnavailable? logAccessUnavailable;
+
+  /// Android 等待中與無線偵錯的連線中斷、正在重試（不中斷等待，只顯示提示）。
+  final bool logConnectionLost;
+
+  /// Android 已取得喚取記錄網址，等玩家切回本 App 才開始抓資料（背景時網路會被系統擋）。
+  final bool credentialReady;
+
+  /// Android 沒有自動讀取方式時，裝置有 root 但本 App 沒拿到授權（提示到 root 工具允許）。
+  final bool rootDenied;
 }
 
 /// 正在拉取指定卡池的完整歷史。
@@ -89,6 +118,7 @@ class UpdateCompleted extends UpdateProgress {
     this.importSummary,
     this.itemDetailsRefreshed,
     this.staleItemsPruned = 0,
+    this.wirelessDebuggingLeftOn = false,
   });
 
   /// 本次更新新增的總紀錄數（update 流程用；import 流程為 0）。
@@ -113,6 +143,9 @@ class UpdateCompleted extends UpdateProgress {
 
   /// 「更新物品資料」流程本次清理殘留語言的物品數；其他入口為 0。
   final int staleItemsPruned;
+
+  /// Android 手動開關模式：照規則該關掉無線偵錯但沒有權限關，完成畫面提示玩家自行關閉。
+  final bool wirelessDebuggingLeftOn;
 }
 
 /// 更新失敗。

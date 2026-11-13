@@ -28,6 +28,7 @@ class ShareProgressDialog extends StatelessWidget {
     return PopScope(
       canPop: false,
       child: AppDialog(
+        showCloseButton: false,
         title: Row(
           children: [
             Icon(Icons.image_outlined, color: tokens.textPrimary),

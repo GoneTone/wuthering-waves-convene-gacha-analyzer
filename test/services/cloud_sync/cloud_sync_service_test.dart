@@ -72,7 +72,7 @@ void main() {
         remote: remote,
         pendingRemovals: const [],
         applyRemote: (_) async => applied = true,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (_) async {},
       );
       expect(applied, isFalse);
@@ -93,13 +93,91 @@ void main() {
         remote: remote,
         pendingRemovals: const ['999'],
         applyRemote: (b) async => appliedBundle = b,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (uids) async => cleared = uids,
       );
       expect(appliedBundle, isNotNull);
       expect(appliedBundle!.accounts.single.data.playerId, '100000001');
       expect(remote.uploads, 1);
       expect(cleared, ['999']);
+    });
+
+    test('紀錄全相同、只差目前選中的帳號 → 不合併，但仍上傳', () async {
+      final remote = _FakeRemote(
+        content: _bundleJson(uids: ['100000001', '100000002']),
+      );
+      var applied = false;
+      await runSyncRound(
+        remote: remote,
+        pendingRemovals: const [],
+        applyRemote: (_) async => applied = true,
+        // 帳號順序相反 → last_active_uid 不同，各帳號內容相同。
+        exportLocal: () async => _bundleJson(uids: ['100000002', '100000001']),
+        clearPendingRemovals: (_) async {},
+      );
+      expect(applied, isFalse);
+      expect(remote.uploads, 1);
+    });
+
+    test('只有部分帳號與本機相同 → 只合併不同的帳號', () async {
+      final remote = _FakeRemote(
+        content: _bundleJson(uids: ['100000001', '100000002']),
+      );
+      AccountsBundle? applied;
+      await runSyncRound(
+        remote: remote,
+        pendingRemovals: const [],
+        applyRemote: (b) async => applied = b,
+        exportLocal: () async => _bundleJson(uids: ['100000001']),
+        clearPendingRemovals: (_) async {},
+      );
+      expect(applied!.accounts.map((a) => a.data.playerId), ['100000002']);
+    });
+
+    test('合併前本機就與雲端相同 → 不合併也不上傳', () async {
+      final remote = _FakeRemote(content: _localJson());
+      var applied = false;
+      final outcome = await runSyncRound(
+        remote: remote,
+        pendingRemovals: const [],
+        applyRemote: (_) async => applied = true,
+        exportLocal: () async => _localJson(),
+        clearPendingRemovals: (_) async {},
+      );
+      expect(applied, isFalse);
+      expect(remote.uploads, 0);
+      expect(
+        (outcome as CloudSyncSuccess).uploadedFingerprint,
+        syncFingerprint(_localJson()),
+      );
+    });
+
+    test('合併後本機與雲端內容相同（只差匯出時間）→ 不上傳，仍清 pendingRemovals', () async {
+      final cloud = _localJson();
+      final remote = _FakeRemote(content: cloud);
+      List<String>? cleared;
+      // 合併前本機只有另一個帳號；合併後才變成與雲端相同（只差匯出時間）。
+      var merged = false;
+      final outcome = await runSyncRound(
+        remote: remote,
+        pendingRemovals: const ['999'],
+        applyRemote: (_) async => merged = true,
+        exportLocal: () async => merged
+            ? _localJson().replaceFirst(
+                '2026-07-04T00:00:00.000Z',
+                '2026-11-08T00:00:00.000Z',
+              )
+            : _bundleJson(uids: ['300000003']),
+        clearPendingRemovals: (uids) async => cleared = uids,
+      );
+      expect(merged, isTrue);
+      expect(remote.uploads, 0);
+      expect(remote.content, cloud);
+      expect(cleared, ['999']);
+      expect(
+        (outcome as CloudSyncSuccess).uploadedFingerprint,
+        syncFingerprint(cloud),
+      );
     });
 
     test('pendingRemovals 剔除雲端帳號，避免剛刪的帳號復活', () async {
@@ -111,7 +189,7 @@ void main() {
         remote: remote,
         pendingRemovals: const ['100000001'],
         applyRemote: (b) async => appliedBundle = b,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (_) async {},
       );
       expect(appliedBundle!.accounts.map((a) => a.data.playerId), [
@@ -126,7 +204,7 @@ void main() {
         remote: remote,
         pendingRemovals: const ['100000001'],
         applyRemote: (_) async => applied = true,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (_) async {},
       );
       expect(applied, isFalse);
@@ -143,7 +221,7 @@ void main() {
         remote: remote,
         pendingRemovals: const ['999'],
         applyRemote: (_) async => applied = true,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (_) async => cleared = true,
       );
       expect(outcome, isA<CloudSyncSkippedSchemaTooNew>());
@@ -159,7 +237,7 @@ void main() {
         remote: remote,
         pendingRemovals: const [],
         applyRemote: (_) async => applied = true,
-        exportLocal: _localJson,
+        exportLocal: () async => _localJson(),
         clearPendingRemovals: (_) async {},
       );
       expect(applied, isFalse);

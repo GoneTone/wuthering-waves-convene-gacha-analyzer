@@ -10,6 +10,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/routing/app_router.dart';
@@ -24,19 +25,21 @@ import 'package:wuthering_waves_convene_gacha_analyzer/src/rust/api/logging.dart
 import 'package:wuthering_waves_convene_gacha_analyzer/src/rust/frb_generated.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/localization_metadata.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/log_service.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/android_app_prefs_sync.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luckdraw_capture_host.dart';
 
-/// 應用程式入口：初始化 Flutter、Rust bridge、視窗管理、log 服務，然後啟動 app。
+/// 應用程式入口：初始化 Flutter、Rust bridge（僅 Windows）、視窗管理、log 服務，然後啟動 app。
+///
+/// Rust 只提供 Windows 的攔截功能，其他平台不編譯也不載入 Rust 函式庫。
 Future<void> main() async {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      await RustLib.init();
 
       if (Platform.isWindows) {
+        await RustLib.init();
         await windowManager.ensureInitialized();
         await WindowStateKeeper.bootstrap();
       }
@@ -64,7 +67,9 @@ Future<void> main() async {
         return true;
       };
 
-      unawaited(_connectRustLogStream());
+      if (Platform.isWindows) {
+        unawaited(_connectRustLogStream());
+      }
 
       final pkgInfo = await PackageInfo.fromPlatform();
 
@@ -111,7 +116,7 @@ Future<void> main() async {
   );
 }
 
-/// 訂閱 Rust 端的 log stream，將每條 log 轉發到 Dart logging。
+/// 訂閱 Rust 端的 log stream，將每條 log 轉發到 Dart logging；只在 Windows 呼叫。
 Future<void> _connectRustLogStream() async {
   try {
     rust_logging.startLogStream().listen(
@@ -154,6 +159,14 @@ class _MainAppState extends ConsumerState<MainApp> {
   late final GoRouter _router = buildAppRouter();
 
   @override
+  void initState() {
+    super.initState();
+    if (Platform.isAndroid) {
+      unawaited(ref.read(androidAppPrefsSyncProvider).start());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
@@ -176,17 +189,11 @@ class _MainAppState extends ConsumerState<MainApp> {
       darkTheme: buildDarkTheme(),
       themeMode: themeMode,
       locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: ref.watch(releasedLocalesProvider),
       localeListResolutionCallback: localeListResolution,
       routerConfig: _router,
-      builder: (context, child) => Stack(
-        clipBehavior: Clip.none,
-        children: [
-          const Positioned(left: 0, top: 0, child: LuckdrawCaptureHost()),
-          if (child != null) Positioned.fill(child: child),
-        ],
-      ),
+      actions: appActions,
     );
   }
 }

@@ -8,15 +8,20 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/android_cloud_auth.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_authorization_gateway.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/cloud_sync.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 import '../helpers/cloud_sync_fakes.dart';
@@ -25,7 +30,11 @@ import '../helpers/no_game_dir.dart';
 /// signIn 卡在 completer 不返回，供測試模擬「cancelLink 後瀏覽器仍完成授權」的情境。
 class _DelayedSignInAuthService extends FakeAuthService {
   /// 建立 [_DelayedSignInAuthService]，signIn 的結果交由 [_completer] 控制。
-  _DelayedSignInAuthService(super.store, this._completer);
+  _DelayedSignInAuthService(
+    super.store,
+    this._completer, {
+    super.baseClientFactory,
+  });
 
   /// 控制 signIn 何時、以何結果返回。
   final Completer<CloudAuthSession> _completer;
@@ -38,6 +47,47 @@ class _DelayedSignInAuthService extends FakeAuthService {
     openUrl('https://accounts.google.com/consent');
     return _completer.future;
   }
+}
+
+/// 記錄是否已 close 的 fake client。
+class _ClosableClient extends FakeAuthClient {
+  /// 是否已被 close。
+  bool closed = false;
+
+  @override
+  void close() => closed = true;
+}
+
+/// 不跨輪沿用 client 的 fake 授權，記錄 restoreClient 收到的 email。
+class _NonPersistentAuth implements CloudAuth {
+  /// restoreClient 每次收到的 expectedEmail。
+  final restoredEmails = <String>[];
+
+  /// restoreClient 回傳過的 client。
+  final clients = <_ClosableClient>[];
+
+  /// link 要回傳的結果；null 代表不支援 link。
+  CloudLinkResult? linkResult;
+
+  @override
+  bool get keepsClientAcrossRounds => false;
+
+  @override
+  Future<CloudLinkResult> link({
+    required void Function(String url) openUrl,
+    String? postAuthPage,
+  }) async => linkResult ?? (throw UnimplementedError());
+
+  @override
+  Future<http.Client?> restoreClient({required String expectedEmail}) async {
+    restoredEmails.add(expectedEmail);
+    final client = _ClosableClient();
+    clients.add(client);
+    return client;
+  }
+
+  @override
+  Future<void> unlink() async {}
 }
 
 /// 產生雲端側 bundle JSON。
@@ -113,6 +163,36 @@ String _cloudBundleJsonWithRecord(String uid) => jsonEncode({
   ],
 });
 
+/// 所有步驟都拋錯的 gateway，模擬 Play services 清理失敗。
+class _ThrowingGateway implements GoogleAuthorizationGateway {
+  @override
+  Future<String?> silentToken() async => throw StateError('down');
+
+  @override
+  Future<String> interactiveToken() async => throw StateError('down');
+
+  @override
+  Future<void> clearToken(String token) async => throw StateError('down');
+
+  @override
+  Future<void> signOut() async => throw StateError('down');
+}
+
+/// download 卡在 [_gate] 之前不返回，供測試模擬「同步輪進行中」。
+class _GatedRemote extends FakeRemote {
+  /// 建立 [_GatedRemote]，download 等 [_gate] 完成才返回。
+  _GatedRemote(this._gate);
+
+  /// download 的放行閘門。
+  final Future<void> _gate;
+
+  @override
+  Future<String?> download() async {
+    await _gate;
+    return super.download();
+  }
+}
+
 void main() {
   late Directory tempDir;
   late InMemoryTokenStore tokenStore;
@@ -159,6 +239,29 @@ void main() {
     return container;
   }
 
+  ProviderContainer makeNonPersistentContainer(CloudAuth auth) {
+    final container = ProviderContainer(
+      overrides: [
+        appVersionProvider.overrideWithValue('1.5.0'),
+        noGameDirOverride,
+        gachaStorageProvider.overrideWithValue(GachaStorage(tempDir)),
+        gachaCaptureProvider.overrideWithValue(FakeCapture()),
+        cancellableHttpClientFactoryProvider.overrideWithValue(
+          () => CancellableHttpClient(
+            client: MockClient((_) async => http.Response('', 500)),
+            cancel: () {},
+          ),
+        ),
+        tokenStoreProvider.overrideWithValue(tokenStore),
+        cloudAuthProvider.overrideWithValue(auth),
+        cloudSyncRemoteFactoryProvider.overrideWithValue((_) => remote),
+        cloudSyncUrlOpenerProvider.overrideWithValue((_) {}),
+      ],
+    );
+    addTearDown(container.dispose);
+    return container;
+  }
+
   test('link 成功 → 寫 email、存 token、跑第一輪同步', () async {
     final container = makeContainer();
     await container.read(settingsProvider.notifier).waitForLoad();
@@ -189,6 +292,29 @@ void main() {
         .map((a) => (a as Map<String, dynamic>)['player_id'])
         .toList();
     expect(uids, contains('100000001'));
+  });
+
+  test('同步自身的合併不觸發 5 秒後的變動檢查（那輪已比對過指紋）', () async {
+    final messages = <String>[];
+    final sub = Logger.root.onRecord.listen((r) {
+      if (r.loggerName == 'cloudsync.sync') messages.add(r.message);
+    });
+    addTearDown(sub.cancel);
+
+    remote.content = _cloudBundleJsonWithRecord('100000001');
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    final notifier = container.read(cloudSyncProvider.notifier);
+    notifier.debounceDelay = const Duration(milliseconds: 10);
+    await notifier.link();
+    expect(
+      container.read(gachaRepositoryProvider).byUid.keys,
+      contains('100000001'),
+    );
+
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    expect(messages.where((m) => m.startsWith('dataChange check')), isEmpty);
   });
 
   test('雲端 schema 過新 → error(schemaTooNew)、不上傳', () async {
@@ -240,6 +366,26 @@ void main() {
     expect(remote.content, isNotNull);
   });
 
+  test('Android unlink → Play services 清理失敗仍清掉 email 並回 idle', () async {
+    final container = makeNonPersistentContainer(
+      AndroidCloudAuth(
+        gateway: _ThrowingGateway(),
+        baseClientFactory: () =>
+            MockClient((_) async => http.Response('', 500)),
+      ),
+    );
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    await container
+        .read(settingsProvider.notifier)
+        .setCloudAccount('u@example.com');
+
+    await container.read(cloudSyncProvider.notifier).unlink();
+
+    expect(container.read(settingsProvider).cloudAccountEmail, isNull);
+    expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
+  });
+
   test('queueCloudRemoval → 上傳內容剔除該 UID、清 pendingRemovals', () async {
     remote.content = _cloudBundleJson('100000001');
     final container = makeContainer();
@@ -261,6 +407,90 @@ void main() {
         .toList();
     expect(uids, isNot(contains('100000001')));
     expect(container.read(settingsProvider).cloudPendingRemovals, isEmpty);
+  });
+
+  test('啟動那輪途中變動檢查到點 → 等該輪結束再比對指紋，內容沒變就不補跑整輪', () async {
+    final messages = <String>[];
+    final sub = Logger.root.onRecord.listen((r) {
+      if (r.loggerName == 'cloudsync.sync') messages.add(r.message);
+    });
+    addTearDown(sub.cancel);
+
+    await GachaStorage(tempDir).save(_localBannerStorage('100000001'));
+    remote.content = _cloudBundleJson('100000001');
+    SharedPreferences.setMockInitialValues({
+      'pref.cloudAccountEmail': 'u@example.com',
+    });
+    tokenStore.token = 'refresh-1';
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    final notifier = container.read(cloudSyncProvider.notifier);
+    notifier.debounceDelay = const Duration(milliseconds: 10);
+
+    // 啟動那輪卡在下載時，本機出現一次「內容沒變」的變動（換成同內容的新 Map），
+    // 變動檢查在該輪還沒跑完時到點；此時還沒有上一輪的指紋可比。
+    remote.downloadGate = Completer<void>();
+    final round = notifier.start();
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    container
+        .read(gachaRepositoryProvider.notifier)
+        .debugSeedAccount(
+          container.read(gachaRepositoryProvider).byUid['100000001']!,
+        );
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    remote.downloadGate!.complete();
+    await round;
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+
+    expect(remote.downloads, 1);
+    expect(messages.any((m) => m.contains('trigger=rerun')), isFalse);
+  });
+
+  test('合併一份與本機相同的資料 → 不重寫記錄檔、不替換記憶體中的紀錄', () async {
+    remote.content = _cloudBundleJsonWithRecord('100000001');
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    await container.read(cloudSyncProvider.notifier).link();
+
+    final file = GachaStorage(tempDir).recordsFile('100000001');
+    final modifiedBefore = file.lastModifiedSync();
+    final byUidBefore = container.read(gachaRepositoryProvider).byUid;
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    await container
+        .read(gachaRepositoryProvider.notifier)
+        .importBundleForCloudSync(importAccounts(remote.content!));
+
+    expect(
+      identical(container.read(gachaRepositoryProvider).byUid, byUidBefore),
+      isTrue,
+    );
+    expect(file.lastModifiedSync(), modifiedBefore);
+  });
+
+  test('上傳內容同時含有記錄檔的帳號（背景讀檔）與只在記憶體的帳號', () async {
+    final onDisk = _localBannerStorage('100000001');
+    await GachaStorage(tempDir).save(onDisk);
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    container
+        .read(gachaRepositoryProvider.notifier)
+        .debugSeedAccount(_localBannerStorage('200000002'));
+    await container.read(cloudSyncProvider.notifier).link();
+
+    final uploaded = jsonDecode(remote.content!) as Map<String, dynamic>;
+    final accounts = (uploaded['accounts'] as List)
+        .cast<Map<String, dynamic>>();
+    expect(
+      accounts.map((a) => a['player_id']),
+      containsAll(['100000001', '200000002']),
+    );
+    // 背景讀檔還原出的內容要與記憶體版的 toJson 完全一致。
+    final fromDisk = accounts.firstWhere((a) => a['player_id'] == '100000001');
+    expect(fromDisk, onDisk.toJson());
   });
 
   test('start：bootstrap 完成前本機紀錄不被雲端空 banner 覆蓋 (C1)', () async {
@@ -315,9 +545,17 @@ void main() {
     expect(authService.restoreCalls, restoreCallsAfterStart);
   });
 
-  test('cancelLink 後遲到的授權結果不寫入 token store、原地 revoke (I1)', () async {
+  test('cancelLink 後遲到的授權結果不寫入 token store、不撤銷 (I1)', () async {
     final completer = Completer<CloudAuthSession>();
-    final delayedAuth = _DelayedSignInAuthService(tokenStore, completer);
+    var baseClientCalls = 0;
+    final delayedAuth = _DelayedSignInAuthService(
+      tokenStore,
+      completer,
+      baseClientFactory: () {
+        baseClientCalls++;
+        return MockClient((_) async => http.Response('', 500));
+      },
+    );
     final container = ProviderContainer(
       overrides: [
         appVersionProvider.overrideWithValue('1.5.0'),
@@ -358,9 +596,173 @@ void main() {
     await linkFuture;
 
     expect(tokenStore.token, isNull);
-    expect(delayedAuth.lastRevokedToken, 'refresh-1');
+    expect(baseClientCalls, 0);
     expect(container.read(cloudSyncProvider).phase, CloudSyncPhase.idle);
     expect(container.read(settingsProvider).cloudAccountEmail, isNull);
+  });
+
+  test('link cancelled by the user → idle without error', () async {
+    authService.signInThrowsCancelled = true;
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+    await container.read(cloudSyncProvider.notifier).link();
+
+    final state = container.read(cloudSyncProvider);
+    expect(state.phase, CloudSyncPhase.idle);
+    expect(state.errorToken, isNull);
+    expect(container.read(settingsProvider).cloudAccountEmail, isNull);
+    expect(tokenStore.token, isNull);
+  });
+
+  test(
+    'non-persistent auth → client restored again on the next round',
+    () async {
+      final auth = _NonPersistentAuth();
+      final container = makeNonPersistentContainer(auth);
+      await container.read(settingsProvider.notifier).waitForLoad();
+      await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+      await container
+          .read(settingsProvider.notifier)
+          .setCloudAccount('u@example.com');
+
+      final notifier = container.read(cloudSyncProvider.notifier);
+      await notifier.syncNow(manual: true);
+      await notifier.syncNow(manual: true);
+
+      expect(auth.restoredEmails, ['u@example.com', 'u@example.com']);
+    },
+  );
+
+  test(
+    'persistent auth → start keeps the client a completed link established',
+    () async {
+      final container = makeContainer();
+      await container.read(settingsProvider.notifier).waitForLoad();
+      await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+      final notifier = container.read(cloudSyncProvider.notifier);
+      await notifier.link();
+      expect(authService.restoreCalls, 0);
+
+      await notifier.start();
+
+      expect(authService.restoreCalls, 0);
+    },
+  );
+
+  test(
+    'link: commit throws → client closed, authFailed, no email saved',
+    () async {
+      final client = _ClosableClient();
+      final auth = _NonPersistentAuth()
+        ..linkResult = CloudLinkResult(
+          client: client,
+          email: 'u@example.com',
+          commit: () async => throw StateError('commit failed'),
+        );
+      final container = makeNonPersistentContainer(auth);
+      await container.read(settingsProvider.notifier).waitForLoad();
+      await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+      await container.read(cloudSyncProvider.notifier).link();
+
+      final state = container.read(cloudSyncProvider);
+      expect(client.closed, isTrue);
+      expect(state.phase, CloudSyncPhase.error);
+      expect(state.errorToken, 'authFailed');
+      expect(container.read(settingsProvider).cloudAccountEmail, isNull);
+    },
+  );
+
+  test(
+    'non-persistent auth + auto-sync on → start restores exactly once',
+    () async {
+      final auth = _NonPersistentAuth();
+      final container = makeNonPersistentContainer(auth);
+      await container.read(settingsProvider.notifier).waitForLoad();
+      await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+      await container
+          .read(settingsProvider.notifier)
+          .setCloudAccount('u@example.com');
+      await container
+          .read(settingsProvider.notifier)
+          .setCloudAutoSyncEnabled(true);
+
+      await container.read(cloudSyncProvider.notifier).start();
+
+      expect(auth.restoredEmails, hasLength(1));
+      expect(remote.uploads, 1);
+    },
+  );
+
+  test(
+    'non-persistent auth + auto-sync off → start validates and closes the client',
+    () async {
+      final auth = _NonPersistentAuth();
+      final container = makeNonPersistentContainer(auth);
+      await container.read(settingsProvider.notifier).waitForLoad();
+      await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+      await container
+          .read(settingsProvider.notifier)
+          .setCloudAccount('u@example.com');
+      await container
+          .read(settingsProvider.notifier)
+          .setCloudAutoSyncEnabled(false);
+
+      await container.read(cloudSyncProvider.notifier).start();
+
+      expect(auth.restoredEmails, hasLength(1));
+      expect(auth.clients.single.closed, isTrue);
+      expect(remote.uploads, 0);
+    },
+  );
+
+  test(
+    'non-persistent auth + sync round running → start skips the restore',
+    () async {
+      final gate = Completer<void>();
+      remote = _GatedRemote(gate.future);
+      final auth = _NonPersistentAuth();
+      final container = makeNonPersistentContainer(auth);
+      await container.read(settingsProvider.notifier).waitForLoad();
+      await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+      await container
+          .read(settingsProvider.notifier)
+          .setCloudAccount('u@example.com');
+      await container
+          .read(settingsProvider.notifier)
+          .setCloudAutoSyncEnabled(false);
+
+      final notifier = container.read(cloudSyncProvider.notifier);
+      final round = notifier.syncNow(manual: true);
+      await Future<void>.delayed(Duration.zero);
+      await notifier.start();
+      gate.complete();
+      await round;
+
+      expect(auth.restoredEmails, hasLength(1));
+      expect(auth.clients.single.closed, isTrue);
+    },
+  );
+
+  test('cloudAuthProvider picks the implementation by platform', () {
+    ProviderContainer make(bool android) {
+      final c = ProviderContainer(
+        overrides: [
+          isAndroidProvider.overrideWithValue(android),
+          googleAuthServiceProvider.overrideWithValue(authService),
+          googleAuthorizationGatewayProvider.overrideWithValue(
+            _ThrowingGateway(),
+          ),
+        ],
+      );
+      addTearDown(c.dispose);
+      return c;
+    }
+
+    expect(make(true).read(cloudAuthProvider), isA<AndroidCloudAuth>());
+    expect(make(false).read(cloudAuthProvider), same(authService));
   });
 
   test('同步合併出新紀錄 → 觸發補圖並以進度／完成摘要呈現', () async {

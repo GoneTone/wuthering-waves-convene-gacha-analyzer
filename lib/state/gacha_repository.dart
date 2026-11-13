@@ -11,7 +11,9 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_source.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/concurrent_pool.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_credential.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
@@ -21,11 +23,14 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/game_dir_locator.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/adb_pairing.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/client_log_watch.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_language_converter.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/app_foreground.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/update_progress.dart';
 
@@ -148,6 +153,9 @@ class GachaRepository extends Notifier<GachaState> {
   /// Client.log 憑證來源 logger（與監看器、locator 同一棵樹）。
   static final _clientLog = Logger('gacha.clientLog');
 
+  /// Android 讀取遊戲記錄流程的 logger。
+  static final _androidLog = Logger('capture.android');
+
   /// build() 內 `_bootstrapLoad()` 完成的 future，供測試 await。
   Completer<void>? _bootstrapCompleter;
 
@@ -232,16 +240,44 @@ class GachaRepository extends Notifier<GachaState> {
     state = state.copyWith(clearProgress: true);
   }
 
-  /// 啟動喚取資料更新，優先使用快取 URL，無快取則觸發 MITM 捕獲。
-  Future<void> update() async {
-    await _runUpdate(forceRecapture: false);
+  /// 啟動喚取資料更新，優先使用快取 URL，無快取則等待取得憑證（電腦版攔截＋Client.log，Android 讀遊戲記錄）。
+  ///
+  /// [afterPairing] 為 true 表示剛完成無線偵錯配對、且開始設定前無線偵錯沒開：這次用完一律關閉（玩家照引導打開的也算 App 開的）。
+  Future<void> update({bool afterPairing = false}) async {
+    await _runUpdate(forceRecapture: false, afterPairing: afterPairing);
   }
 
-  /// 實際執行更新流程；[forceRecapture] 為 true 時強制重新 MITM 捕獲。
-  Future<void> _runUpdate({required bool forceRecapture}) async {
+  /// 使用者手動輸入的喚取記錄憑證（貼上網址或選 Client.log 檔案）。
+  ///
+  /// 正在等待取得憑證時直接完成這次等待（與 Client.log 命中同一條路，電腦版會照常收尾攔截）；
+  /// 沒有進行中的更新時用它跑一次更新；正在抓資料時忽略，避免重入。
+  Future<void> submitManualCredential(GachaCredential cred) async {
+    final hit = _logHit;
+    if (hit != null && !hit.isCompleted) {
+      _clientLog.info('credential source=manual (completing wait)');
+      hit.complete(cred);
+      return;
+    }
+    if (_isUpdating) {
+      _clientLog.info('manual credential ignored: update in progress');
+      return;
+    }
+    _clientLog.info('credential source=manual (new update)');
+    await _runUpdate(forceRecapture: false, manual: cred);
+  }
+
+  /// 實際執行更新流程；[forceRecapture] 為 true 時強制重新 MITM 捕獲，[manual] 非 null 時直接用它。
+  Future<void> _runUpdate({
+    required bool forceRecapture,
+    GachaCredential? manual,
+    bool afterPairing = false,
+  }) async {
     if (_isUpdating) return; // 防止重入
     _isUpdating = true;
+    final done = _updateDone = Completer<void>();
     _cancelTriggered = false;
+    _afterPairing = afterPairing;
+    _wirelessLeftOn = false;
     _log.info('update start, forceRecapture=$forceRecapture');
 
     final cancellable = ref.read(cancellableHttpClientFactoryProvider)();
@@ -255,9 +291,9 @@ class GachaRepository extends Notifier<GachaState> {
       final storage = ref.read(gachaStorageProvider);
       final fetcher = ref.read(gachaFetcherProvider);
 
-      GachaCredential? cred;
+      GachaCredential? cred = manual;
 
-      if (!forceRecapture && initialActiveUid != null) {
+      if (cred == null && !forceRecapture && initialActiveUid != null) {
         final cachedJson = await storage.loadCapturedCredential(
           initialActiveUid,
         );
@@ -275,7 +311,7 @@ class GachaRepository extends Notifier<GachaState> {
         }
       }
 
-      cred ??= await _runMitm(isFallback: false);
+      cred ??= await _acquireCredential(isFallback: false);
       if (!ref.mounted) return;
       if (cred == null) {
         _log.info('update aborted (user cancelled capture)');
@@ -297,7 +333,7 @@ class GachaRepository extends Notifier<GachaState> {
         _log.warning(
           'first pool failed (code=${e.apiError.code}), falling back to recapture',
         );
-        final newCred = await _runMitm(isFallback: true);
+        final newCred = await _acquireCredential(isFallback: true);
         if (!ref.mounted) return;
         if (newCred == null) {
           _log.info('recapture cancelled by user');
@@ -376,6 +412,7 @@ class GachaRepository extends Notifier<GachaState> {
       _activeCancellable = null;
       _cancelTriggered = false;
       _isUpdating = false;
+      done.complete();
     }
   }
 
@@ -454,6 +491,219 @@ class GachaRepository extends Notifier<GachaState> {
     return cred;
   }
 
+  /// 依平台取得憑證：Android 讀遊戲記錄，其他平台走攔截與 Client.log 競速。null 代表使用者取消。
+  Future<GachaCredential?> _acquireCredential({required bool isFallback}) =>
+      ref.read(isAndroidProvider)
+      ? _runAndroidWait(isFallback: isFallback)
+      : _runMitm(isFallback: isFallback);
+
+  /// 清掉記住的鳴潮版本、結束這次更新，等它真的結束後重新開始，讓玩家重新選版本。
+  ///
+  /// 連線中斷時進行中的讀取可能要等逾時才停，不能只等固定秒數，否則重新開始會被防重入擋掉。
+  Future<void> switchGameVersion() async {
+    _androidLog.info('game switch requested');
+    await ref.read(settingsProvider.notifier).setGamePackage(null);
+    final running = _updateDone?.future;
+    await cancelCapture();
+    await running;
+    if (ref.mounted) await update();
+  }
+
+  /// Android 裝了多個版本的鳴潮時，記下玩家選的 [package] 並重新判斷讀取方式。
+  Future<void> selectGame(String package) async {
+    _androidLog.info('game selected package=$package');
+    await ref.read(settingsProvider.notifier).setGamePackage(package);
+    await retryLogAccess();
+  }
+
+  /// Android 沒有自動讀取方式而等待時重新判斷（玩家打開了無線偵錯、授權了權限、切回 App 時呼叫）；其他時候為 no-op。
+  Future<void> retryLogAccess() async {
+    final retry = _logAccessRetry;
+    if (retry == null || retry.isCompleted) return;
+    _androidLog.info('log access retry requested');
+    retry.complete();
+  }
+
+  /// [reason] 是否為找遊戲／選版本這一步（還沒試過任何讀取方式）。
+  static bool _isGameStep(LogAccessUnavailable reason) =>
+      reason == LogAccessUnavailable.gameNotInstalled ||
+      reason == LogAccessUnavailable.chooseGame;
+
+  /// Android 的等待流程：決定讀取方式、監看 Client.log，等命中、手動輸入或取消。null 代表使用者取消。
+  ///
+  /// 沒有自動讀取方式時改顯示原因並只等手動輸入，[retryLogAccess] 可以重新判斷。
+  /// 結束時一律停監看並 release（中斷連線、依規則關閉無線偵錯）。
+  Future<GachaCredential?> _runAndroidWait({required bool isFallback}) async {
+    state = state.copyWith(
+      progress: WaitingForCapture(
+        isFallback: isFallback,
+        checkingLogAccess: true,
+      ),
+    );
+    final logHit = Completer<GachaCredential>();
+    _logHit = logHit;
+    final cancelled = Completer<void>();
+    _waitCancelled = cancelled;
+    _captureCancelRequested = false;
+    LogAccessReady? ready;
+    CaptureSession? watch;
+    StreamSubscription<bool>? healthSub;
+    try {
+      // 只有第一次判斷可以跳權限詢問；回到前景的自動重試只檢查，否則永久拒絕時會一直跳去設定頁。
+      var requestPermissions = true;
+      var forceDisableAfterUse = _afterPairing;
+      // 判斷途中玩家取消或手動送出就不等了（root 授權視窗最多等 60 秒）。
+      final stop = Future.any<Object?>([
+        logHit.future,
+        cancelled.future.then((_) => null),
+      ]);
+      while (true) {
+        final resolving = ref
+            .read(logAccessResolverProvider)
+            .resolve(
+              preferred: ref.read(settingsProvider).logAccessMethod,
+              preferredGame: ref.read(settingsProvider).gamePackage,
+              forceDisableAfterUse: forceDisableAfterUse,
+              requestPermissions: requestPermissions,
+              abort: stop,
+            );
+        final first = await Future.any<Object?>([resolving, stop]);
+        if (first is! LogAccessOutcome) {
+          _androidLog.info('log access resolve abandoned');
+          // 晚到的結果也要 release，否則連線或打開的無線偵錯會留著。
+          unawaited(
+            resolving.then((late) async {
+              if (late is LogAccessReady) await late.release();
+            }),
+          );
+          if (first is GachaCredential && !_captureCancelRequested) {
+            return first;
+          }
+          return null;
+        }
+        final outcome = first;
+        // 找遊戲、選版本時還沒試過讀取方式，權限詢問要留給真正試的那一次。
+        if (outcome is! LogAccessBlocked || !_isGameStep(outcome.reason)) {
+          requestPermissions = false;
+        }
+        if (outcome is LogAccessReady) {
+          ready = outcome;
+          if (_captureCancelRequested || !ref.mounted) return null;
+          state = state.copyWith(
+            progress: WaitingForCapture(
+              isFallback: isFallback,
+              gamePackage: outcome.game,
+              installedGames: outcome.games,
+            ),
+          );
+          break;
+        }
+        if (_captureCancelRequested || !ref.mounted) return null;
+        if (logHit.isCompleted) return await logHit.future;
+        final blocked = outcome as LogAccessBlocked;
+        // 這次是 App 打開過無線偵錯；之後重試看到它開著，多半是系統（玩家按了允許）開的，用完要關回去。
+        if (blocked.enabledWireless) forceDisableAfterUse = true;
+        state = state.copyWith(
+          progress: WaitingForCapture(
+            isFallback: isFallback,
+            logAccessUnavailable: blocked.reason,
+            rootDenied: blocked.rootDenied,
+            installedGames: blocked.games,
+          ),
+        );
+        final retry = Completer<void>();
+        _logAccessRetry = retry;
+        final next = await Future.any<Object?>([
+          logHit.future,
+          cancelled.future.then((_) => null),
+          retry.future.then((_) => retry),
+        ]);
+        _logAccessRetry = null;
+        if (next is GachaCredential) return next;
+        if (next == null || !ref.mounted) return null;
+        state = state.copyWith(
+          progress: WaitingForCapture(
+            isFallback: isFallback,
+            checkingLogAccess: true,
+          ),
+        );
+      }
+      await ref
+          .read(settingsProvider.notifier)
+          .setLogAccessMethod(ready.method);
+      final game = ready.game;
+      final games = ready.games;
+      healthSub = ready.healthChanges.listen((healthy) {
+        final p = state.progress;
+        if (p is! WaitingForCapture || p.logConnectionLost == !healthy) return;
+        _androidLog.info('log connection healthy=$healthy');
+        state = state.copyWith(
+          progress: WaitingForCapture(
+            isFallback: p.isFallback,
+            logConnectionLost: !healthy,
+            gamePackage: game,
+            installedGames: games,
+          ),
+        );
+      });
+      final session = await ref
+          .read(clientLogWatchProvider)
+          .start(ready.source);
+      watch = session;
+      _logSession = session;
+      if (_captureCancelRequested || !ref.mounted) return null;
+      unawaited(
+        session.result.then((c) {
+          if (c != null && !logHit.isCompleted) logHit.complete(c);
+        }),
+      );
+      final cred = await Future.any<GachaCredential?>([
+        logHit.future,
+        cancelled.future.then((_) => null),
+      ]);
+      if (cred == null || _captureCancelRequested) return null;
+      _clientLog.info('credential source=log or manual');
+      final foreground = ref.read(appForegroundProvider);
+      if (!foreground.isForeground) {
+        _androidLog.info('credential ready, waiting for the app to return');
+        state = state.copyWith(
+          progress: WaitingForCapture(
+            isFallback: isFallback,
+            credentialReady: true,
+            gamePackage: game,
+            installedGames: games,
+          ),
+        );
+        final resumed = await Future.any([
+          foreground.untilForeground().then((_) => true),
+          cancelled.future.then((_) => false),
+        ]);
+        if (!resumed || _captureCancelRequested || !ref.mounted) return null;
+      }
+      return cred;
+    } finally {
+      _logHit = null;
+      _waitCancelled = null;
+      _logAccessRetry = null;
+      await healthSub?.cancel();
+      await _stopClientLogWatch();
+      // 取消時 [cancelCapture] 已先拿走 session；仍要等進行中的輪詢停下再 release，
+      // 否則讀取失敗會觸發重連、把剛關掉的無線偵錯又打開。
+      try {
+        await watch?.cancel();
+      } catch (e) {
+        _clientLog.warning(
+          'client log watch stop failed error=${e.runtimeType}',
+        );
+      }
+      if (ready != null) {
+        if (await ready.release()) _wirelessLeftOn = true;
+        // 連上時可能順便補回授權，設定頁的配對狀態要重讀。
+        if (ref.mounted) ref.invalidate(wirelessPairingStatusProvider);
+      }
+    }
+  }
+
   /// 等 [logStart]（監看啟動流程）跑完後，判斷攔截失效時能否改為只等 Client.log。
   ///
   /// 沒有監看 session（找不到遊戲資料夾）也照樣等：畫面會提示使用者選資料夾，選好就能接上。
@@ -508,9 +758,18 @@ class GachaRepository extends Notifier<GachaState> {
         _syncLogOnlyNotice();
         return;
       }
-      final watch = ref
+      final watch = await ref
           .read(clientLogWatchProvider)
-          .start(GameDirLocator.clientLogPath(location.path));
+          .start(
+            LocalFileLogSource(GameDirLocator.clientLogPath(location.path)),
+          );
+      // 取 baseline 期間可能已被取消、重啟或命中：這個 session 已過期就直接收掉。
+      if (!ref.mounted ||
+          generation != _logWatchGeneration ||
+          hit.isCompleted) {
+        unawaited(watch.cancel());
+        return;
+      }
       _logSession = watch;
       unawaited(
         watch.result.then((c) {
@@ -709,12 +968,25 @@ class GachaRepository extends Notifier<GachaState> {
         failedBanners: failed,
         updatedAt: updatedAt,
         itemImagesDownloaded: itemImagesDownloaded,
+        wirelessDebuggingLeftOn: _wirelessLeftOn,
       ),
     );
   }
 
+  /// 本次更新是否剛完成配對、且設定前無線偵錯沒開（用完一律關閉無線偵錯）。
+  bool _afterPairing = false;
+
+  /// 本次更新讀完後無線偵錯是否因沒有權限而留著開（完成畫面要提示）。
+  bool _wirelessLeftOn = false;
+
+  /// Android 沒有自動讀取方式而等待時，[retryLogAccess] 會完成它以重新判斷。
+  Completer<void>? _logAccessRetry;
+
   /// 防 re-entrancy 旗標，update 進行中為 true。
   bool _isUpdating = false;
+
+  /// 最近一次 [_runUpdate] 結束時完成。
+  Completer<void>? _updateDone;
 
   /// 使用者觸發取消時設為 true，避免將 ClientException 誤判為錯誤。
   bool _cancelTriggered = false;
@@ -1068,7 +1340,13 @@ class GachaRepository extends Notifier<GachaState> {
             ? incoming
             : localBefore.mergeWith(incoming);
         toSave = await _convertAccountToDataLanguage(toSave);
-        await storage.save(toSave);
+        // 合併後與本機完全相同（例如雲端同步重抓到同一份）就沿用原物件、不重寫檔案：
+        // 寫檔的 JSON 編碼在主 isolate 實機量到數十毫秒。
+        if (localBefore != null && toSave.sameContentAs(localBefore)) {
+          toSave = localBefore;
+        } else {
+          await storage.save(toSave);
+        }
         final added =
             toSave.allRecords.length - (localBefore?.allRecords.length ?? 0);
         addedRecords += added;
@@ -1147,8 +1425,12 @@ class GachaRepository extends Notifier<GachaState> {
       }
     }
 
+    // 沒有任何帳號換物件就保留原 Map：頁面與「本機資料變動」監聽都不必重跑。
+    final byUidChanged =
+        newByUid.length != state.byUid.length ||
+        newByUid.entries.any((e) => !identical(state.byUid[e.key], e.value));
     state = state.copyWith(
-      byUid: newByUid,
+      byUid: byUidChanged ? newByUid : null,
       activeUid: newActive,
       clearActiveUid: newActive == null,
     );
@@ -1239,8 +1521,11 @@ class GachaRepository extends Notifier<GachaState> {
     for (final entry in state.byUid.entries) {
       try {
         final out = await converter.convert(entry.value, target);
-        await storage.save(out.data);
-        newByUid[entry.key] = out.data;
+        // 沒有任何紀錄需要轉換時不重寫檔案：寫檔的 JSON 編碼在主 isolate 實機量到數十毫秒。
+        if (!out.data.sameContentAs(entry.value)) {
+          await storage.save(out.data);
+          newByUid[entry.key] = out.data;
+        }
         agg = agg + out.result;
       } catch (e, st) {
         Logger('wish.langconvert').warning(
@@ -1251,7 +1536,9 @@ class GachaRepository extends Notifier<GachaState> {
       }
       if (!ref.mounted) return agg;
     }
-    state = state.copyWith(byUid: newByUid);
+    if (newByUid.entries.any((e) => !identical(state.byUid[e.key], e.value))) {
+      state = state.copyWith(byUid: newByUid);
+    }
     if (!ref.mounted) return agg;
 
     // best-effort 補抓目標語言 icon／詳情（backfill 的真實 id 也順帶補圖）。

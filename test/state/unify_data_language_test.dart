@@ -62,6 +62,11 @@ class _FakeConverter extends GachaLanguageConverter {
       final out = <GachaRecord>[];
       for (final r in list) {
         total++;
+        // 已是目標語言的紀錄原樣保留（比照實際轉換器不重複轉換）。
+        if (r.languageCode == targetLang) {
+          out.add(r);
+          continue;
+        }
         out.add(
           r.copyWith(name: '${r.name}@$targetLang', languageCode: targetLang),
         );
@@ -253,6 +258,39 @@ void main() {
     expect(reloadedA!.banners['1']!.first.name, '角色A@en');
     final reloadedB = await storage.load('100000002');
     expect(reloadedB!.banners['1']!.first.name, '角色C@en');
+  });
+
+  test('unifyDataLanguage: 全部已是目標語言 → 不重寫記錄檔、不替換記憶體中的紀錄', () async {
+    SharedPreferences.setMockInitialValues({'pref.dataLanguage': 'en'});
+    final storage = GachaStorage(tempDir);
+    await storage.save(
+      BannerStorage(
+        playerId: '100000001',
+        languageCode: 'en',
+        lastUpdated: DateTime.utc(2026, 1, 1),
+        banners: {
+          '1': [_rec(1001, 'A').copyWith(languageCode: 'en')],
+        },
+      ),
+    );
+
+    final container = _buildContainer(tempDir: tempDir);
+    addTearDown(container.dispose);
+    final notifier = container.read(gachaRepositoryProvider.notifier);
+    await notifier.waitForBootstrap();
+
+    final file = storage.recordsFile('100000001');
+    final modifiedBefore = file.lastModifiedSync();
+    final byUidBefore = container.read(gachaRepositoryProvider).byUid;
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    await notifier.unifyDataLanguage();
+
+    expect(file.lastModifiedSync(), modifiedBefore);
+    expect(
+      identical(container.read(gachaRepositoryProvider).byUid, byUidBefore),
+      isTrue,
+    );
   });
 
   test('unifyDataLanguage: 立即設 Preparing 進度（dialog 即時彈出）', () async {

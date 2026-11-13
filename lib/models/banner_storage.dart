@@ -101,7 +101,38 @@ class BannerStorage {
     );
   }
 
+  /// 與 [other] 的內容（語言、更新時間、各卡池每筆紀錄的所有欄位）是否完全相同。
+  ///
+  /// 合併後沒有任何變化時用來省掉寫檔與 state 替換；[GachaRecord] 刻意不定義 `==`。
+  bool sameContentAs(BannerStorage other) {
+    if (playerId != other.playerId ||
+        languageCode != other.languageCode ||
+        lastUpdated != other.lastUpdated ||
+        banners.length != other.banners.length) {
+      return false;
+    }
+    for (final MapEntry(:key, :value) in banners.entries) {
+      final theirs = other.banners[key];
+      if (theirs == null || theirs.length != value.length) return false;
+      for (var i = 0; i < value.length; i++) {
+        if (!_sameRecord(value[i], theirs[i])) return false;
+      }
+    }
+    return true;
+  }
+
   /// 全 banner 串成一條 list（OverviewPage 用）。
   List<GachaRecord> get allRecords =>
       banners.values.expand((l) => l).toList(growable: false);
 }
+
+/// 兩筆紀錄的所有欄位是否相同。
+bool _sameRecord(GachaRecord a, GachaRecord b) =>
+    a.resourceId == b.resourceId &&
+    a.qualityLevel == b.qualityLevel &&
+    a.resourceType == b.resourceType &&
+    a.cardPoolType == b.cardPoolType &&
+    a.name == b.name &&
+    a.count == b.count &&
+    a.time == b.time &&
+    a.languageCode == b.languageCode;

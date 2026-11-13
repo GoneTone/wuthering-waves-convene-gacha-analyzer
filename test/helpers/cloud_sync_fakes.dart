@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_remote.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_auth_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/token_store.dart';
@@ -32,9 +35,13 @@ class FakeAuthClient extends http.BaseClient implements AuthClient {
 
 /// 可程式化行為的 fake 授權服務。
 class FakeAuthService extends GoogleAuthService {
-  /// 建立 [FakeAuthService]，以 [store] 作為底層 token store。
-  FakeAuthService(this.store)
-    : super(tokenStore: store, baseClientFactory: http.Client.new);
+  /// 建立 [FakeAuthService]，以 [store] 作為底層 token store；
+  /// [baseClientFactory] 供測試計數底層 HTTP client 的建立。
+  FakeAuthService(this.store, {http.Client Function()? baseClientFactory})
+    : super(
+        tokenStore: store,
+        baseClientFactory: baseClientFactory ?? http.Client.new,
+      );
 
   /// 供斷言的 token store。
   final InMemoryTokenStore store;
@@ -48,8 +55,8 @@ class FakeAuthService extends GoogleAuthService {
   /// restore() 被呼叫的次數，供斷言「reauthRequired 後不再重試」用。
   int restoreCalls = 0;
 
-  /// revokeToken() 最後一次收到的 token，供斷言用；未呼叫則為 null。
-  String? lastRevokedToken;
+  /// signIn 是否要模擬使用者取消而拋 [CloudLinkCancelledException]。
+  bool signInThrowsCancelled = false;
 
   /// signIn() 最後一次收到的自訂完成頁 HTML，供斷言用；未傳則為 null。
   String? lastPostAuthPage;
@@ -61,6 +68,9 @@ class FakeAuthService extends GoogleAuthService {
   }) async {
     lastPostAuthPage = postAuthPage;
     openUrl('https://accounts.google.com/consent');
+    if (signInThrowsCancelled) {
+      throw const CloudLinkCancelledException('canceled');
+    }
     if (signInThrowsScopeMissing) throw const CloudScopeMissingException();
     return CloudAuthSession(
       client: FakeAuthClient(),
@@ -79,11 +89,6 @@ class FakeAuthService extends GoogleAuthService {
 
   @override
   Future<void> signOut() async => store.deleteRefreshToken();
-
-  @override
-  Future<void> revokeToken(String refreshToken) async {
-    lastRevokedToken = refreshToken;
-  }
 }
 
 /// 記錄呼叫的 fake 遠端。
@@ -97,8 +102,16 @@ class FakeRemote implements CloudSyncRemote {
   /// 設定後 download 會拋出此例外，模擬遠端錯誤（如 insufficient_scope）。
   Object? downloadError;
 
+  /// download 次數。
+  int downloads = 0;
+
+  /// 設定後 download 會等它完成才回傳，模擬下載途中發生其他事。
+  Completer<void>? downloadGate;
+
   @override
   Future<String?> download() async {
+    downloads++;
+    await downloadGate?.future;
     final err = downloadError;
     if (err != null) throw err;
     return content;

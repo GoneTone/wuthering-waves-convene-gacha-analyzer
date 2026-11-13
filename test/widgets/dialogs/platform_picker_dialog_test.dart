@@ -58,7 +58,7 @@ void main() {
   testWidgets('cancel returns null', (tester) async {
     await _open(tester);
 
-    await tester.tap(find.byIcon(Icons.close));
+    await tester.tap(find.text('取消'));
     await tester.pumpAndSettle();
 
     expect(_completed, isTrue);

@@ -1,4 +1,5 @@
 import 'dart:async' show unawaited;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart' show DefaultCupertinoLocalizations;
@@ -9,7 +10,7 @@ import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/share_image_options.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/services/share_image_export.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/share_image_renderer.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
@@ -147,27 +148,13 @@ Future<void> generateAndShareImage({
     );
     closeProgress();
     if (!context.mounted) return;
-    switch (action) {
-      case ShareImageAction.save:
-        final path = await saveShareImage(png, suggestedName: suggestedName);
-        if (!context.mounted) return;
-        // 使用者取消存檔對話框：不彈任何結果，保持安靜。
-        if (path == null) return;
-        await showExportResultDialog(
-          context,
-          success: true,
-          message: l.shareImageSaved(path),
-          revealPath: path,
-        );
-      case ShareImageAction.copy:
-        final ok = await copyShareImage(png);
-        if (!context.mounted) return;
-        await showExportResultDialog(
-          context,
-          success: ok,
-          message: ok ? l.shareImageCopiedOnly : l.shareImageCopyFailed,
-        );
-    }
+    await deliverShareImage(
+      context: context,
+      l: l,
+      action: action,
+      png: png,
+      suggestedName: suggestedName,
+    );
   } catch (e, st) {
     _log.warning('share image flow failed', e, st);
     closeProgress();
@@ -181,5 +168,54 @@ Future<void> generateAndShareImage({
     closeProgress();
     icon?.dispose();
     if (preloaded != null) disposePreloadedItemImages(preloaded);
+  }
+}
+
+/// 依 [action] 把 [png] 存檔、分享或複製，並以結果視窗回報。
+/// 取消存檔與分享成功不彈視窗；Android 存檔訊息只顯示檔名、不給開啟資料夾。
+@visibleForTesting
+Future<void> deliverShareImage({
+  required BuildContext context,
+  required AppLocalizations l,
+  required ShareImageAction action,
+  required Uint8List png,
+  required String suggestedName,
+}) async {
+  switch (action) {
+    case ShareImageAction.save:
+      final saved = await saveBytes(
+        png,
+        suggestedName: suggestedName,
+        extension: 'png',
+        mimeType: 'image/png',
+        dialogTitle: l.dialogSaveAsTitle,
+      );
+      if (!context.mounted || saved == null) return;
+      await showExportResultDialog(
+        context,
+        success: true,
+        message: l.shareImageSaved(saved.path ?? saved.displayName),
+        revealPath: saved.path,
+      );
+    case ShareImageAction.share:
+      final ok = await shareBytes(
+        png,
+        fileName: suggestedName,
+        mimeType: 'image/png',
+      );
+      if (!context.mounted || ok) return;
+      await showExportResultDialog(
+        context,
+        success: false,
+        message: l.shareFailed,
+      );
+    case ShareImageAction.copy:
+      final ok = await copyPngToClipboard(png);
+      if (!context.mounted) return;
+      await showExportResultDialog(
+        context,
+        success: ok,
+        message: ok ? l.shareImageCopiedOnly : l.shareImageCopyFailed,
+      );
   }
 }

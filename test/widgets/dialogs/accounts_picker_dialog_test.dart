@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/accounts_picker_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/relative_time_text.dart';
 
 final _entries = [
   AccountPickerEntry(
@@ -30,12 +31,13 @@ final _entries = [
 // 用 file-level 變數捕捉 dialog 結果。每個 test 跑前 _open 會重置。
 // 直接從 async _open return Future 會被 Dart auto-unwrap，所以採用
 // 捕捉變數模式（同 test/widgets/dialogs/confirm_dialog_test.dart）。
-List<String>? _result;
+({List<String> uids, bool secondary})? _result;
 bool _completed = false;
 
 Future<void> _open(
   WidgetTester tester, {
   List<AccountPickerEntry>? entries,
+  String? secondaryConfirmLabel,
 }) async {
   _result = null;
   _completed = false;
@@ -56,6 +58,7 @@ Future<void> _open(
                     title: '選擇要匯出的帳號',
                     confirmLabel: '匯出',
                     entries: entries ?? _entries,
+                    secondaryConfirmLabel: secondaryConfirmLabel,
                   );
                   _completed = true;
                 },
@@ -193,7 +196,8 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, '匯出'));
     await tester.pumpAndSettle();
     expect(_completed, isTrue);
-    expect(_result, ['100000001', '100000003']);
+    expect(_result?.uids, ['100000001', '100000003']);
+    expect(_result?.secondary, isFalse);
   });
 
   testWidgets('confirm returns all UIDs when nothing toggled', (tester) async {
@@ -201,13 +205,55 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, '匯出'));
     await tester.pumpAndSettle();
     expect(_completed, isTrue);
-    expect(_result, ['100000001', '100000002', '100000003']);
+    expect(_result?.uids, ['100000001', '100000002', '100000003']);
+  });
+
+  testWidgets('secondary button returns secondary == true', (tester) async {
+    await _open(tester, secondaryConfirmLabel: '分享');
+    expect(find.widgetWithText(FilledButton, '匯出'), findsOneWidget);
+    await tester.tap(find.widgetWithText(OutlinedButton, '分享'));
+    await tester.pumpAndSettle();
+    expect(_result?.secondary, isTrue);
+    expect(_result?.uids, ['100000001', '100000002', '100000003']);
+  });
+
+  testWidgets('no secondary button unless a label is given', (tester) async {
+    await _open(tester);
+    expect(find.byType(OutlinedButton), findsNothing);
   });
 
   testWidgets('action buttons render with icons', (tester) async {
     await _open(tester);
 
-    expect(find.byIcon(Icons.close), findsOneWidget);
+    // 取消鈕＋右上 ✕ 各一。
+    expect(find.byIcon(Icons.close), findsNWidgets(2));
     expect(find.byIcon(Icons.check), findsOneWidget);
+  });
+
+  testWidgets('tapping the update time on a phone still toggles the row', (
+    tester,
+  ) async {
+    // 相對時間的提示框在手機上改成點一下顯示；勾選列裡不能讓它搶走點擊。
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await _open(tester);
+    final row = find.widgetWithText(CheckboxListTile, '100000002');
+    await tester.tap(
+      find.descendant(
+        of: find.descendant(of: row, matching: find.byType(RelativeTimeText)),
+        matching: find.byType(Tooltip),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.widget<CheckboxListTile>(row).value, isFalse);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('account rows fit a phone width', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await _open(tester);
+    expect(tester.takeException(), isNull);
   });
 }

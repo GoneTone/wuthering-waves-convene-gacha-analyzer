@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_method.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/settings_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -96,6 +98,29 @@ void main() {
     await container.read(settingsProvider.notifier).setUidAlias('A', '主帳');
     await container.read(settingsProvider.notifier).setUidAlias('A', null);
     expect(container.read(settingsProvider).uidAliases, isEmpty);
+  });
+
+  test('setUidAlias 別名沒變時不寫入也不記 log', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(settingsProvider.notifier);
+    await notifier.waitForLoad();
+    await notifier.setUidAlias('A', 'Main');
+
+    Logger.root.level = Level.ALL;
+    final logs = <String>[];
+    final sub = Logger.root.onRecord.listen((r) => logs.add(r.message));
+    addTearDown(sub.cancel);
+    final before = container.read(settingsProvider);
+
+    await notifier.setUidAlias('A', '  Main ');
+    await notifier.setUidAlias('B', '   ');
+    await notifier.setUidAlias('B', null);
+    expect(logs, isEmpty);
+    expect(container.read(settingsProvider), same(before));
+
+    await notifier.setUidAlias('A', 'Alt');
+    expect(logs, hasLength(1));
   });
 
   test('setUidOrder 寫入並持久化', () async {
@@ -235,6 +260,35 @@ void main() {
     expect((await SettingsStorage.load()).gameDir, isNull);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.containsKey('pref.gameDir'), isFalse);
+  });
+
+  test('setLogAccessMethod 寫入、清除 state 與 prefs', () async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(settingsProvider.notifier);
+    await notifier.waitForLoad();
+    expect(container.read(settingsProvider).logAccessMethod, isNull);
+
+    await notifier.setLogAccessMethod(LogAccessMethod.wirelessDebugging);
+    expect(
+      container.read(settingsProvider).logAccessMethod,
+      LogAccessMethod.wirelessDebugging,
+    );
+    expect(
+      (await SettingsStorage.load()).logAccessMethod,
+      LogAccessMethod.wirelessDebugging,
+    );
+
+    await notifier.setLogAccessMethod(null);
+    expect((await SettingsStorage.load()).logAccessMethod, isNull);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.containsKey('pref.logAccessMethod'), isFalse);
+  });
+
+  test('unknown stored logAccessMethod loads as null', () async {
+    SharedPreferences.setMockInitialValues({'pref.logAccessMethod': 'shizuku'});
+    expect((await SettingsStorage.load()).logAccessMethod, isNull);
   });
 
   group('setMaskUidInUi', () {

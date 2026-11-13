@@ -9,9 +9,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/file_access.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/item_image_save.dart';
@@ -19,9 +21,13 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/item_type_kind.d
 import 'package:wuthering_waves_convene_gacha_analyzer/services/luckdraw_capture_service.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/luckdraw_capture.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/gacha_item_detail_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/zoomable_image_overlay.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/scroll/scroll_affordance.dart';
 
 GachaRecord _rec({
   required int resourceId,
@@ -39,6 +45,9 @@ GachaRecord _rec({
   time: DateTime(2026, 5, 24),
   languageCode: languageCode,
 );
+
+/// 雙欄版面左欄（資訊欄）的 key。
+const detailsColumnKey = ValueKey('detail-info-column');
 
 /// 找 label 文字為 [text] 的詳情 tag [Chip]（與 [ChoiceChip] 切換器 chip 區隔）。
 Finder _chipWithText(String text) =>
@@ -96,9 +105,11 @@ void main() {
   void rebuildContainer({
     ItemImageFetcher? fetcher,
     LuckdrawCaptureService? luckdraw,
+    bool android = false,
   }) {
     container = ProviderContainer(
       overrides: [
+        isAndroidProvider.overrideWithValue(android),
         itemImageIndexStorageProvider.overrideWithValue(
           ItemImageIndexStorage(tempDir),
         ),
@@ -226,14 +237,18 @@ void main() {
     });
   });
 
-  Future<void> pumpDialog(WidgetTester tester, GachaRecord record) async {
+  Future<void> pumpDialog(
+    WidgetTester tester,
+    GachaRecord record, {
+    ThemeData? theme,
+  }) async {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
           // 鎖繁中：立繪／圖示／encore 連結等斷言均比對 app_zh.arb 文案。
           locale: const Locale('zh'),
-          theme: buildDarkTheme(),
+          theme: theme ?? buildDarkTheme(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const Scaffold(body: SizedBox()),
@@ -313,7 +328,8 @@ void main() {
     });
 
     testWidgets('長簡介在寬視窗下換行、不把 dialog 撐寬（保持 ≤ md 寬）', (tester) async {
-      tester.view.physicalSize = const Size(1400, 900);
+      // 寬度未達雙欄門檻（1000），維持單欄：簡介在 title 區。
+      tester.view.physicalSize = const Size(990, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
         tester.view.resetPhysicalSize();
@@ -359,7 +375,7 @@ void main() {
       expect(find.byType(Html), findsOneWidget);
       // AppDialog 把 title 鎖在 md(640) 寬 → 簡介 Html 被限制在 title 內（約
       // 640 扣掉 icon／間距／padding ≈ 560px）換行，不會以 intrinsic 單行寬度
-      // 擴張到接近視窗寬(1400)。修壞時 Html 會 >1000px。
+      // 擴張到接近視窗寬(990)。修壞時 Html 會 >900px。
       expect(tester.getSize(find.byType(Html)).width, lessThan(700));
     });
 
@@ -1131,6 +1147,9 @@ void main() {
     Future<File> seedCharacterWithSkin(
       WidgetTester tester, {
       ItemImageFetcher? fetcher,
+      bool android = false,
+      String intro = '',
+      String bgDescription = '',
     }) async {
       const iconUrl = 'https://cdn.example.com/m_icon.png';
       const illustUrl = 'https://cdn.example.com/m_illust.png';
@@ -1146,8 +1165,8 @@ void main() {
         await n.mergeItemDetail(
           resourceId: 111,
           lang: 'zh-Hant',
-          detail: const ItemDetailL10n(
-            intro: '',
+          detail: ItemDetailL10n(
+            intro: intro,
             elementName: '',
             weaponTypeName: '',
             skins: [
@@ -1155,7 +1174,7 @@ void main() {
                 formationCard: illustUrl,
                 name: '造型A',
                 subDecName: '',
-                bgDescription: '',
+                bgDescription: bgDescription,
               ),
             ],
           ),
@@ -1173,7 +1192,7 @@ void main() {
         );
         await _touchFile(tempDir, illustFile.uri.pathSegments.last);
       });
-      rebuildContainer(fetcher: fetcher);
+      rebuildContainer(fetcher: fetcher, android: android);
       await tester.runAsync(loadIndex);
       return illustFile;
     }
@@ -1231,6 +1250,728 @@ void main() {
       expect(find.text('重抓圖片'), findsOneWidget);
     });
 
+    testWidgets('mouse long press on the image does not open the menu', (
+      tester,
+    ) async {
+      final illustFile = await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await tester.longPressAt(
+        tester.getCenter(find.byKey(ValueKey(illustFile.path))),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('儲存圖片'), findsNothing);
+    });
+
+    testWidgets('long press on the image opens the image menu', (tester) async {
+      final illustFile = await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await tester.longPress(find.byKey(ValueKey(illustFile.path)));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('儲存圖片'), findsOneWidget);
+    });
+
+    /// 以 [size] 的畫面開啟詳情（平台由 test variant 決定），回傳名稱與圖片的位置。
+    Future<(Rect, Rect)> pumpAt(
+      WidgetTester tester,
+      Size size, {
+      String intro = '',
+      String bgDescription = '',
+      ThemeData? theme,
+    }) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final illustFile = await seedCharacterWithSkin(
+        tester,
+        intro: intro,
+        bgDescription: bgDescription,
+      );
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+        theme: theme,
+      );
+      expect(tester.takeException(), isNull);
+      return (
+        tester.getRect(find.text('Char')),
+        tester.getRect(find.byKey(ValueKey(illustFile.path))),
+      );
+    }
+
+    testWidgets('phone landscape puts details and image side by side', (
+      tester,
+    ) async {
+      final (name, image) = await pumpAt(tester, const Size(800, 360));
+      expect(name.right, lessThan(image.left));
+      expect((name.top - image.top).abs(), lessThan(100));
+      expect(tester.getSize(find.byKey(detailsColumnKey)).width, 240);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('phone landscape keeps the skin caption in the left column', (
+      tester,
+    ) async {
+      // 造型說明放在右欄會把立繪擠扁（實機上只剩約 120dp 高）。
+      final (_, image) = await pumpAt(tester, const Size(800, 360));
+      final captions = find
+          .text('造型A')
+          .evaluate()
+          .map((e) => tester.getRect(find.byWidget(e.widget)));
+      expect(captions.any((r) => r.right < image.left), isTrue);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('phone portrait stacks details above the image', (
+      tester,
+    ) async {
+      final (name, image) = await pumpAt(tester, const Size(360, 800));
+      expect(name.bottom, lessThan(image.top));
+      expect(find.byKey(detailsColumnKey), findsNothing);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('wide desktop window puts details and image side by side', (
+      tester,
+    ) async {
+      final (name, image) = await pumpAt(tester, const Size(1280, 800));
+      expect(name.right, lessThan(image.left));
+      expect(tester.getSize(find.byKey(detailsColumnKey)).width, 320);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+    testWidgets('desktop window under 1000 wide stays single column', (
+      tester,
+    ) async {
+      final (name, image) = await pumpAt(tester, const Size(900, 700));
+      expect(name.bottom, lessThan(image.top));
+      expect(find.byKey(detailsColumnKey), findsNothing);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+    group('close button', () {
+      final close = find.byType(AppDialogCloseButton);
+
+      /// [a] 與 [b] 在垂直方向有重疊（同一列）。
+      bool sameRow(Rect a, Rect b) => a.top < b.bottom && b.top < a.bottom;
+
+      /// 點 ✕ 後詳情應關閉。
+      Future<void> tapClosesDialog(WidgetTester tester) async {
+        await tester.tap(close);
+        await tester.pumpAndSettle();
+        expect(find.byType(GachaItemDetailDialog), findsNothing);
+      }
+
+      testWidgets('phone portrait: at the right end of the header row', (
+        tester,
+      ) async {
+        final (name, _) = await pumpAt(tester, const Size(360, 800));
+        expect(close, findsOneWidget);
+        final rect = tester.getRect(close);
+        expect(sameRow(rect, name), isTrue);
+        expect(rect.left, greaterThanOrEqualTo(name.right));
+        expect(tester.getSize(close), const Size(44, 44));
+        final icon = tester.getCenter(
+          find.descendant(of: close, matching: find.byIcon(Icons.close)),
+        );
+        expect((icon.dy - name.center.dy).abs(), lessThanOrEqualTo(2));
+        await tapClosesDialog(tester);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+      /// 圖片區（圖片最近的 [Expanded]）頂端與 ✕ 所在頂列底端的距離。
+      double gapBelowClose(WidgetTester tester, Finder image) =>
+          tester
+              .getTopLeft(
+                find.ancestor(of: image, matching: find.byType(Expanded)).first,
+              )
+              .dy -
+          tester
+              .getRect(
+                find.ancestor(of: close, matching: find.byType(Row)).first,
+              )
+              .bottom;
+
+      testWidgets('two columns with a chip bar: gap under the top row', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        final illustFile = await seedCharacterWithSkin(tester);
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+        );
+        expect(
+          gapBelowClose(tester, find.byKey(ValueKey(illustFile.path))),
+          closeTo(AppSpacing.m, 0.5),
+        );
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+      testWidgets('two columns, single image: X row without the extra gap', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        const iconUrl = 'https://cdn.example.com/w_icon.webp';
+        late File iconFile;
+        await tester.runAsync(() async {
+          await container
+              .read(itemImageIndexProvider.notifier)
+              .mergeIcon(
+                resourceId: 77,
+                iconUrl: iconUrl,
+                noImage: false,
+                permanentNoImage: false,
+              );
+          iconFile = itemIconCacheFile(
+            baseDir: tempDir,
+            resourceId: 77,
+            url: iconUrl,
+          );
+          await _touchFile(tempDir, iconFile.uri.pathSegments.last);
+        });
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 77, name: 'WeaponX', resourceType: '武器'),
+        );
+        expect(find.byType(ChoiceChip), findsNothing);
+        expect(close, findsOneWidget);
+        expect(
+          gapBelowClose(tester, find.byKey(ValueKey(iconFile.path))),
+          closeTo(0, 0.5),
+        );
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+      for (final (label, size, platform) in [
+        ('phone landscape', const Size(914, 411), TargetPlatform.android),
+        ('desktop', const Size(1280, 800), TargetPlatform.windows),
+      ]) {
+        testWidgets('two columns: right of the chip bar arrow ($label)', (
+          tester,
+        ) async {
+          final (_, image) = await pumpAt(tester, size);
+          expect(close, findsOneWidget);
+          final rect = tester.getRect(close);
+          final arrow = tester.getRect(find.byTooltip('下一個'));
+          expect(sameRow(rect, arrow), isTrue);
+          expect(rect.left, greaterThanOrEqualTo(arrow.right));
+          expect(rect.bottom, lessThanOrEqualTo(image.top));
+          expect(rect.width, greaterThanOrEqualTo(44));
+          await tapClosesDialog(tester);
+        }, variant: TargetPlatformVariant.only(platform));
+      }
+    });
+
+    group('two-column details scroll as one region', () {
+      /// 超過原本內層捲動上限的長簡介（使用者以「千咲」回報的情境）。
+      final longIntro = '<p>${'千咲的簡介很長。' * 120}</p>';
+
+      /// 簡介的 [Html]（左欄第一個 Html）。
+      Finder intro() => find.byType(Html).first;
+
+      /// 左欄底部的漸層提示。
+      Finder bottomFade() => find.byWidgetPredicate(
+        (w) => w is ScrollEdgeFade && w.side == ScrollSide.bottom,
+      );
+
+      testWidgets('dragging on the intro scrolls the whole column', (
+        tester,
+      ) async {
+        await pumpAt(
+          tester,
+          const Size(1280, 800),
+          intro: longIntro,
+          bgDescription: '<p>造型說明</p>',
+        );
+        final scrollables = find.ancestor(
+          of: intro(),
+          matching: find.byType(Scrollable),
+        );
+        expect(scrollables, findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byKey(detailsColumnKey),
+            matching: find.byType(Scrollable),
+          ),
+          findsOneWidget,
+        );
+        final introTop = tester.getRect(intro()).top;
+        final encore = tester.getRect(find.text('在 encore.moe 查看'));
+        final close = tester.getRect(find.text('關閉'));
+
+        await tester.dragFrom(
+          tester.getTopLeft(intro()) + const Offset(40, 20),
+          const Offset(0, -200),
+        );
+        await tester.pump();
+
+        final position = tester.state<ScrollableState>(scrollables).position;
+        expect(position.pixels, greaterThan(0));
+        expect(tester.getRect(intro()).top, lessThan(introTop));
+        expect(tester.getRect(find.text('在 encore.moe 查看')).top, encore.top);
+        expect(tester.getRect(find.text('關閉')).top, close.top);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+      for (final (name, size, platform) in [
+        ('desktop', const Size(1280, 800), TargetPlatform.windows),
+        ('phone landscape', const Size(914, 411), TargetPlatform.android),
+      ]) {
+        testWidgets('bottom fade shows until scrolled to the end ($name)', (
+          tester,
+        ) async {
+          await pumpAt(tester, size, intro: longIntro);
+          await tester.pump();
+          expect(find.byKey(detailsColumnKey), findsOneWidget);
+          expect(bottomFade(), findsOneWidget);
+          final position = tester
+              .state<ScrollableState>(
+                find.ancestor(of: intro(), matching: find.byType(Scrollable)),
+              )
+              .position;
+          position.jumpTo(position.maxScrollExtent);
+          await tester.pump();
+          expect(bottomFade(), findsNothing);
+        }, variant: TargetPlatformVariant.only(platform));
+      }
+
+      /// 左欄往下捲的箭頭按鈕。
+      Finder scrollDown() => find.byTooltip('往下捲動');
+
+      /// 以左欄捲軸的 painter 在其實際尺寸上作畫的函式，供 `paints` 比對。
+      void Function(Canvas) paintDetailsScrollbar(WidgetTester tester) {
+        final finder = find.descendant(
+          of: find.byKey(detailsColumnKey),
+          matching: find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.foregroundPainter is ScrollbarPainter,
+          ),
+        );
+        final painter = tester.widget<CustomPaint>(finder).foregroundPainter!;
+        final size = tester.getSize(finder);
+        return (canvas) => painter.paint(canvas, size);
+      }
+
+      /// 畫出不透明度大於 0 的捲軸 thumb（淡出時仍會以全透明色作畫）。
+      final visibleThumb = paints
+        ..something((_, args) => args.last is Paint && args.last.color.a > 0);
+
+      for (final (name, size, platform) in [
+        ('desktop', const Size(1280, 800), TargetPlatform.windows),
+        ('phone landscape', const Size(914, 411), TargetPlatform.android),
+      ]) {
+        testWidgets('scrollbar thumb shows without interaction ($name)', (
+          tester,
+        ) async {
+          await pumpAt(tester, size, intro: longIntro);
+          await tester.pump(const Duration(milliseconds: 500));
+          expect(paintDetailsScrollbar(tester), visibleThumb);
+        }, variant: TargetPlatformVariant.only(platform));
+
+        testWidgets('scroll-down chevron pages the column until the end '
+            '($name)', (tester) async {
+          await pumpAt(tester, size, intro: longIntro);
+          await tester.pump();
+          expect(scrollDown(), findsOneWidget);
+          expect(tester.getSize(scrollDown()).width, greaterThanOrEqualTo(44));
+          expect(tester.getSize(scrollDown()).height, greaterThanOrEqualTo(44));
+          final position = tester
+              .state<ScrollableState>(
+                find.ancestor(of: intro(), matching: find.byType(Scrollable)),
+              )
+              .position;
+          await tester.tap(scrollDown());
+          await tester.pumpAndSettle();
+          expect(position.pixels, closeTo(position.viewportDimension * 0.8, 1));
+          position.jumpTo(position.maxScrollExtent);
+          await tester.pump();
+          expect(scrollDown(), findsNothing);
+          expect(bottomFade(), findsNothing);
+        }, variant: TargetPlatformVariant.only(platform));
+
+        testWidgets('no scrollbar thumb or chevron when the column fits '
+            '($name)', (tester) async {
+          await pumpAt(tester, size, intro: '<p>短</p>');
+          await tester.pump(const Duration(milliseconds: 500));
+          expect(scrollDown(), findsNothing);
+          expect(paintDetailsScrollbar(tester), isNot(visibleThumb));
+        }, variant: TargetPlatformVariant.only(platform));
+      }
+
+      for (final (name, theme) in [
+        ('light', buildLightTheme()),
+        ('dark', buildDarkTheme()),
+      ]) {
+        testWidgets('bottom fade blends into the dialog surface ($name)', (
+          tester,
+        ) async {
+          await pumpAt(
+            tester,
+            const Size(1280, 800),
+            intro: longIntro,
+            theme: theme,
+          );
+          await tester.pump();
+          final dialogColor = tester
+              .widget<Material>(
+                find
+                    .descendant(
+                      of: find.byType(Dialog),
+                      matching: find.byType(Material),
+                    )
+                    .first,
+              )
+              .color;
+          final box = tester.widget<DecoratedBox>(
+            find.descendant(
+              of: bottomFade(),
+              matching: find.byType(DecoratedBox),
+            ),
+          );
+          final gradient =
+              (box.decoration as BoxDecoration).gradient! as LinearGradient;
+          expect(gradient.colors.first, dialogColor);
+        }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+      }
+
+      testWidgets('divider separates tags from the skin caption only', (
+        tester,
+      ) async {
+        await pumpAt(tester, const Size(1280, 800));
+        final divider = find.descendant(
+          of: find.byKey(detailsColumnKey),
+          matching: find.byType(Divider),
+        );
+        expect(divider, findsOneWidget);
+        expect(
+          tester.getRect(divider).bottom,
+          lessThan(tester.getRect(find.text('造型A').first).top),
+        );
+        // 切到 Icon（無造型說明）→ 分隔線一併消失。
+        await tester.tap(find.byType(ChoiceChip).last);
+        await tester.pump();
+        expect(divider, findsNothing);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+      testWidgets('no bottom fade when the column fits', (tester) async {
+        await pumpAt(tester, const Size(1280, 800), intro: '<p>短</p>');
+        await tester.pump();
+        expect(bottomFade(), findsNothing);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+      testWidgets('phone portrait keeps the capped inner intro scroll', (
+        tester,
+      ) async {
+        await pumpAt(tester, const Size(360, 800), intro: longIntro);
+        final inner = find.ancestor(
+          of: intro(),
+          matching: find.byType(SingleChildScrollView),
+        );
+        expect(inner, findsOneWidget);
+        expect(tester.getSize(inner).height, lessThanOrEqualTo(120));
+        expect(tester.getSize(intro()).height, greaterThan(120));
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+      testWidgets('phone portrait: long intro shows the scroll hint and the '
+          'chevron pages it', (tester) async {
+        await pumpAt(tester, const Size(360, 800), intro: longIntro);
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(bottomFade(), findsOneWidget);
+        expect(scrollDown(), findsOneWidget);
+        final scrollbar = find.ancestor(
+          of: intro(),
+          matching: find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.foregroundPainter is ScrollbarPainter,
+          ),
+        );
+        final painter = tester
+            .widget<CustomPaint>(scrollbar)
+            .foregroundPainter!;
+        final size = tester.getSize(scrollbar);
+        expect((Canvas c) => painter.paint(c, size), visibleThumb);
+        final position = tester
+            .state<ScrollableState>(
+              find.ancestor(of: intro(), matching: find.byType(Scrollable)),
+            )
+            .position;
+        await tester.tap(scrollDown());
+        await tester.pumpAndSettle();
+        expect(position.pixels, closeTo(position.viewportDimension * 0.8, 1));
+        position.jumpTo(position.maxScrollExtent);
+        await tester.pump();
+        expect(scrollDown(), findsNothing);
+        expect(bottomFade(), findsNothing);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+      testWidgets('phone portrait: long skin caption shows the scroll hint', (
+        tester,
+      ) async {
+        await pumpAt(
+          tester,
+          const Size(360, 800),
+          intro: '<p>短</p>',
+          bgDescription: longIntro,
+        );
+        await tester.pump();
+        expect(bottomFade(), findsOneWidget);
+        expect(scrollDown(), findsOneWidget);
+        final caption = find.byType(Html).last;
+        expect(
+          tester.getRect(scrollDown()).center.dy,
+          greaterThan(tester.getRect(find.text('造型A').first).bottom),
+        );
+        expect(
+          find.ancestor(of: caption, matching: find.byType(Scrollable)),
+          findsOneWidget,
+        );
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+      testWidgets('phone portrait: short intro keeps its own height, no hint', (
+        tester,
+      ) async {
+        await pumpAt(tester, const Size(360, 800), intro: '<p>短</p>');
+        await tester.pump();
+        expect(bottomFade(), findsNothing);
+        expect(scrollDown(), findsNothing);
+        final inner = find.ancestor(
+          of: intro(),
+          matching: find.byType(SingleChildScrollView),
+        );
+        expect(tester.getSize(inner).height, lessThan(60));
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    });
+
+    group('swipe between images', () {
+      const iconUrl = 'https://cdn.example.com/m_icon.png';
+
+      /// 以 [theme]（預設深色）開啟「造型A＋Icon」兩張圖的詳情，回傳 (造型檔, icon 檔)。
+      Future<(File, File)> openTwoImages(
+        WidgetTester tester, {
+        ThemeData? theme,
+      }) async {
+        final skin = await seedCharacterWithSkin(tester);
+        final icon = itemIconCacheFile(
+          baseDir: tempDir,
+          resourceId: 111,
+          url: iconUrl,
+        );
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+          theme: theme,
+        );
+        return (skin, icon);
+      }
+
+      /// 圖片區目前顯示 [file] 的那張。
+      Finder shown(File file) => find.byKey(ValueKey(file.path));
+
+      /// 頁點（key 為 `page-dot-N`）。
+      Finder dots() => find.byWidgetPredicate((w) {
+        final k = w.key;
+        return k is ValueKey<String> && k.value.startsWith('page-dot-');
+      });
+
+      /// 第 [i] 個頁點的寬度。
+      double dotWidth(WidgetTester tester, int i) =>
+          tester.getSize(find.byKey(ValueKey('page-dot-$i'))).width;
+
+      testWidgets('swipe left goes to the next image, right goes back', (
+        tester,
+      ) async {
+        final (skin, icon) = await openTwoImages(tester);
+        expect(shown(skin), findsOneWidget);
+        await tester.drag(shown(skin), const Offset(-120, 0));
+        await tester.pump();
+        expect(shown(icon), findsOneWidget);
+        expect(shown(skin), findsNothing);
+        await tester.drag(shown(icon), const Offset(120, 0));
+        await tester.pump();
+        expect(shown(skin), findsOneWidget);
+      });
+
+      testWidgets('no wrap-around at either end', (tester) async {
+        final (skin, icon) = await openTwoImages(tester);
+        await tester.drag(shown(skin), const Offset(120, 0));
+        await tester.pump();
+        expect(shown(skin), findsOneWidget);
+        await tester.drag(shown(skin), const Offset(-120, 0));
+        await tester.pump();
+        await tester.drag(shown(icon), const Offset(-120, 0));
+        await tester.pump();
+        expect(shown(icon), findsOneWidget);
+      });
+
+      testWidgets('vertical drag never switches', (tester) async {
+        final (skin, _) = await openTwoImages(tester);
+        await tester.drag(shown(skin), const Offset(0, -120));
+        await tester.pump();
+        expect(shown(skin), findsOneWidget);
+      });
+
+      testWidgets('short slow drag does not switch', (tester) async {
+        final (skin, _) = await openTwoImages(tester);
+        await tester.timedDrag(
+          shown(skin),
+          const Offset(-20, 0),
+          const Duration(seconds: 1),
+        );
+        await tester.pump();
+        expect(shown(skin), findsOneWidget);
+      });
+
+      testWidgets('short fast flick switches', (tester) async {
+        final (skin, icon) = await openTwoImages(tester);
+        await tester.timedDrag(
+          shown(skin),
+          const Offset(-40, 0),
+          const Duration(milliseconds: 60),
+        );
+        await tester.pump();
+        expect(shown(icon), findsOneWidget);
+      });
+
+      testWidgets('trackpad horizontal pan switches', (tester) async {
+        final (skin, icon) = await openTwoImages(tester);
+        final center = tester.getCenter(shown(skin));
+        final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+        await tester.sendEventToBinding(pointer.panZoomStart(center));
+        await tester.sendEventToBinding(
+          pointer.panZoomUpdate(center, pan: const Offset(-60, 0)),
+        );
+        await tester.sendEventToBinding(
+          pointer.panZoomUpdate(center, pan: const Offset(-120, 0)),
+        );
+        await tester.sendEventToBinding(pointer.panZoomEnd());
+        await tester.pump();
+        expect(shown(icon), findsOneWidget);
+      });
+
+      testWidgets('tap still opens zoom and the menu button stays', (
+        tester,
+      ) async {
+        final (skin, _) = await openTwoImages(tester);
+        expect(find.byIcon(Icons.more_vert), findsOneWidget);
+        await tester.tap(shown(skin));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+      });
+
+      testWidgets('page dots: one per image, selected one is wider', (
+        tester,
+      ) async {
+        final (skin, _) = await openTwoImages(tester);
+        expect(dots(), findsNWidgets(2));
+        expect(dotWidth(tester, 0), 18);
+        expect(dotWidth(tester, 1), 6);
+        await tester.drag(shown(skin), const Offset(-120, 0));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(dotWidth(tester, 0), 6);
+        expect(dotWidth(tester, 1), 18);
+      });
+
+      /// 第 [i] 個頁點的底色。
+      Color dotColor(WidgetTester tester, int i) =>
+          ((tester
+                      .widget<AnimatedContainer>(
+                        find.byKey(ValueKey('page-dot-$i')),
+                      )
+                      .decoration!
+                  as BoxDecoration)
+              .color)!;
+
+      for (final (name, theme) in [
+        ('light', buildLightTheme()),
+        ('dark', buildDarkTheme()),
+      ]) {
+        testWidgets('page dots sit on a dark pill readable over any image '
+            '($name)', (tester) async {
+          // 頁點直接畫在圖上，深色圖會吃掉 borderEmphasis 色的點；比照 ⋮ 鈕墊半透明黑底。
+          await openTwoImages(tester, theme: theme);
+          final pill = find.byKey(const ValueKey('page-dots-scrim'));
+          expect(pill, findsOneWidget);
+          for (final i in [0, 1]) {
+            expect(
+              find.descendant(
+                of: pill,
+                matching: find.byKey(ValueKey('page-dot-$i')),
+              ),
+              findsOneWidget,
+            );
+          }
+          final decoration =
+              tester.widget<DecoratedBox>(pill).decoration as ShapeDecoration;
+          expect(decoration.color, Colors.black.withValues(alpha: 0.4));
+          expect(dotColor(tester, 0), theme.colorScheme.primary);
+          expect(dotColor(tester, 1), Colors.white70);
+        });
+      }
+
+      /// 頁點的半透明底。
+      Finder pill() => find.byKey(const ValueKey('page-dots-scrim'));
+
+      testWidgets('tap on the page-dots pill still opens zoom', (tester) async {
+        // 頁點墊了底色但不接手勢，點在上面仍要放大圖片。
+        await openTwoImages(tester);
+        await tester.tapAt(tester.getCenter(pill()));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.byType(ZoomableImageOverlay), findsOneWidget);
+      });
+
+      testWidgets('swipe starting on the page-dots pill switches the image', (
+        tester,
+      ) async {
+        final (_, icon) = await openTwoImages(tester);
+        await tester.dragFrom(tester.getCenter(pill()), const Offset(-120, 0));
+        await tester.pump();
+        expect(shown(icon), findsOneWidget);
+      });
+
+      testWidgets('single image: no dots, swipe does not throw', (
+        tester,
+      ) async {
+        await tester.runAsync(() async {
+          await container
+              .read(itemImageIndexProvider.notifier)
+              .mergeIcon(
+                resourceId: 222,
+                iconUrl: iconUrl,
+                noImage: false,
+                permanentNoImage: false,
+              );
+          final f = itemIconCacheFile(
+            baseDir: tempDir,
+            resourceId: 222,
+            url: iconUrl,
+          );
+          await _touchFile(tempDir, f.uri.pathSegments.last);
+        });
+        rebuildContainer();
+        await tester.runAsync(loadIndex);
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 222, name: 'Weapon', resourceType: '武器'),
+        );
+        final icon = itemIconCacheFile(
+          baseDir: tempDir,
+          resourceId: 222,
+          url: iconUrl,
+        );
+        expect(dots(), findsNothing);
+        await tester.drag(shown(icon), const Offset(-120, 0));
+        await tester.drag(shown(icon), const Offset(120, 0));
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        expect(shown(icon), findsOneWidget);
+      });
+    });
+
     testWidgets('點 dialog 外圍 → barrier 仍能關閉（Scaffold 包裹不擋 barrier）', (
       tester,
     ) async {
@@ -1248,8 +1989,9 @@ void main() {
 
     testWidgets('點複製圖片 → 在 dialog 之上彈出 toast（不被 dialog 蓋住）', (tester) async {
       addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
       itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
-      itemImageClipboardWriter = (_) async => true;
+      pngClipboardWriter = (_) async => true;
       await seedCharacterWithSkin(tester);
       await pumpDialog(
         tester,
@@ -1271,6 +2013,180 @@ void main() {
       // flush 停留計時器與淡出動畫，避免測試結束時殘留 pending timer。
       await tester.pump(const Duration(milliseconds: 2200));
       await tester.pumpAndSettle();
+    });
+
+    /// 開啟 ready 圖的溢出選單。
+    Future<void> openImageMenu(WidgetTester tester) async {
+      await tester.tap(
+        find.descendant(
+          of: find.byType(GachaItemDetailDialog),
+          matching: find.byIcon(Icons.more_vert),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('item image menu offers share only on Android', (tester) async {
+      await seedCharacterWithSkin(tester, android: true);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await openImageMenu(tester);
+      expect(find.text('分享'), findsOneWidget);
+    });
+
+    testWidgets('item image menu hides share on desktop', (tester) async {
+      await seedCharacterWithSkin(tester);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await openImageMenu(tester);
+      expect(find.text('分享'), findsNothing);
+    });
+
+    testWidgets('sharing an item image sends a png named after the item', (
+      tester,
+    ) async {
+      addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      String? name;
+      String? mime;
+      fileSharer = (bytes, fileName, mimeType) async {
+        name = fileName;
+        mime = mimeType;
+      };
+      await seedCharacterWithSkin(tester, android: true);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await openImageMenu(tester);
+      await tester.tap(find.text('分享'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(name, 'Char_造型A.png');
+      expect(mime, 'image/png');
+    });
+
+    testWidgets(
+      'saving and sharing replace illegal file name characters with underscores',
+      (tester) async {
+        addTearDown(resetItemImageSaveSeams);
+        addTearDown(resetFileAccessSeams);
+        itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+        final names = <String>[];
+        fileSaveDialog = (_, name, _, _, _) async {
+          names.add(name);
+          return null;
+        };
+        fileSharer = (_, name, _) async => names.add(name);
+        await seedCharacterWithSkin(tester, android: true);
+        await pumpDialog(
+          tester,
+          _rec(resourceId: 111, name: 'Ch:ar/x', languageCode: 'zh-Hant'),
+        );
+        for (final label in ['儲存圖片', '分享']) {
+          await openImageMenu(tester);
+          await tester.tap(find.text(label));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+        }
+        expect(names, ['Ch_ar_x_造型A.png', 'Ch_ar_x_造型A.png']);
+      },
+    );
+
+    testWidgets('item image share failure shows shareFailed', (tester) async {
+      addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSharer = (_, _, _) async => throw Exception('boom');
+      await seedCharacterWithSkin(tester, android: true);
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await openImageMenu(tester);
+      await tester.tap(find.text('分享'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      final l = AppLocalizations.of(
+        tester.element(find.byType(GachaItemDetailDialog)),
+      )!;
+      expect(find.text(l.shareFailed), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 2200));
+      await tester.pumpAndSettle();
+    });
+
+    /// 開 dialog、選單點 [label]，並等動作與 toast 動畫跑完。
+    Future<void> runMenuAction(WidgetTester tester, String label) async {
+      await pumpDialog(
+        tester,
+        _rec(resourceId: 111, name: 'Char', languageCode: 'zh-Hant'),
+      );
+      await openImageMenu(tester);
+      await tester.tap(find.text(label));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    /// 結束前 flush toast 的停留計時器。
+    Future<void> flushToast(WidgetTester tester) async {
+      await tester.pump(const Duration(milliseconds: 2200));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Windows save toast shows the full path and logs the outcome', (
+      tester,
+    ) async {
+      addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSaveDialog = (_, _, _, _, _) async => r'C:\out\Char_造型A.png';
+      final messages = <String>[];
+      final sub = Logger.root.onRecord
+          .where((r) => r.loggerName == 'gacha.itemimage.save')
+          .listen((r) => messages.add(r.message));
+      addTearDown(sub.cancel);
+      await seedCharacterWithSkin(tester);
+      await runMenuAction(tester, '儲存圖片');
+      final l = AppLocalizations.of(
+        tester.element(find.byType(GachaItemDetailDialog)),
+      )!;
+      expect(
+        find.text(l.itemImageSavedTo(r'C:\out\Char_造型A.png')),
+        findsOneWidget,
+      );
+      expect(messages, ['item image action=save name=Char_造型A.png outcome=ok']);
+      await flushToast(tester);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+
+    testWidgets('Android save toast shows only the file name', (tester) async {
+      addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSaveDialog = (_, _, _, _, _) async =>
+          '/document/primary:Download/Char_造型A.png';
+      await seedCharacterWithSkin(tester, android: true);
+      await runMenuAction(tester, '儲存圖片');
+      final l = AppLocalizations.of(
+        tester.element(find.byType(GachaItemDetailDialog)),
+      )!;
+      expect(find.text(l.itemImageSavedTo('Char_造型A.png')), findsOneWidget);
+      await flushToast(tester);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('sharing successfully shows no toast', (tester) async {
+      addTearDown(resetItemImageSaveSeams);
+      addTearDown(resetFileAccessSeams);
+      itemImageEncoder = (_) async => Uint8List.fromList([1, 2, 3, 4]);
+      fileSharer = (_, _, _) async {};
+      await seedCharacterWithSkin(tester, android: true);
+      await runMenuAction(tester, '分享');
+      expect(find.byKey(const ValueKey('dialogToast')), findsNothing);
     });
 
     testWidgets('點重抓圖片 → 造型圖切回 loading（spinner 出現）', (tester) async {

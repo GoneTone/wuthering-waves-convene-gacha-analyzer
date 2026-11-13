@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/update_progress_dialog.dart';
 import '../helpers/no_game_dir.dart';
 
@@ -56,6 +57,18 @@ Future<void> _pumpDialog(
 }
 
 void main() {
+  for (final progress in const <UpdateProgress>[
+    Preparing(),
+    WaitingForCapture(),
+  ]) {
+    testWidgets('no close button while running (${progress.runtimeType})', (
+      tester,
+    ) async {
+      await _pumpDialog(tester, progress: progress);
+      expect(find.byType(AppDialogCloseButton), findsNothing);
+    });
+  }
+
   testWidgets('WaitingForCapture shows not-detected link that opens help', (
     tester,
   ) async {
@@ -66,8 +79,31 @@ void main() {
     expect(find.text('偵測不到喚取記錄'), findsOneWidget);
   });
 
+  testWidgets('WaitingForCapture shows manual input link that opens dialog', (
+    tester,
+  ) async {
+    await _pumpDialog(tester, progress: const WaitingForCapture());
+    await tester.tap(find.text('手動輸入喚取記錄網址'));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('如何取得網址？'), findsOneWidget);
+  });
+
+  testWidgets('manual input link also shown when game dir is missing', (
+    tester,
+  ) async {
+    await _pumpDialog(
+      tester,
+      progress: const WaitingForCapture(
+        captureUnavailable: true,
+        gameDirMissing: true,
+      ),
+    );
+    expect(find.text('手動輸入喚取記錄網址'), findsOneWidget);
+  });
+
   const captureUnavailableNotice =
-      '無法啟動攔截程式（可能是 Windows 權限提示被拒絕），改為只從遊戲記錄檔偵測。請開啟喚取記錄。';
+      '無法啟動攔截程式（可能是 Windows 權限提示被拒絕），改為只從遊戲 log 檔偵測。請在遊戲中開啟喚取記錄頁。';
   const chooseGameDir = '選擇遊戲資料夾';
 
   testWidgets('normal wait does not show log-only notice', (tester) async {
@@ -196,5 +232,41 @@ void main() {
       expect(find.textContaining('補下載'), findsNothing);
       expect(find.textContaining('殘留語言'), findsNothing);
     });
+  });
+
+  testWidgets('進度在 dialog 建構前就已清空 → dialog 自己關掉，不留空白框', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          noGameDirOverride,
+          gachaRepositoryProvider.overrideWith(
+            () => _FakeGachaRepository(null),
+          ),
+        ],
+        child: MaterialApp(
+          theme: buildDarkTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh', 'Hant'),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const UpdateProgressDialog(),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(UpdateProgressDialog), findsNothing);
+    expect(find.text('open'), findsOneWidget);
   });
 }

@@ -1,10 +1,10 @@
 {
   "@@locale": "zh_Hans",
   "localeNativeName": "简体中文",
-  "localeTranslatorLabel": "翻译者：{translator}",
   "@localeNativeName": {
     "description": "Native name of this locale, shown in language picker."
   },
+  "localeTranslatorLabel": "翻译者：{translator}",
   "@localeTranslatorLabel": {
     "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
     "placeholders": {
@@ -110,7 +110,7 @@
   "uidNotSynced": "未同步",
   "uidActiveSuffix": "（活跃）",
   "emptyNoSyncTitle": "尚未同步任何数据",
-  "emptyNoSyncMessage": "点右上「更新数据」开始",
+  "emptyNoSyncMessage": "点右上 {icon} 开始",
   "emptyNoRecords": "此卡池无记录",
   "emptyNoFilterMatch": "没有符合条件的记录",
   "emptyNoGachaRecords": "暂无唤取记录",
@@ -138,7 +138,7 @@
   "kindCharacter": "角色",
   "kindWeapon": "武器",
   "kindItem": "道具",
-  "tableTime": "时间",
+  "tableTime": "唤取时间",
   "tableName": "名称",
   "tableKind": "类型",
   "tableRarity": "稀有度",
@@ -152,6 +152,23 @@
   },
   "tableTotalIndex": "总抽数",
   "tableMainPity": "保底内",
+  "tableSortButton": "排序：{column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
+  "tableSortDefault": "排序：默认",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
+  "tableSortSheetTitle": "排序方式",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "距上一次 {star} 的抽数",
   "@tableMainPityTooltip": {
     "placeholders": {
@@ -163,15 +180,15 @@
   "sortDirectionDesc": "降序",
   "sortDirectionAsc": "升序",
   "sortHintClickToSort": "点击排序",
-  "progressPreparing": "准备中…",
-  "progressPreparingHint": "正在准备数据源…",
-  "progressWaiting": "等待拦截…",
-  "progressFetching": "抓取中…",
+  "progressPreparing": "准备中...",
+  "progressPreparingHint": "正在准备数据源...",
+  "progressWaiting": "等待拦截...",
+  "progressFetching": "抓取中...",
   "progressDone": "更新完成",
   "progressFailed": "失败",
   "progressOpenGameHint": "请打开鸣潮 → 唤取 → 唤取记录",
   "progressFallbackHint": "（先前的拦截已失效，需重新拦截）",
-  "progressCaptureUnavailableHint": "无法启动拦截程序（可能是 Windows 权限提示被拒绝），改为只从游戏记录文件检测。请打开唤取记录。",
+  "progressCaptureUnavailableHint": "无法启动拦截程序（可能是 Windows 权限提示被拒绝），改为只从游戏 log 文件检测。请在游戏中打开唤取记录页。",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
   },
@@ -187,7 +204,7 @@
   "@gameDirHelpTitle": {
     "description": "Title of the detection help dialog shown when the convene record is not detected"
   },
-  "gameDirHelpNotFound": "找不到鸣潮的游戏文件夹。选择游戏文件夹后，本工具也能改从游戏日志文件读取唤取记录。",
+  "gameDirHelpNotFound": "找不到鸣潮的游戏文件夹。选择游戏文件夹后，本工具也能改从游戏 log 文件获取唤取记录网址。",
   "@gameDirHelpNotFound": {
     "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
   },
@@ -204,7 +221,7 @@
   "@gameDirHelpReopen": {
     "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
   },
-  "gameDirInvalid": "这个文件夹里找不到游戏日志文件，请选择「Wuthering Waves Game」文件夹。",
+  "gameDirInvalid": "这个文件夹里找不到游戏 log 文件，请选择「Wuthering Waves Game」文件夹。",
   "@gameDirInvalid": {
     "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
   },
@@ -311,6 +328,8 @@
   },
   "errorGachaFailed": "重新拦截后仍无法获取记录，服务器可能暂时异常，请稍后再试",
   "errorNoRecords": "此账号尚无任何卡池记录",
+  "errorNetwork": "网络连接失败，请检查网络后重试",
+  "errorUnexpected": "发生意外错误，请稍后再试",
   "pageOverviewTitle": "综合数据（全卡池合计）",
   "pageOverviewGachaSection": "唤取综合",
   "pageBannerRecordList": "记录列表",
@@ -382,10 +401,11 @@
     "description": "Button that clears the manually set game folder"
   },
   "settingsCloudSync": "云端同步",
-  "cloudSyncIntro": "关联 Google 账号后，唤取记录会自动备份到你的 Google 云端硬盘，并在多台电脑间同步。",
+  "cloudSyncIntro": "关联 Google 账号后，唤取记录会自动备份到你的 Google 云端硬盘，并在多台设备间同步。",
   "cloudSyncUnconfigured": "此构建未设置 Google OAuth 凭据，云端同步无法使用。",
   "cloudSyncLink": "关联 Google 账号",
   "cloudSyncAwaitingConsent": "已打开浏览器，请在浏览器完成授权...",
+  "cloudSyncAwaitingConsentAndroid": "请在 Google 窗口完成授权...",
   "cloudSyncLinkedAs": "已关联：{email}",
   "@cloudSyncLinkedAs": {
     "placeholders": {
@@ -424,6 +444,14 @@
   "settingsPrivacySectionTitle": "隐私",
   "settingsMaskUidInUi": "遮蔽界面中的 UID",
   "settingsMaskUidInUiHint": "开启后，画面与账号列表中的 UID 会以前 3 位搭配 • 显示（例如 123•••••），适合直播或屏幕分享时使用。分享图、导出文件、删除确认框不受影响。",
+  "settingsAdPrivacyOptions": "广告隐私选项",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
+  "settingsAdPrivacyOptionsHint": "更改是否同意显示个性化广告。",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "关于",
   "settingsOtherGamesTitle": "其他游戏版本",
   "settingsOtherGamesGenshin": "原神",
@@ -445,6 +473,7 @@
   "contributorsTranslatedLanguages": "已翻译语言",
   "contributorsHelpTranslate": "没有您的语言吗？帮助我们翻译！",
   "contributorsProjectLicense": "项目许可证",
+  "contributorsOpenSourceLicenses": "开源许可证",
   "pityRank": "{star} 保底",
   "@pityRank": {
     "placeholders": {
@@ -578,10 +607,15 @@
     }
   },
   "filterKindAll": "全部类型",
-  "filterSearchHint": "搜索名称…",
+  "filterSearchHint": "搜索名称...",
   "filterClear": "清除筛选",
   "pagerFirst": "首页",
   "pagerLast": "末页",
+  "pagerJumpTitle": "前往页数",
+  "pagerJumpLabel": "页码（{min}–{max}）",
+  "pagerJumpCurrent": "当前在第 {page} 页，共 {total} 条",
+  "pagerJumpGo": "前往",
+  "pagerJumpInvalid": "请输入 {min}–{max} 的页码",
   "settingsClearActive": "清除当前账号数据",
   "settingsClearAll": "清除所有数据",
   "settingsRefetchItemImagesTitle": "强制重抓物品图片",
@@ -675,7 +709,7 @@
   "@settingsImageCacheGallery": {
     "description": "Label for gallery cache size (large detail images shown in item dialog)."
   },
-  "settingsImageCacheCalculating": "计算中…",
+  "settingsImageCacheCalculating": "计算中...",
   "@settingsImageCacheCalculating": {
     "description": "Loading placeholder while scanning cache size."
   },
@@ -769,6 +803,7 @@
     }
   },
   "importReasonInvalidFormat": "文件格式不正确或已损坏",
+  "importReasonIncompatibleVersion": "此备份的数据版本与当前 App 不兼容，无法导入",
   "importReasonUnreadable": "无法读取文件",
   "importReasonForeignApp": "此文件不是由本软件导出的备份",
   "importReasonNotPlatformFile": "此文件不是有效的 {platform} 导出文件",
@@ -829,8 +864,11 @@
   "accountAdd": "新增账号",
   "accountAliasLabel": "别名",
   "accountAliasHint": "为此账号取一个好记的名字",
+  "accountAliasNone": "未设置别名",
+  "accountActionEditAlias": "编辑别名",
+  "accountEditAliasTitle": "编辑别名",
   "accountDragHandleTooltip": "拖动排序",
-  "loadingBootstrap": "加载中…",
+  "loadingBootstrap": "加载中...",
   "timelineTopRarityTitle": "{star} 时间轴 ({n})",
   "@timelineTopRarityTitle": {
     "placeholders": {
@@ -871,10 +909,20 @@
     }
   },
   "updateButtonDownload": "前往下载",
+  "updateButtonUpdate": "更新",
+  "updateNotesUnavailable": "目前无法获取更新内容，详情请见 Google Play。",
+  "updateDownloadingMessage": "正在下载新版本...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
+  "updateDownloadedMessage": "新版本已下载完成",
+  "updateRestartAction": "重新启动",
+  "updateInAppUnavailable": "目前无法在 App 内更新，请到 Google Play 更新。",
+  "updateOpenPlayStore": "前往 Google Play",
   "updateButtonSkip": "跳过此版本",
   "updateButtonLater": "稍后再说",
   "updateCheckButton": "检查更新",
-  "updateChecking": "检查中…",
+  "updateChecking": "检查中...",
   "updateAlreadyLatest": "已是最新版本",
   "updateCheckFailed": "检查更新失败：{reason}",
   "@updateCheckFailed": {
@@ -896,6 +944,7 @@
     }
   },
   "updateErrorFormat": "响应格式异常",
+  "updateErrorPlay": "无法连接到 Google Play，或此版本不是从 Google Play 安装",
   "currentReleaseTitle": "当前版本的更新内容",
   "@currentReleaseTitle": {
     "description": "Title of the dialog showing release notes for the currently installed version."
@@ -979,6 +1028,10 @@
   "@galleryNextTab": {
     "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
   },
+  "detailScrollDown": "往下滚动",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "图片加载失败",
   "@galleryLazyLoadFailed": {
     "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
@@ -1035,5 +1088,377 @@
   "actionViewOnEncore": "在 encore.moe 查看",
   "@actionViewOnEncore": {
     "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
-  }
+  },
+  "progressManualInputLink": "手动输入唤取记录网址",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
+  "manualCredentialTitle": "手动输入唤取记录网址",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
+  "manualCredentialHint": "粘贴唤取记录的网址，或包含网址的整段文字。",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
+  "manualCredentialFieldHint": "粘贴网址...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
+  "manualCredentialPaste": "从剪贴板粘贴",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
+  "manualCredentialPickLog": "选择 Client.log 文件",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
+  "manualCredentialHowTo": "如何获取网址？",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
+  "manualCredentialNotFound": "找不到唤取记录网址",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
+  "manualCredentialNotFoundInLog": "这个文件里找不到唤取记录网址，请先在游戏打开唤取记录再选一次。",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
+  "manualCredentialHelpAndroid": "方法一：飞行模式\n1. 在游戏进入「唤取」画面\n2. 开启飞行模式，再点「唤取记录」\n3. 页面会显示加载失败：长按 → 全选 → 复制\n4. 关闭飞行模式，回来粘贴整段文字\n\n方法二：已有 Client.log 文件\n点「选择 Client.log 文件」，本程序会自动找出网址。",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
+  "manualCredentialHelpWindows": "选择 Client.log 文件\n1. 在游戏打开「唤取记录」\n2. 点「选择 Client.log 文件」，位置在：\n游戏文件夹\\Client\\Saved\\Logs\\Client.log\n\n其他工具获取的网址\n例如 WuWa Tracker 获取的网址，可以直接粘贴。",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
+  "manualCredentialWarning": "网址含有账号凭证，请勿公开分享。网址过一段时间会失效。",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
+  "manualCredentialSubmit": "确定",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
+  "progressWaitingLog": "等待在游戏中打开唤取记录页...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
+  "progressCheckingLogAccess": "正在准备读取游戏 log 文件...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
+  "progressLogUnavailableTitle": "无法自动获取唤取记录网址",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
+  "logUnavailableNotPaired": "尚未设置读取游戏 log 文件的方式。设置一次之后，每次更新都会自动读取。",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
+  "logUnavailableNoWifi": "无线调试只能在连上 Wi‑Fi 时使用。连上 Wi‑Fi 后回到本 App 就会自动继续，也可以改用手动输入网址。",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
+  "logRootDeniedHint": "检测到 root，但本 App 没有获得 root 授权。如果要用 root 读取，请到 root 工具（例如 Magisk 的“超级用户”）允许本 App，回到本 App 就会自动重试。",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
+  "logUnavailableAdbFailed": "连不上无线调试。可能是配对已失效，请重新配对。",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
+  "logUnavailableWirelessOff": "你的设备不允许本 App 自动开启无线调试。请在无线调试页面打开开关，再回到本 App，就会自动继续。",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
+  "logUnavailableNetworkNotAllowed": "这个 Wi‑Fi 还没允许无线调试。请在系统窗口点“允许”（勾选“始终允许通过此网络”之后就不会再问），就会自动继续。如果已经关闭窗口，请点“重试”。",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
+  "logUnavailableStorage": "需要存储空间权限才能读取游戏 log 文件。",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
+  "logUnavailableUnsupported": "这台设备无法自动读取游戏 log 文件，请改用手动输入网址。",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
+  "actionOpenGame": "打开鸣潮",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
+  "actionOpenWirelessDebugging": "前往无线调试",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
+  "actionRegrantStorage": "重新授权",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
+  "progressLogConnectionLost": "与无线调试的连接中断，正在重新连接...如果一直无法恢复，请确认 Wi‑Fi 是否连接，或改用手动输入网址。",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
+  "progressWirelessLeftOnHint": "无线调试仍是开启的，可以到系统设置自行关闭。",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
+  "actionSetupLogAccess": "设置读取方式",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
+  "actionRepair": "重新配对",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
+  "setupTitle": "读取游戏 log 文件",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
+  "setupWhyTitle": "为什么需要这个设置？",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
+  "setupWhyBody": "Android 不允许 App 直接读取其他 App 的文件。本 App 会通过系统内置的「无线调试」，读取鸣潮的 log 文件，从中获取唤取记录网址。",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
+  "setupWhatTitle": "本 App 会做什么",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
+  "setupWhatBody": "・只读取鸣潮的 log 文件\n・读完立刻断开连接；无线调试如果是本 App 打开的，会一并关闭\n・授权自己开关无线调试，之后不用再设置\n・可以随时在设置页解除",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
+  "setupNeedTitle": "使用条件",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
+  "setupNeedBody": "Android 11 以上、连上 Wi‑Fi、允许通知",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
+  "setupStart": "开始设置",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
+  "setupUseManual": "改用手动输入网址",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
+  "setupPairTitle": "配对无线调试",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
+  "setupStepDevOptions": "1. 开启开发者选项",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
+  "setupStepDevOptionsBody": "1. 打开系统「设置」的「关于」页面（例如「关于手机」或「关于平板电脑」）\n2. 找到「版本号」，连点 7 次\n3. 看到「您已处于开发者模式」后回到本 App",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
+  "setupOpenAbout": "打开「关于」页面",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
+  "setupStepDevOptionsDone": "1. 开发者选项已开启",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
+  "setupStepNotifications": "2. 允许通知",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
+  "setupStepNotificationsBody": "配对码要从通知输入，请允许本 App 显示通知。",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
+  "setupAllowNotifications": "允许通知",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
+  "setupOpenNotificationSettings": "前往通知设置",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
+  "setupStepNotificationsDone": "2. 已允许通知",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
+  "setupStepPair": "3. 配对",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
+  "setupStepPairBody": "1. 点下方按钮，会跳到「无线调试」\n2. 打开「使用无线调试」，点「使用配对码配对设备」\n3. 从屏幕顶端往下拉，在本 App 的通知中，输入「无线调试」配对画面上显示的 6 位数配对码",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
+  "setupWaitingCode": "等待你在通知输入配对码...\n配对码要在「无线调试」的配对画面开着时输入。",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
+  "setupOpenWirelessAgain": "再次前往无线调试",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
+  "setupPairing": "配对中...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
+  "setupGrantFailedTitle": "配对成功，但还差一步",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
+  "setupGrantFailedBody": "你的设备有额外的安全性限制，需要再开启一个选项，本 App 才能自动开关无线调试。",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
+  "setupGrantHowTitle": "开启方式",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
+  "setupGrantHowBody": "1. 到「开发者选项」\n2. 找到与 USB 调试安全性或权限监控有关的开关并打开，例如：\n・小米：「USB 调试（安全设置）」\n・OPPO／realme：「禁止权限监控」\n3. 确认无线调试是开着的，再回到本 App 点「重试」",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
+  "setupOpenDeveloperOptions": "前往开发者选项",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
+  "setupRetry": "重试",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
+  "setupSkipGrant": "跳过（每次更新时手动开启无线调试）",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
+  "setupDoneTitle": "设置完成",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
+  "setupDoneBody": "之后点「更新数据」都会自动读取，不用再设置。",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
+  "setupDoneManualBody": "之后点「更新数据」时，请依提示开启无线调试。",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
+  "setupDoneReturning": "即将返回并开始更新...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
+  "settingsLogAccess": "读取游戏 log 文件",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
+  "settingsLogAccessMethod": "读取方式",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
+  "logAccessMethodRoot": "root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
+  "logAccessMethodLegacy": "直接读取",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
+  "logAccessMethodWireless": "无线调试",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
+  "logAccessMethodNone": "尚未设置",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
+  "settingsPairingStatus": "配对状态",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
+  "settingsPaired": "已配对",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
+  "settingsPairedManual": "已配对（需手动开启无线调试）",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
+  "settingsRetryGrant": "重试授权",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
+  "settingsSetupLogAccess": "设置",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
+  "settingsUnpair": "解除配对",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
+  "settingsUnpairConfirmTitle": "解除配对？",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
+  "settingsUnpairConfirmBody": "解除配对会删除本 App 的配对密钥，并收回本 App 开关无线调试的权限。之后要再使用无线调试，需要重新配对。",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
+  "settingsUnpairDone": "已解除配对",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
+  "settingsUnpairDoneBody": "已删除本 App 的配对密钥，并收回「开关无线调试」的权限。",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
+  "settingsUnpairUnreachableTitle": "已删除配对密钥",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
+  "settingsUnpairUnreachableBody": "已删除本 App 的配对密钥，但这次连不上无线调试，「开关无线调试」的权限还没收回。",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
+  "settingsUnpairUnreachableRevokeHint": "未配对时本 App 不会使用这个权限；想完全收回，可以连上 Wi‑Fi 后重新配对，再解除一次。",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
+  "settingsUnpairLeftover": "系统「无线调试」的配对列表里还会留着「{name}」。这条配对已经无法再连接，可以不用理会；想移除的话，点击它即可删除。",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsUnpairLeftoverAlso": "系统「无线调试」的配对列表里也还留着「{name}」，点击它即可删除。",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "progressCredentialReady": "已获取唤取记录网址，回到本 App 后就会开始抓取唤取记录。",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
+  "actionShare": "分享",
+  "shareFailed": "无法分享",
+  "dialogSaveAsTitle": "另存为",
+  "dialogOpenTitle": "打开",
+  "dialogSelectFolderTitle": "选择文件夹",
+  "actionSave": "保存",
+  "settingsLogsShare": "分享日志",
+  "logUnavailableGameNotInstalled": "这台设备上找不到国际服鸣潮，装好后回到这里会自动重新检测。",
+  "actionRedetectGame": "重新检测",
+  "logChooseGameVersion": "这台设备装了多个版本的鸣潮，要读取哪一个版本的记录？",
+  "gameVersionGooglePlay": "Google Play 版",
+  "gameVersionGalaxyStore": "Galaxy Store 版",
+  "progressGameVersion": "鸣潮版本：{name}",
+  "actionSwitchGameVersion": "切换版本"
 }

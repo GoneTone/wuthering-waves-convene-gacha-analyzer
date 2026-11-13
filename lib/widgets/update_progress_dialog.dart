@@ -3,10 +3,14 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/android_log_wait_body.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/game_dir_help_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/manual_credential_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/game_dir_picker.dart';
 
 /// 顯示喚取資料更新進度的 dialog，包含 [LinearProgressIndicator] 與各狀態文字。
@@ -16,16 +20,20 @@ class UpdateProgressDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    void closeSelf() {
+      final route = ModalRoute.of(context);
+      // route 已離開 stack 時 popUntil 永遠比不到，會把所有頁面 pop 光。
+      if (route == null || !route.isActive) return;
+      // 上面可能疊著說明視窗，先收回到自己這層再關，避免多 pop 底下的頁面。
+      final nav = Navigator.of(context);
+      nav.popUntil((r) => r == route);
+      if (nav.canPop()) nav.pop();
+    }
+
     ref.listen<UpdateProgress?>(
       gachaRepositoryProvider.select((s) => s.progress),
       (prev, next) {
-        final route = ModalRoute.of(context);
-        // route 已離開 stack 時 popUntil 永遠比不到，會把所有頁面 pop 光。
-        if (next != null || route == null || !route.isActive) return;
-        // 上面可能疊著說明視窗，先收回到自己這層再關，避免多 pop 底下的頁面。
-        final nav = Navigator.of(context);
-        nav.popUntil((r) => r == route);
-        if (nav.canPop()) nav.pop();
+        if (next == null) closeSelf();
       },
     );
     final progress = ref.watch(
@@ -34,14 +42,27 @@ class UpdateProgressDialog extends ConsumerWidget {
     final notifier = ref.read(gachaRepositoryProvider.notifier);
     final l = AppLocalizations.of(context)!;
     final tokens = Theme.of(context).gacha;
+    final android = ref.watch(isAndroidProvider);
 
-    return PopScope(
-      canPop: false,
-      child: AppDialog(
-        // size 預設 sm，符合短訊息 + LinearProgressIndicator 語意。
-        title: _Title(progress: progress, l: l, tokens: tokens),
-        content: _Body(progress: progress, l: l),
-        actions: _actions(context, progress, notifier, l),
+    return _CloseIfIdleOnOpen(
+      close: closeSelf,
+      child: PopScope(
+        canPop: false,
+        child: AppDialog(
+          // size 預設 sm，符合短訊息 + LinearProgressIndicator 語意。
+          // 手機橫向高度只剩約 390，等待畫面放不下，要能捲動。
+          scrollable: true,
+          // 進行中的更新只能用下方按鈕取消（會一併收掉擷取流程），不給 ✕ 直接關窗。
+          showCloseButton: false,
+          title: _Title(
+            progress: progress,
+            l: l,
+            tokens: tokens,
+            android: android,
+          ),
+          content: _Body(progress: progress, l: l, android: android),
+          actions: _actions(context, progress, notifier, l),
+        ),
       ),
     );
   }
@@ -84,10 +105,53 @@ class UpdateProgressDialog extends ConsumerWidget {
   }
 }
 
+/// dialog 第一次建構後若進度已經是 null 就呼叫 [close]。
+///
+/// 流程很快結束時（例如轉換資料語言沒東西要轉），進度可能在 dialog 建構前就被清掉，
+/// [UpdateProgressDialog] 的 listen 收不到那次變化，dialog 會留著空白內容。
+/// 只在開啟時檢查一次：之後的清空由 listen 處理，避免在別的頁面推上來後誤關。
+class _CloseIfIdleOnOpen extends ConsumerStatefulWidget {
+  /// 建立 [_CloseIfIdleOnOpen]。
+  const _CloseIfIdleOnOpen({required this.close, required this.child});
+
+  /// 關閉 dialog 的動作。
+  final VoidCallback close;
+
+  /// dialog 內容。
+  final Widget child;
+
+  @override
+  ConsumerState<_CloseIfIdleOnOpen> createState() => _CloseIfIdleOnOpenState();
+}
+
+/// [_CloseIfIdleOnOpen] 的狀態：只在第一幀後檢查一次。
+class _CloseIfIdleOnOpenState extends ConsumerState<_CloseIfIdleOnOpen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && ref.read(gachaRepositoryProvider).progress == null) {
+        widget.close();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 /// Dialog 標題列：依 [progress] 狀態切換圖示、顏色與文字。
 class _Title extends StatelessWidget {
   /// 建立 [_Title]。
-  const _Title({required this.progress, required this.l, required this.tokens});
+  const _Title({
+    required this.progress,
+    required this.l,
+    required this.tokens,
+    required this.android,
+  });
+
+  /// 是否為 Android（等待時標題改為「等待在遊戲中開啟喚取記錄頁」）。
+  final bool android;
 
   /// 當前更新進度狀態。
   final UpdateProgress? progress;
@@ -106,11 +170,26 @@ class _Title extends StatelessWidget {
         tokens.textPrimary,
         l.progressPreparing,
       ),
-      WaitingForCapture() => (
-        Icons.hourglass_top,
-        tokens.textPrimary,
-        l.progressWaiting,
-      ),
+      WaitingForCapture(
+        :final logAccessUnavailable,
+        :final checkingLogAccess,
+      ) =>
+        (
+          logAccessUnavailable == null ||
+                  logAccessUnavailable == LogAccessUnavailable.chooseGame
+              ? Icons.hourglass_top
+              : Icons.info_outline,
+          tokens.textPrimary,
+          !android
+              ? l.progressWaiting
+              // 選版本是準備讀取的一步，不是讀不到。
+              : checkingLogAccess ||
+                    logAccessUnavailable == LogAccessUnavailable.chooseGame
+              ? l.progressCheckingLogAccess
+              : logAccessUnavailable == null
+              ? l.progressWaitingLog
+              : l.progressLogUnavailableTitle,
+        ),
       FetchingBanner() => (
         Icons.cloud_download_outlined,
         tokens.textPrimary,
@@ -133,7 +212,7 @@ class _Title extends StatelessWidget {
       children: [
         Icon(icon, color: color),
         const SizedBox(width: AppSpacing.s),
-        Text(text),
+        Flexible(child: Text(text)),
       ],
     );
   }
@@ -142,7 +221,10 @@ class _Title extends StatelessWidget {
 /// Dialog 內容區：依 [progress] 狀態切換進度列、說明文字或結果摘要。
 class _Body extends StatelessWidget {
   /// 建立 [_Body]。
-  const _Body({required this.progress, required this.l});
+  const _Body({required this.progress, required this.l, required this.android});
+
+  /// 是否為 Android（等待畫面改用 [AndroidLogWaitBody]）。
+  final bool android;
 
   /// 當前更新進度狀態。
   final UpdateProgress? progress;
@@ -171,6 +253,7 @@ class _Body extends StatelessWidget {
           Text(l.progressPreparingHint),
         ],
       ),
+      final WaitingForCapture p when android => AndroidLogWaitBody(progress: p),
       WaitingForCapture(
         :final isFallback,
         :final captureUnavailable,
@@ -210,6 +293,13 @@ class _Body extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
               ),
+            TextButton(
+              onPressed: () => showManualCredentialDialog(context),
+              child: Text(
+                l.progressManualInputLink,
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
         ),
       FetchingBanner(
@@ -258,6 +348,7 @@ class _Body extends StatelessWidget {
         :final importSummary,
         :final itemDetailsRefreshed,
         :final staleItemsPruned,
+        :final wirelessDebuggingLeftOn,
       ) =>
         Column(
           mainAxisSize: MainAxisSize.min,
@@ -294,6 +385,13 @@ class _Body extends StatelessWidget {
                   failedBanners.map(resolveBannerName).join('、'),
                 ),
                 style: TextStyle(color: tokens.stateDanger),
+              ),
+            ],
+            if (wirelessDebuggingLeftOn) ...[
+              const SizedBox(height: AppSpacing.s),
+              Text(
+                l.progressWirelessLeftOnHint,
+                style: TextStyle(color: tokens.stateWarning),
               ),
             ],
             if (importSummary != null &&

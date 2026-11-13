@@ -238,4 +238,45 @@ void main() {
     final merged = local.mergeWith(incoming);
     expect(merged.banners['1']!.map((r) => r.resourceId).toList(), [2, 1]);
   });
+
+  group('sameContentAs', () {
+    BannerStorage make({
+      String lang = 'zh-Hant',
+      DateTime? updated,
+      List<GachaRecord>? records,
+    }) => BannerStorage(
+      playerId: '701000000',
+      languageCode: lang,
+      lastUpdated: updated ?? DateTime.utc(2026, 5, 21),
+      banners: {
+        '1': records ?? [_r(1), _r(2)],
+      },
+    );
+
+    test('不同物件但內容相同 → true', () {
+      expect(make().sameContentAs(make()), isTrue);
+    });
+
+    test('語言、更新時間、筆數或任一紀錄欄位不同 → false', () {
+      final base = make();
+      expect(base.sameContentAs(make(lang: 'ja')), isFalse);
+      expect(
+        base.sameContentAs(make(updated: DateTime.utc(2026, 5, 22))),
+        isFalse,
+      );
+      expect(base.sameContentAs(make(records: [_r(1)])), isFalse);
+      expect(
+        base.sameContentAs(
+          make(
+            records: [
+              _r(1),
+              _r(2).copyWith(name: '別名'),
+            ],
+          ),
+        ),
+        isFalse,
+      );
+      expect(base.sameContentAs(make(records: [_r(1), _rt(2, 4)])), isFalse);
+    });
+  });
 }

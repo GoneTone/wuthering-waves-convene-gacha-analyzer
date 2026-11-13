@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/confirm_dialog.dart';
 
 void main() {
@@ -10,6 +12,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildDarkTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (ctx) => Center(
@@ -53,6 +57,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildDarkTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (ctx) => Center(
@@ -76,7 +82,8 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.close), findsOneWidget);
+    // 取消鈕＋右上 ✕ 各一。
+    expect(find.byIcon(Icons.close), findsNWidgets(2));
     expect(find.byIcon(Icons.delete_outline), findsOneWidget);
   });
 
@@ -84,6 +91,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildDarkTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (ctx) => Center(
@@ -118,6 +127,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildDarkTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (ctx) => Center(
@@ -157,6 +168,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildDarkTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (ctx) => Center(
@@ -190,6 +203,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildDarkTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (ctx) => Center(
@@ -221,4 +236,51 @@ void main() {
       buildDarkTheme().gacha.stateDanger,
     );
   });
+
+  for (final typed in [false, true]) {
+    testWidgets('close button cancels (typed: $typed)', (tester) async {
+      Object? result = 'unset';
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildDarkTheme(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    result = typed
+                        ? await showConfirmTypeDialog(
+                            context: ctx,
+                            title: 'Confirm',
+                            body: 'Type X',
+                            expectedText: 'X',
+                            cancelLabel: 'Cancel',
+                            confirmLabel: 'Delete',
+                            confirmIcon: Icons.delete_outline,
+                          )
+                        : await showConfirmDialog(
+                            context: ctx,
+                            title: 'Merge',
+                            body: 'About to merge',
+                            cancelLabel: 'Cancel',
+                            confirmLabel: 'Import',
+                          );
+                  },
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(AppDialogCloseButton));
+      await tester.pumpAndSettle();
+      expect(find.text('Confirm'), findsNothing);
+      expect(result, isNull);
+    });
+  }
 }

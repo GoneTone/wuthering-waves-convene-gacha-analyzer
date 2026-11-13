@@ -42,7 +42,11 @@ class RarityPie extends StatelessWidget {
     super.key,
     required this.stats,
     this.animationDuration = const Duration(milliseconds: 600),
+    this.diameter = kDefaultRingDiameter,
   });
+
+  /// 圓環直徑。
+  final double diameter;
 
   /// 用於計算各 Pie 區塊比例的統計資料。
   final GachaStats stats;
@@ -58,6 +62,7 @@ class RarityPie extends StatelessWidget {
       entries: rarityDistributionEntries(stats, tokens, l),
       total: stats.total,
       animationDuration: animationDuration,
+      diameter: diameter,
     );
   }
 }
@@ -65,20 +70,29 @@ class RarityPie extends StatelessWidget {
 /// 稀有度分佈 ChartCard（標題 + [RarityPie] + 圖例），overview / banner 兩頁共用。
 class RarityChartCard extends StatelessWidget {
   /// 建立 [RarityChartCard]。
-  const RarityChartCard({super.key, required this.stats});
+  const RarityChartCard({
+    super.key,
+    required this.stats,
+    this.layout = ChartCardLayout.standard,
+  });
 
   /// 稀有度統計資料。
   final GachaStats stats;
+
+  /// 卡片版面。
+  final ChartCardLayout layout;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final tokens = Theme.of(context).gacha;
     return ChartCard(
+      layout: layout,
       title: l.statsRarityDistribution,
       icon: Icons.pie_chart_outline,
-      chart: RarityPie(stats: stats),
+      chart: RarityPie(stats: stats, diameter: layout.chartDiameter),
       legend: DistributionLegend(
+        compact: layout.isCompact,
         entries: rarityDistributionEntries(stats, tokens, l),
       ),
     );

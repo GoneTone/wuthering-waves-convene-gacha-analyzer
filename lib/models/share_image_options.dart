@@ -22,4 +22,7 @@ enum ShareImageAction {
 
   /// 複製分享圖到剪貼簿。
   copy,
+
+  /// 以系統分享面板分享分享圖（僅 Android）。
+  share,
 }

@@ -428,6 +428,45 @@ void main() {
     );
   });
 
+  testWidgets('loaded count survives being scrolled out of a lazy list', (
+    tester,
+  ) async {
+    final entries = List<TimelineEntry>.generate(
+      25,
+      (i) => _e('item-$i', '301', 10, DateTime(2025, 4, 28 - i)),
+    );
+    const listKey = Key('outer');
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) => ListView(
+          key: listKey,
+          children: [
+            TimelineVertical(entries: entries, colors: colors, targetRank: 5),
+            const SizedBox(height: 5000),
+          ],
+        ),
+      ),
+    );
+    final l = AppLocalizations.of(
+      tester.element(find.byType(TimelineVertical)),
+    )!;
+    await tester.ensureVisible(find.text(l.timelineLoadMore(15)));
+    await tester.tap(find.text(l.timelineLoadMore(15)));
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byKey(listKey), const Offset(0, -8000));
+    await tester.pumpAndSettle();
+    expect(find.text('item-0'), findsNothing);
+    await tester.drag(find.byKey(listKey), const Offset(0, 8000));
+    await tester.pumpAndSettle();
+
+    expect(find.text('item-19', skipOffstage: false), findsOneWidget);
+    expect(
+      find.text(l.timelineLoadMore(5), skipOffstage: false),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('entries=11 → defaults to first 10 entries only', (tester) async {
     final entries = List<TimelineEntry>.generate(
       11,
@@ -823,4 +862,31 @@ void main() {
       expect(find.text('夜蘭'), findsNWidgets(2));
     },
   );
+
+  testWidgets('on phones a tap on the node or the date shows the name', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) => TimelineVertical(
+          entries: [_e('夜蘭', '301', 87, DateTime(2025, 4, 1))],
+          colors: colors,
+          targetRank: 5,
+        ),
+      ),
+    );
+    final tips = find.descendant(
+      of: find.byType(TimelineVertical),
+      matching: find.byType(Tooltip),
+    );
+    for (final tip in [tips.first, tips.last]) {
+      await tester.tap(tip);
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('夜蘭'), findsNWidgets(2));
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+    }
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 }

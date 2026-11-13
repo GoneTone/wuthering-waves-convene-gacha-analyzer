@@ -76,4 +76,18 @@ void main() {
     await tester.tap(find.text(TeamInfo.name));
     await tester.pumpAndSettle();
   });
+
+  testWidgets('compact hides the team name and uses 48dp targets', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(const TeamLinksBar(compact: true)));
+    expect(find.text(TeamInfo.name), findsNothing);
+    expect(find.byType(FaIcon), findsNWidgets(3));
+    for (final button in tester.widgetList<IconButton>(
+      find.byType(IconButton),
+    )) {
+      expect(button.constraints?.minWidth, 48);
+      expect(button.constraints?.minHeight, 48);
+    }
+  });
 }
