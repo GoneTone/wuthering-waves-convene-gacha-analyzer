@@ -959,7 +959,7 @@
   "updateDownloadedMessage": "The update has been downloaded",
   "updateRestartAction": "Restart",
   "updateInAppUnavailable": "Can't update in the app right now. Please update from Google Play.",
-  "updateOpenPlayStore": "Google Play",
+  "updateOpenPlayStore": "Open Google Play",
   "updateButtonSkip": "Skip this version",
   "updateButtonLater": "Later",
   "updateCheckButton": "Check for updates",
