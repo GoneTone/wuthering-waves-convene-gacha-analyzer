@@ -3,6 +3,20 @@
   "localeNativeName": "Català",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "Traducció: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "Analitzador de convocacions de Wuthering Waves",
   "actionUpdate": "Actualitza",
   "actionCancel": "Cancel·la",
@@ -40,24 +54,94 @@
   "navSectionGacha": "Convene",
   "footerNotSynced": "Sense sincronitzar",
   "footerLastUpdated": "Última actualització: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "Ara mateix",
   "relativeSecondsAgo": "{count, plural, one{fa {count} segon} other{fa {count} segons}}",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count, plural, one{fa {count} minut} other{fa {count} minuts}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count, plural, one{fa {count} hora} other{fa {count} hores}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count, plural, one{fa {count} dia} other{fa {count} dies}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count, plural, one{fa {count} mes} other{fa {count} mesos}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count, plural, one{fa {count} any} other{fa {count} anys}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "Canvia de compte",
   "uidNotSynced": "Sense sincronitzar",
   "uidActiveSuffix": " (actiu)",
   "emptyNoSyncTitle": "Encara no s'han sincronitzat dades",
   "emptyNoSyncMessage": "Toca {icon} a la part superior dreta per començar",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "No hi ha registres en aquest bàner",
   "emptyNoFilterMatch": "Cap registre no coincideix amb el filtre actual",
   "emptyNoGachaRecords": "Encara no hi ha registres de convocacions",
   "statsTotal": "Total de tirades",
   "statsRankCount": "Nombre de {star}",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "{rate}% del total",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "Distribució per raresa",
   "statsItemTypeDistribution": "Distribució per tipus",
   "statsNoData": "No hi ha dades",
@@ -70,12 +154,40 @@
   "tableKind": "Tipus",
   "tableRarity": "Raresa",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "Total",
   "tableMainPity": "Pity",
   "tableSortButton": "Ordre: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "Ordre: predeterminat",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "Ordena per",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "Tirades des de l'últim {star}",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "Descendent",
   "sortDirectionAsc": "Ascendent",
   "sortHintClickToSort": "Fes clic per ordenar",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "Obre Wuthering Waves → Convene → Convene Records",
   "progressFallbackHint": "(La captura anterior ha caducat. Torna a obrir la pàgina Convene Records.)",
   "progressCaptureUnavailableHint": "No s'ha pogut iniciar l'assistent de captura (potser s'ha rebutjat la sol·licitud de permís de Windows). Ara només es detecta a partir del fitxer de registre del joc. Obre la pàgina Convene Records al joc.",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "No s'ha pogut iniciar l'assistent de captura (potser s'ha rebutjat la sol·licitud de permís de Windows) i no s'ha trobat la carpeta del joc. Prem «Tria la carpeta del joc» a sota per definir-la manualment, o cancel·la, torna a prémer «Actualitza» i tria «Sí» a la sol·licitud de permís.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "Has obert Convene Records però no passa res?",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "No s'ha detectat l'historial de convocacions",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "No s'ha trobat la carpeta del joc Wuthering Waves. Quan la triïs, aquesta eina també podrà obtenir l'URL de l'historial de convocacions des del fitxer de registre del joc.",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "Carpeta del joc en ús: {path}. Si aquest camí és incorrecte (per exemple, si tens més d'una còpia del joc instal·lada), prem «Torna a triar».",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "S'ha desat la carpeta del joc. Torna al joc i obre Convene Records una altra vegada.",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "No s'ha trobat cap fitxer de registre del joc en aquesta carpeta. Tria la carpeta «Wuthering Waves Game».",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "Tria la carpeta del joc",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "Torna a triar",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "S'està obtenint: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "Bàner {index} / {total}, nous: {count}",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "{count, plural, one{S'ha afegit {count} registre nou} other{S'han afegit {count} registres nous}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, one{S'ha baixat {count} imatge d'objecte} other{S'han baixat {count} imatges d'objectes}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ Error parcial: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, one{S'ha importat {accounts} compte} other{S'han importat {accounts} comptes}}: nous: {added}, ja existents: {duplicate}",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ Error parcial d'importació: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "S'estan baixant les imatges dels objectes {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "S'estan obtenint les dades dels objectes {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "Tot i tornar a capturar, no s'han pogut obtenir els registres. És possible que el servidor no estigui disponible temporalment. Torna-ho a provar més tard.",
   "errorNoRecords": "Aquest compte encara no té registres de convocacions",
   "errorNetwork": "Ha fallat la connexió de xarxa. Comprova la connexió i torna-ho a provar.",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "Resum de convocacions",
   "pageBannerRecordList": "Llista de registres",
   "rarityOverviewTitle": "Resum de {star}",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "Configuració",
   "settingsAppearance": "Aparença",
   "settingsThemeSystem": "Segons el sistema",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "Converteix ara l'idioma de les dades",
   "settingsDataLanguageUnifying": "S'està convertint...",
   "settingsDataLanguageUnifyDone": "Convertits: {converted}, ID recuperats: {backfilled}, no convertibles: {unresolved}.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "Ha fallat la conversió; les dades no han canviat. Comprova la connexió i torna-ho a provar.",
   "settingsDataManagement": "Gestió de dades",
   "settingsGameDir": "Carpeta del joc",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "Detectada automàticament: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "Definida manualment: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "No s'ha trobat la carpeta del joc",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "Esborra",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "Sincronització al núvol",
   "cloudSyncIntro": "Vincula el teu compte de Google per fer còpies de seguretat automàtiques dels registres de convocacions a Google Drive i mantenir diversos dispositius sincronitzats.",
   "cloudSyncUnconfigured": "Aquesta compilació no té credencials de Google OAuth configurades; la sincronització al núvol no està disponible.",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "S'ha obert el navegador. Completa l'autorització al navegador...",
   "cloudSyncAwaitingConsentAndroid": "Completa l'autorització a la finestra de Google...",
   "cloudSyncLinkedAs": "Vinculat: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "Sincronització automàtica",
   "cloudSyncAutoToggleHint": "Es sincronitza automàticament en obrir l'aplicació i després de canvis a les dades; si està desactivada, pots continuar sincronitzant manualment.",
   "cloudSyncNow": "Sincronitza ara",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "Desvinculació",
   "cloudSyncUnlinkConfirmBody": "La sincronització s'aturarà. Es conserven tant les dades locals com la còpia de seguretat al núvol.",
   "cloudSyncLastSynced": "Última sincronització: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "Encara no s'ha sincronitzat",
   "cloudSyncErrorNetwork": "Ha fallat la sincronització: problema de xarxa. Es tornarà a provar automàticament.",
   "cloudSyncErrorBusy": "Sincronització ajornada: hi ha una actualització o importació en curs. Es tornarà a provar automàticament.",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "Amaga l'UID a la interfície",
   "settingsMaskUidInUiHint": "Si està activat, els UID de la interfície i de la llista de comptes mostren els 3 primers dígits i amaguen la resta (p. ex. 123•••••). Útil per fer streaming o compartir la pantalla. No afecta les imatges per compartir, els fitxers exportats ni el diàleg de confirmació de supressió.",
   "settingsAdPrivacyOptions": "Opcions de privadesa dels anuncis",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "Canvia si consents a veure anuncis personalitzats.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "Quant a",
   "settingsOtherGamesTitle": "Versions per a altres jocs",
   "settingsOtherGamesGenshin": "Genshin Impact",
   "settingsOtherGamesFuture": "En el futur potser s'admetran més jocs...",
   "settingsAboutVersion": "Versió {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "Col·laboradors",
   "contributorsSubtitle": "Moltes gràcies a tots els col·laboradors que han contribuït al desenvolupament d'aquest programari!",
   "contributorsProjectLeader": "Moderador del projecte",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "Llicència del projecte",
   "contributorsOpenSourceLicenses": "Llicències de codi obert",
   "pityRank": "Pity de {star}",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "{n, plural, one{{n} tirada fins a la garantia} other{{n} tirades fins a la garantia}}",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "Gairebé garantit! {n, plural, one{Queda {n} tirada} other{Queden {n} tirades}}",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "Garantit aviat",
   "pityNoMainRarity": "Encara cap {star}",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "Mitjana: {n} tirades",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "No hi ha registres de {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n, plural, one{{n} tirada} other{{n} tirades}}",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "Amb sort",
   "luckTierAverage": "Normal",
   "luckTierUnlucky": "Sense sort",
   "timelineNowLabel": "Ara",
   "timelineNowPulls": "{n, plural, one{{n} tirada} other{{n} tirades}}",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "{n, plural, one{{n} tirada des de l'últim {star}} other{{n} tirades des de l'últim {star}}}",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "{n, plural, one{{n} tirada des de l'últim {star} entre bàners} other{{n} tirades des de l'últim {star} entre bàners}}",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{month} / {year}",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "Desplaça a l'esquerra",
   "timelineScrollRight": "Desplaça a la dreta",
   "timelineLoadMore": "{n, plural, =1{Carrega'n més (en queda 1)} other{Carrega'n més (en queden {n})}}",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "Totes les rareses",
   "filterRarityRankOnly": "Només {star}",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "Tots els tipus",
   "filterSearchHint": "Cerca per nom...",
   "filterClear": "Esborra els filtres",
@@ -210,35 +624,150 @@
   "pagerLast": "Última",
   "pagerJumpTitle": "Ves a la pàgina",
   "pagerJumpLabel": "Pàgina ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "Pàgina actual: {page} · Registres: {total}",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "Ves-hi",
   "pagerJumpInvalid": "Introdueix una pàgina entre {min} i {max}",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "Esborra les dades del compte actual",
   "settingsClearAll": "Esborra totes les dades",
   "settingsRefetchItemImagesTitle": "Força la nova baixada de les imatges dels objectes",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "Encara no hi ha registres de convocacions; no hi ha res per tornar a baixar",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "Força la nova baixada de les imatges dels objectes",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "S'esborrarà tota la memòria cau local d'imatges dels objectes i es tornaran a baixar les icones dels personatges. Les imatges de detall es baixaran quan les necessitis, la propera vegada que obris el detall d'un objecte. Segons el nombre d'objectes, això pot consumir uns minuts i dades.",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "Comença a baixar",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "Dades dels objectes",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "Torna a obtenir els detalls més recents de tots els objectes (descripció, llista d'imatges, etc.) i conserva les imatges ja baixades; les imatges noves es baixen quan obres el detall de l'objecte.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "Actualitza les dades dels objectes",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "Encara no hi ha registres de convocacions; no hi ha res per actualitzar",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "Vols actualitzar les dades dels objectes?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "Es tornaran a obtenir els detalls de tots els objectes i es conservaran les imatges ja baixades; les imatges noves es baixen quan obres el detall. Vols actualitzar-les ara?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "Comença a actualitzar",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, one{S'han actualitzat les dades de {count} objecte} other{S'han actualitzat les dades de {count} objectes}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, one{S'ha baixat {count} imatge d'objecte} other{S'han baixat {count} imatges d'objectes}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, one{S'han netejat les dades d'idiomes obsolets de {count} objecte} other{S'han netejat les dades d'idiomes obsolets de {count} objectes}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "Memòria cau d'imatges",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "Total",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "Icones",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "Imatges de detall",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "S'està calculant...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "No s'ha pogut llegir la mida de la memòria cau",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "Esborra les imatges de detall",
   "confirmClearGalleryCacheTitle": "Vols esborrar les imatges de detall?",
   "confirmClearGalleryCacheBody": "S'eliminaran uns {size} d'imatges de detall dels objectes; es conserva la memòria cau d'icones. Es tornaran a baixar la propera vegada que obris el detall d'un objecte.",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "Esborra",
   "settingsImageCacheClearGalleryFailed": "No s'han pogut esborrar les imatges de detall",
   "settingsExportData": "Exporta les dades",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "Mostra l'UID complet a la imatge",
   "shareImageShowFullUidHint": "Si està desactivat, només es mostren els 3 primers dígits i la resta s'amaga amb •",
   "shareImageUpdatedAt": "Actualitzat: {time}",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "S'ha copiat al porta-retalls",
   "shareImageSaved": "S'ha desat: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "No s'ha pogut copiar al porta-retalls",
   "shareImageFailed": "No s'ha pogut generar la imatge per compartir",
   "shareImageGenerating": "S'està generant la imatge...",
   "exportDialogSuccessTitle": "Exportació completada",
   "exportDialogFailedTitle": "Error d'exportació",
   "settingsExportFailed": "Ha fallat l'exportació: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "S'ha exportat a {path}",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "Confirmació d'importació",
   "settingsImportConfirmIntro": "{accounts, plural, one{S'importarà {accounts} compte} other{S'importaran {accounts} comptes}} (registres en total: {records}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "Els comptes següents es combinaran amb les dades locals; no s'eliminarà cap registre existent:",
   "settingsImportConfirmNoConflict": "No hi ha conflictes de dades.",
   "settingsImportConfirmPreserveFooter": "Es conservaran els altres comptes existents ({uids}).",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "El format del fitxer no és vàlid o el fitxer està malmès",
   "importReasonIncompatibleVersion": "La versió de les dades d'aquesta còpia de seguretat no és compatible amb l'aplicació actual i no es pot importar",
   "importReasonUnreadable": "No s'ha pogut llegir el fitxer",
   "importReasonForeignApp": "Aquest fitxer no l'ha exportat aquesta aplicació",
   "importReasonNotPlatformFile": "Aquest fitxer no és una exportació vàlida de {platform}",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "No s'ha pogut escriure el fitxer. Comprova la ubicació i els permisos",
   "settingsImportFailed": "Ha fallat la importació: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "Tria els comptes que vols exportar",
   "settingsImportSelectTitle": "Tria els comptes que vols importar",
   "settingsImportMergeBadge": "Combinació",
   "accountsPickerSelectAll": "Selecciona-ho tot",
   "accountRecordCount": "{n, plural, one{{n} registre} other{{n} registres}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Confirmació",
   "confirmClearActiveBody": "S'eliminaran permanentment tots els registres de convocacions de l'UID {uid}. Escriu l'UID per confirmar-ho:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "S'eliminaran permanentment els registres de convocacions de tots els comptes. Escriu DELETE per confirmar-ho:",
   "confirmDelete": "Suprimeix",
   "confirmImport": "Importa",
@@ -290,6 +892,13 @@
   "confirmContinue": "Continua",
   "accountListEmpty": "Encara no hi ha comptes",
   "accountLastUpdated": "Última actualització: {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "Actiu",
   "accountSetActive": "Defineix com a actiu",
   "accountRemove": "Elimina",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "Arrossega per reordenar",
   "loadingBootstrap": "S'està carregant...",
   "timelineTopRarityTitle": "Cronologia de {star} ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "Recompte de la raresa més alta per bàner",
   "bannerTopRarityPullsSinceLast": "{n, plural, one{{n} tirada des de l'últim {star}} other{{n} tirades des de l'últim {star}}}",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "Nova versió disponible: {version}",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "Publicada el {date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "Baixa",
   "updateButtonUpdate": "Actualitza",
   "updateNotesUnavailable": "Les notes de la versió no estan disponibles ara mateix. Consulta Google Play per a més detalls.",
   "updateDownloadingMessage": "S'està baixant l'actualització...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "S'ha baixat l'actualització",
   "updateRestartAction": "Reinicia",
   "updateInAppUnavailable": "Ara mateix no es pot actualitzar des de l'aplicació. Actualitza-la des de Google Play.",
@@ -320,134 +966,532 @@
   "updateChecking": "S'està comprovant...",
   "updateAlreadyLatest": "Tens la versió més recent",
   "updateCheckFailed": "Ha fallat la comprovació d'actualitzacions: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "No s'ha pogut connectar. Comprova la xarxa",
   "updateErrorTimeout": "S'ha esgotat el temps de la sol·licitud",
   "updateErrorRateLimited": "S'ha esgotat la quota de l'API de GitHub. Torna-ho a provar més tard",
   "updateErrorServer": "Error del servidor (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "Format de resposta inesperat",
   "updateErrorPlay": "No s'ha pogut accedir a Google Play, o aquesta còpia no s'ha instal·lat des de Google Play",
   "currentReleaseTitle": "Notes de la versió actual",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "No s'han trobat les notes de la versió {version}",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "Mostra a GitHub",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "Ves a la pàgina de GitHub Releases",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "Mostra les notes de la versió",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "No s'ha pogut esborrar la memòria cau d'imatges dels objectes: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "Registres de depuració",
+  "@settingsLogs": {},
   "settingsLogsHint": "Si tens problemes, exporta els registres per ajudar els desenvolupadors a investigar-los.",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "Informa d'un problema",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "Exporta els registres",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "Obre la carpeta de registres",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "Esborra tots els registres",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "S'han exportat els registres: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "Ha fallat l'exportació dels registres: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "S'eliminaran permanentment tots els fitxers de logs/. Exporta'ls primer si els necessites per informar d'errors. Escriu CLEAR per confirmar-ho.",
   "galleryIllustrationLabel": "Vestit",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "Convocació",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "Icona",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "Anterior",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "Següent",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "Desplaça avall",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "No s'ha pogut carregar la imatge",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "Torna-ho a provar",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "Copia la imatge",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "Desa la imatge",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "Torna a baixar la imatge",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "S'ha desat la imatge a {path}",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "No s'ha pogut desar la imatge",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "S'ha copiat la imatge al porta-retalls",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "No s'ha pogut copiar la imatge",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "Tanca la previsualització de la imatge",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "Amplia",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "Redueix",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "Mostra a encore.moe",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "Introdueix manualment l'URL de l'historial de convocacions",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "Introducció manual de l'URL de l'historial de convocacions",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "Enganxa l'URL de l'historial de convocacions o qualsevol text que el contingui.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "Enganxa l'URL...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "Enganxa del porta-retalls",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "Tria el fitxer Client.log",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "Com puc obtenir l'URL?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "No s'ha trobat cap URL de l'historial de convocacions",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "Aquest fitxer no conté cap URL de l'historial de convocacions. Obre primer Convene Records al joc i després torna a triar el fitxer.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "Opció 1: Mode d'avió\n1. Al joc, ves a la pantalla Convene\n2. Activa el mode d'avió i toca Convene Records\n3. La pàgina no es carrega: mantén premut → Selecciona-ho tot → Copia\n4. Desactiva el mode d'avió i enganxa aquí tot el text\n\nOpció 2: Ja tens un fitxer Client.log\nToca «Tria el fitxer Client.log» i l'aplicació hi trobarà l'URL.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "Tria el fitxer Client.log\n1. Obre Convene Records al joc\n2. Toca «Tria el fitxer Client.log». Es troba a:\nCarpeta del joc\\Client\\Saved\\Logs\\Client.log\n\nURL d'una altra eina\nPots enganxar directament un URL obtingut amb eines com WuWa Tracker.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "L'URL conté les credencials del teu compte. No el comparteixis públicament. Caduca al cap d'un temps.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "D'acord",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "S'està esperant que obris la pàgina Convene Records al joc...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "S'està preparant la lectura del fitxer de registre del joc...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "No es pot obtenir automàticament l'URL de l'historial de convocacions",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "La lectura del fitxer de registre del joc encara no està configurada. Després d'una configuració única, cada actualització el llegirà automàticament.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "La depuració sense fil només funciona amb Wi‑Fi. Connecta't a una xarxa Wi‑Fi i torna; l'aplicació continuarà automàticament. També pots introduir l'URL manualment.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "S'ha detectat root, però aquesta aplicació no té accés root. Per llegir amb root, permet aquesta aplicació al gestor de root (per exemple, la llista de Superusuari de Magisk) i torna; l'aplicació ho tornarà a provar automàticament.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "No s'ha pogut connectar a la depuració sense fil. Potser la vinculació ha caducat; torna a vincular el dispositiu.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "El dispositiu no permet que aquesta aplicació activi la depuració sense fil. Activa-la a la pàgina Depuració sense fil i torna; l'aplicació continuarà automàticament.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "Aquesta xarxa Wi‑Fi encara no està permesa per a la depuració sense fil. Toca Permet a l'avís del sistema (marca «Permet sempre en aquesta xarxa» perquè no t'ho torni a preguntar) i l'aplicació continuarà automàticament. Si has tancat l'avís, toca Torna-ho a provar.",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "Cal el permís d'emmagatzematge per llegir el fitxer de registre del joc.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "Aquest dispositiu no pot llegir automàticament el fitxer de registre del joc. Introdueix l'URL manualment.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "Obre Wuthering Waves",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "Obre Depuració sense fil",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "Concedeix el permís",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "S'ha perdut la connexió de depuració sense fil; s'està tornant a connectar... Si no es recupera, comprova la Wi‑Fi o introdueix l'URL manualment.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "La depuració sense fil continua activada. Pots desactivar-la a la configuració del sistema.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "Configura",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "Torna a vincular",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "Lectura del fitxer de registre del joc",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "Per què cal?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "Android no permet que les aplicacions llegeixin directament els fitxers d'altres aplicacions. Aquesta aplicació fa servir la funció integrada Depuració sense fil per llegir el fitxer de registre de Wuthering Waves i obtenir-ne l'URL de l'historial de convocacions.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "Què fa aquesta aplicació",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• Només llegeix el fitxer de registre de Wuthering Waves\n• Es desconnecta just després de llegir-lo i, si aquesta aplicació havia activat la depuració sense fil, la desactiva\n• Es concedeix permís per activar i desactivar la depuració sense fil, perquè no l'hagis de tornar a configurar\n• Pots retirar-ho en qualsevol moment a Configuració",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "Requisits",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 o posterior, Wi‑Fi i notificacions permeses",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "Comença la configuració",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "Introdueix l'URL manualment",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "Vincula la depuració sense fil",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. Activa les opcions per a desenvolupadors",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. Obre la pàgina d'informació a la Configuració del sistema (per exemple, «Informació del telèfon» o «Informació de la tauleta»)\n2. Cerca «Número de compilació» i toca'l 7 vegades\n3. Quan vegis «Ara ets desenvolupador», torna a aquesta aplicació",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "Obre la pàgina d'informació",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. Les opcions per a desenvolupadors estan activades",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. Permet les notificacions",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "Introduiràs el codi de vinculació en una notificació, així que permet que aquesta aplicació mostri notificacions.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "Permet les notificacions",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "Obre la configuració de notificacions",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. Notificacions permeses",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. Vincula",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. Toca el botó de sota per obrir Depuració sense fil\n2. Activa «Utilitza la depuració sense fil» i toca «Vincula el dispositiu amb un codi de vinculació»\n3. Llisca cap avall des de la part superior de la pantalla i, a la notificació d'aquesta aplicació, introdueix el codi de vinculació de 6 dígits que es mostra a la pantalla de vinculació de Depuració sense fil",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "S'està esperant que introdueixis el codi de vinculació a la notificació...\nIntrodueix-lo mentre la pantalla de vinculació de Depuració sense fil encara estigui oberta.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "Torna a obrir Depuració sense fil",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "S'està vinculant...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "Vinculat; falta un pas",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "El dispositiu té una restricció de seguretat addicional. Activa una opció més perquè aquesta aplicació pugui activar i desactivar automàticament la depuració sense fil.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "Com s'activa",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. Obre les opcions per a desenvolupadors\n2. Cerca l'interruptor relacionat amb la seguretat de la depuració per USB o la supervisió de permisos i activa'l, per exemple:\n• Xiaomi: «Depuració per USB (Configuració de seguretat)»\n• OPPO / realme: «Desactiva la supervisió de permisos»\n3. Comprova que la depuració sense fil estigui activada, torna i toca Torna-ho a provar",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "Obre les opcions per a desenvolupadors",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "Torna-ho a provar",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "Omet (activa tu mateix la depuració sense fil a cada actualització)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "Tot a punt",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "A partir d'ara, Actualitza llegeix el registre automàticament. No cal cap més configuració.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "Quan toquis Actualitza, activa la depuració sense fil quan se't demani.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "S'està tornant i s'inicia l'actualització...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "Accés al fitxer de registre del joc",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "Mètode",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "Accés directe",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "Depuració sense fil",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "Sense configurar",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "Vinculació",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "Vinculat",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "Vinculat (activa manualment la depuració sense fil)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "Torna a provar el permís",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "Configura",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "Elimina la vinculació",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "Vols eliminar la vinculació?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "S'esborrarà la clau de vinculació d'aquesta aplicació i es retirarà el permís d'aquesta aplicació per activar o desactivar la depuració sense fil. Hauràs de tornar a vincular-lo per fer servir la depuració sense fil més endavant.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "S'ha eliminat la vinculació",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "S'ha esborrat la clau de vinculació d'aquesta aplicació i s'ha retirat el permís per activar i desactivar la depuració sense fil.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "S'ha esborrat la clau de vinculació",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "S'ha esborrat la clau de vinculació d'aquesta aplicació, però aquesta vegada no s'ha pogut connectar a la depuració sense fil, així que el permís per activar-la i desactivar-la no s'ha retirat.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "Aquesta aplicació no fa servir aquest permís mentre no està vinculada. Per retirar-lo del tot, connecta't a una xarxa Wi‑Fi, torna a vincular-la i desvincula-la una altra vegada.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "La llista Depuració sense fil → Dispositius vinculats del sistema continuarà mostrant «{name}». Ja no es pot connectar, així que el pots deixar; per eliminar-lo, toca'l i esborra'l.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "La llista Depuració sense fil → Dispositius vinculats del sistema també mostra «{name}»; toca'l per esborrar-lo.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "S'ha obtingut l'URL de l'historial de convocacions. L'obtenció de l'historial de convocacions començarà quan tornis a aquesta aplicació.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "Comparteix",
   "shareFailed": "No s'ha pogut compartir",
   "dialogSaveAsTitle": "Desa com a",
@@ -456,10 +1500,37 @@
   "actionSave": "Desa",
   "settingsLogsShare": "Comparteix els registres",
   "logUnavailableGameNotInstalled": "No s'ha trobat la versió global de Wuthering Waves en aquest dispositiu. Un cop instal·lada, torna aquí i es detectarà automàticament.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "Torna a comprovar",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "Hi ha més d'una versió de Wuthering Waves instal·lada en aquest dispositiu. Quina vols llegir?",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "Versió de Google Play",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "Versió de Galaxy Store",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "Versió de Wuthering Waves: {name}",
-  "actionSwitchGameVersion": "Canvia de versió"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "Canvia de versió",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }

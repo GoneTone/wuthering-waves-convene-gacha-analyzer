@@ -3,6 +3,20 @@
   "localeNativeName": "Русский",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "Перевод: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "Анализатор созывов Wuthering Waves",
   "actionUpdate": "Обновить",
   "actionCancel": "Отмена",
@@ -40,24 +54,94 @@
   "navSectionGacha": "Convene",
   "footerNotSynced": "Не синхронизировано",
   "footerLastUpdated": "Обновлено: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "Только что",
   "relativeSecondsAgo": "{count, plural, one{{count} секунду назад} few{{count} секунды назад} many{{count} секунд назад} other{{count} секунды назад}}",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count, plural, one{{count} минуту назад} few{{count} минуты назад} many{{count} минут назад} other{{count} минуты назад}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count, plural, one{{count} час назад} few{{count} часа назад} many{{count} часов назад} other{{count} часа назад}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count, plural, one{{count} день назад} few{{count} дня назад} many{{count} дней назад} other{{count} дня назад}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count, plural, one{{count} месяц назад} few{{count} месяца назад} many{{count} месяцев назад} other{{count} месяца назад}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count, plural, one{{count} год назад} few{{count} года назад} many{{count} лет назад} other{{count} года назад}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "Сменить аккаунт",
   "uidNotSynced": "Не синхронизировано",
   "uidActiveSuffix": " (активный)",
   "emptyNoSyncTitle": "Данные ещё не загружены",
   "emptyNoSyncMessage": "Нажмите {icon} в правом верхнем углу, чтобы начать",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "В этом баннере нет записей",
   "emptyNoFilterMatch": "Нет записей, подходящих под фильтр",
   "emptyNoGachaRecords": "Записей созыва пока нет",
   "statsTotal": "Всего круток",
   "statsRankCount": "Всего {star}",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "{rate}% от общего числа",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "Распределение по редкости",
   "statsItemTypeDistribution": "Распределение по типу",
   "statsNoData": "Нет данных",
@@ -70,12 +154,40 @@
   "tableKind": "Тип",
   "tableRarity": "Редкость",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "Всего",
   "tableMainPity": "Гарант",
   "tableSortButton": "Сортировка: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "Сортировка: по умолчанию",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "Сортировать по",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "Круток с последнего {star}",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "По убыванию",
   "sortDirectionAsc": "По возрастанию",
   "sortHintClickToSort": "Нажмите, чтобы отсортировать",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "Откройте Wuthering Waves → Convene → Convene Records",
   "progressFallbackHint": "(Предыдущие данные перехвата устарели. Откройте страницу Convene Records ещё раз.)",
   "progressCaptureUnavailableHint": "Не удалось запустить помощник перехвата (возможно, запрос разрешений Windows был отклонён). Сейчас поиск идёт только по лог-файлу игры. Откройте страницу Convene Records в игре.",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "Не удалось запустить помощник перехвата (возможно, запрос разрешений Windows был отклонён), а папка игры не найдена. Нажмите «Выбрать папку игры» ниже, чтобы указать её вручную, или отмените, снова нажмите «Обновить» и выберите «Да» в запросе разрешений.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "Открыли страницу Convene Records, но ничего не происходит?",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "История созывов не обнаружена",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "Не удалось найти папку игры Wuthering Waves. Если указать её, приложение сможет получать URL истории созывов и из лог-файла игры.",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "Используется папка игры: {path}. Если путь неверный (например, установлено несколько копий игры), нажмите «Выбрать заново».",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "Папка игры сохранена. Вернитесь в игру и ещё раз откройте страницу Convene Records.",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "В этой папке не найден лог-файл игры. Выберите папку «Wuthering Waves Game».",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "Выбрать папку игры",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "Выбрать заново",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "Загрузка: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "Баннер {index} из {total}, новых: {count}",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "{count, plural, one{Добавлена {count} новая запись} few{Добавлено {count} новые записи} many{Добавлено {count} новых записей} other{Добавлено {count} новой записи}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, one{Загружено {count} изображение предмета} few{Загружено {count} изображения предметов} many{Загружено {count} изображений предметов} other{Загружено {count} изображения предметов}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ Частичная ошибка: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, one{Импортирован {accounts} аккаунт} few{Импортировано {accounts} аккаунта} many{Импортировано {accounts} аккаунтов} other{Импортировано {accounts} аккаунта}}: новых {added}, уже было {duplicate}",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ Частичная ошибка импорта: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "Загрузка изображений предметов {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "Загрузка данных предметов {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "Не удалось получить записи даже после повторного перехвата. Возможно, сервер временно недоступен — попробуйте позже.",
   "errorNoRecords": "У этого аккаунта пока нет записей созыва",
   "errorNetwork": "Ошибка сетевого подключения. Проверьте соединение и попробуйте снова.",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "Обзор созывов",
   "pageBannerRecordList": "Список записей",
   "rarityOverviewTitle": "Обзор {star}",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "Настройки",
   "settingsAppearance": "Оформление",
   "settingsThemeSystem": "Как в системе",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "Преобразовать язык данных сейчас",
   "settingsDataLanguageUnifying": "Преобразование...",
   "settingsDataLanguageUnifyDone": "Преобразовано: {converted}, восстановлено ID: {backfilled}, не удалось преобразовать: {unresolved}.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "Не удалось преобразовать, данные не изменены. Проверьте подключение и попробуйте снова.",
   "settingsDataManagement": "Управление данными",
   "settingsGameDir": "Папка игры",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "Найдена автоматически: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "Указана вручную: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "Папка игры не найдена",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "Сбросить",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "Облачная синхронизация",
   "cloudSyncIntro": "Привяжите аккаунт Google, чтобы записи созывов автоматически сохранялись на Google Drive и синхронизировались между устройствами.",
   "cloudSyncUnconfigured": "В этой сборке не настроены учётные данные Google OAuth, облачная синхронизация недоступна.",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "Браузер открыт. Завершите авторизацию в браузере...",
   "cloudSyncAwaitingConsentAndroid": "Завершите авторизацию в окне Google...",
   "cloudSyncLinkedAs": "Привязан: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "Автосинхронизация",
   "cloudSyncAutoToggleHint": "Синхронизация при запуске приложения и после изменения данных. Если выключено, можно синхронизировать вручную.",
   "cloudSyncNow": "Синхронизировать",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "Отвязать",
   "cloudSyncUnlinkConfirmBody": "Синхронизация прекратится. Локальные данные и облачная копия сохранятся.",
   "cloudSyncLastSynced": "Последняя синхронизация: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "Ещё не синхронизировано",
   "cloudSyncErrorNetwork": "Ошибка синхронизации: проблема с сетью. Повторная попытка будет выполнена автоматически.",
   "cloudSyncErrorBusy": "Синхронизация отложена: идёт обновление или импорт. Повторная попытка будет выполнена автоматически.",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "Скрывать UID в интерфейсе",
   "settingsMaskUidInUiHint": "Если включено, UID в интерфейсе и списке аккаунтов показывается только первыми 3 цифрами, остальные скрыты (например, 123•••••). Удобно для стримов и демонстрации экрана. Не влияет на изображения для публикации, экспортированные файлы и окно подтверждения удаления.",
   "settingsAdPrivacyOptions": "Параметры конфиденциальности рекламы",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "Измените согласие на показ персонализированной рекламы.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "О приложении",
   "settingsOtherGamesTitle": "Версии для других игр",
   "settingsOtherGamesGenshin": "Genshin Impact",
   "settingsOtherGamesFuture": "Возможно, в будущем появятся и другие игры...",
   "settingsAboutVersion": "Версия {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "Участники",
   "contributorsSubtitle": "Особая благодарность всем, кто помогал в разработке этого приложения!",
   "contributorsProjectLeader": "Руководитель проекта",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "Лицензия проекта",
   "contributorsOpenSourceLicenses": "Лицензии открытого ПО",
   "pityRank": "Гарант {star}",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "{n, plural, one{До гаранта {n} крутка} few{До гаранта {n} крутки} many{До гаранта {n} круток} other{До гаранта {n} крутки}}",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "{n, plural, one{Гарант близко! Осталась {n} крутка} few{Гарант близко! Осталось {n} крутки} many{Гарант близко! Осталось {n} круток} other{Гарант близко! Осталось {n} крутки}}",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "Скоро гарант",
   "pityNoMainRarity": "{star} ещё не было",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "В среднем {n} крутки",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "Нет записей {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n, plural, one{{n} крутка} few{{n} крутки} many{{n} круток} other{{n} крутки}}",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "Удачно",
   "luckTierAverage": "Средне",
   "luckTierUnlucky": "Неудачно",
   "timelineNowLabel": "Сейчас",
   "timelineNowPulls": "{n, plural, one{{n} крутка} few{{n} крутки} many{{n} круток} other{{n} крутки}}",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "{n, plural, one{{n} крутка с последнего {star}} few{{n} крутки с последнего {star}} many{{n} круток с последнего {star}} other{{n} крутки с последнего {star}}}",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "{n, plural, one{{n} крутка с последнего {star} во всех баннерах} few{{n} крутки с последнего {star} во всех баннерах} many{{n} круток с последнего {star} во всех баннерах} other{{n} крутки с последнего {star} во всех баннерах}}",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{month} / {year}",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "Прокрутить влево",
   "timelineScrollRight": "Прокрутить вправо",
   "timelineLoadMore": "Показать ещё (осталось {n})",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "Любая редкость",
   "filterRarityRankOnly": "Только {star}",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "Все типы",
   "filterSearchHint": "Поиск по названию...",
   "filterClear": "Сбросить фильтры",
@@ -210,35 +624,150 @@
   "pagerLast": "Последняя",
   "pagerJumpTitle": "Перейти к странице",
   "pagerJumpLabel": "Страница ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "Сейчас страница {page} · записей: {total}",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "Перейти",
   "pagerJumpInvalid": "Введите номер страницы от {min} до {max}",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "Удалить данные текущего аккаунта",
   "settingsClearAll": "Удалить все данные",
   "settingsRefetchItemImagesTitle": "Принудительно перезагрузить изображения предметов",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "Записей созыва пока нет, перезагружать нечего",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "Принудительно перезагрузить изображения предметов",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "Весь локальный кэш изображений предметов будет удалён, а иконки персонажей загрузятся заново. Подробные изображения загрузятся при следующем открытии сведений о предмете. В зависимости от количества предметов это может занять несколько минут и потребовать трафика.",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "Начать перезагрузку",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "Данные предметов",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "Заново загрузить актуальные сведения обо всех предметах (описание, список изображений и т. д.), сохранив уже загруженные изображения. Новые изображения загрузятся при открытии сведений о предмете.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "Обновить данные предметов",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "Записей созыва пока нет, обновлять нечего",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "Обновить данные предметов?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "Сведения обо всех предметах будут загружены заново, уже загруженные изображения сохранятся. Новые изображения загрузятся при открытии сведений. Обновить сейчас?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "Начать обновление",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, one{Обновлены данные {count} предмета} few{Обновлены данные {count} предметов} many{Обновлены данные {count} предметов} other{Обновлены данные {count} предмета}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, one{Загружено {count} изображение предмета} few{Загружено {count} изображения предметов} many{Загружено {count} изображений предметов} other{Загружено {count} изображения предметов}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, one{Удалены устаревшие языковые данные {count} предмета} few{Удалены устаревшие языковые данные {count} предметов} many{Удалены устаревшие языковые данные {count} предметов} other{Удалены устаревшие языковые данные {count} предмета}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "Кэш изображений",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "Всего",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "Иконки",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "Подробные изображения",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "Подсчёт...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "Не удалось определить размер кэша",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "Очистить подробные изображения",
   "confirmClearGalleryCacheTitle": "Очистить подробные изображения?",
   "confirmClearGalleryCacheBody": "Будет удалено около {size} подробных изображений предметов, кэш иконок сохранится. Изображения загрузятся заново при следующем открытии сведений о предмете.",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "Очистить",
   "settingsImageCacheClearGalleryFailed": "Не удалось очистить подробные изображения",
   "settingsExportData": "Экспорт данных",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "Показывать полный UID на изображении",
   "shareImageShowFullUidHint": "Если выключено, видны только первые 3 цифры, остальные скрыты символом •",
   "shareImageUpdatedAt": "Обновлено {time}",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "Скопировано в буфер обмена",
   "shareImageSaved": "Сохранено: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "Не удалось скопировать в буфер обмена",
   "shareImageFailed": "Не удалось создать изображение",
   "shareImageGenerating": "Создание изображения...",
   "exportDialogSuccessTitle": "Экспорт выполнен",
   "exportDialogFailedTitle": "Ошибка экспорта",
   "settingsExportFailed": "Ошибка экспорта: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "Экспортировано в {path}",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "Подтверждение импорта",
   "settingsImportConfirmIntro": "Будет импортировано аккаунтов: {accounts} (всего записей: {records}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "Следующие аккаунты будут объединены с локальными данными, существующие записи не удалятся:",
   "settingsImportConfirmNoConflict": "Конфликтов данных нет.",
   "settingsImportConfirmPreserveFooter": "Остальные аккаунты ({uids}) сохранятся.",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "Неверный формат файла или файл повреждён",
   "importReasonIncompatibleVersion": "Версия данных в этой резервной копии несовместима с текущим приложением, импорт невозможен",
   "importReasonUnreadable": "Не удалось прочитать файл",
   "importReasonForeignApp": "Этот файл экспортирован не этим приложением",
   "importReasonNotPlatformFile": "Этот файл не является корректным экспортом {platform}",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "Не удалось записать файл. Проверьте место сохранения и права доступа",
   "settingsImportFailed": "Ошибка импорта: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "Выберите аккаунты для экспорта",
   "settingsImportSelectTitle": "Выберите аккаунты для импорта",
   "settingsImportMergeBadge": "Объединение",
   "accountsPickerSelectAll": "Выбрать все",
   "accountRecordCount": "{n, plural, one{{n} запись} few{{n} записи} many{{n} записей} other{{n} записи}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Подтверждение",
   "confirmClearActiveBody": "Все записи созыва для UID {uid} будут безвозвратно удалены. Для подтверждения введите UID:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "Записи созыва всех аккаунтов будут безвозвратно удалены. Для подтверждения введите DELETE:",
   "confirmDelete": "Удалить",
   "confirmImport": "Импортировать",
@@ -290,6 +892,13 @@
   "confirmContinue": "Продолжить",
   "accountListEmpty": "Аккаунтов пока нет",
   "accountLastUpdated": "Обновлено {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "Активный",
   "accountSetActive": "Сделать активным",
   "accountRemove": "Удалить",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "Перетащите, чтобы изменить порядок",
   "loadingBootstrap": "Загрузка...",
   "timelineTopRarityTitle": "Хронология {star} ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "Максимальная редкость по баннерам",
   "bannerTopRarityPullsSinceLast": "{n, plural, one{{n} крутка с последнего {star}} few{{n} крутки с последнего {star}} many{{n} круток с последнего {star}} other{{n} крутки с последнего {star}}}",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "Доступна новая версия {version}",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "Дата выпуска: {date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "Скачать",
   "updateButtonUpdate": "Обновить",
   "updateNotesUnavailable": "Список изменений сейчас недоступен. Подробности смотрите в Google Play.",
   "updateDownloadingMessage": "Загрузка обновления...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "Обновление загружено",
   "updateRestartAction": "Перезапустить",
   "updateInAppUnavailable": "Сейчас нельзя обновиться внутри приложения. Обновите его через Google Play.",
@@ -320,134 +966,532 @@
   "updateChecking": "Проверка...",
   "updateAlreadyLatest": "У вас последняя версия",
   "updateCheckFailed": "Не удалось проверить обновления: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "Не удалось подключиться. Проверьте сеть",
   "updateErrorTimeout": "Время ожидания истекло",
   "updateErrorRateLimited": "Лимит запросов GitHub API исчерпан, повторите попытку позже",
   "updateErrorServer": "Ошибка сервера (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "Неожиданный формат ответа",
   "updateErrorPlay": "Не удалось связаться с Google Play, или приложение установлено не из Google Play",
   "currentReleaseTitle": "Изменения в текущей версии",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "Список изменений для {version} не найден",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "Открыть на GitHub",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "Перейти к релизам на GitHub",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "Список изменений",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "Не удалось очистить кэш изображений предметов: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "Журналы отладки",
+  "@settingsLogs": {},
   "settingsLogsHint": "Если возникли проблемы, экспортируйте журналы, чтобы помочь разработчикам разобраться.",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "Сообщить о проблеме",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "Экспортировать журналы",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "Открыть папку журналов",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "Удалить все журналы",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "Журналы экспортированы: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "Ошибка экспорта журналов: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "Все файлы в папке logs/ будут безвозвратно удалены. Если они нужны для отчёта об ошибке, сначала экспортируйте их. Для подтверждения введите CLEAR.",
   "galleryIllustrationLabel": "Облик",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "Созыв",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "Иконка",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "Назад",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "Далее",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "Прокрутить вниз",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "Не удалось загрузить изображение",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "Повторить",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "Копировать изображение",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "Сохранить изображение",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "Загрузить изображение заново",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "Изображение сохранено в {path}",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "Не удалось сохранить изображение",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "Изображение скопировано в буфер обмена",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "Не удалось скопировать изображение",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "Закрыть просмотр изображения",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "Увеличить",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "Уменьшить",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "Открыть на encore.moe",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "Ввести URL истории созывов вручную",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "Ввод URL истории созывов вручную",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "Вставьте URL истории созывов или любой текст, который его содержит.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "Вставьте URL...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "Вставить из буфера обмена",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "Выбрать файл Client.log",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "Как получить URL?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "URL истории созывов не найден",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "В этом файле нет URL истории созывов. Сначала откройте страницу Convene Records в игре, затем выберите файл снова.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "Способ 1: режим полёта\n1. В игре откройте экран Convene\n2. Включите режим полёта и нажмите «Convene Records»\n3. Страница не загрузится: долгое нажатие → «Выбрать все» → «Копировать»\n4. Выключите режим полёта и вставьте весь текст сюда\n\nСпособ 2: у вас уже есть файл Client.log\nНажмите «Выбрать файл Client.log», и приложение само найдёт URL.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "Выбор файла Client.log\n1. Откройте страницу Convene Records в игре\n2. Нажмите «Выбрать файл Client.log». Он находится здесь:\nПапка игры\\Client\\Saved\\Logs\\Client.log\n\nURL из другого инструмента\nURL, полученный с помощью таких инструментов, как WuWa Tracker, можно вставить напрямую.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "URL содержит учётные данные вашего аккаунта. Не публикуйте его. Через некоторое время он перестаёт действовать.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "OK",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "Ожидание, пока вы откроете страницу Convene Records в игре...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "Подготовка к чтению лог-файла игры...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "Не удаётся автоматически получить URL истории созывов",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "Чтение лог-файла игры ещё не настроено. После однократной настройки он будет считываться автоматически при каждом обновлении.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "Отладка по Wi‑Fi работает только при подключении к Wi‑Fi. Подключитесь к Wi‑Fi и вернитесь — приложение продолжит автоматически. Также можно ввести URL вручную.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "Root обнаружен, но этому приложению не выдан root-доступ. Чтобы читать лог через root, разрешите приложение в менеджере root (например, в списке Superuser в Magisk) и вернитесь — приложение повторит попытку автоматически.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "Не удалось подключиться к отладке по Wi‑Fi. Возможно, сопряжение устарело — выполните его заново.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "Устройство не позволяет этому приложению включить отладку по Wi‑Fi. Включите её на странице «Отладка по Wi‑Fi» и вернитесь — приложение продолжит автоматически.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "Эта сеть Wi‑Fi ещё не разрешена для отладки по Wi‑Fi. Нажмите «Разрешить» в системном запросе (отметьте «Всегда разрешать в этой сети», чтобы он больше не появлялся), и приложение продолжит автоматически. Если вы закрыли запрос, нажмите «Повторить».",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "Для чтения лог-файла игры нужно разрешение на доступ к хранилищу.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "На этом устройстве нельзя автоматически прочитать лог-файл игры. Введите URL вручную.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "Открыть Wuthering Waves",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "Открыть отладку по Wi‑Fi",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "Выдать разрешение",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "Соединение с отладкой по Wi‑Fi потеряно, переподключение... Если оно не восстановится, проверьте Wi‑Fi или введите URL вручную.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "Отладка по Wi‑Fi всё ещё включена. Её можно отключить в настройках системы.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "Настроить",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "Выполнить сопряжение заново",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "Чтение лог-файла игры",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "Зачем это нужно?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "Android не позволяет приложениям напрямую читать файлы других приложений. Это приложение использует встроенную функцию «Отладка по Wi‑Fi», чтобы прочитать лог-файл Wuthering Waves и получить из него URL истории созывов.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "Что делает приложение",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• Читает только лог-файл Wuthering Waves\n• Сразу после чтения отключается, а отладку по Wi‑Fi выключает, если её включило это приложение\n• Выдаёт себе разрешение включать и выключать отладку по Wi‑Fi, чтобы не нужно было настраивать её снова\n• Это можно отменить в любой момент в настройках",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "Требования",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 или новее, Wi‑Fi, разрешённые уведомления",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "Начать настройку",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "Ввести URL вручную",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "Сопряжение для отладки по Wi‑Fi",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. Включите режим разработчика",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. Откройте в настройках системы раздел «О телефоне» (или «О планшете»)\n2. Найдите «Номер сборки» и нажмите на него 7 раз\n3. Когда появится сообщение «Вы стали разработчиком!», вернитесь в это приложение",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "Открыть «О телефоне»",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. Режим разработчика включён",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. Разрешите уведомления",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "Код сопряжения вводится в уведомлении, поэтому разрешите этому приложению показывать уведомления.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "Разрешить уведомления",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "Открыть настройки уведомлений",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. Уведомления разрешены",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. Сопряжение",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. Нажмите кнопку ниже, чтобы открыть «Отладку по Wi‑Fi»\n2. Включите «Использовать отладку по Wi‑Fi» и нажмите «Подключить устройство с помощью кода»\n3. Проведите вниз от верхнего края экрана и в уведомлении этого приложения введите 6-значный код, показанный на экране подключения в «Отладке по Wi‑Fi»",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "Ожидание ввода кода сопряжения в уведомлении...\nВведите его, пока экран сопряжения в «Отладке по Wi‑Fi» ещё открыт.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "Снова открыть отладку по Wi‑Fi",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "Сопряжение...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "Сопряжение выполнено, остался один шаг",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "На вашем устройстве есть дополнительное ограничение безопасности. Включите ещё один параметр, чтобы приложение могло автоматически включать и выключать отладку по Wi‑Fi.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "Как это включить",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. Откройте раздел «Для разработчиков»\n2. Найдите переключатель, связанный с безопасностью отладки по USB или контролем разрешений, и включите его, например:\n• Xiaomi: «Отладка по USB (настройки безопасности)»\n• OPPO / realme: «Отключить мониторинг разрешений»\n3. Убедитесь, что отладка по Wi‑Fi включена, затем вернитесь и нажмите «Повторить»",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "Открыть «Для разработчиков»",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "Повторить",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "Пропустить (включать отладку по Wi‑Fi вручную при каждом обновлении)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "Готово",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "Теперь при обновлении лог будет читаться автоматически. Больше ничего настраивать не нужно.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "При нажатии «Обновить» включите отладку по Wi‑Fi, когда появится запрос.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "Возвращаемся и начинаем обновление...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "Доступ к лог-файлу игры",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "Способ",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "Прямой доступ",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "Отладка по Wi‑Fi",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "Не настроено",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "Сопряжение",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "Сопряжено",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "Сопряжено (отладку по Wi‑Fi нужно включать вручную)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "Повторить выдачу разрешения",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "Настроить",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "Удалить сопряжение",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "Удалить сопряжение?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "Ключ сопряжения этого приложения будет удалён, а у приложения будет отозвано разрешение управлять отладкой по Wi‑Fi. Чтобы снова использовать отладку по Wi‑Fi, потребуется новое сопряжение.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "Сопряжение удалено",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "Ключ сопряжения этого приложения удалён, и у него отозвано разрешение включать и отключать отладку по Wi‑Fi.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "Ключ сопряжения удалён",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "Ключ сопряжения этого приложения удалён, но на этот раз не удалось подключиться к отладке по Wi‑Fi, поэтому разрешение включать и отключать её не отозвано.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "Без сопряжения приложение это разрешение не использует. Чтобы отозвать его полностью, подключитесь к Wi‑Fi, выполните сопряжение заново, а затем снова удалите его.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "В системном списке «Отладка по Wi‑Fi» → «Подключенные устройства» по-прежнему будет «{name}». Подключиться оно больше не может, так что его можно оставить; чтобы удалить, нажмите на него и удалите.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "В системном списке «Отладка по Wi‑Fi» → «Подключенные устройства» также остаётся «{name}»; нажмите на него, чтобы удалить.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "URL истории созывов получен. Загрузка истории созывов начнётся, когда вы вернётесь в приложение.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "Поделиться",
   "shareFailed": "Не удалось поделиться",
   "dialogSaveAsTitle": "Сохранить как",
@@ -456,10 +1500,37 @@
   "actionSave": "Сохранить",
   "settingsLogsShare": "Поделиться журналами",
   "logUnavailableGameNotInstalled": "Глобальная версия Wuthering Waves не найдена на этом устройстве. После установки вернитесь сюда — игра будет обнаружена автоматически.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "Проверить снова",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "На этом устройстве установлено несколько версий Wuthering Waves. Какую из них читать?",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "Версия из Google Play",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "Версия из Galaxy Store",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "Версия Wuthering Waves: {name}",
-  "actionSwitchGameVersion": "Сменить версию"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "Сменить версию",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }

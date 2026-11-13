@@ -3,6 +3,20 @@
   "localeNativeName": "עברית",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "תרגום: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "מנתח זימונים ל-Wuthering Waves",
   "actionUpdate": "עדכון",
   "actionCancel": "ביטול",
@@ -40,24 +54,94 @@
   "navSectionGacha": "Convene",
   "footerNotSynced": "לא סונכרן",
   "footerLastUpdated": "עדכון אחרון: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "עכשיו",
   "relativeSecondsAgo": "{count, plural, one{לפני שנייה} other{לפני {count} שניות}}",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count, plural, one{לפני דקה} other{לפני {count} דקות}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count, plural, one{לפני שעה} two{לפני שעתיים} other{לפני {count} שעות}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count, plural, one{לפני יום} two{לפני יומיים} other{לפני {count} ימים}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count, plural, one{לפני חודש} two{לפני חודשיים} other{לפני {count} חודשים}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count, plural, one{לפני שנה} two{לפני שנתיים} other{לפני {count} שנים}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "החלפת חשבון",
   "uidNotSynced": "לא סונכרן",
   "uidActiveSuffix": " (פעיל)",
   "emptyNoSyncTitle": "עדיין לא סונכרנו נתונים",
   "emptyNoSyncMessage": "הקישו על {icon} למעלה כדי להתחיל",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "אין רשומות בבאנר הזה",
   "emptyNoFilterMatch": "אין רשומות שתואמות לסינון הנוכחי",
   "emptyNoGachaRecords": "עדיין אין רשומות זימון",
   "statsTotal": "סך המשיכות",
   "statsRankCount": "מספר {star}",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "{rate}% מהסך הכול",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "התפלגות נדירות",
   "statsItemTypeDistribution": "התפלגות סוגים",
   "statsNoData": "אין נתונים",
@@ -70,12 +154,40 @@
   "tableKind": "סוג",
   "tableRarity": "נדירות",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "סה״כ",
   "tableMainPity": "פיטי",
   "tableSortButton": "מיון: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "מיון: ברירת מחדל",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "מיון לפי",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "משיכות מאז {star} האחרון",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "סדר יורד",
   "sortDirectionAsc": "סדר עולה",
   "sortHintClickToSort": "לחצו למיון",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "פתחו את Wuthering Waves ← Convene ← Convene Records",
   "progressFallbackHint": "(תוקף הלכידה הקודמת פג. פתחו שוב את דף Convene Records.)",
   "progressCaptureUnavailableHint": "לא ניתן היה להפעיל את רכיב הלכידה (ייתכן שבקשת ההרשאה של Windows נדחתה). כעת מתבצע זיהוי מקובץ היומן של המשחק בלבד. פתחו את דף Convene Records במשחק.",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "לא ניתן היה להפעיל את רכיב הלכידה (ייתכן שבקשת ההרשאה של Windows נדחתה), ותיקיית המשחק לא נמצאה. הקישו על \"בחירת תיקיית המשחק\" למטה כדי להגדיר אותה ידנית, או בטלו, הקישו שוב על \"עדכון\" ובחרו \"כן\" בבקשת ההרשאה.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "פתחתם את Convene Records ושום דבר לא קורה?",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "היסטוריית הזימונים לא זוהתה",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "תיקיית המשחק Wuthering Waves לא נמצאה. אחרי שתבחרו אותה, הכלי יוכל לקבל את כתובת ה-URL של היסטוריית הזימונים גם מקובץ היומן של המשחק.",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "תיקיית המשחק שבשימוש: {path}. אם הנתיב שגוי (למשל, כשמותקן יותר מעותק אחד של המשחק), הקישו על \"בחירה מחדש\".",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "תיקיית המשחק נשמרה. חזרו למשחק ופתחו שוב את Convene Records.",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "לא נמצא קובץ יומן של המשחק בתיקייה זו. בחרו את התיקייה \"Wuthering Waves Game\".",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "בחירת תיקיית המשחק",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "בחירה מחדש",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "מאחזר: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "באנר {index} / {total}, חדשות: {count}",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "{count, plural, one{נוספה רשומה חדשה אחת} other{נוספו {count} רשומות חדשות}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, one{הורדה תמונת פריט אחת} other{הורדו {count} תמונות פריטים}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ כשל חלקי: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, one{יובא חשבון אחד} other{יובאו {accounts} חשבונות}}: {added, plural, =1{1 חדשה} other{{added} חדשות}}, {duplicate, plural, =1{1 כבר קיימת} other{{duplicate} כבר קיימות}}",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ כשל חלקי בייבוא: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "מוריד תמונות פריטים {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "מאחזר נתוני פריטים {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "עדיין לא ניתן לאחזר רשומות גם אחרי לכידה מחדש. ייתכן שהשרת אינו זמין זמנית. נסו שוב מאוחר יותר.",
   "errorNoRecords": "לחשבון הזה עדיין אין רשומות זימון",
   "errorNetwork": "החיבור לרשת נכשל. בדקו את החיבור ונסו שוב.",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "סקירת זימונים",
   "pageBannerRecordList": "רשימת רשומות",
   "rarityOverviewTitle": "סקירת {star}",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "הגדרות",
   "settingsAppearance": "מראה",
   "settingsThemeSystem": "לפי המערכת",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "המרת שפת הנתונים עכשיו",
   "settingsDataLanguageUnifying": "ממיר...",
   "settingsDataLanguageUnifyDone": "הומרו: {converted}, מזהים ששוחזרו: {backfilled}, לא ניתן היה להמיר: {unresolved}.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "ההמרה נכשלה והנתונים לא השתנו. בדקו את החיבור ונסו שוב.",
   "settingsDataManagement": "ניהול נתונים",
   "settingsGameDir": "תיקיית המשחק",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "זוהתה אוטומטית: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "הוגדרה ידנית: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "תיקיית המשחק לא נמצאה",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "ניקוי",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "סנכרון בענן",
   "cloudSyncIntro": "קשרו את חשבון Google שלכם כדי לגבות אוטומטית את רשומות הזימון ל-Google Drive ולשמור על סנכרון בין כמה מכשירים.",
   "cloudSyncUnconfigured": "בגרסה זו לא הוגדרו פרטי OAuth של Google, ולכן סנכרון בענן אינו זמין.",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "הדפדפן נפתח. השלימו את ההרשאה בדפדפן...",
   "cloudSyncAwaitingConsentAndroid": "השלימו את ההרשאה בחלון של Google...",
   "cloudSyncLinkedAs": "מקושר: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "סנכרון אוטומטי",
   "cloudSyncAutoToggleHint": "הסנכרון מתבצע אוטומטית בהפעלת האפליקציה ואחרי שינויים בנתונים. כשהאפשרות כבויה, סנכרון ידני עדיין זמין.",
   "cloudSyncNow": "סנכרון עכשיו",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "ביטול קישור",
   "cloudSyncUnlinkConfirmBody": "הסנכרון ייפסק. הנתונים המקומיים והגיבוי בענן יישמרו.",
   "cloudSyncLastSynced": "סנכרון אחרון: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "עדיין לא סונכרן",
   "cloudSyncErrorNetwork": "הסנכרון נכשל בגלל בעיית רשת. ננסה שוב אוטומטית.",
   "cloudSyncErrorBusy": "הסנכרון נדחה: מתבצע עדכון או ייבוא. ננסה שוב אוטומטית.",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "הסתרת UID בממשק",
   "settingsMaskUidInUiHint": "כשהאפשרות מופעלת, מזהי UID בממשק וברשימת החשבונות מציגים רק את 3 הספרות הראשונות והשאר מוסתר (למשל 123•••••). שימושי בזמן שידור או שיתוף מסך. תמונות לשיתוף, קבצים מיוצאים וחלון אישור המחיקה אינם מושפעים.",
   "settingsAdPrivacyOptions": "אפשרויות פרטיות למודעות",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "שנו אם אתם מסכימים להצגת מודעות מותאמות אישית.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "אודות",
   "settingsOtherGamesTitle": "גרסאות למשחקים אחרים",
   "settingsOtherGamesGenshin": "Genshin Impact",
   "settingsOtherGamesFuture": "ייתכן שבעתיד ייתמכו משחקים נוספים...",
   "settingsAboutVersion": "גרסה {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "תורמים",
   "contributorsSubtitle": "תודה מיוחדת לשותפים הבאים שתרמו לפיתוח התוכנה!",
   "contributorsProjectLeader": "מנהל הפרויקט",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "רישיון הפרויקט",
   "contributorsOpenSourceLicenses": "רישיונות קוד פתוח",
   "pityRank": "פיטי {star}",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "{n, plural, one{עוד משיכה אחת עד הפיטי} other{עוד {n} משיכות עד הפיטי}}",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "כמעט פיטי! {n, plural, one{נותרה משיכה אחת} other{נותרו {n} משיכות}}",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "מובטח בקרוב",
   "pityNoMainRarity": "עדיין אין {star}",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "ממוצע {n} משיכות",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "אין רשומות {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n, plural, one{משיכה אחת} other{{n} משיכות}}",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "בר מזל",
   "luckTierAverage": "ממוצע",
   "luckTierUnlucky": "חסר מזל",
   "timelineNowLabel": "עכשיו",
   "timelineNowPulls": "{n, plural, one{משיכה אחת} other{{n} משיכות}}",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "{n, plural, one{משיכה אחת מאז {star} האחרון} other{{n} משיכות מאז {star} האחרון}}",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "{n, plural, one{משיכה אחת מאז {star} האחרון בכל הבאנרים} other{{n} משיכות מאז {star} האחרון בכל הבאנרים}}",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{month} / {year}",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "גלילה שמאלה",
   "timelineScrollRight": "גלילה ימינה",
   "timelineLoadMore": "{n, plural, =1{טעינת עוד (נותרה 1)} other{טעינת עוד (נותרו {n})}}",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "כל הנדירויות",
   "filterRarityRankOnly": "{star} בלבד",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "כל הסוגים",
   "filterSearchHint": "חיפוש לפי שם...",
   "filterClear": "ניקוי סינון",
@@ -210,35 +624,150 @@
   "pagerLast": "אחרון",
   "pagerJumpTitle": "מעבר לדף",
   "pagerJumpLabel": "דף ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "דף נוכחי: {page} · סה״כ רשומות: {total}",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "מעבר",
   "pagerJumpInvalid": "הזינו דף בין {min} ל-{max}",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "מחיקת נתוני החשבון הנוכחי",
   "settingsClearAll": "מחיקת כל הנתונים",
   "settingsRefetchItemImagesTitle": "אחזור מחדש בכפייה של תמונות פריטים",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "עדיין אין רשומות זימון, אין מה לאחזר מחדש",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "אחזור מחדש בכפייה של תמונות פריטים",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "פעולה זו תנקה את כל מטמון תמונות הפריטים המקומי ותוריד מחדש את סמלי הדמויות. תמונות מפורטות יורדו לפי הצורך בפעם הבאה שתפתחו את פרטי הפריט. בהתאם למספר הפריטים, זה עשוי לקחת כמה דקות ולצרוך נפח גלישה.",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "התחלת אחזור מחדש",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "נתוני פריטים",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "אחזור מחדש של הפרטים העדכניים לכל הפריטים (תיאור, רשימת תמונות ועוד) תוך שמירת התמונות שכבר הורדו. תמונות חדשות יורדו כשתפתחו את פרטי הפריט.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "עדכון נתוני פריטים",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "עדיין אין רשומות זימון, אין מה לעדכן",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "לעדכן את נתוני הפריטים?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "פעולה זו תאחזר מחדש את הפרטים של כל הפריטים תוך שמירת התמונות שכבר הורדו. תמונות חדשות יורדו כשתפתחו את הפרטים. לעדכן עכשיו?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "התחלת עדכון",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, one{עודכנו הנתונים של פריט אחד} other{עודכנו הנתונים של {count} פריטים}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, one{הורדה תמונת פריט אחת} other{הורדו {count} תמונות פריטים}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, one{נוקו נתוני שפה ישנים של פריט אחד} other{נוקו נתוני שפה ישנים של {count} פריטים}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "מטמון תמונות",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "סה״כ",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "סמלים",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "תמונות מפורטות",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "מחשב...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "לא ניתן לקרוא את גודל המטמון",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "ניקוי תמונות מפורטות",
   "confirmClearGalleryCacheTitle": "לנקות את התמונות המפורטות?",
   "confirmClearGalleryCacheBody": "יימחקו כ-{size} של תמונות מפורטות של פריטים; מטמון הסמלים יישמר. הן יורדו מחדש בפעם הבאה שתפתחו את פרטי הפריט.",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "ניקוי",
   "settingsImageCacheClearGalleryFailed": "ניקוי התמונות המפורטות נכשל",
   "settingsExportData": "ייצוא נתונים",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "הצגת UID מלא בתמונה",
   "shareImageShowFullUidHint": "כשהאפשרות כבויה, מוצגות רק 3 הספרות הראשונות והשאר מוסתר ב-•",
   "shareImageUpdatedAt": "עודכן {time}",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "הועתק ללוח",
   "shareImageSaved": "נשמר: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "ההעתקה ללוח נכשלה",
   "shareImageFailed": "יצירת תמונת השיתוף נכשלה",
   "shareImageGenerating": "יוצר תמונה...",
   "exportDialogSuccessTitle": "הייצוא הצליח",
   "exportDialogFailedTitle": "הייצוא נכשל",
   "settingsExportFailed": "הייצוא נכשל: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "יוצא אל {path}",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "אישור ייבוא",
   "settingsImportConfirmIntro": "{accounts, plural, one{עומד להיות מיובא חשבון אחד} other{עומדים להיות מיובאים {accounts} חשבונות}} (סה״כ {records, plural, =1{רשומה אחת} other{{records} רשומות}}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "החשבונות הבאים ימוזגו עם הנתונים המקומיים; רשומות קיימות לא יימחקו:",
   "settingsImportConfirmNoConflict": "אין התנגשויות בנתונים.",
   "settingsImportConfirmPreserveFooter": "שאר החשבונות הקיימים ({uids}) יישמרו.",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "פורמט הקובץ לא תקין או שהקובץ פגום",
   "importReasonIncompatibleVersion": "גרסת הנתונים של הגיבוי הזה אינה תואמת לאפליקציה הנוכחית ולא ניתן לייבא אותו",
   "importReasonUnreadable": "לא ניתן לקרוא את הקובץ",
   "importReasonForeignApp": "הקובץ הזה לא יוצא מהאפליקציה הזו",
   "importReasonNotPlatformFile": "הקובץ הזה אינו קובץ ייצוא תקין של {platform}",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "לא ניתן לכתוב את הקובץ. בדקו את מיקום השמירה ואת ההרשאות",
   "settingsImportFailed": "הייבוא נכשל: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "בחירת חשבונות לייצוא",
   "settingsImportSelectTitle": "בחירת חשבונות לייבוא",
   "settingsImportMergeBadge": "מיזוג",
   "accountsPickerSelectAll": "בחירת הכול",
   "accountRecordCount": "{n, plural, one{רשומה אחת} other{{n} רשומות}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "אישור",
   "confirmClearActiveBody": "פעולה זו תמחק לצמיתות את כל רשומות הזימון של UID {uid}. הקלידו את ה-UID לאישור:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "פעולה זו תמחק לצמיתות את רשומות הזימון של כל החשבונות. הקלידו DELETE לאישור:",
   "confirmDelete": "מחיקה",
   "confirmImport": "ייבוא",
@@ -290,6 +892,13 @@
   "confirmContinue": "המשך",
   "accountListEmpty": "עדיין אין חשבונות",
   "accountLastUpdated": "עדכון אחרון {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "פעיל",
   "accountSetActive": "הגדרה כפעיל",
   "accountRemove": "הסרה",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "גררו לשינוי הסדר",
   "loadingBootstrap": "טוען...",
   "timelineTopRarityTitle": "ציר זמן {star} ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "מספר הפריטים בנדירות הגבוהה ביותר בכל באנר",
   "bannerTopRarityPullsSinceLast": "{n, plural, one{משיכה אחת מאז {star} האחרון} other{{n} משיכות מאז {star} האחרון}}",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "גרסה חדשה {version} זמינה",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "פורסמה ב-{date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "הורדה",
   "updateButtonUpdate": "עדכון",
   "updateNotesUnavailable": "הערות הגרסה אינן זמינות כרגע. לפרטים ראו ב-Google Play.",
   "updateDownloadingMessage": "מוריד את העדכון...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "העדכון הורד",
   "updateRestartAction": "הפעלה מחדש",
   "updateInAppUnavailable": "לא ניתן לעדכן מתוך האפליקציה כרגע. עדכנו דרך Google Play.",
@@ -320,134 +966,532 @@
   "updateChecking": "בודק...",
   "updateAlreadyLatest": "הגרסה שלך היא העדכנית ביותר",
   "updateCheckFailed": "בדיקת העדכונים נכשלה: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "לא ניתן להתחבר. בדקו את הרשת",
   "updateErrorTimeout": "תם הזמן הקצוב לבקשה",
   "updateErrorRateLimited": "מכסת GitHub API נוצלה. נסו שוב מאוחר יותר",
   "updateErrorServer": "שגיאת שרת (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "פורמט תגובה לא צפוי",
   "updateErrorPlay": "לא ניתן להתחבר ל-Google Play, או שהעותק הזה לא הותקן מ-Google Play",
   "currentReleaseTitle": "הערות הגרסה הנוכחית",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "לא נמצאו הערות גרסה עבור {version}",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "צפייה ב-GitHub",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "מעבר לדף הגרסאות ב-GitHub",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "צפייה בהערות הגרסה",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "ניקוי מטמון תמונות הפריטים נכשל: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "יומני ניפוי באגים",
+  "@settingsLogs": {},
   "settingsLogsHint": "אם נתקלתם בבעיה, ייצאו את היומנים כדי לעזור למפתחים לבדוק אותה.",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "דיווח על בעיה",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "ייצוא יומנים",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "פתיחת תיקיית היומנים",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "מחיקת כל היומנים",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "היומנים יוצאו: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "ייצוא היומנים נכשל: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "פעולה זו תמחק לצמיתות את כל הקבצים ב-logs/. אם תצטרכו אותם לדיווח על באגים, ייצאו אותם קודם. הקלידו CLEAR לאישור.",
   "galleryIllustrationLabel": "תלבושת",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "זימון",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "סמל",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "הקודם",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "הבא",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "גלילה למטה",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "טעינת התמונה נכשלה",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "ניסיון חוזר",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "העתקת תמונה",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "שמירת תמונה",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "אחזור התמונה מחדש",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "התמונה נשמרה ב-{path}",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "שמירת התמונה נכשלה",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "התמונה הועתקה ללוח",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "העתקת התמונה נכשלה",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "סגירת תצוגה מקדימה של התמונה",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "הגדלה",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "הקטנה",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "צפייה ב-encore.moe",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "הזנה ידנית של כתובת ה-URL של היסטוריית הזימונים",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "הזנה ידנית של כתובת ה-URL של היסטוריית הזימונים",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "הדביקו את כתובת ה-URL של היסטוריית הזימונים, או כל טקסט שמכיל אותה.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "הדביקו URL...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "הדבקה מהלוח",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "בחירת קובץ Client.log",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "איך משיגים את ה-URL?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "לא נמצאה כתובת URL של היסטוריית הזימונים",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "אין בקובץ הזה כתובת URL של היסטוריית הזימונים. פתחו קודם את Convene Records במשחק, ואז בחרו אותו שוב.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "אפשרות 1: מצב טיסה\n1. במשחק, עברו למסך Convene\n2. הפעילו מצב טיסה, ואז הקישו על Convene Records\n3. הדף לא ייטען: לחיצה ארוכה ← בחירת הכול ← העתקה\n4. כבו את מצב הטיסה והדביקו כאן את כל הטקסט\n\nאפשרות 2: כבר יש לכם קובץ Client.log\nהקישו על \"בחירת קובץ Client.log\" והאפליקציה תמצא את ה-URL בשבילכם.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "בחירת קובץ Client.log\n1. פתחו את Convene Records במשחק\n2. הקישו על \"בחירת קובץ Client.log\". הקובץ נמצא ב:\nתיקיית המשחק\\Client\\Saved\\Logs\\Client.log\n\nURL מכלי אחר\nאפשר להדביק ישירות URL שהתקבל מכלים כמו WuWa Tracker.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "ה-URL מכיל את פרטי הגישה לחשבון שלכם. אל תשתפו אותו בפומבי. תוקפו פג לאחר זמן מה.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "אישור",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "ממתין שתפתחו את דף Convene Records במשחק...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "מתכונן לקריאת קובץ היומן של המשחק...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "לא ניתן לקבל אוטומטית את כתובת ה-URL של היסטוריית הזימונים",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "קריאת קובץ היומן של המשחק עדיין לא הוגדרה. אחרי הגדרה חד־פעמית, כל עדכון יקרא אותו אוטומטית.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "ניפוי באגים אלחוטי פועל רק ב-Wi‑Fi. התחברו ל-Wi‑Fi וחזרו; האפליקציה תמשיך אוטומטית. אפשר גם להזין את כתובת ה-URL ידנית.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "נמצאה גישת Root, אבל האפליקציה לא קיבלה הרשאת Root. כדי לקרוא עם Root, אשרו את האפליקציה במנהל ה-Root (למשל ברשימת Superuser של Magisk) וחזרו; האפליקציה תנסה שוב אוטומטית.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "לא ניתן להתחבר לניפוי באגים אלחוטי. ייתכן שתוקף ההתאמה פג; בצעו התאמה מחדש.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "המכשיר שלכם לא מאפשר לאפליקציה להפעיל ניפוי באגים אלחוטי. הפעילו אותו בדף ניפוי באגים אלחוטי וחזרו; האפליקציה תמשיך אוטומטית.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "רשת ה-Wi‑Fi הזו עדיין לא אושרה לניפוי באגים אלחוטי. הקישו על \"אישור\" בהודעת המערכת (סמנו \"אפשר תמיד ברשת זו\" כדי שלא תישאלו שוב) והאפליקציה תמשיך אוטומטית. אם סגרתם את ההודעה, הקישו על \"ניסיון חוזר\".",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "נדרשת הרשאת אחסון כדי לקרוא את קובץ היומן של המשחק.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "המכשיר הזה לא יכול לקרוא את קובץ היומן של המשחק אוטומטית. הזינו את כתובת ה-URL ידנית.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "פתיחת Wuthering Waves",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "פתיחת ניפוי באגים אלחוטי",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "מתן הרשאה",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "החיבור לניפוי באגים אלחוטי אבד, מתחבר מחדש... אם הוא לא יתחדש, בדקו את ה-Wi‑Fi או הזינו את כתובת ה-URL ידנית.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "ניפוי באגים אלחוטי עדיין פועל. אפשר לכבות אותו בהגדרות המערכת.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "הגדרה",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "התאמה מחדש",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "קריאת קובץ היומן של המשחק",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "למה זה נחוץ?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "Android לא מאפשר לאפליקציות לקרוא ישירות קבצים של אפליקציות אחרות. האפליקציה משתמשת בתכונה המובנית ניפוי באגים אלחוטי כדי לקרוא את קובץ היומן של Wuthering Waves ולהשיג ממנו את כתובת ה-URL של היסטוריית הזימונים.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "מה האפליקציה עושה",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• קוראת רק את קובץ היומן של Wuthering Waves\n• מתנתקת מיד אחרי הקריאה, ומכבה את ניפוי הבאגים האלחוטי אם האפליקציה היא שהפעילה אותו\n• מעניקה לעצמה הרשאה להפעיל ולכבות ניפוי באגים אלחוטי, כך שלא תצטרכו להגדיר שוב\n• אפשר להסיר זאת בכל עת בהגדרות",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "דרישות",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 ומעלה, Wi‑Fi, הרשאה להתראות",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "התחלת ההגדרה",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "הזנה ידנית של כתובת ה-URL במקום זאת",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "התאמת ניפוי באגים אלחוטי",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. הפעלת אפשרויות למפתחים",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. פתחו את דף המידע בהגדרות המערכת (למשל \"מידע על הטלפון\" או \"מידע על הטאבלט\")\n2. מצאו את \"מספר Build\" והקישו עליו 7 פעמים\n3. כשתופיע ההודעה \"הפכת למפתח\", חזרו לאפליקציה",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "פתיחת דף המידע",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. האפשרויות למפתחים מופעלות",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. הרשאה להתראות",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "את קוד ההתאמה תזינו בהתראה, לכן אפשרו לאפליקציה להציג התראות.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "הרשאה להתראות",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "פתיחת הגדרות ההתראות",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. ההתראות מורשות",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. התאמה",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. הקישו על הכפתור למטה כדי לפתוח ניפוי באגים אלחוטי\n2. הפעילו את \"שימוש בניפוי באגים אלחוטי\" והקישו על \"התאמת מכשיר באמצעות קוד התאמה\"\n3. החליקו מטה מראש המסך, ובהתראה של האפליקציה הזינו את קוד ההתאמה בן 6 הספרות שמוצג במסך ההתאמה של ניפוי באגים אלחוטי",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "ממתין להזנת קוד ההתאמה בהתראה...\nהזינו אותו כשמסך ההתאמה בניפוי באגים אלחוטי עדיין פתוח.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "פתיחה חוזרת של ניפוי באגים אלחוטי",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "מבצע התאמה...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "ההתאמה הצליחה, נותר עוד שלב אחד",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "במכשיר שלכם יש הגבלת אבטחה נוספת. הפעילו אפשרות נוספת אחת כדי שהאפליקציה תוכל להפעיל ולכבות ניפוי באגים אלחוטי אוטומטית.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "איך להפעיל",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. פתחו את האפשרויות למפתחים\n2. מצאו את המתג הקשור לאבטחת ניפוי באגים ב-USB או לניטור הרשאות והפעילו אותו, לדוגמה:\n• Xiaomi: \"ניפוי באגים ב-USB (הגדרות אבטחה)\"\n• OPPO / realme: \"השבתת ניטור הרשאות\"\n3. ודאו שניפוי באגים אלחוטי מופעל, ואז חזרו והקישו על \"ניסיון חוזר\"",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "פתיחת האפשרויות למפתחים",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "ניסיון חוזר",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "דילוג (תפעילו ניפוי באגים אלחוטי בעצמכם בכל עדכון)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "הכול מוכן",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "מעכשיו, \"עדכון\" יקרא את היומן אוטומטית. אין צורך בהגדרות נוספות.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "כשתקישו על \"עדכון\", הפעילו ניפוי באגים אלחוטי כשתתבקשו.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "חוזר ומתחיל את העדכון...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "גישה לקובץ היומן של המשחק",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "שיטה",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "גישה ישירה",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "ניפוי באגים אלחוטי",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "לא הוגדר",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "התאמה",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "מותאם",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "מותאם (הפעלה ידנית של ניפוי באגים אלחוטי)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "ניסיון חוזר לקבלת הרשאה",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "הגדרה",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "הסרת ההתאמה",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "להסיר את ההתאמה?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "פעולה זו תמחק את מפתח ההתאמה של האפליקציה ותסיר את הרשאת האפליקציה להפעיל ולכבות ניפוי באגים אלחוטי. כדי להשתמש בניפוי באגים אלחוטי בהמשך, תצטרכו לבצע התאמה מחדש.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "ההתאמה הוסרה",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "מפתח ההתאמה של האפליקציה נמחק וההרשאה שלה להפעיל ולכבות ניפוי באגים אלחוטי הוסרה.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "מפתח ההתאמה נמחק",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "מפתח ההתאמה של האפליקציה נמחק, אבל הפעם לא ניתן היה להתחבר לניפוי באגים אלחוטי, ולכן ההרשאה להפעיל ולכבות אותו לא הוסרה.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "האפליקציה לא משתמשת בהרשאה הזו כשאין התאמה. כדי להסיר אותה לגמרי, יש להתחבר ל‑Wi‑Fi, לבצע התאמה מחדש ואז לבטל אותה שוב.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "ברשימת המערכת ניפוי באגים אלחוטי ← מכשירים מותאמים עדיין יופיע \"{name}\". הוא כבר לא יכול להתחבר, כך שאפשר להשאיר אותו; כדי להסיר אותו, יש להקיש עליו ולמחוק.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "ברשימת המערכת ניפוי באגים אלחוטי ← מכשירים מותאמים מופיע גם \"{name}\"; אפשר להקיש עליו כדי למחוק.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "כתובת ה-URL של היסטוריית הזימונים התקבלה. אחזור היסטוריית הזימונים יתחיל כשתחזרו לאפליקציה.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "שיתוף",
   "shareFailed": "השיתוף נכשל",
   "dialogSaveAsTitle": "שמירה בשם",
@@ -456,10 +1500,37 @@
   "actionSave": "שמירה",
   "settingsLogsShare": "שיתוף היומנים",
   "logUnavailableGameNotInstalled": "הגרסה הגלובלית של Wuthering Waves לא נמצאה במכשיר הזה. אחרי ההתקנה חזרו לכאן והמשחק יזוהה אוטומטית.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "בדיקה חוזרת",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "במכשיר הזה מותקנת יותר מגרסה אחת של Wuthering Waves. איזו גרסה לקרוא?",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "גרסת Google Play",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "גרסת Galaxy Store",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "גרסת Wuthering Waves: {name}",
-  "actionSwitchGameVersion": "החלפת גרסה"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "החלפת גרסה",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }

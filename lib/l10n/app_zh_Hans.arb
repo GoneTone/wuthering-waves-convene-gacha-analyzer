@@ -1,10 +1,10 @@
 {
   "@@locale": "zh_Hans",
   "localeNativeName": "简体中文",
+  "localeTranslatorLabel": "翻译者：{translator}",
   "@localeNativeName": {
     "description": "Native name of this locale, shown in language picker."
   },
-  "localeTranslatorLabel": "翻译者：{translator}",
   "@localeTranslatorLabel": {
     "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
     "placeholders": {
@@ -111,6 +111,13 @@
   "uidActiveSuffix": "（活跃）",
   "emptyNoSyncTitle": "尚未同步任何数据",
   "emptyNoSyncMessage": "点右上 {icon} 开始",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "此卡池无记录",
   "emptyNoFilterMatch": "没有符合条件的记录",
   "emptyNoGachaRecords": "暂无唤取记录",
@@ -613,9 +620,39 @@
   "pagerLast": "末页",
   "pagerJumpTitle": "前往页数",
   "pagerJumpLabel": "页码（{min}–{max}）",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "当前在第 {page} 页，共 {total} 条",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "前往",
   "pagerJumpInvalid": "请输入 {min}–{max} 的页码",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "清除当前账号数据",
   "settingsClearAll": "清除所有数据",
   "settingsRefetchItemImagesTitle": "强制重抓物品图片",
@@ -1433,14 +1470,18 @@
   "@settingsUnpairLeftover": {
     "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "settingsUnpairLeftoverAlso": "系统「无线调试」的配对列表里也还留着「{name}」，点击它即可删除。",
   "@settingsUnpairLeftoverAlso": {
     "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "progressCredentialReady": "已获取唤取记录网址，回到本 App 后就会开始抓取唤取记录。",
@@ -1455,10 +1496,37 @@
   "actionSave": "保存",
   "settingsLogsShare": "分享日志",
   "logUnavailableGameNotInstalled": "这台设备上找不到国际服鸣潮，装好后回到这里会自动重新检测。",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "重新检测",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "这台设备装了多个版本的鸣潮，要读取哪一个版本的记录？",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "Google Play 版",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "Galaxy Store 版",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "鸣潮版本：{name}",
-  "actionSwitchGameVersion": "切换版本"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "切换版本",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }

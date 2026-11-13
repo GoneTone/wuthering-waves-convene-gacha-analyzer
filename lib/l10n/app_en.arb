@@ -115,6 +115,13 @@
   "uidActiveSuffix": " (active)",
   "emptyNoSyncTitle": "No data synced yet",
   "emptyNoSyncMessage": "Tap {icon} in the top right to start",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "No records for this banner",
   "emptyNoFilterMatch": "No records match the current filter",
   "emptyNoGachaRecords": "No Convene records yet",
@@ -410,9 +417,6 @@
   "cloudSyncLink": "Link Google account",
   "cloudSyncAwaitingConsent": "Browser opened. Please finish authorization in your browser...",
   "cloudSyncAwaitingConsentAndroid": "Please finish authorization in the Google window...",
-  "@cloudSyncAwaitingConsentAndroid": {
-    "description": "Hint shown on Android while the Google account/consent sheet is open"
-  },
   "cloudSyncLinkedAs": "Linked: {email}",
   "@cloudSyncLinkedAs": {
     "placeholders": {
@@ -620,9 +624,39 @@
   "pagerLast": "Last",
   "pagerJumpTitle": "Go to page",
   "pagerJumpLabel": "Page ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "Currently on page {page} · {total} records",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "Go",
   "pagerJumpInvalid": "Enter a page from {min}–{max}",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "Clear current account data",
   "settingsClearAll": "Clear all data",
   "settingsRefetchItemImagesTitle": "Force re-fetch item images",
@@ -1440,14 +1474,18 @@
   "@settingsUnpairLeftover": {
     "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "settingsUnpairLeftoverAlso": "The system's Wireless debugging → Paired devices list also still shows \"{name}\"; tap it to delete it.",
   "@settingsUnpairLeftoverAlso": {
     "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "progressCredentialReady": "Got the convene history URL. Fetching your convene history starts when you return to this app.",
@@ -1455,33 +1493,12 @@
     "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
   },
   "actionShare": "Share",
-  "@actionShare": {
-    "description": "Share action label: share-image dialog, item image menus and the backup/log picker (Android): opens the system share sheet."
-  },
   "shareFailed": "Couldn't share",
-  "@shareFailed": {
-    "description": "Shown when opening the system share sheet failed."
-  },
   "dialogSaveAsTitle": "Save as",
-  "@dialogSaveAsTitle": {
-    "description": "Title of the system save-file dialog (desktop)."
-  },
   "dialogOpenTitle": "Open",
-  "@dialogOpenTitle": {
-    "description": "Title of the system open-file dialog (desktop)."
-  },
   "dialogSelectFolderTitle": "Select folder",
-  "@dialogSelectFolderTitle": {
-    "description": "Title of the system select-folder dialog (desktop)."
-  },
   "actionSave": "Save",
-  "@actionSave": {
-    "description": "Save button in the backup account picker (Android) and similar save actions."
-  },
   "settingsLogsShare": "Share logs",
-  "@settingsLogsShare": {
-    "description": "Button that shares the exported log bundle through the system share sheet (Android)."
-  },
   "logUnavailableGameNotInstalled": "The global version of Wuthering Waves isn't installed on this device. Once it's installed, come back here and it will be detected automatically.",
   "@logUnavailableGameNotInstalled": {
     "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"

@@ -3,6 +3,20 @@
   "localeNativeName": "Português (Brasil)",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "Tradução: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "Analisador de Invocações de Wuthering Waves",
   "actionUpdate": "Atualizar",
   "actionCancel": "Cancelar",
@@ -40,24 +54,94 @@
   "navSectionGacha": "Invocações",
   "footerNotSynced": "Não sincronizado",
   "footerLastUpdated": "Última atualização: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "Agora mesmo",
   "relativeSecondsAgo": "{count, plural, =1{Há 1 segundo} other{Há {count} segundos}}",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count, plural, =1{Há 1 minuto} other{Há {count} minutos}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count, plural, =1{Há 1 hora} other{Há {count} horas}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count, plural, =1{Há 1 dia} other{Há {count} dias}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count, plural, =1{Há 1 mês} other{Há {count} meses}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count, plural, =1{Há 1 ano} other{Há {count} anos}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "Trocar de conta",
   "uidNotSynced": "Não sincronizado",
   "uidActiveSuffix": " (ativa)",
   "emptyNoSyncTitle": "Nenhum dado sincronizado ainda",
   "emptyNoSyncMessage": "Toque em {icon} no canto superior direito para começar",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "Nenhum registro neste banner",
   "emptyNoFilterMatch": "Nenhum registro corresponde ao filtro atual",
   "emptyNoGachaRecords": "Nenhum registro de Invocação ainda",
   "statsTotal": "Total de tiros",
   "statsRankCount": "Quantidade de {star}",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "{rate}% do total",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "Distribuição por raridade",
   "statsItemTypeDistribution": "Distribuição por tipo",
   "statsNoData": "Sem dados",
@@ -70,12 +154,40 @@
   "tableKind": "Tipo",
   "tableRarity": "Raridade",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "Total",
   "tableMainPity": "Garantia",
   "tableSortButton": "Ordenar: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "Ordenar: padrão",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "Ordenar por",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "Tiros desde o último {star}",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "Decrescente",
   "sortDirectionAsc": "Crescente",
   "sortHintClickToSort": "Clique para ordenar",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "Abra Wuthering Waves → Invocação → Registros de invocação",
   "progressFallbackHint": "(A captura anterior expirou. Abra a página Registros de invocação de novo.)",
   "progressCaptureUnavailableHint": "Não foi possível iniciar o assistente de captura (talvez a solicitação de permissão do Windows tenha sido recusada). Agora a detecção é feita só pelo arquivo de log do jogo. Abra a página Registros de invocação no jogo.",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "Não foi possível iniciar o assistente de captura (talvez a solicitação de permissão do Windows tenha sido recusada) e a pasta do jogo não foi encontrada. Clique em \"Escolher pasta do jogo\" abaixo para defini-la manualmente, ou cancele, clique em \"Atualizar\" de novo e escolha \"Sim\" na solicitação de permissão.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "Abriu os Registros de invocação e nada aconteceu?",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "Histórico de invocações não detectado",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "Não foi possível encontrar a pasta do jogo Wuthering Waves. Depois que você escolher a pasta, esta ferramenta também poderá obter o URL do histórico de invocações pelo arquivo de log do jogo.",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "Pasta do jogo em uso: {path}. Se esse caminho estiver errado (por exemplo, se houver mais de uma cópia do jogo instalada), clique em \"Escolher de novo\".",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "Pasta do jogo salva. Volte ao jogo e abra os Registros de invocação mais uma vez.",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "Nenhum arquivo de log do jogo foi encontrado nesta pasta. Escolha a pasta \"Wuthering Waves Game\".",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "Escolher pasta do jogo",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "Escolher de novo",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "Buscando: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "Banner {index}/{total}, {count, plural, =1{1 novo} other{{count} novos}}",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "{count, plural, =1{1 novo registro adicionado} other{{count} novos registros adicionados}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, =1{{count} imagem de item baixada} other{{count} imagens de itens baixadas}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ Falha parcial: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, =1{1 conta importada} other{{accounts} contas importadas}}: {added, plural, =1{1 novo} other{{added} novos}}, {duplicate, plural, =1{1 já existente} other{{duplicate} já existentes}}",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ Falha parcial na importação: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "Baixando imagens de itens {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "Buscando dados de itens {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "Mesmo depois de capturar de novo, não foi possível buscar os registros. O servidor pode estar temporariamente indisponível. Tente de novo mais tarde.",
   "errorNoRecords": "Esta conta ainda não tem registros de Invocação",
   "errorNetwork": "Falha na conexão. Verifique sua conexão e tente de novo.",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "Visão geral das Invocações",
   "pageBannerRecordList": "Lista de registros",
   "rarityOverviewTitle": "Visão geral de {star}",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "Configurações",
   "settingsAppearance": "Aparência",
   "settingsThemeSystem": "Padrão do sistema",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "Converter idioma dos dados agora",
   "settingsDataLanguageUnifying": "Convertendo...",
   "settingsDataLanguageUnifyDone": "Convertidos: {converted}; IDs recuperados: {backfilled}; não convertidos: {unresolved}.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "A conversão falhou; os dados não foram alterados. Verifique sua conexão e tente de novo.",
   "settingsDataManagement": "Gerenciamento de dados",
   "settingsGameDir": "Pasta do jogo",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "Detectada automaticamente: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "Definida manualmente: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "Pasta do jogo não encontrada",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "Limpar",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "Sincronização na nuvem",
   "cloudSyncIntro": "Vincule sua Conta do Google para fazer backup automático dos registros de Invocação no seu Google Drive e manter vários dispositivos sincronizados.",
   "cloudSyncUnconfigured": "Esta versão não tem credenciais OAuth do Google configuradas; a sincronização na nuvem não está disponível.",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "O navegador foi aberto. Conclua a autorização no navegador...",
   "cloudSyncAwaitingConsentAndroid": "Conclua a autorização na janela do Google...",
   "cloudSyncLinkedAs": "Vinculada: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "Sincronização automática",
   "cloudSyncAutoToggleHint": "Sincroniza automaticamente ao abrir o app e quando os dados mudam; com a opção desativada, a sincronização manual continua disponível.",
   "cloudSyncNow": "Sincronizar agora",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "Desvincular",
   "cloudSyncUnlinkConfirmBody": "A sincronização vai parar. Os dados locais e o backup na nuvem são mantidos.",
   "cloudSyncLastSynced": "Última sincronização: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "Ainda não sincronizado",
   "cloudSyncErrorNetwork": "Falha na sincronização: problema de rede. O app vai tentar de novo automaticamente.",
   "cloudSyncErrorBusy": "Sincronização adiada: há uma atualização ou importação em andamento. O app vai tentar de novo automaticamente.",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "Ocultar UID na interface",
   "settingsMaskUidInUiHint": "Quando ativado, os UIDs na interface e na lista de contas mostram só os 3 primeiros dígitos, com o restante oculto (ex.: 123•••••). Útil para lives ou compartilhamento de tela. Imagens de compartilhamento, arquivos exportados e a caixa de confirmação de exclusão não são afetados.",
   "settingsAdPrivacyOptions": "Opções de privacidade dos anúncios",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "Altere seu consentimento para ver anúncios personalizados.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "Sobre",
   "settingsOtherGamesTitle": "Versões para outros jogos",
   "settingsOtherGamesGenshin": "Genshin Impact",
   "settingsOtherGamesFuture": "Mais jogos podem ser suportados no futuro...",
   "settingsAboutVersion": "Versão {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "Colaboradores",
   "contributorsSubtitle": "Um agradecimento especial a todos que contribuíram para o desenvolvimento deste software!",
   "contributorsProjectLeader": "Responsável pelo projeto",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "Licença do projeto",
   "contributorsOpenSourceLicenses": "Licenças de código aberto",
   "pityRank": "Garantia de {star}",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "{n, plural, =1{Falta 1 tiro para a garantia} other{Faltam {n} tiros para a garantia}}",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "{n, plural, =1{Quase garantido! Falta 1 tiro} other{Quase garantido! Faltam {n} tiros}}",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "Garantido em breve",
   "pityNoMainRarity": "Nenhum {star} ainda",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "Média: {n} tiros",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "Nenhum registro de {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n, plural, =1{1 tiro} other{{n} tiros}}",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "Sortudo",
   "luckTierAverage": "Na média",
   "luckTierUnlucky": "Azarado",
   "timelineNowLabel": "Agora",
   "timelineNowPulls": "{n, plural, =1{1 tiro} other{{n} tiros}}",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "{n, plural, =1{1 tiro desde o último {star}} other{{n} tiros desde o último {star}}}",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "{n, plural, =1{1 tiro desde o último {star} entre banners} other{{n} tiros desde o último {star} entre banners}}",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{month}/{year}",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "Rolar para a esquerda",
   "timelineScrollRight": "Rolar para a direita",
   "timelineLoadMore": "{n, plural, =1{Carregar mais (1 restante)} other{Carregar mais ({n} restantes)}}",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "Todas as raridades",
   "filterRarityRankOnly": "Só {star}",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "Todos os tipos",
   "filterSearchHint": "Buscar nome...",
   "filterClear": "Limpar filtros",
@@ -210,35 +624,150 @@
   "pagerLast": "Última",
   "pagerJumpTitle": "Ir para a página",
   "pagerJumpLabel": "Página ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "Página atual: {page} · {total} registros",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "Ir",
   "pagerJumpInvalid": "Digite uma página entre {min} e {max}",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "Limpar dados da conta atual",
   "settingsClearAll": "Limpar todos os dados",
   "settingsRefetchItemImagesTitle": "Forçar novo download das imagens",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "Nenhum registro de Invocação ainda, nada para baixar",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "Forçar novo download das imagens",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "Todo o cache local de imagens de itens será apagado e os ícones dos Ressonantes serão baixados de novo. As imagens de detalhes serão baixadas quando você abrir os detalhes do item. Dependendo da quantidade de itens, isso pode levar alguns minutos e consumir dados.",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "Iniciar download",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "Dados dos itens",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "Busca de novo os detalhes mais recentes de todos os itens (descrição, lista de imagens etc.), mantendo as imagens já baixadas; as imagens novas são baixadas quando você abre os detalhes do item.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "Atualizar dados dos itens",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "Nenhum registro de Invocação ainda, nada para atualizar",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "Atualizar dados dos itens?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "Os detalhes de todos os itens serão buscados de novo, mantendo as imagens já baixadas; as imagens novas são baixadas quando você abre os detalhes. Atualizar agora?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "Iniciar atualização",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, =1{Dados de {count} item atualizados} other{Dados de {count} itens atualizados}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, =1{{count} imagem de item baixada} other{{count} imagens de itens baixadas}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, =1{Dados de idiomas antigos removidos de {count} item} other{Dados de idiomas antigos removidos de {count} itens}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "Cache de imagens",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "Total",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "Ícones",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "Imagens de detalhes",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "Calculando...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "Não foi possível ler o tamanho do cache",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "Limpar imagens de detalhes",
   "confirmClearGalleryCacheTitle": "Limpar imagens de detalhes?",
   "confirmClearGalleryCacheBody": "Cerca de {size} de imagens de detalhes dos itens serão excluídos; o cache de ícones é mantido. Elas serão baixadas de novo na próxima vez que você abrir os detalhes do item.",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "Limpar",
   "settingsImageCacheClearGalleryFailed": "Não foi possível limpar as imagens de detalhes",
   "settingsExportData": "Exportar dados",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "Mostrar UID completo na imagem",
   "shareImageShowFullUidHint": "Quando desativado, só os 3 primeiros dígitos aparecem e o restante fica oculto com •",
   "shareImageUpdatedAt": "Atualizado: {time}",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "Copiado para a área de transferência",
   "shareImageSaved": "Salvo: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "Não foi possível copiar para a área de transferência",
   "shareImageFailed": "Não foi possível gerar a imagem",
   "shareImageGenerating": "Gerando imagem...",
   "exportDialogSuccessTitle": "Exportação concluída",
   "exportDialogFailedTitle": "Falha na exportação",
   "settingsExportFailed": "Falha na exportação: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "Exportado para {path}",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "Confirmar importação",
   "settingsImportConfirmIntro": "{accounts, plural, =1{1 conta será importada} other{{accounts} contas serão importadas}} ({records, plural, =1{1 registro} other{{records} registros}} no total):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "As contas a seguir serão mescladas com os dados locais; os registros existentes não serão excluídos:",
   "settingsImportConfirmNoConflict": "Nenhum conflito de dados.",
   "settingsImportConfirmPreserveFooter": "As outras contas existentes ({uids}) serão mantidas.",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "O formato do arquivo é inválido ou o arquivo está corrompido",
   "importReasonIncompatibleVersion": "A versão dos dados deste backup não é compatível com o app atual e não pode ser importada",
   "importReasonUnreadable": "Não foi possível ler o arquivo",
   "importReasonForeignApp": "Este arquivo não foi exportado por este app",
   "importReasonNotPlatformFile": "Este arquivo não é uma exportação válida do {platform}",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "Não foi possível gravar o arquivo. Verifique o local de salvamento e as permissões",
   "settingsImportFailed": "Falha na importação: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "Selecione as contas para exportar",
   "settingsImportSelectTitle": "Selecione as contas para importar",
   "settingsImportMergeBadge": "Mesclar",
   "accountsPickerSelectAll": "Selecionar tudo",
   "accountRecordCount": "{n, plural, =1{1 registro} other{{n} registros}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Confirmar",
   "confirmClearActiveBody": "Todos os registros de Invocação do UID {uid} serão excluídos permanentemente. Digite o UID para confirmar:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "Os registros de Invocação de todas as contas serão excluídos permanentemente. Digite DELETE para confirmar:",
   "confirmDelete": "Excluir",
   "confirmImport": "Importar",
@@ -290,6 +892,13 @@
   "confirmContinue": "Continuar",
   "accountListEmpty": "Nenhuma conta ainda",
   "accountLastUpdated": "Última atualização: {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "Ativa",
   "accountSetActive": "Definir como ativa",
   "accountRemove": "Remover",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "Arraste para reordenar",
   "loadingBootstrap": "Carregando...",
   "timelineTopRarityTitle": "Linha do tempo de {star} ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "Quantidade da raridade mais alta por banner",
   "bannerTopRarityPullsSinceLast": "{n, plural, =1{1 tiro desde o último {star}} other{{n} tiros desde o último {star}}}",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "Nova versão {version} disponível",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "Lançada em {date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "Baixar",
   "updateButtonUpdate": "Atualizar",
   "updateNotesUnavailable": "As notas da versão não estão disponíveis no momento. Veja os detalhes no Google Play.",
   "updateDownloadingMessage": "Baixando a atualização...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "A atualização foi baixada",
   "updateRestartAction": "Reiniciar",
   "updateInAppUnavailable": "Não é possível atualizar pelo app agora. Atualize pelo Google Play.",
@@ -320,134 +966,532 @@
   "updateChecking": "Verificando...",
   "updateAlreadyLatest": "Você já está na versão mais recente",
   "updateCheckFailed": "Falha ao verificar atualizações: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "Não foi possível conectar. Verifique sua rede",
   "updateErrorTimeout": "A solicitação expirou",
   "updateErrorRateLimited": "A cota da API do GitHub acabou. Tente de novo mais tarde",
   "updateErrorServer": "Erro no servidor (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "Formato de resposta inesperado",
   "updateErrorPlay": "Não foi possível acessar o Google Play, ou esta cópia não foi instalada pelo Google Play",
   "currentReleaseTitle": "Notas da versão atual",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "Notas da versão {version} não encontradas",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "Ver no GitHub",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "Ir para a página de versões no GitHub",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "Ver notas da versão",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "Não foi possível limpar o cache de imagens de itens: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "Logs de depuração",
+  "@settingsLogs": {},
   "settingsLogsHint": "Se tiver algum problema, exporte os logs para ajudar os desenvolvedores a investigar.",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "Relatar um problema",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "Exportar logs",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "Abrir pasta de logs",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "Limpar todos os logs",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "Logs exportados: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "Falha ao exportar os logs: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "Todos os arquivos em logs/ serão excluídos permanentemente. Se precisar deles para relatar bugs, exporte-os antes. Digite CLEAR para confirmar.",
   "galleryIllustrationLabel": "Traje",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "Invocação",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "Ícone",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "Anterior",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "Próxima",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "Rolar para baixo",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "Não foi possível carregar a imagem",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "Tentar de novo",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "Copiar imagem",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "Salvar imagem",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "Baixar imagem de novo",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "Imagem salva em {path}",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "Não foi possível salvar a imagem",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "Imagem copiada para a área de transferência",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "Não foi possível copiar a imagem",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "Fechar visualização",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "Aumentar zoom",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "Diminuir zoom",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "Ver no encore.moe",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "Inserir o URL do histórico de invocações manualmente",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "Inserir URL do histórico de invocações manualmente",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "Cole o URL do histórico de invocações ou qualquer texto que o contenha.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "Colar URL...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "Colar da área de transferência",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "Escolher arquivo Client.log",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "Como consigo o URL?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "Nenhum URL do histórico de invocações encontrado",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "Este arquivo não tem nenhum URL do histórico de invocações. Abra os Registros de invocação no jogo primeiro e escolha o arquivo de novo.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "Opção 1: modo avião\n1. No jogo, vá para a tela de Invocação\n2. Ative o modo avião e toque em Registros de invocação\n3. A página não carrega: toque e segure → Selecionar tudo → Copiar\n4. Desative o modo avião e cole o texto inteiro aqui\n\nOpção 2: você já tem um arquivo Client.log\nToque em \"Escolher arquivo Client.log\" e o app encontra o URL para você.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "Escolher o arquivo Client.log\n1. Abra os Registros de invocação no jogo\n2. Clique em \"Escolher arquivo Client.log\". Ele fica em:\nPasta do jogo\\Client\\Saved\\Logs\\Client.log\n\nURL de outra ferramenta\nUm URL obtido com ferramentas como o WuWa Tracker pode ser colado diretamente.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "O URL contém as credenciais da sua conta. Não compartilhe publicamente. Ele expira depois de um tempo.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "OK",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "Aguardando você abrir a página Registros de invocação no jogo...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "Preparando a leitura do arquivo de log do jogo...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "Não é possível obter o URL do histórico de invocações automaticamente",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "A leitura do arquivo de log do jogo ainda não foi configurada. Depois de uma configuração única, toda atualização lê o arquivo automaticamente.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "A depuração por Wi‑Fi só funciona conectada a uma rede Wi‑Fi. Conecte-se ao Wi‑Fi e volte; o app continua automaticamente. Você também pode inserir o URL manualmente.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "Root encontrado, mas este app não recebeu acesso root. Para ler com root, permita este app no seu gerenciador de root (por exemplo, na lista de Superusuário do Magisk) e volte; o app tenta de novo automaticamente.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "Não foi possível conectar à depuração por Wi‑Fi. O pareamento pode ter expirado; pareie de novo.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "Seu dispositivo não permite que este app ative a depuração por Wi‑Fi. Ative-a na página Depuração por Wi‑Fi e volte; o app continua automaticamente.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "Esta rede Wi‑Fi ainda não foi permitida para a depuração por Wi‑Fi. Toque em Permitir na solicitação do sistema (marque \"Sempre permitir nesta rede\" para não ser perguntado de novo) e o app continua automaticamente. Se você fechou a solicitação, toque em Tentar de novo.",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "É preciso permissão de armazenamento para ler o arquivo de log do jogo.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "Este dispositivo não consegue ler o arquivo de log do jogo automaticamente. Insira o URL manualmente.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "Abrir Wuthering Waves",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "Abrir Depuração por Wi‑Fi",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "Conceder permissão",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "A conexão de depuração por Wi‑Fi caiu, reconectando... Se não voltar, verifique o Wi‑Fi ou insira o URL manualmente.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "A depuração por Wi‑Fi continua ativada. Você pode desativá-la nas configurações do sistema.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "Configurar",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "Parear de novo",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "Ler arquivo de log do jogo",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "Por que isso é necessário?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "O Android não permite que apps leiam diretamente os arquivos de outros apps. Este app usa o recurso nativo de depuração por Wi‑Fi para ler o arquivo de log do Wuthering Waves e obter dele o URL do histórico de invocações.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "O que este app faz",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• Lê apenas o arquivo de log do Wuthering Waves\n• Desconecta logo após a leitura e desativa a depuração por Wi‑Fi se foi este app que a ativou\n• Concede a si mesmo permissão para ativar e desativar a depuração por Wi‑Fi, para você não precisar configurar de novo\n• Você pode remover isso a qualquer momento nas Configurações",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "Requisitos",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 ou mais recente, Wi‑Fi e notificações permitidas",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "Iniciar configuração",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "Inserir o URL manualmente",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "Parear depuração por Wi‑Fi",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. Ative as Opções do desenvolvedor",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. Abra a página Sobre nas Configurações do sistema (por exemplo, \"Sobre o telefone\" ou \"Sobre o tablet\")\n2. Encontre \"Número da versão\" e toque nele 7 vezes\n3. Quando aparecer \"Você agora é um desenvolvedor\", volte para este app",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "Abrir página Sobre",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. Opções do desenvolvedor ativadas",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. Permita as notificações",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "Você vai digitar o código de pareamento em uma notificação, então permita que este app mostre notificações.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "Permitir notificações",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "Abrir configurações de notificação",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. Notificações permitidas",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. Pareie",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. Toque no botão abaixo para abrir a Depuração por Wi‑Fi\n2. Ative \"Usar a depuração por Wi‑Fi\" e toque em \"Parear o dispositivo com um código de pareamento\"\n3. Deslize para baixo a partir do topo da tela e, na notificação deste app, digite o código de pareamento de 6 dígitos mostrado na tela de pareamento da Depuração por Wi‑Fi",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "Aguardando você digitar o código de pareamento na notificação...\nDigite enquanto a tela de pareamento da Depuração por Wi‑Fi ainda estiver aberta.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "Abrir a Depuração por Wi‑Fi de novo",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "Pareando...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "Pareado, falta só mais um passo",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "Seu dispositivo tem uma restrição de segurança extra. Ative mais uma opção para que este app possa ativar e desativar a depuração por Wi‑Fi automaticamente.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "Como ativar",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. Abra as Opções do desenvolvedor\n2. Encontre a chave relacionada à segurança da depuração USB ou ao monitoramento de permissões e ative-a, por exemplo:\n• Xiaomi: \"Depuração USB (configurações de segurança)\"\n• OPPO / realme: \"Desativar monitoramento de permissões\"\n3. Confira se a depuração por Wi‑Fi está ativada, volte e toque em Tentar de novo",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "Abrir Opções do desenvolvedor",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "Tentar de novo",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "Pular (ativar a depuração por Wi‑Fi manualmente a cada atualização)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "Tudo pronto",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "A partir de agora, Atualizar lê o log automaticamente. Nenhuma configuração extra é necessária.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "Quando tocar em Atualizar, ative a depuração por Wi‑Fi quando for solicitado.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "Voltando e iniciando a atualização...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "Acesso ao arquivo de log do jogo",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "Método",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "Acesso direto",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "Depuração por Wi‑Fi",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "Não configurado",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "Pareamento",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "Pareado",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "Pareado (ativar a depuração por Wi‑Fi manualmente)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "Tentar permissão de novo",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "Configurar",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "Remover pareamento",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "Remover pareamento?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "A chave de pareamento deste app será excluída e a permissão deste app para ativar e desativar a depuração por Wi‑Fi será removida. Você vai precisar parear de novo para usar a depuração por Wi‑Fi depois.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "Pareamento removido",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "A chave de pareamento deste app foi excluída e a permissão para ativar e desativar a depuração por Wi‑Fi foi removida.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "Chave de pareamento excluída",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "A chave de pareamento deste app foi excluída, mas desta vez não foi possível conectar à depuração por Wi‑Fi, então a permissão para ativá-la e desativá-la não foi removida.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "Este app não usa essa permissão enquanto não estiver pareado. Para removê-la por completo, conecte-se a uma rede Wi‑Fi, pareie de novo e depois remova o pareamento outra vez.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "A lista Depuração por Wi‑Fi → Dispositivos pareados do sistema vai continuar mostrando \"{name}\". Ele não consegue mais se conectar, então você pode deixá-lo; para removê-lo, toque nele e exclua.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "A lista Depuração por Wi‑Fi → Dispositivos pareados do sistema também ainda mostra \"{name}\"; toque nele para excluir.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "URL do histórico de invocações obtido. A busca do seu histórico de invocações começa quando você voltar para este app.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "Compartilhar",
   "shareFailed": "Não foi possível compartilhar",
   "dialogSaveAsTitle": "Salvar como",
@@ -456,10 +1500,37 @@
   "actionSave": "Salvar",
   "settingsLogsShare": "Compartilhar logs",
   "logUnavailableGameNotInstalled": "A versão global do Wuthering Waves não foi encontrada neste dispositivo. Depois de instalar, volte aqui e o jogo será detectado automaticamente.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "Verificar de novo",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "Há mais de uma versão do Wuthering Waves instalada neste dispositivo. Qual deve ser lida?",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "Versão do Google Play",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "Versão da Galaxy Store",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "Versão do Wuthering Waves: {name}",
-  "actionSwitchGameVersion": "Trocar versão"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "Trocar versão",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }

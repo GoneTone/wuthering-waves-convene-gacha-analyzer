@@ -3,6 +3,20 @@
   "localeNativeName": "Tiếng Việt",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "Người dịch: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "Trình phân tích triệu hồi Wuthering Waves",
   "actionUpdate": "Cập nhật",
   "actionCancel": "Hủy",
@@ -40,24 +54,94 @@
   "navSectionGacha": "Convene",
   "footerNotSynced": "Chưa đồng bộ",
   "footerLastUpdated": "Cập nhật lần cuối: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "Vừa xong",
   "relativeSecondsAgo": "{count} giây trước",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count} phút trước",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count} giờ trước",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count} ngày trước",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count} tháng trước",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count} năm trước",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "Chuyển tài khoản",
   "uidNotSynced": "Chưa đồng bộ",
   "uidActiveSuffix": " (đang dùng)",
   "emptyNoSyncTitle": "Chưa có dữ liệu được đồng bộ",
   "emptyNoSyncMessage": "Nhấn {icon} ở góc trên bên phải để bắt đầu",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "Banner này chưa có lịch sử",
   "emptyNoFilterMatch": "Không có lịch sử nào khớp với bộ lọc hiện tại",
   "emptyNoGachaRecords": "Chưa có lịch sử triệu hồi",
   "statsTotal": "Tổng số lượt",
   "statsRankCount": "Số {star}",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "{rate}% tổng số",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "Phân bố độ hiếm",
   "statsItemTypeDistribution": "Phân bố loại",
   "statsNoData": "Không có dữ liệu",
@@ -70,12 +154,40 @@
   "tableKind": "Loại",
   "tableRarity": "Độ hiếm",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "Tổng",
   "tableMainPity": "Bảo hiểm",
   "tableSortButton": "Sắp xếp: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "Sắp xếp: mặc định",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "Sắp xếp theo",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "Số lượt kể từ {star} gần nhất",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "Giảm dần",
   "sortDirectionAsc": "Tăng dần",
   "sortHintClickToSort": "Nhấp để sắp xếp",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "Mở Wuthering Waves → Convene → Convene Records",
   "progressFallbackHint": "(Lần bắt dữ liệu trước đã hết hạn. Vui lòng mở lại trang Convene Records.)",
   "progressCaptureUnavailableHint": "Không thể khởi động trình hỗ trợ bắt dữ liệu (có thể bạn đã từ chối yêu cầu cấp quyền của Windows). Hiện chỉ phát hiện từ tệp log của game. Vui lòng mở trang Convene Records trong game.",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "Không thể khởi động trình hỗ trợ bắt dữ liệu (có thể bạn đã từ chối yêu cầu cấp quyền của Windows) và không tìm thấy thư mục game. Nhấn “Chọn thư mục game” bên dưới để tự đặt, hoặc hủy, nhấn lại “Cập nhật” và chọn “Có” trong yêu cầu cấp quyền.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "Đã mở Convene Records nhưng không có gì xảy ra?",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "Không phát hiện được lịch sử triệu hồi",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "Không tìm thấy thư mục game Wuthering Waves. Sau khi bạn chọn thư mục, công cụ này còn có thể lấy URL lịch sử triệu hồi từ tệp log của game.",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "Thư mục game đang dùng: {path}. Nếu đường dẫn này sai (ví dụ: cài nhiều bản game), hãy nhấn “Chọn lại”.",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "Đã lưu thư mục game. Quay lại game và mở Convene Records thêm một lần nữa.",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "Không tìm thấy tệp log của game trong thư mục này. Vui lòng chọn thư mục “Wuthering Waves Game”.",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "Chọn thư mục game",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "Chọn lại",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "Đang tải: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "Banner {index} / {total}, {count} mới",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "Đã thêm {count} lịch sử mới",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, other{Đã tải {count} ảnh vật phẩm}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ Thất bại một phần: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, other{Đã nhập {accounts} tài khoản}}: {added} mới, {duplicate} đã có",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ Nhập thất bại một phần: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "Đang tải ảnh vật phẩm {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "Đang tải dữ liệu vật phẩm {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "Đã bắt lại dữ liệu nhưng vẫn không tải được lịch sử. Máy chủ có thể đang tạm thời không khả dụng. Vui lòng thử lại sau.",
   "errorNoRecords": "Tài khoản này chưa có lịch sử triệu hồi",
   "errorNetwork": "Kết nối mạng thất bại. Vui lòng kiểm tra kết nối và thử lại.",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "Tổng quan triệu hồi",
   "pageBannerRecordList": "Danh sách lịch sử",
   "rarityOverviewTitle": "Tổng quan {star}",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "Cài đặt",
   "settingsAppearance": "Giao diện",
   "settingsThemeSystem": "Theo hệ thống",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "Chuyển ngôn ngữ dữ liệu ngay",
   "settingsDataLanguageUnifying": "Đang chuyển đổi...",
   "settingsDataLanguageUnifyDone": "Đã chuyển đổi {converted}, khôi phục {backfilled} ID, {unresolved} không thể chuyển đổi.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "Chuyển đổi thất bại, dữ liệu không thay đổi. Hãy kiểm tra kết nối và thử lại.",
   "settingsDataManagement": "Quản lý dữ liệu",
   "settingsGameDir": "Thư mục game",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "Tự động phát hiện: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "Đặt thủ công: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "Không tìm thấy thư mục game",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "Xóa",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "Đồng bộ đám mây",
   "cloudSyncIntro": "Liên kết tài khoản Google để tự động sao lưu lịch sử triệu hồi lên Google Drive và đồng bộ giữa nhiều thiết bị.",
   "cloudSyncUnconfigured": "Bản dựng này chưa cấu hình thông tin xác thực Google OAuth nên không thể dùng đồng bộ đám mây.",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "Đã mở trình duyệt. Vui lòng hoàn tất ủy quyền trong trình duyệt...",
   "cloudSyncAwaitingConsentAndroid": "Vui lòng hoàn tất ủy quyền trong cửa sổ Google...",
   "cloudSyncLinkedAs": "Đã liên kết: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "Tự động đồng bộ",
   "cloudSyncAutoToggleHint": "Tự động đồng bộ khi mở ứng dụng và sau khi dữ liệu thay đổi; khi tắt vẫn có thể đồng bộ thủ công.",
   "cloudSyncNow": "Đồng bộ ngay",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "Hủy liên kết",
   "cloudSyncUnlinkConfirmBody": "Việc đồng bộ sẽ dừng lại. Cả dữ liệu trên máy và bản sao lưu trên đám mây đều được giữ nguyên.",
   "cloudSyncLastSynced": "Đồng bộ lần cuối: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "Chưa đồng bộ lần nào",
   "cloudSyncErrorNetwork": "Đồng bộ thất bại: lỗi mạng. Sẽ tự động thử lại.",
   "cloudSyncErrorBusy": "Tạm hoãn đồng bộ: đang cập nhật hoặc nhập dữ liệu. Sẽ tự động thử lại.",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "Ẩn UID trên giao diện",
   "settingsMaskUidInUiHint": "Khi bật, UID trên giao diện và trong danh sách tài khoản chỉ hiện 3 chữ số đầu, phần còn lại bị ẩn (ví dụ: 123•••••). Hữu ích khi livestream hoặc chia sẻ màn hình. Ảnh chia sẻ, tệp đã xuất và hộp thoại xác nhận xóa không bị ảnh hưởng.",
   "settingsAdPrivacyOptions": "Tùy chọn quyền riêng tư quảng cáo",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "Thay đổi việc bạn có đồng ý xem quảng cáo được cá nhân hóa hay không.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "Giới thiệu",
   "settingsOtherGamesTitle": "Phiên bản cho game khác",
   "settingsOtherGamesGenshin": "Genshin Impact",
   "settingsOtherGamesFuture": "Có thể hỗ trợ thêm game khác trong tương lai...",
   "settingsAboutVersion": "Phiên bản {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "Người đóng góp",
   "contributorsSubtitle": "Xin đặc biệt cảm ơn những người sau đây đã đóng góp vào việc phát triển phần mềm này!",
   "contributorsProjectLeader": "Người quản lý dự án",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "Giấy phép dự án",
   "contributorsOpenSourceLicenses": "Giấy phép nguồn mở",
   "pityRank": "Bảo hiểm {star}",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "Còn {n} lượt đến bảo hiểm",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "Sắp chạm bảo hiểm! Còn {n} lượt",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "Sắp chạm bảo hiểm",
   "pityNoMainRarity": "Chưa có {star}",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "Trung bình {n} lượt",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "Không có lịch sử {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n} lượt",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "May mắn",
   "luckTierAverage": "Trung bình",
   "luckTierUnlucky": "Xui xẻo",
   "timelineNowLabel": "Hiện tại",
   "timelineNowPulls": "{n} lượt",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "{n} lượt kể từ {star} gần nhất",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "{n} lượt kể từ {star} gần nhất trên mọi banner",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{month} / {year}",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "Cuộn sang trái",
   "timelineScrollRight": "Cuộn sang phải",
   "timelineLoadMore": "Tải thêm (còn {n})",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "Mọi độ hiếm",
   "filterRarityRankOnly": "Chỉ {star}",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "Mọi loại",
   "filterSearchHint": "Tìm theo tên...",
   "filterClear": "Xóa bộ lọc",
@@ -210,35 +624,150 @@
   "pagerLast": "Cuối",
   "pagerJumpTitle": "Đến trang",
   "pagerJumpLabel": "Trang ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "Đang ở trang {page} · {total} lịch sử",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "Đi",
   "pagerJumpInvalid": "Nhập trang từ {min}–{max}",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "Xóa dữ liệu tài khoản hiện tại",
   "settingsClearAll": "Xóa toàn bộ dữ liệu",
   "settingsRefetchItemImagesTitle": "Buộc tải lại ảnh vật phẩm",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "Chưa có lịch sử triệu hồi, không có gì để tải lại",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "Buộc tải lại ảnh vật phẩm",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "Thao tác này sẽ xóa toàn bộ bộ nhớ đệm ảnh vật phẩm trên máy và tải lại biểu tượng nhân vật. Ảnh chi tiết sẽ được tải khi cần vào lần tới bạn mở chi tiết vật phẩm. Tùy số lượng vật phẩm, việc này có thể tốn vài phút và dung lượng mạng.",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "Bắt đầu tải lại",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "Dữ liệu vật phẩm",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "Tải lại thông tin chi tiết mới nhất của mọi vật phẩm (giới thiệu, danh sách ảnh, v.v.), giữ nguyên ảnh đã tải; ảnh mới sẽ được tải khi bạn mở chi tiết vật phẩm đó.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "Cập nhật dữ liệu vật phẩm",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "Chưa có lịch sử triệu hồi, không có gì để cập nhật",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "Cập nhật dữ liệu vật phẩm?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "Thao tác này sẽ tải lại thông tin chi tiết của mọi vật phẩm, giữ nguyên ảnh đã tải; ảnh mới sẽ được tải khi bạn mở chi tiết. Cập nhật ngay?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "Bắt đầu cập nhật",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, other{Đã cập nhật dữ liệu cho {count} vật phẩm}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, other{Đã tải {count} ảnh vật phẩm}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, other{Đã dọn dữ liệu ngôn ngữ cũ của {count} vật phẩm}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "Bộ nhớ đệm ảnh",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "Tổng",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "Biểu tượng",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "Ảnh chi tiết",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "Đang tính...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "Không đọc được dung lượng bộ nhớ đệm",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "Xóa ảnh chi tiết",
   "confirmClearGalleryCacheTitle": "Xóa ảnh chi tiết?",
   "confirmClearGalleryCacheBody": "Khoảng {size} ảnh chi tiết vật phẩm sẽ bị xóa; bộ nhớ đệm biểu tượng được giữ lại. Ảnh sẽ được tải lại vào lần tới bạn mở chi tiết vật phẩm.",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "Xóa",
   "settingsImageCacheClearGalleryFailed": "Không xóa được ảnh chi tiết",
   "settingsExportData": "Xuất dữ liệu",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "Hiện đầy đủ UID trên ảnh",
   "shareImageShowFullUidHint": "Khi tắt, chỉ hiện 3 chữ số đầu, phần còn lại được che bằng •",
   "shareImageUpdatedAt": "Cập nhật {time}",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "Đã sao chép vào bộ nhớ tạm",
   "shareImageSaved": "Đã lưu: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "Không sao chép được vào bộ nhớ tạm",
   "shareImageFailed": "Không tạo được ảnh chia sẻ",
   "shareImageGenerating": "Đang tạo ảnh...",
   "exportDialogSuccessTitle": "Xuất thành công",
   "exportDialogFailedTitle": "Xuất thất bại",
   "settingsExportFailed": "Xuất thất bại: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "Đã xuất ra {path}",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "Xác nhận nhập",
   "settingsImportConfirmIntro": "Sắp nhập {accounts} tài khoản (tổng cộng {records} lịch sử):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "Các tài khoản sau sẽ được gộp với dữ liệu trên máy; lịch sử hiện có sẽ không bị xóa:",
   "settingsImportConfirmNoConflict": "Không có xung đột dữ liệu.",
   "settingsImportConfirmPreserveFooter": "Các tài khoản hiện có khác ({uids}) sẽ được giữ nguyên.",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "Định dạng tệp không hợp lệ hoặc tệp bị hỏng",
   "importReasonIncompatibleVersion": "Phiên bản dữ liệu của bản sao lưu này không tương thích với ứng dụng hiện tại nên không thể nhập",
   "importReasonUnreadable": "Không đọc được tệp",
   "importReasonForeignApp": "Tệp này không được xuất từ ứng dụng này",
   "importReasonNotPlatformFile": "Tệp này không phải tệp xuất hợp lệ của {platform}",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "Không ghi được tệp, vui lòng kiểm tra vị trí lưu và quyền truy cập",
   "settingsImportFailed": "Nhập thất bại: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "Chọn tài khoản để xuất",
   "settingsImportSelectTitle": "Chọn tài khoản để nhập",
   "settingsImportMergeBadge": "Gộp",
   "accountsPickerSelectAll": "Chọn tất cả",
   "accountRecordCount": "{n} lịch sử",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Xác nhận",
   "confirmClearActiveBody": "Thao tác này sẽ xóa vĩnh viễn toàn bộ lịch sử triệu hồi của UID {uid}. Nhập UID để xác nhận:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "Thao tác này sẽ xóa vĩnh viễn lịch sử triệu hồi của mọi tài khoản. Nhập DELETE để xác nhận:",
   "confirmDelete": "Xóa",
   "confirmImport": "Nhập",
@@ -290,6 +892,13 @@
   "confirmContinue": "Tiếp tục",
   "accountListEmpty": "Chưa có tài khoản nào",
   "accountLastUpdated": "Cập nhật lần cuối {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "Đang dùng",
   "accountSetActive": "Đặt làm đang dùng",
   "accountRemove": "Xóa",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "Kéo để sắp xếp lại",
   "loadingBootstrap": "Đang tải...",
   "timelineTopRarityTitle": "Dòng thời gian {star} ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "Số lượng độ hiếm cao nhất theo banner",
   "bannerTopRarityPullsSinceLast": "{n} lượt kể từ {star} gần nhất",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "Đã có phiên bản mới {version}",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "Phát hành ngày {date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "Tải xuống",
   "updateButtonUpdate": "Cập nhật",
   "updateNotesUnavailable": "Hiện không thể hiển thị ghi chú phát hành. Xem chi tiết trên Google Play.",
   "updateDownloadingMessage": "Đang tải bản cập nhật...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "Đã tải xong bản cập nhật",
   "updateRestartAction": "Khởi động lại",
   "updateInAppUnavailable": "Hiện không thể cập nhật trong ứng dụng. Vui lòng cập nhật từ Google Play.",
@@ -320,134 +966,532 @@
   "updateChecking": "Đang kiểm tra...",
   "updateAlreadyLatest": "Bạn đang dùng phiên bản mới nhất",
   "updateCheckFailed": "Kiểm tra cập nhật thất bại: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "Không thể kết nối, vui lòng kiểm tra mạng",
   "updateErrorTimeout": "Yêu cầu đã hết thời gian chờ",
   "updateErrorRateLimited": "Đã hết hạn mức GitHub API, vui lòng thử lại sau",
   "updateErrorServer": "Lỗi máy chủ (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "Định dạng phản hồi không như mong đợi",
   "updateErrorPlay": "Không kết nối được Google Play, hoặc bản này không được cài từ Google Play",
   "currentReleaseTitle": "Ghi chú phát hành hiện tại",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "Không tìm thấy ghi chú phát hành cho {version}",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "Xem trên GitHub",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "Đến trang GitHub Releases",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "Xem ghi chú phát hành",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "Không xóa được bộ nhớ đệm ảnh vật phẩm: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "Log gỡ lỗi",
+  "@settingsLogs": {},
   "settingsLogsHint": "Nếu gặp sự cố, hãy xuất log để giúp nhà phát triển tìm nguyên nhân.",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "Báo cáo sự cố",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "Xuất log",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "Mở thư mục log",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "Xóa toàn bộ log",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "Đã xuất log: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "Xuất log thất bại: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "Thao tác này sẽ xóa vĩnh viễn mọi tệp trong logs/. Nếu cần dùng để báo lỗi, hãy xuất trước. Nhập CLEAR để xác nhận.",
   "galleryIllustrationLabel": "Trang phục",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "Triệu hồi",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "Biểu tượng",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "Trước",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "Sau",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "Cuộn xuống",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "Không tải được ảnh",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "Thử lại",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "Sao chép ảnh",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "Lưu ảnh",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "Tải lại ảnh",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "Đã lưu ảnh vào {path}",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "Không lưu được ảnh",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "Đã sao chép ảnh vào bộ nhớ tạm",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "Không sao chép được ảnh",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "Đóng xem trước ảnh",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "Phóng to",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "Thu nhỏ",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "Xem trên encore.moe",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "Nhập URL lịch sử triệu hồi thủ công",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "Nhập URL lịch sử triệu hồi thủ công",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "Dán URL lịch sử triệu hồi, hoặc bất kỳ đoạn văn bản nào có chứa URL đó.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "Dán URL...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "Dán từ bộ nhớ tạm",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "Chọn tệp Client.log",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "Làm sao để lấy URL?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "Không tìm thấy URL lịch sử triệu hồi",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "Tệp này không có URL lịch sử triệu hồi. Hãy mở Convene Records trong game trước, rồi chọn lại tệp.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "Cách 1: Chế độ máy bay\n1. Trong game, vào màn hình Convene\n2. Bật chế độ máy bay, rồi nhấn Convene Records\n3. Trang không tải được: nhấn giữ → Chọn tất cả → Sao chép\n4. Tắt chế độ máy bay và dán toàn bộ văn bản vào đây\n\nCách 2: Bạn đã có tệp Client.log\nNhấn “Chọn tệp Client.log” và ứng dụng sẽ tự tìm URL.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "Chọn tệp Client.log\n1. Mở Convene Records trong game\n2. Nhấn “Chọn tệp Client.log”. Tệp nằm ở:\nThư mục game\\Client\\Saved\\Logs\\Client.log\n\nURL từ công cụ khác\nURL lấy được bằng các công cụ như WuWa Tracker có thể dán trực tiếp.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "URL chứa thông tin xác thực tài khoản của bạn. Đừng chia sẻ công khai. URL sẽ hết hạn sau một thời gian.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "OK",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "Đang chờ bạn mở trang Convene Records trong game...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "Đang chuẩn bị đọc tệp log của game...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "Không thể tự động lấy URL lịch sử triệu hồi",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "Chưa thiết lập đọc tệp log của game. Chỉ cần thiết lập một lần, sau đó mỗi lần cập nhật sẽ tự động đọc.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "Gỡ lỗi không dây chỉ hoạt động qua Wi‑Fi. Hãy kết nối Wi‑Fi rồi quay lại, ứng dụng sẽ tự động tiếp tục. Bạn cũng có thể nhập URL thủ công.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "Đã phát hiện root nhưng ứng dụng này chưa được cấp quyền root. Để đọc bằng root, hãy cho phép ứng dụng này trong trình quản lý root (ví dụ danh sách Superuser của Magisk), rồi quay lại; ứng dụng sẽ tự động thử lại.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "Không kết nối được gỡ lỗi không dây. Việc ghép nối có thể đã hết hạn, vui lòng ghép nối lại.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "Thiết bị của bạn không cho phép ứng dụng này bật gỡ lỗi không dây. Hãy bật trong trang Gỡ lỗi không dây rồi quay lại, ứng dụng sẽ tự động tiếp tục.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "Mạng Wi‑Fi này chưa được phép dùng gỡ lỗi không dây. Nhấn Cho phép trong hộp thoại hệ thống (đánh dấu “Luôn cho phép trên mạng này” để không bị hỏi lại) và ứng dụng sẽ tự động tiếp tục. Nếu bạn đã đóng hộp thoại, hãy nhấn Thử lại.",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "Cần quyền bộ nhớ để đọc tệp log của game.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "Thiết bị này không thể tự động đọc tệp log của game. Vui lòng nhập URL thủ công.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "Mở Wuthering Waves",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "Mở Gỡ lỗi không dây",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "Cấp quyền",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "Mất kết nối gỡ lỗi không dây, đang kết nối lại... Nếu không khôi phục được, hãy kiểm tra Wi‑Fi hoặc nhập URL thủ công.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "Gỡ lỗi không dây vẫn đang bật. Bạn có thể tắt trong cài đặt hệ thống.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "Thiết lập",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "Ghép nối lại",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "Đọc tệp log của game",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "Vì sao cần bước này?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "Android không cho ứng dụng đọc trực tiếp tệp của ứng dụng khác. Ứng dụng này dùng tính năng Gỡ lỗi không dây có sẵn để đọc tệp log của Wuthering Waves và lấy URL lịch sử triệu hồi từ đó.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "Ứng dụng này sẽ làm gì",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• Chỉ đọc tệp log của Wuthering Waves\n• Ngắt kết nối ngay sau khi đọc, và tắt gỡ lỗi không dây nếu chính ứng dụng này đã bật\n• Tự cấp quyền bật/tắt gỡ lỗi không dây để bạn không phải thiết lập lại\n• Bạn có thể gỡ bỏ bất cứ lúc nào trong Cài đặt",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "Yêu cầu",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 trở lên, Wi‑Fi, cho phép thông báo",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "Bắt đầu thiết lập",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "Nhập URL thủ công thay thế",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "Ghép nối gỡ lỗi không dây",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. Bật Tùy chọn cho nhà phát triển",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. Mở trang Giới thiệu trong Cài đặt hệ thống (ví dụ “Giới thiệu về điện thoại” hoặc “Giới thiệu về máy tính bảng”)\n2. Tìm “Số bản dựng” và nhấn 7 lần\n3. Khi thấy thông báo “Bạn đã là nhà phát triển”, hãy quay lại ứng dụng này",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "Mở trang Giới thiệu",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. Tùy chọn cho nhà phát triển đã bật",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. Cho phép thông báo",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "Bạn sẽ nhập mã ghép nối trong thông báo, vì vậy hãy cho phép ứng dụng này hiển thị thông báo.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "Cho phép thông báo",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "Mở cài đặt thông báo",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. Đã cho phép thông báo",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. Ghép nối",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. Nhấn nút bên dưới để mở Gỡ lỗi không dây\n2. Bật “Sử dụng tính năng gỡ lỗi không dây” và nhấn “Ghép nối thiết bị bằng mã ghép nối”\n3. Vuốt xuống từ đầu màn hình và nhập mã ghép nối 6 chữ số hiển thị trên màn hình ghép nối của Gỡ lỗi không dây vào thông báo của ứng dụng này",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "Đang chờ bạn nhập mã ghép nối trong thông báo...\nHãy nhập khi màn hình ghép nối trong Gỡ lỗi không dây vẫn đang mở.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "Mở lại Gỡ lỗi không dây",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "Đang ghép nối...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "Đã ghép nối, còn một bước nữa",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "Thiết bị của bạn có thêm một hạn chế bảo mật. Hãy bật thêm một tùy chọn để ứng dụng này có thể tự động bật/tắt gỡ lỗi không dây.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "Cách bật",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. Mở Tùy chọn cho nhà phát triển\n2. Tìm công tắc liên quan đến bảo mật gỡ lỗi USB hoặc giám sát quyền và bật lên, ví dụ:\n• Xiaomi: “Gỡ lỗi USB (Cài đặt bảo mật)”\n• OPPO / realme: “Tắt giám sát quyền”\n3. Đảm bảo gỡ lỗi không dây đang bật, rồi quay lại và nhấn Thử lại",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "Mở Tùy chọn cho nhà phát triển",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "Thử lại",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "Bỏ qua (tự bật gỡ lỗi không dây mỗi lần cập nhật)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "Hoàn tất",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "Từ giờ, Cập nhật sẽ tự động đọc log. Không cần thiết lập thêm.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "Khi nhấn Cập nhật, hãy bật gỡ lỗi không dây khi được nhắc.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "Đang quay lại và bắt đầu cập nhật...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "Truy cập tệp log của game",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "Phương thức",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "Truy cập trực tiếp",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "Gỡ lỗi không dây",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "Chưa thiết lập",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "Ghép nối",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "Đã ghép nối",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "Đã ghép nối (tự bật gỡ lỗi không dây)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "Thử cấp quyền lại",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "Thiết lập",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "Gỡ ghép nối",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "Gỡ ghép nối?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "Thao tác này sẽ xóa khóa ghép nối của ứng dụng này và thu hồi quyền bật/tắt gỡ lỗi không dây của ứng dụng. Sau này muốn dùng gỡ lỗi không dây, bạn sẽ cần ghép nối lại.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "Đã gỡ ghép nối",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "Đã xóa khóa ghép nối của ứng dụng này và thu hồi quyền bật/tắt gỡ lỗi không dây.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "Đã xóa khóa ghép nối",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "Đã xóa khóa ghép nối của ứng dụng này, nhưng lần này không kết nối được gỡ lỗi không dây nên chưa thu hồi được quyền bật/tắt gỡ lỗi không dây.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "Khi chưa ghép nối, ứng dụng này không dùng quyền đó. Muốn thu hồi hoàn toàn, hãy kết nối Wi‑Fi, ghép nối lại rồi gỡ ghép nối thêm một lần nữa.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "Danh sách Gỡ lỗi không dây → Thiết bị đã ghép nối của hệ thống vẫn sẽ hiển thị \"{name}\". Mục này không thể kết nối được nữa nên bạn có thể để nguyên; muốn xóa thì nhấn vào và xóa.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "Danh sách Gỡ lỗi không dây → Thiết bị đã ghép nối của hệ thống cũng vẫn hiển thị \"{name}\"; nhấn vào để xóa.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "Đã lấy được URL lịch sử triệu hồi. Việc tải lịch sử triệu hồi sẽ bắt đầu khi bạn quay lại ứng dụng này.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "Chia sẻ",
   "shareFailed": "Không chia sẻ được",
   "dialogSaveAsTitle": "Lưu thành",
@@ -456,10 +1500,37 @@
   "actionSave": "Lưu",
   "settingsLogsShare": "Chia sẻ log",
   "logUnavailableGameNotInstalled": "Không tìm thấy bản toàn cầu của Wuthering Waves trên thiết bị này. Cài đặt xong hãy quay lại đây, ứng dụng sẽ tự động phát hiện.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "Kiểm tra lại",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "Thiết bị này đang cài nhiều phiên bản Wuthering Waves. Bạn muốn đọc phiên bản nào?",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "Bản Google Play",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "Bản Galaxy Store",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "Phiên bản Wuthering Waves: {name}",
-  "actionSwitchGameVersion": "Đổi phiên bản"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "Đổi phiên bản",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }

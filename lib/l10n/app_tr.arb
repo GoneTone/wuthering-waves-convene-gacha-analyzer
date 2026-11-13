@@ -3,6 +3,20 @@
   "localeNativeName": "Türkçe",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "Çevirmen: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "Wuthering Waves Çağrı Analizcisi",
   "actionUpdate": "Güncelle",
   "actionCancel": "İptal",
@@ -40,24 +54,94 @@
   "navSectionGacha": "Convene",
   "footerNotSynced": "Eşitlenmedi",
   "footerLastUpdated": "Son güncelleme: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "Az önce",
   "relativeSecondsAgo": "{count} saniye önce",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count} dakika önce",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count} saat önce",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count} gün önce",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count} ay önce",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count} yıl önce",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "Hesap değiştir",
   "uidNotSynced": "Eşitlenmedi",
   "uidActiveSuffix": " (etkin)",
   "emptyNoSyncTitle": "Henüz veri eşitlenmedi",
   "emptyNoSyncMessage": "Başlamak için sağ üstteki {icon} simgesine dokunun",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "Bu banner için kayıt yok",
   "emptyNoFilterMatch": "Geçerli filtreyle eşleşen kayıt yok",
   "emptyNoGachaRecords": "Henüz Çağrı kaydı yok",
   "statsTotal": "Toplam çekiliş",
   "statsRankCount": "{star} Sayısı",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "Toplam içinde %{rate}",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "Nadirlik Dağılımı",
   "statsItemTypeDistribution": "Tür Dağılımı",
   "statsNoData": "Veri yok",
@@ -70,12 +154,40 @@
   "tableKind": "Tür",
   "tableRarity": "Nadirlik",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "Toplam",
   "tableMainPity": "Garanti",
   "tableSortButton": "Sırala: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "Sırala: varsayılan",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "Sıralama ölçütü",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "Son {star} sonrasındaki çekiliş sayısı",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "Azalan",
   "sortDirectionAsc": "Artan",
   "sortHintClickToSort": "Sıralamak için tıklayın",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "Wuthering Waves'i açın → Convene → Convene Records",
   "progressFallbackHint": "(Önceki yakalamanın süresi doldu. Lütfen Convene Records sayfasını yeniden açın.)",
   "progressCaptureUnavailableHint": "Yakalama yardımcısı başlatılamadı (Windows izin istemi reddedilmiş olabilir). Şu anda yalnızca oyunun günlük dosyasından algılama yapılıyor. Lütfen oyunda Convene Records sayfasını açın.",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "Yakalama yardımcısı başlatılamadı (Windows izin istemi reddedilmiş olabilir) ve oyun klasörü bulunamadı. Klasörü elle ayarlamak için aşağıdaki \"Oyun klasörünü seç\" düğmesine basın ya da iptal edip yeniden \"Güncelle\"ye basın ve izin isteminde \"Evet\"i seçin.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "Convene Records sayfasını açtınız ama hiçbir şey olmuyor mu?",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "Çağrı geçmişi algılanmadı",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "Wuthering Waves oyun klasörü bulunamadı. Klasörü seçtiğinizde bu araç çağrı geçmişi URL'sini oyunun günlük dosyasından da alabilir.",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "Kullanılan oyun klasörü: {path}. Bu yol yanlışsa (örneğin oyunun birden fazla kopyası yüklüyse) \"Yeniden seç\"e basın.",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "Oyun klasörü kaydedildi. Oyuna dönüp Convene Records sayfasını bir kez daha açın.",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "Bu klasörde oyun günlük dosyası bulunamadı. Lütfen \"Wuthering Waves Game\" klasörünü seçin.",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "Oyun klasörünü seç",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "Yeniden seç",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "Alınıyor: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "Banner {index} / {total}, {count} yeni",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "{count} yeni kayıt eklendi",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, other{{count} eşya görseli indirildi}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ Kısmi hata: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, other{{accounts} hesap içe aktarıldı}}: {added} yeni, {duplicate} zaten mevcut",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ Kısmi içe aktarma hatası: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "Eşya görselleri indiriliyor {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "Eşya verileri alınıyor {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "Yeniden yakalamadan sonra da kayıtlar alınamadı. Sunucu geçici olarak kullanılamıyor olabilir, lütfen daha sonra tekrar deneyin.",
   "errorNoRecords": "Bu hesabın henüz Çağrı kaydı yok",
   "errorNetwork": "Ağ bağlantısı başarısız oldu. Lütfen bağlantınızı kontrol edip tekrar deneyin.",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "Çağrı Genel Bakışı",
   "pageBannerRecordList": "Kayıt listesi",
   "rarityOverviewTitle": "{star} Genel Bakışı",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "Ayarlar",
   "settingsAppearance": "Görünüm",
   "settingsThemeSystem": "Sistemi takip et",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "Veri dilini şimdi dönüştür",
   "settingsDataLanguageUnifying": "Dönüştürülüyor...",
   "settingsDataLanguageUnifyDone": "Dönüştürülen: {converted}, kurtarılan kimlik: {backfilled}, dönüştürülemeyen: {unresolved}.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "Dönüştürme başarısız oldu; veriler değişmedi. Bağlantınızı kontrol edip tekrar deneyin.",
   "settingsDataManagement": "Veri yönetimi",
   "settingsGameDir": "Oyun klasörü",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "Otomatik algılandı: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "Elle ayarlandı: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "Oyun klasörü bulunamadı",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "Temizle",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "Bulut eşitleme",
   "cloudSyncIntro": "Çağrı kayıtlarınızı Google Drive'ınıza otomatik olarak yedeklemek ve birden fazla cihazı eşit tutmak için Google hesabınızı bağlayın.",
   "cloudSyncUnconfigured": "Bu sürümde Google OAuth kimlik bilgileri yapılandırılmamış; bulut eşitleme kullanılamıyor.",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "Tarayıcı açıldı. Lütfen yetkilendirmeyi tarayıcınızda tamamlayın...",
   "cloudSyncAwaitingConsentAndroid": "Lütfen yetkilendirmeyi Google penceresinde tamamlayın...",
   "cloudSyncLinkedAs": "Bağlı: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "Otomatik eşitleme",
   "cloudSyncAutoToggleHint": "Uygulama açılışında ve veriler değiştikten sonra otomatik olarak eşitler; kapalıyken elle eşitleme kullanılabilir.",
   "cloudSyncNow": "Şimdi eşitle",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "Bağlantıyı kaldır",
   "cloudSyncUnlinkConfirmBody": "Eşitleme duracak. Hem yerel veriler hem de bulut yedeği korunur.",
   "cloudSyncLastSynced": "Son eşitleme: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "Henüz eşitlenmedi",
   "cloudSyncErrorNetwork": "Eşitleme başarısız: ağ sorunu. Otomatik olarak tekrar denenecek.",
   "cloudSyncErrorBusy": "Eşitleme ertelendi: bir güncelleme veya içe aktarma sürüyor. Otomatik olarak tekrar denenecek.",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "Arayüzde UID'yi gizle",
   "settingsMaskUidInUiHint": "Açıkken arayüzdeki ve hesap listesindeki UID'lerin yalnızca ilk 3 hanesi gösterilir, kalanı gizlenir (ör. 123•••••). Yayın veya ekran paylaşımı sırasında işe yarar. Paylaşım görselleri, dışa aktarılan dosyalar ve silme onay penceresi bundan etkilenmez.",
   "settingsAdPrivacyOptions": "Reklam gizlilik seçenekleri",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "Kişiselleştirilmiş reklamlar görmeye onay verip vermediğinizi değiştirin.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "Hakkında",
   "settingsOtherGamesTitle": "Diğer Oyunlar İçin Sürümler",
   "settingsOtherGamesGenshin": "Genshin Impact",
   "settingsOtherGamesFuture": "Gelecekte daha fazla oyun desteklenebilir...",
   "settingsAboutVersion": "Sürüm {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "Katkıda Bulunanlar",
   "contributorsSubtitle": "Bu yazılımın geliştirilmesine katkıda bulunan aşağıdaki ortaklara özel teşekkürler!",
   "contributorsProjectLeader": "Proje yöneticisi",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "Proje Lisansı",
   "contributorsOpenSourceLicenses": "Açık kaynak lisansları",
   "pityRank": "{star} garantisi",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "Garantiye {n} çekiliş kaldı",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "Garantiye çok az kaldı! {n} çekiliş",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "Garanti yakın",
   "pityNoMainRarity": "Henüz {star} yok",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "Ort. {n} çekiliş",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "{star} kaydı yok",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n} çekiliş",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "Şanslı",
   "luckTierAverage": "Ortalama",
   "luckTierUnlucky": "Şanssız",
   "timelineNowLabel": "Şimdi",
   "timelineNowPulls": "{n} çekiliş",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "Son {star} sonrası {n} çekiliş",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "Tüm bannerlarda son {star} sonrası {n} çekiliş",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{month} / {year}",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "Sola kaydır",
   "timelineScrollRight": "Sağa kaydır",
   "timelineLoadMore": "Daha fazla yükle ({n} kaldı)",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "Tüm nadirlikler",
   "filterRarityRankOnly": "Yalnızca {star}",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "Tüm türler",
   "filterSearchHint": "Ad ara...",
   "filterClear": "Filtreleri temizle",
@@ -210,35 +624,150 @@
   "pagerLast": "Son",
   "pagerJumpTitle": "Sayfaya git",
   "pagerJumpLabel": "Sayfa ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "Şu anki sayfa: {page} · {total} kayıt",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "Git",
   "pagerJumpInvalid": "{min}–{max} arasında bir sayfa girin",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "Geçerli hesabın verilerini temizle",
   "settingsClearAll": "Tüm verileri temizle",
   "settingsRefetchItemImagesTitle": "Eşya görsellerini zorla yeniden al",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "Henüz Çağrı kaydı yok, yeniden alınacak bir şey yok",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "Eşya görsellerini zorla yeniden al",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "Bu işlem tüm yerel eşya görseli önbelleğini temizler ve karakter simgelerini yeniden indirir. Ayrıntı görselleri, eşya ayrıntısını bir sonraki açışınızda gerektikçe indirilir. Eşya sayısına bağlı olarak bu işlem birkaç dakika sürebilir ve veri kullanabilir.",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "Yeniden almayı başlat",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "Eşya verileri",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "Tüm eşyaların en güncel ayrıntılarını (tanıtım, görsel listesi vb.) yeniden alır, önceden indirilmiş görselleri korur; yeni eklenen görseller o eşyanın ayrıntılarını açtığınızda indirilir.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "Eşya verilerini güncelle",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "Henüz Çağrı kaydı yok, güncellenecek bir şey yok",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "Eşya verileri güncellensin mi?",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "Bu işlem tüm eşyaların ayrıntılarını yeniden alır ve önceden indirilmiş görselleri korur; yeni eklenen görseller ayrıntıları açtığınızda indirilir. Şimdi güncellensin mi?",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "Güncellemeyi başlat",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, other{{count} eşyanın verileri güncellendi}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, other{{count} eşya görseli indirildi}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, other{{count} eşyanın eski dil verileri temizlendi}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "Görsel önbelleği",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "Toplam",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "Simgeler",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "Ayrıntı görselleri",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "Hesaplanıyor...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "Önbellek boyutu okunamadı",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "Ayrıntı görsellerini temizle",
   "confirmClearGalleryCacheTitle": "Ayrıntı görselleri temizlensin mi?",
   "confirmClearGalleryCacheBody": "Yaklaşık {size} boyutunda eşya ayrıntı görseli silinecek; simge önbelleği korunur. Görseller, eşya ayrıntısını bir sonraki açışınızda yeniden indirilir.",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "Temizle",
   "settingsImageCacheClearGalleryFailed": "Ayrıntı görselleri temizlenemedi",
   "settingsExportData": "Verileri dışa aktar",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "Görselde UID'nin tamamını göster",
   "shareImageShowFullUidHint": "Kapalıyken yalnızca ilk 3 hane gösterilir, kalanı • ile gizlenir",
   "shareImageUpdatedAt": "Güncelleme: {time}",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "Panoya kopyalandı",
   "shareImageSaved": "Kaydedildi: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "Panoya kopyalanamadı",
   "shareImageFailed": "Paylaşım görseli oluşturulamadı",
   "shareImageGenerating": "Görsel oluşturuluyor...",
   "exportDialogSuccessTitle": "Dışa Aktarma Başarılı",
   "exportDialogFailedTitle": "Dışa Aktarma Başarısız",
   "settingsExportFailed": "Dışa aktarma başarısız: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "Dışa aktarıldı: {path}",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "İçe aktarma onayı",
   "settingsImportConfirmIntro": "{accounts} hesap (toplam {records} kayıt) içe aktarılmak üzere:",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "Aşağıdaki hesaplar yerel verilerle birleştirilecek; mevcut kayıtlar silinmeyecek:",
   "settingsImportConfirmNoConflict": "Veri çakışması yok.",
   "settingsImportConfirmPreserveFooter": "Diğer mevcut hesaplar ({uids}) korunacak.",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "Dosya biçimi geçersiz veya dosya bozuk",
   "importReasonIncompatibleVersion": "Bu yedeğin veri sürümü mevcut uygulamayla uyumlu değil ve içe aktarılamaz",
   "importReasonUnreadable": "Dosya okunamadı",
   "importReasonForeignApp": "Bu dosya bu uygulama tarafından dışa aktarılmamış",
   "importReasonNotPlatformFile": "Bu dosya geçerli bir {platform} dışa aktarma dosyası değil",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "Dosya yazılamadı, lütfen kayıt konumunu ve izinleri kontrol edin",
   "settingsImportFailed": "İçe aktarma başarısız: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "Dışa aktarılacak hesapları seçin",
   "settingsImportSelectTitle": "İçe aktarılacak hesapları seçin",
   "settingsImportMergeBadge": "Birleştir",
   "accountsPickerSelectAll": "Tümünü seç",
   "accountRecordCount": "{n} kayıt",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Onayla",
   "confirmClearActiveBody": "Bu işlem şu UID'ye ait tüm Çağrı kayıtlarını kalıcı olarak silecek: {uid}. Onaylamak için UID'yi yazın:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "Bu işlem tüm hesapların Çağrı kayıtlarını kalıcı olarak silecek. Onaylamak için DELETE yazın:",
   "confirmDelete": "Sil",
   "confirmImport": "İçe aktar",
@@ -290,6 +892,13 @@
   "confirmContinue": "Devam",
   "accountListEmpty": "Henüz hesap yok",
   "accountLastUpdated": "Son güncelleme: {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "Etkin",
   "accountSetActive": "Etkin yap",
   "accountRemove": "Kaldır",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "Yeniden sıralamak için sürükleyin",
   "loadingBootstrap": "Yükleniyor...",
   "timelineTopRarityTitle": "{star} Zaman Çizelgesi ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "Banner başına en yüksek nadirlik sayısı",
   "bannerTopRarityPullsSinceLast": "Son {star} sonrası {n} çekiliş",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "Yeni sürüm {version} mevcut",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "Yayın tarihi: {date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "İndir",
   "updateButtonUpdate": "Güncelle",
   "updateNotesUnavailable": "Sürüm notları şu anda kullanılamıyor. Ayrıntılar için Google Play'e bakın.",
   "updateDownloadingMessage": "Güncelleme indiriliyor...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "Güncelleme indirildi",
   "updateRestartAction": "Yeniden başlat",
   "updateInAppUnavailable": "Şu anda uygulama içinden güncellenemiyor. Lütfen Google Play üzerinden güncelleyin.",
@@ -320,134 +966,532 @@
   "updateChecking": "Denetleniyor...",
   "updateAlreadyLatest": "En son sürümü kullanıyorsunuz",
   "updateCheckFailed": "Güncelleme denetimi başarısız: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "Bağlanılamadı, lütfen ağınızı kontrol edin",
   "updateErrorTimeout": "İstek zaman aşımına uğradı",
   "updateErrorRateLimited": "GitHub API kotası doldu, lütfen daha sonra tekrar deneyin",
   "updateErrorServer": "Sunucu hatası (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "Beklenmeyen yanıt biçimi",
   "updateErrorPlay": "Google Play'e ulaşılamadı veya bu kopya Google Play'den yüklenmemiş",
   "currentReleaseTitle": "Geçerli sürüm notları",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "{version} için sürüm notları bulunamadı",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "GitHub'da görüntüle",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "GitHub Releases sayfasına git",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "Sürüm notlarını görüntüle",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "Eşya görseli önbelleği temizlenemedi: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "Hata ayıklama günlükleri",
+  "@settingsLogs": {},
   "settingsLogsHint": "Bir sorunla karşılaşırsanız geliştiricilerin incelemesine yardımcı olmak için günlükleri dışa aktarın.",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "Sorun bildir",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "Günlükleri dışa aktar",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "Günlük klasörünü aç",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "Tüm günlükleri temizle",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "Günlükler dışa aktarıldı: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "Günlükler dışa aktarılamadı: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "Bu işlem logs/ içindeki tüm dosyaları kalıcı olarak silecek. Hata bildirimi için gerekiyorsa önce dışa aktarın. Onaylamak için CLEAR yazın.",
   "galleryIllustrationLabel": "Kıyafet",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "Çağrı",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "Simge",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "Önceki",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "Sonraki",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "Aşağı kaydır",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "Görsel yüklenemedi",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "Yeniden dene",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "Görseli kopyala",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "Görseli kaydet",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "Görseli yeniden al",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "Görsel kaydedildi: {path}",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "Görsel kaydedilemedi",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "Görsel panoya kopyalandı",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "Görsel kopyalanamadı",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "Görsel önizlemesini kapat",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "Yakınlaştır",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "Uzaklaştır",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "encore.moe'da görüntüle",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "Çağrı geçmişi URL'sini elle gir",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "Çağrı Geçmişi URL'sini Elle Gir",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "Çağrı geçmişi URL'sini veya onu içeren herhangi bir metni yapıştırın.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "URL yapıştırın...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "Panodan yapıştır",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "Client.log dosyasını seç",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "URL'yi nasıl alırım?",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "Çağrı geçmişi URL'si bulunamadı",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "Bu dosyada çağrı geçmişi URL'si yok. Önce oyunda Convene Records sayfasını açın, ardından dosyayı yeniden seçin.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "Yöntem 1: Uçak modu\n1. Oyunda Convene ekranına gidin\n2. Uçak modunu açın, ardından Convene Records düğmesine dokunun\n3. Sayfa yüklenemez: uzun basın → Tümünü seç → Kopyala\n4. Uçak modunu kapatın ve metnin tamamını buraya yapıştırın\n\nYöntem 2: Zaten bir Client.log dosyanız var\n\"Client.log dosyasını seç\"e dokunun, uygulama URL'yi sizin için bulur.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "Client.log dosyasını seçin\n1. Oyunda Convene Records sayfasını açın\n2. \"Client.log dosyasını seç\"e dokunun. Dosyanın konumu:\nOyun klasörü\\Client\\Saved\\Logs\\Client.log\n\nBaşka bir araçtan alınan URL\nWuWa Tracker gibi araçlarla alınan bir URL doğrudan yapıştırılabilir.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "URL, hesabınızın kimlik bilgilerini içerir. Herkese açık şekilde paylaşmayın. Bir süre sonra geçerliliğini yitirir.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "Tamam",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "Oyunda Convene Records sayfasını açmanız bekleniyor...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "Oyun günlük dosyasını okumaya hazırlanılıyor...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "Çağrı geçmişi URL'si otomatik olarak alınamıyor",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "Oyun günlük dosyasını okuma henüz ayarlanmadı. Tek seferlik bir kurulumdan sonra her güncellemede otomatik olarak okunur.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "Kablosuz hata ayıklama yalnızca Wi‑Fi'de çalışır. Wi‑Fi'ye bağlanıp geri dönün; uygulama otomatik olarak devam eder. URL'yi elle de girebilirsiniz.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "Root bulundu ancak bu uygulamaya root erişimi verilmedi. Root ile okumak için root yöneticinizde (örneğin Magisk'in Superuser listesi) bu uygulamaya izin verip geri dönün; uygulama otomatik olarak yeniden dener.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "Kablosuz hata ayıklamaya bağlanılamadı. Eşlemenin süresi dolmuş olabilir; lütfen yeniden eşleyin.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "Cihazınız bu uygulamanın kablosuz hata ayıklamayı açmasına izin vermiyor. Kablosuz hata ayıklama sayfasından açıp geri dönün; uygulama otomatik olarak devam eder.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "Bu Wi‑Fi ağına henüz kablosuz hata ayıklama için izin verilmedi. Sistem isteminde \"İzin ver\"e dokunun (tekrar sorulmaması için \"Bu ağda her zaman izin ver\"i işaretleyin), uygulama otomatik olarak devam eder. İstemi kapattıysanız \"Yeniden dene\"ye dokunun.",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "Oyun günlük dosyasını okumak için depolama izni gerekiyor.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "Bu cihaz oyun günlük dosyasını otomatik olarak okuyamıyor. Lütfen URL'yi elle girin.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "Wuthering Waves'i aç",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "Kablosuz hata ayıklamayı aç",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "İzin ver",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "Kablosuz hata ayıklama bağlantısı koptu, yeniden bağlanılıyor... Düzelmezse Wi‑Fi bağlantınızı kontrol edin veya URL'yi elle girin.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "Kablosuz hata ayıklama hâlâ açık. Sistem ayarlarından kapatabilirsiniz.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "Kur",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "Yeniden eşle",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "Oyun Günlük Dosyasını Oku",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "Bu neden gerekli?",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "Android, uygulamaların diğer uygulamaların dosyalarını doğrudan okumasına izin vermez. Bu uygulama, Wuthering Waves'in günlük dosyasını okumak ve çağrı geçmişi URL'sini oradan almak için yerleşik Kablosuz hata ayıklama özelliğini kullanır.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "Bu uygulama ne yapar?",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• Yalnızca Wuthering Waves'in günlük dosyasını okur\n• Okuduktan hemen sonra bağlantıyı keser; kablosuz hata ayıklamayı bu uygulama açtıysa kapatır\n• Kablosuz hata ayıklamayı açıp kapatmak için kendine izin verir, böylece yeniden kurmanız gerekmez\n• Bunu istediğiniz zaman Ayarlar'dan kaldırabilirsiniz",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "Gereksinimler",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 veya üzeri, Wi‑Fi, bildirimlere izin verilmiş olması",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "Kurulumu başlat",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "Bunun yerine URL'yi elle gir",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "Kablosuz Hata Ayıklamayı Eşle",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. Geliştirici seçeneklerini açın",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. Sistem Ayarları'nda Hakkında sayfasını açın (örneğin \"Telefon hakkında\" veya \"Tablet hakkında\")\n2. \"Derleme numarası\"nı bulun ve 7 kez dokunun\n3. \"Artık bir geliştiricisiniz\" mesajını görünce bu uygulamaya dönün",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "Hakkında sayfasını aç",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. Geliştirici seçenekleri açık",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. Bildirimlere izin verin",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "Eşleme kodunu bir bildirime gireceksiniz, bu yüzden bu uygulamanın bildirim göstermesine izin verin.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "Bildirimlere izin ver",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "Bildirim ayarlarını aç",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. Bildirimlere izin verildi",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. Eşleyin",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. Kablosuz hata ayıklamayı açmak için aşağıdaki düğmeye dokunun\n2. \"Kablosuz hata ayıklamayı kullan\"ı açın ve \"Cihazı eşleme koduyla eşle\"ye dokunun\n3. Ekranın üstünden aşağı kaydırın ve Kablosuz hata ayıklama eşleme ekranında gösterilen 6 haneli eşleme kodunu bu uygulamanın bildirimine girin",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "Eşleme kodunu bildirime girmeniz bekleniyor...\nKablosuz hata ayıklamadaki eşleme ekranı hâlâ açıkken girin.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "Kablosuz hata ayıklamayı yeniden aç",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "Eşleniyor...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "Eşlendi, bir adım kaldı",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "Cihazınızda ek bir güvenlik kısıtlaması var. Bu uygulamanın kablosuz hata ayıklamayı otomatik olarak açıp kapatabilmesi için bir seçeneği daha açın.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "Nasıl açılır?",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. Geliştirici seçeneklerini açın\n2. USB hata ayıklama güvenliği veya izin izlemeyle ilgili anahtarı bulup açın, örneğin:\n• Xiaomi: \"USB hata ayıklama (Güvenlik ayarları)\"\n• OPPO / realme: \"İzin izlemeyi devre dışı bırak\"\n3. Kablosuz hata ayıklamanın açık olduğundan emin olun, ardından geri dönüp \"Yeniden dene\"ye dokunun",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "Geliştirici seçeneklerini aç",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "Yeniden dene",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "Atla (her güncellemede kablosuz hata ayıklamayı kendiniz açın)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "Her şey hazır",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "Artık Güncelle, günlüğü otomatik olarak okuyacak. Başka kurulum gerekmiyor.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "Güncelle'ye dokunduğunuzda, istendiğinde kablosuz hata ayıklamayı açın.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "Geri dönülüyor ve güncelleme başlatılıyor...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "Oyun Günlük Dosyası Erişimi",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "Yöntem",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "Doğrudan erişim",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "Kablosuz hata ayıklama",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "Ayarlanmadı",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "Eşleme",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "Eşlendi",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "Eşlendi (kablosuz hata ayıklamayı elle açın)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "İzni yeniden dene",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "Kur",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "Eşlemeyi kaldır",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "Eşleme kaldırılsın mı?",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "Bu işlem bu uygulamanın eşleme anahtarını siler ve bu uygulamanın kablosuz hata ayıklamayı açıp kapatma iznini kaldırır. Daha sonra kablosuz hata ayıklamayı kullanmak için yeniden eşlemeniz gerekir.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "Eşleme kaldırıldı",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "Bu uygulamanın eşleme anahtarı silindi ve kablosuz hata ayıklamayı açıp kapatma izni kaldırıldı.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "Eşleme anahtarı silindi",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "Bu uygulamanın eşleme anahtarı silindi ancak bu kez kablosuz hata ayıklamaya bağlanılamadı; bu yüzden kablosuz hata ayıklamayı açıp kapatma izni kaldırılmadı.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "Eşlenmemişken bu uygulama bu izni kullanmaz. İzni tamamen kaldırmak için Wi‑Fi'ye bağlanın, yeniden eşleyin ve ardından eşlemeyi bir kez daha kaldırın.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "Sistemdeki Kablosuz hata ayıklama → Eşlenen cihazlar listesinde \"{name}\" görünmeye devam edecek. Artık bağlanamaz, bu yüzden bırakabilirsiniz; kaldırmak için üzerine dokunup silin.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "Sistemdeki Kablosuz hata ayıklama → Eşlenen cihazlar listesinde \"{name}\" de hâlâ görünüyor; silmek için üzerine dokunun.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "Çağrı geçmişi URL'si alındı. Bu uygulamaya döndüğünüzde çağrı geçmişiniz alınmaya başlayacak.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "Paylaş",
   "shareFailed": "Paylaşılamadı",
   "dialogSaveAsTitle": "Farklı kaydet",
@@ -456,10 +1500,37 @@
   "actionSave": "Kaydet",
   "settingsLogsShare": "Günlükleri paylaş",
   "logUnavailableGameNotInstalled": "Bu cihazda Wuthering Waves'in global sürümü bulunamadı. Yükledikten sonra buraya dönün, oyun otomatik olarak algılanır.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "Yeniden kontrol et",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "Bu cihazda Wuthering Waves'in birden fazla sürümü yüklü. Hangisi okunsun?",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "Google Play sürümü",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "Galaxy Store sürümü",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "Wuthering Waves sürümü: {name}",
-  "actionSwitchGameVersion": "Sürümü değiştir"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "Sürümü değiştir",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }
