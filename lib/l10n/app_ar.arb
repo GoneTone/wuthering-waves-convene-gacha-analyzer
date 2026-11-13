@@ -3,6 +3,20 @@
   "localeNativeName": "العربية",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "المترجم: {translator}",
+  "@localeNativeName": {
+    "description": "Native name of this locale, shown in language picker."
+  },
+  "@localeTranslator": {
+    "description": "Comma-separated list of translators for this locale. Empty = original language (no credit row shown)."
+  },
+  "@localeTranslatorLabel": {
+    "description": "Settings language section: shows who translated the currently active language. {translator} is the comma-separated translator credit (may contain <a href> markup), rendered by TranslatorText.",
+    "placeholders": {
+      "translator": {
+        "type": "String"
+      }
+    }
+  },
   "appName": "محلل استدعاءات Wuthering Waves",
   "actionUpdate": "تحديث",
   "actionCancel": "إلغاء",
@@ -40,24 +54,94 @@
   "navSectionGacha": "Convene",
   "footerNotSynced": "لم تتم المزامنة",
   "footerLastUpdated": "آخر تحديث: {time}",
+  "@footerLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "relativeNow": "الآن",
   "relativeSecondsAgo": "{count, plural, zero{الآن} one{منذ ثانية} two{منذ ثانيتين} few{منذ {count} ثوانٍ} many{منذ {count} ثانية} other{منذ {count} ثانية}}",
+  "@relativeSecondsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMinutesAgo": "{count, plural, zero{منذ {count} دقيقة} one{منذ دقيقة} two{منذ دقيقتين} few{منذ {count} دقائق} many{منذ {count} دقيقة} other{منذ {count} دقيقة}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeHoursAgo": "{count, plural, zero{منذ {count} ساعة} one{منذ ساعة} two{منذ ساعتين} few{منذ {count} ساعات} many{منذ {count} ساعة} other{منذ {count} ساعة}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeDaysAgo": "{count, plural, zero{منذ {count} يوم} one{منذ يوم} two{منذ يومين} few{منذ {count} أيام} many{منذ {count} يومًا} other{منذ {count} يوم}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeMonthsAgo": "{count, plural, zero{منذ {count} شهر} one{منذ شهر} two{منذ شهرين} few{منذ {count} أشهر} many{منذ {count} شهرًا} other{منذ {count} شهر}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "relativeYearsAgo": "{count, plural, zero{منذ {count} سنة} one{منذ سنة} two{منذ سنتين} few{منذ {count} سنوات} many{منذ {count} سنة} other{منذ {count} سنة}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uidSwitchTooltip": "تبديل الحساب",
   "uidNotSynced": "لم تتم المزامنة",
   "uidActiveSuffix": " (نشط)",
   "emptyNoSyncTitle": "لم تتم مزامنة أي بيانات بعد",
   "emptyNoSyncMessage": "اضغط على {icon} في الأعلى للبدء",
+  "@emptyNoSyncMessage": {
+    "placeholders": {
+      "icon": {
+        "type": "String"
+      }
+    }
+  },
   "emptyNoRecords": "لا توجد سجلات لهذا البانر",
   "emptyNoFilterMatch": "لا توجد سجلات تطابق عامل التصفية الحالي",
   "emptyNoGachaRecords": "لا توجد سجلات استدعاء بعد",
   "statsTotal": "إجمالي السحبات",
   "statsRankCount": "عدد {star}",
+  "@statsRankCount": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "statsShareOfTotal": "{rate}% من الإجمالي",
+  "@statsShareOfTotal": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
   "statsRarityDistribution": "توزيع الندرة",
   "statsItemTypeDistribution": "توزيع الأنواع",
   "statsNoData": "لا توجد بيانات",
@@ -70,12 +154,40 @@
   "tableKind": "النوع",
   "tableRarity": "الندرة",
   "rarityStar": "{rank}★",
+  "@rarityStar": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
   "tableTotalIndex": "الإجمالي",
   "tableMainPity": "الضمان",
   "tableSortButton": "الترتيب: {column}",
+  "@tableSortButton": {
+    "description": "Sort button above the record cards on narrow screens; column is the sorted column name with an arrow",
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "tableSortDefault": "الترتيب: افتراضي",
+  "@tableSortDefault": {
+    "description": "Sort button text when the records are in their default order"
+  },
   "tableSortSheetTitle": "ترتيب حسب",
+  "@tableSortSheetTitle": {
+    "description": "Title of the bottom sheet that picks the sort column"
+  },
   "tableMainPityTooltip": "السحبات منذ آخر {star}",
+  "@tableMainPityTooltip": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "sortDirectionDesc": "تنازلي",
   "sortDirectionAsc": "تصاعدي",
   "sortHintClickToSort": "انقر للترتيب",
@@ -88,24 +200,143 @@
   "progressOpenGameHint": "افتح Wuthering Waves ← Convene ← Convene Records",
   "progressFallbackHint": "(انتهت صلاحية الالتقاط السابق. يُرجى إعادة فتح صفحة Convene Records.)",
   "progressCaptureUnavailableHint": "تعذّر تشغيل أداة الالتقاط المساعدة (ربما رُفضت مطالبة أذونات Windows). يجري الاكتشاف الآن من ملف سجل أحداث اللعبة فقط. يُرجى فتح صفحة Convene Records في اللعبة.",
+  "@progressCaptureUnavailableHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
+  },
   "progressCaptureUnavailableNoGameDirHint": "تعذّر تشغيل أداة الالتقاط المساعدة (ربما رُفضت مطالبة أذونات Windows)، ولم يُعثر على مجلد اللعبة. اضغط «اختيار مجلد اللعبة» أدناه لتعيينه يدويًا، أو ألغِ ثم اضغط «تحديث» مجددًا واختر «نعم» في مطالبة الأذونات.",
+  "@progressCaptureUnavailableNoGameDirHint": {
+    "description": "Notice on the capture-waiting screen when the elevated capture helper could not run AND no game folder was found, so nothing can be detected until the user picks the game folder via the link below or retries with administrator permission"
+  },
   "progressNotDetectedLink": "فتحت Convene Records ولم يحدث شيء؟",
+  "@progressNotDetectedLink": {
+    "description": "Link on the capture-waiting screen for users whose convene record page is open but nothing is detected; opens the detection help dialog"
+  },
   "gameDirHelpTitle": "لم يتم اكتشاف سجل الاستدعاء",
+  "@gameDirHelpTitle": {
+    "description": "Title of the detection help dialog shown when the convene record is not detected"
+  },
   "gameDirHelpNotFound": "تعذّر العثور على مجلد لعبة Wuthering Waves. بعد اختياره، يمكن لهذه الأداة أيضًا الحصول على رابط سجل الاستدعاء من ملف سجل أحداث اللعبة.",
+  "@gameDirHelpNotFound": {
+    "description": "Help text shown when the Wuthering Waves game folder cannot be found; explains that choosing the folder lets the tool read convene records from the game log instead"
+  },
   "gameDirHelpFound": "مجلد اللعبة المستخدم: {path}. إذا كان هذا المسار خاطئًا (مثلًا عند تثبيت أكثر من نسخة من اللعبة)، فاضغط «إعادة الاختيار».",
+  "@gameDirHelpFound": {
+    "description": "Help text shown when the game folder was found; {path} is the folder currently being read. Asks the user to choose again if it is not the installation they play",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "gameDirHelpReopen": "تم حفظ مجلد اللعبة. عُد إلى اللعبة وافتح Convene Records مرة أخرى.",
+  "@gameDirHelpReopen": {
+    "description": "Hint shown after the user picked a game folder: go back to the game and open the convene record again"
+  },
   "gameDirInvalid": "لم يُعثر على ملف سجل أحداث اللعبة في هذا المجلد. يُرجى اختيار المجلد «Wuthering Waves Game».",
+  "@gameDirInvalid": {
+    "description": "Error shown when the chosen folder contains no game log file; asks for the \"Wuthering Waves Game\" folder"
+  },
   "actionChooseGameDir": "اختيار مجلد اللعبة",
+  "@actionChooseGameDir": {
+    "description": "Button that opens a folder picker to choose the game folder"
+  },
   "actionRechooseGameDir": "إعادة الاختيار",
+  "@actionRechooseGameDir": {
+    "description": "Button to pick a different game folder when one is already set"
+  },
   "progressFetchingBanner": "جارٍ الجلب: {name}",
+  "@progressFetchingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressPoolStatus": "البانر {index} / {total}، الجديد: {count}",
+  "@progressPoolStatus": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneSummary": "{count, plural, zero{لم تتم إضافة سجلات جديدة} one{تمت إضافة سجل جديد واحد} two{تمت إضافة سجلين جديدين} few{تمت إضافة {count} سجلات جديدة} many{تمت إضافة {count} سجلًا جديدًا} other{تمت إضافة {count} سجل جديد}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, zero{لم يتم تنزيل أي صور للعناصر} one{تم تنزيل صورة عنصر واحدة} two{تم تنزيل صورتين للعناصر} few{تم تنزيل {count} صور للعناصر} many{تم تنزيل {count} صورة للعناصر} other{تم تنزيل {count} صورة للعناصر}}",
+  "@progressDoneImagesSummary": {
+    "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialFailed": "⚠ فشل جزئي: {names}",
+  "@progressPartialFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "progressDoneImportSummary": "{accounts, plural, zero{لم يتم استيراد أي حساب} one{تم استيراد حساب واحد} two{تم استيراد حسابين} few{تم استيراد {accounts} حسابات} many{تم استيراد {accounts} حسابًا} other{تم استيراد {accounts} حساب}} (جديدة: {added}، موجودة مسبقًا: {duplicate})",
+  "@progressDoneImportSummary": {
+    "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "duplicate": {
+        "type": "int"
+      }
+    }
+  },
   "progressPartialImportFailed": "⚠ فشل استيراد جزئي: {uids}",
+  "@progressPartialImportFailed": {
+    "description": "Completion dialog warning line shown when some UIDs failed to write to storage during import. uids is a comma-separated list.",
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "updateProgressItemDownloading": "جارٍ تنزيل صور العناصر {done}/{total}",
+  "@updateProgressItemDownloading": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "updateProgressItemFetchingData": "جارٍ جلب بيانات العناصر {done}/{total}",
+  "@updateProgressItemFetchingData": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "errorGachaFailed": "تعذّر جلب السجلات حتى بعد إعادة الالتقاط. قد يكون الخادم غير متاح مؤقتًا، يُرجى المحاولة لاحقًا.",
   "errorNoRecords": "لا توجد سجلات استدعاء لهذا الحساب بعد",
   "errorNetwork": "فشل الاتصال بالشبكة. يُرجى التحقق من اتصالك والمحاولة مجددًا.",
@@ -114,6 +345,14 @@
   "pageOverviewGachaSection": "نظرة عامة على الاستدعاء",
   "pageBannerRecordList": "قائمة السجلات",
   "rarityOverviewTitle": "نظرة عامة على {star}",
+  "@rarityOverviewTitle": {
+    "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "settingsTitle": "الإعدادات",
   "settingsAppearance": "المظهر",
   "settingsThemeSystem": "حسب النظام",
@@ -127,13 +366,51 @@
   "settingsDataLanguageUnify": "تحويل لغة البيانات الآن",
   "settingsDataLanguageUnifying": "جارٍ التحويل...",
   "settingsDataLanguageUnifyDone": "تم التحويل: {converted}، المعرّفات المستعادة: {backfilled}، تعذّر تحويلها: {unresolved}.",
+  "@settingsDataLanguageUnifyDone": {
+    "placeholders": {
+      "converted": {
+        "type": "int"
+      },
+      "backfilled": {
+        "type": "int"
+      },
+      "unresolved": {
+        "type": "int"
+      }
+    }
+  },
   "settingsDataLanguageUnifyFailed": "فشل التحويل ولم تتغير البيانات. تحقّق من اتصالك وحاول مجددًا.",
   "settingsDataManagement": "إدارة البيانات",
   "settingsGameDir": "مجلد اللعبة",
+  "@settingsGameDir": {
+    "description": "Title of the game folder section in the settings page"
+  },
   "settingsGameDirAuto": "مُكتشَف تلقائيًا: {path}",
+  "@settingsGameDirAuto": {
+    "description": "Description when the game folder was detected automatically from the registry or common locations; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirManual": "معيّن يدويًا: {path}",
+  "@settingsGameDirManual": {
+    "description": "Description when the game folder was set manually by the user; {path} is the folder path",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsGameDirNone": "لم يُعثر على مجلد اللعبة",
+  "@settingsGameDirNone": {
+    "description": "Description when no game folder is set and none can be detected"
+  },
   "actionClearGameDir": "مسح",
+  "@actionClearGameDir": {
+    "description": "Button that clears the manually set game folder"
+  },
   "settingsCloudSync": "المزامنة السحابية",
   "cloudSyncIntro": "اربط حسابك على Google لنسخ سجلات الاستدعاء احتياطيًا إلى Google Drive تلقائيًا ومزامنتها بين أجهزتك.",
   "cloudSyncUnconfigured": "لم تُضبط بيانات اعتماد Google OAuth في هذا الإصدار، لذا فالمزامنة السحابية غير متاحة.",
@@ -141,6 +418,13 @@
   "cloudSyncAwaitingConsent": "تم فتح المتصفح. يُرجى إكمال التفويض في المتصفح...",
   "cloudSyncAwaitingConsentAndroid": "يُرجى إكمال التفويض في نافذة Google...",
   "cloudSyncLinkedAs": "مرتبط: {email}",
+  "@cloudSyncLinkedAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncAutoToggle": "مزامنة تلقائية",
   "cloudSyncAutoToggleHint": "تتم المزامنة تلقائيًا عند تشغيل التطبيق وبعد تغيّر البيانات، وتبقى المزامنة اليدوية متاحة عند إيقافها.",
   "cloudSyncNow": "مزامنة الآن",
@@ -148,6 +432,13 @@
   "cloudSyncUnlinkConfirmTitle": "إلغاء الربط",
   "cloudSyncUnlinkConfirmBody": "ستتوقف المزامنة. سيتم الاحتفاظ بالبيانات المحلية والنسخة الاحتياطية السحابية.",
   "cloudSyncLastSynced": "آخر مزامنة: {time}",
+  "@cloudSyncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "cloudSyncNeverSynced": "لم تتم المزامنة بعد",
   "cloudSyncErrorNetwork": "فشلت المزامنة بسبب مشكلة في الشبكة. ستتم إعادة المحاولة تلقائيًا.",
   "cloudSyncErrorBusy": "تأجّلت المزامنة لأن تحديثًا أو استيرادًا قيد التنفيذ. ستتم إعادة المحاولة تلقائيًا.",
@@ -165,12 +456,25 @@
   "settingsMaskUidInUi": "إخفاء UID في الواجهة",
   "settingsMaskUidInUiHint": "عند التفعيل، تُعرض أول 3 أرقام فقط من UID في الواجهة وقائمة الحسابات ويُخفى الباقي (مثل 123•••••). مفيد عند البث أو مشاركة الشاشة. لا يؤثر ذلك على صور المشاركة والملفات المُصدَّرة ونافذة تأكيد الحذف.",
   "settingsAdPrivacyOptions": "خيارات خصوصية الإعلانات",
+  "@settingsAdPrivacyOptions": {
+    "description": "Button label in Settings > Privacy that reopens Google's ad consent (UMP) privacy options form; shown only on Android in regions that require it."
+  },
   "settingsAdPrivacyOptionsHint": "غيّر موافقتك على عرض الإعلانات المخصصة.",
+  "@settingsAdPrivacyOptionsHint": {
+    "description": "One-line explanation shown above the ad privacy options button."
+  },
   "settingsAbout": "حول",
   "settingsOtherGamesTitle": "إصدارات لألعاب أخرى",
   "settingsOtherGamesGenshin": "Genshin Impact",
   "settingsOtherGamesFuture": "قد ندعم ألعابًا أخرى مستقبلًا...",
   "settingsAboutVersion": "الإصدار {version}",
+  "@settingsAboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "contributorsTitle": "المساهمون",
   "contributorsSubtitle": "شكر خاص للشركاء التالين الذين ساهموا في تطوير هذا البرنامج!",
   "contributorsProjectLeader": "مشرف المشروع",
@@ -182,27 +486,137 @@
   "contributorsProjectLicense": "ترخيص المشروع",
   "contributorsOpenSourceLicenses": "تراخيص البرامج مفتوحة المصدر",
   "pityRank": "ضمان {star}",
+  "@pityRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityCurrent": "{current} / {threshold}",
+  "@pityCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
   "pityDistance": "{n, plural, zero{{n} سحبة حتى الضمان} one{سحبة واحدة حتى الضمان} two{سحبتان حتى الضمان} few{{n} سحبات حتى الضمان} many{{n} سحبة حتى الضمان} other{{n} سحبة حتى الضمان}}",
+  "@pityDistance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityClose": "الضمان قريب! {n, plural, zero{تبقّى {n} سحبة} one{تبقّت سحبة واحدة} two{تبقّت سحبتان} few{تبقّت {n} سحبات} many{تبقّت {n} سحبة} other{تبقّت {n} سحبة}}",
+  "@pityClose": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "pityGuaranteed": "الضمان وشيك",
   "pityNoMainRarity": "لا يوجد {star} بعد",
+  "@pityNoMainRarity": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "pityAverageInterval": "المتوسط {n} سحبة",
+  "@pityAverageInterval": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "timelineNoRecordsForRank": "لا توجد سجلات {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "timelineSinceLast": "{n, plural, zero{{n} سحبة} one{سحبة واحدة} two{سحبتان} few{{n} سحبات} many{{n} سحبة} other{{n} سحبة}}",
+  "@timelineSinceLast": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "luckTierLucky": "محظوظ",
   "luckTierAverage": "متوسط",
   "luckTierUnlucky": "سيئ الحظ",
   "timelineNowLabel": "الآن",
   "timelineNowPulls": "{n, plural, zero{{n} سحبة} one{سحبة واحدة} two{سحبتان} few{{n} سحبات} many{{n} سحبة} other{{n} سحبة}}",
+  "@timelineNowPulls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceLast": "{n, plural, zero{{n} سحبة منذ آخر {star}} one{سحبة واحدة منذ آخر {star}} two{سحبتان منذ آخر {star}} few{{n} سحبات منذ آخر {star}} many{{n} سحبة منذ آخر {star}} other{{n} سحبة منذ آخر {star}}}",
+  "@timelineNowSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineNowSinceCrossPool": "{n, plural, zero{{n} سحبة منذ آخر {star} في كل البانرات} one{سحبة واحدة منذ آخر {star} في كل البانرات} two{سحبتان منذ آخر {star} في كل البانرات} few{{n} سحبات منذ آخر {star} في كل البانرات} many{{n} سحبة منذ آخر {star} في كل البانرات} other{{n} سحبة منذ آخر {star} في كل البانرات}}",
+  "@timelineNowSinceCrossPool": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "timelineMonthLabel": "{month} / {year}",
+  "@timelineMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
   "timelineScrollLeft": "التمرير لليسار",
   "timelineScrollRight": "التمرير لليمين",
   "timelineLoadMore": "تحميل المزيد (المتبقي: {n})",
+  "@timelineLoadMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "filterRarityAll": "كل درجات الندرة",
   "filterRarityRankOnly": "{star} فقط",
+  "@filterRarityRankOnly": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      }
+    }
+  },
   "filterKindAll": "كل الأنواع",
   "filterSearchHint": "البحث بالاسم...",
   "filterClear": "مسح عوامل التصفية",
@@ -210,35 +624,150 @@
   "pagerLast": "الأخيرة",
   "pagerJumpTitle": "الانتقال إلى صفحة",
   "pagerJumpLabel": "الصفحة ({min}–{max})",
+  "@pagerJumpLabel": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpCurrent": "الصفحة الحالية: {page} · إجمالي السجلات: {total}",
+  "@pagerJumpCurrent": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pagerJumpGo": "انتقال",
   "pagerJumpInvalid": "أدخل صفحة من {min} إلى {max}",
+  "@pagerJumpInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "settingsClearActive": "مسح بيانات الحساب الحالي",
   "settingsClearAll": "مسح كل البيانات",
   "settingsRefetchItemImagesTitle": "فرض إعادة جلب صور العناصر",
+  "@settingsRefetchItemImagesTitle": {
+    "description": "Settings → Data management → button: forcibly clears all cached official guide-server character images (icon + header) and re-fetches them from scratch."
+  },
   "settingsRefetchItemImagesEmpty": "لا توجد سجلات استدعاء بعد، فلا شيء لإعادة جلبه",
+  "@settingsRefetchItemImagesEmpty": {
+    "description": "Tooltip shown when the Refetch button is disabled because there are no gacha records on the device."
+  },
   "confirmRefetchItemImagesTitle": "فرض إعادة جلب صور العناصر",
+  "@confirmRefetchItemImagesTitle": {
+    "description": "Title of the AlertDialog confirming the refetch action."
+  },
   "confirmRefetchItemImagesBody": "سيؤدي هذا إلى مسح ذاكرة التخزين المؤقت المحلية لكل صور العناصر وإعادة تنزيل أيقونات الشخصيات. ستُنزَّل الصور التفصيلية عند الحاجة في المرة التالية التي تفتح فيها تفاصيل العنصر. حسب عدد العناصر، قد يستغرق ذلك بضع دقائق ويستهلك بعض البيانات.",
+  "@confirmRefetchItemImagesBody": {
+    "description": "Body of the AlertDialog confirming the refetch action; warns about traffic and time cost."
+  },
   "confirmRefetchItemImagesConfirm": "بدء إعادة الجلب",
+  "@confirmRefetchItemImagesConfirm": {
+    "description": "Confirm button label in the refetch AlertDialog."
+  },
   "settingsItemData": "بيانات العناصر",
+  "@settingsItemData": {
+    "description": "Settings page section title for item metadata controls (non-destructive update)."
+  },
   "settingsRefreshItemDataDesc": "إعادة جلب أحدث التفاصيل لكل العناصر (النبذة وقائمة الصور وغيرها) مع الاحتفاظ بالصور المُنزَّلة؛ تُنزَّل الصور الجديدة عند فتح تفاصيل العنصر.",
+  "@settingsRefreshItemDataDesc": {
+    "description": "Description under the item data section explaining the non-destructive metadata refresh."
+  },
   "settingsRefreshItemDataTitle": "تحديث بيانات العناصر",
+  "@settingsRefreshItemDataTitle": {
+    "description": "Button label: non-destructively re-fetch item metadata, keeping downloaded images."
+  },
   "settingsRefreshItemDataEmpty": "لا توجد سجلات استدعاء بعد، فلا شيء لتحديثه",
+  "@settingsRefreshItemDataEmpty": {
+    "description": "Tooltip shown when the update item data button is disabled because there are no gacha records."
+  },
   "confirmRefreshItemDataTitle": "تحديث بيانات العناصر؟",
+  "@confirmRefreshItemDataTitle": {
+    "description": "Title of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataBody": "سيعيد هذا جلب تفاصيل كل العناصر مع الاحتفاظ بالصور المُنزَّلة؛ تُنزَّل الصور الجديدة عند فتح التفاصيل. هل تريد التحديث الآن؟",
+  "@confirmRefreshItemDataBody": {
+    "description": "Body of the confirm dialog for the non-destructive item data update."
+  },
   "confirmRefreshItemDataConfirm": "بدء التحديث",
+  "@confirmRefreshItemDataConfirm": {
+    "description": "Confirm button label in the item data update dialog."
+  },
   "progressDoneItemDataSummary": "{count, plural, zero{لم يتم تحديث بيانات أي عنصر} one{تم تحديث بيانات عنصر واحد} two{تم تحديث بيانات عنصرين} few{تم تحديث بيانات {count} عناصر} many{تم تحديث بيانات {count} عنصرًا} other{تم تحديث بيانات {count} عنصر}}",
+  "@progressDoneItemDataSummary": {
+    "description": "Completion summary main line for the update item data flow: number of items whose metadata was refreshed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataImagesSummary": "{count, plural, zero{لم يتم تنزيل أي صور للعناصر} one{تم تنزيل صورة عنصر واحدة} two{تم تنزيل صورتين للعناصر} few{تم تنزيل {count} صور للعناصر} many{تم تنزيل {count} صورة للعناصر} other{تم تنزيل {count} صورة للعناصر}}",
+  "@progressDoneItemDataImagesSummary": {
+    "description": "Completion line shown only when count > 0: item images back-filled during the update item data flow.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneItemDataPrunedSummary": "{count, plural, zero{لم يتم تنظيف بيانات لغة قديمة لأي عنصر} one{تم تنظيف بيانات اللغة القديمة لعنصر واحد} two{تم تنظيف بيانات اللغة القديمة لعنصرين} few{تم تنظيف بيانات اللغة القديمة لـ {count} عناصر} many{تم تنظيف بيانات اللغة القديمة لـ {count} عنصرًا} other{تم تنظيف بيانات اللغة القديمة لـ {count} عنصر}}",
+  "@progressDoneItemDataPrunedSummary": {
+    "description": "Completion line shown only when count > 0: items whose stale-language metadata was pruned.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImageCache": "ذاكرة التخزين المؤقت للصور",
+  "@settingsImageCache": {
+    "description": "Settings page section title for image cache controls."
+  },
   "settingsImageCacheTotal": "الإجمالي",
+  "@settingsImageCacheTotal": {
+    "description": "Label for total cache size (icon + gallery)."
+  },
   "settingsImageCacheIcons": "الأيقونات",
+  "@settingsImageCacheIcons": {
+    "description": "Label for icon cache size (small thumbnails shown in record list)."
+  },
   "settingsImageCacheGallery": "الصور التفصيلية",
+  "@settingsImageCacheGallery": {
+    "description": "Label for gallery cache size (large detail images shown in item dialog)."
+  },
   "settingsImageCacheCalculating": "جارٍ الحساب...",
+  "@settingsImageCacheCalculating": {
+    "description": "Loading placeholder while scanning cache size."
+  },
   "settingsImageCacheFailed": "تعذّرت قراءة حجم ذاكرة التخزين المؤقت",
+  "@settingsImageCacheFailed": {
+    "description": "Shown when scanning cache size fails (e.g. permission denied)."
+  },
   "settingsImageCacheClearGallery": "مسح الصور التفصيلية",
   "confirmClearGalleryCacheTitle": "مسح الصور التفصيلية؟",
   "confirmClearGalleryCacheBody": "سيتم حذف نحو {size} من الصور التفصيلية للعناصر مع الاحتفاظ بذاكرة الأيقونات. ستُنزَّل مجددًا عند فتح تفاصيل العنصر في المرة القادمة.",
+  "@confirmClearGalleryCacheBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearGalleryCacheConfirm": "مسح",
   "settingsImageCacheClearGalleryFailed": "فشل مسح الصور التفصيلية",
   "settingsExportData": "تصدير البيانات",
@@ -255,34 +784,107 @@
   "shareImageShowFullUid": "إظهار UID كاملًا في الصورة",
   "shareImageShowFullUidHint": "عند الإيقاف، تظهر أول 3 أرقام فقط ويُخفى الباقي بالرمز •",
   "shareImageUpdatedAt": "آخر تحديث {time}",
+  "@shareImageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopiedOnly": "تم النسخ إلى الحافظة",
   "shareImageSaved": "تم الحفظ: {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "shareImageCopyFailed": "فشل النسخ إلى الحافظة",
   "shareImageFailed": "فشل إنشاء صورة المشاركة",
   "shareImageGenerating": "جارٍ إنشاء الصورة...",
   "exportDialogSuccessTitle": "تم التصدير بنجاح",
   "exportDialogFailedTitle": "فشل التصدير",
   "settingsExportFailed": "فشل التصدير: {error}",
+  "@settingsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSuccess": "تم التصدير إلى {path}",
+  "@settingsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsImportConfirmTitle": "تأكيد الاستيراد",
   "settingsImportConfirmIntro": "سيتم استيراد {accounts, plural, zero{0 حساب} one{حساب واحد} two{حسابين} few{{accounts} حسابات} many{{accounts} حسابًا} other{{accounts} حساب}} (إجمالي السجلات: {records}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
   "settingsImportConfirmMergeHeader": "سيتم دمج الحسابات التالية مع البيانات المحلية دون حذف السجلات الموجودة:",
   "settingsImportConfirmNoConflict": "لا توجد تعارضات في البيانات.",
   "settingsImportConfirmPreserveFooter": "سيتم الاحتفاظ بالحسابات الأخرى الموجودة ({uids}).",
+  "@settingsImportConfirmPreserveFooter": {
+    "placeholders": {
+      "uids": {
+        "type": "String"
+      }
+    }
+  },
   "importReasonInvalidFormat": "تنسيق الملف غير صالح أو الملف تالف",
   "importReasonIncompatibleVersion": "إصدار بيانات هذه النسخة الاحتياطية غير متوافق مع التطبيق الحالي ولا يمكن استيرادها",
   "importReasonUnreadable": "تعذّرت قراءة الملف",
   "importReasonForeignApp": "لم يتم تصدير هذا الملف بواسطة هذا التطبيق",
   "importReasonNotPlatformFile": "هذا الملف ليس ملف تصدير صالحًا من {platform}",
+  "@importReasonNotPlatformFile": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
   "exportReasonWriteFailed": "تعذّرت كتابة الملف، يُرجى التحقق من موقع الحفظ والأذونات",
   "settingsImportFailed": "فشل الاستيراد: {reason}",
+  "@settingsImportFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "settingsExportSelectTitle": "اختر الحسابات المراد تصديرها",
   "settingsImportSelectTitle": "اختر الحسابات المراد استيرادها",
   "settingsImportMergeBadge": "دمج",
   "accountsPickerSelectAll": "تحديد الكل",
   "accountRecordCount": "{n, plural, zero{لا توجد سجلات} one{سجل واحد} two{سجلان} few{{n} سجلات} many{{n} سجلًا} other{{n} سجل}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "تأكيد",
   "confirmClearActiveBody": "سيؤدي هذا إلى حذف كل سجلات الاستدعاء الخاصة بـ UID {uid} نهائيًا. اكتب UID للتأكيد:",
+  "@confirmClearActiveBody": {
+    "placeholders": {
+      "uid": {
+        "type": "String"
+      }
+    }
+  },
   "confirmClearAllBody": "سيؤدي هذا إلى حذف سجلات الاستدعاء لكل الحسابات نهائيًا. اكتب DELETE للتأكيد:",
   "confirmDelete": "حذف",
   "confirmImport": "استيراد",
@@ -290,6 +892,13 @@
   "confirmContinue": "متابعة",
   "accountListEmpty": "لا توجد حسابات بعد",
   "accountLastUpdated": "آخر تحديث {time}",
+  "@accountLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "accountActiveTag": "نشط",
   "accountSetActive": "تعيين كنشط",
   "accountRemove": "إزالة",
@@ -302,14 +911,51 @@
   "accountDragHandleTooltip": "اسحب لإعادة الترتيب",
   "loadingBootstrap": "جارٍ التحميل...",
   "timelineTopRarityTitle": "الخط الزمني لـ {star} ({n})",
+  "@timelineTopRarityTitle": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "bannerTopRarityCountTitle": "عدد أعلى ندرة في كل بانر",
   "bannerTopRarityPullsSinceLast": "{n, plural, zero{{n} سحبة منذ آخر {star}} one{سحبة واحدة منذ آخر {star}} two{سحبتان منذ آخر {star}} few{{n} سحبات منذ آخر {star}} many{{n} سحبة منذ آخر {star}} other{{n} سحبة منذ آخر {star}}}",
+  "@bannerTopRarityPullsSinceLast": {
+    "placeholders": {
+      "star": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "updateTitle": "يتوفر إصدار جديد {version}",
+  "@updateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateReleasedAt": "صدر في {date}",
+  "@updateReleasedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "updateButtonDownload": "تنزيل",
   "updateButtonUpdate": "تحديث",
   "updateNotesUnavailable": "ملاحظات الإصدار غير متاحة حاليًا. راجع Google Play للتفاصيل.",
   "updateDownloadingMessage": "جارٍ تنزيل التحديث...",
+  "@updateDownloadingMessage": {
+    "description": "Android SnackBar text while Google Play downloads the in-app update in the background (shown with percentage and size)"
+  },
   "updateDownloadedMessage": "تم تنزيل التحديث",
   "updateRestartAction": "إعادة التشغيل",
   "updateInAppUnavailable": "لا يمكن التحديث من داخل التطبيق حاليًا. يُرجى التحديث من Google Play.",
@@ -320,134 +966,532 @@
   "updateChecking": "جارٍ التحقق...",
   "updateAlreadyLatest": "أنت تستخدم أحدث إصدار",
   "updateCheckFailed": "فشل التحقق من التحديثات: {reason}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorNetwork": "تعذّر الاتصال، يُرجى التحقق من الشبكة",
   "updateErrorTimeout": "انتهت مهلة الطلب",
   "updateErrorRateLimited": "نفدت حصة GitHub API، يُرجى المحاولة لاحقًا",
   "updateErrorServer": "خطأ في الخادم (HTTP {status})",
+  "@updateErrorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "updateErrorFormat": "تنسيق استجابة غير متوقع",
   "updateErrorPlay": "تعذّر الوصول إلى Google Play، أو أن هذه النسخة لم تُثبَّت من Google Play",
   "currentReleaseTitle": "ملاحظات الإصدار الحالي",
+  "@currentReleaseTitle": {
+    "description": "Title of the dialog showing release notes for the currently installed version."
+  },
   "currentReleaseNotFound": "لم يُعثر على ملاحظات الإصدار {version}",
+  "@currentReleaseNotFound": {
+    "description": "Shown inside the current-release dialog when GitHub returns 404 for the version's tag.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "currentReleaseOpenOnGithub": "عرض على GitHub",
+  "@currentReleaseOpenOnGithub": {
+    "description": "Action button: open this release page on github.com in the external browser."
+  },
   "currentReleaseOpenReleasesPage": "الانتقال إلى صفحة إصدارات GitHub",
+  "@currentReleaseOpenReleasesPage": {
+    "description": "Action button shown when no release was found / rate-limited: open the repo's GitHub Releases listing."
+  },
   "aboutViewReleaseNotes": "عرض ملاحظات الإصدار",
+  "@aboutViewReleaseNotes": {
+    "description": "Settings > About: button next to the version label that opens the current-release dialog."
+  },
   "updateErrorWipeItemImageCache": "فشل مسح ذاكرة صور العناصر المؤقتة: {detail}",
+  "@updateErrorWipeItemImageCache": {
+    "description": "Force-refetch flow: failed to clear the local item-image index or cache directory. {detail} is the sanitized exception message.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogs": "سجلات التصحيح",
+  "@settingsLogs": {},
   "settingsLogsHint": "إذا واجهت مشكلات، فصدّر السجلات لمساعدة المطورين على التحقيق فيها.",
+  "@settingsLogsHint": {},
   "settingsLogsReport": "الإبلاغ عن مشكلة",
+  "@settingsLogsReport": {},
   "settingsLogsExport": "تصدير السجلات",
+  "@settingsLogsExport": {},
   "settingsLogsOpenFolder": "فتح مجلد السجلات",
+  "@settingsLogsOpenFolder": {},
   "settingsLogsClear": "مسح كل السجلات",
+  "@settingsLogsClear": {},
   "settingsLogsExportSuccess": "تم تصدير السجلات: {path}",
+  "@settingsLogsExportSuccess": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsExportFailed": "فشل تصدير السجلات: {error}",
+  "@settingsLogsExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLogsClearConfirmBody": "سيؤدي هذا إلى حذف كل الملفات في logs/ نهائيًا. صدّرها أولًا إذا كنت تحتاجها للإبلاغ عن الأخطاء. اكتب CLEAR للتأكيد.",
   "galleryIllustrationLabel": "الزي",
+  "@galleryIllustrationLabel": {
+    "description": "Item detail dialog: chip label for the character illustration (large art) page. Placed before the icon chip. Weapons have no illustration so this chip is absent for them."
+  },
   "galleryLuckdrawLabel": "الاستدعاء",
+  "@galleryLuckdrawLabel": {
+    "description": "Item detail dialog: chip label for the character convene (Luckdraw) splash art page. Placed first. Characters only; absent if the character has no Luckdraw spine."
+  },
   "galleryIconLabel": "الأيقونة",
+  "@galleryIconLabel": {
+    "description": "Item detail dialog gallery: chip label for the icon page placed last in the chip row. Lets items without a gallery_character module (e.g. weapons) still open the dialog and show the icon image."
+  },
   "galleryPrevTab": "السابق",
+  "@galleryPrevTab": {
+    "description": "Item detail dialog gallery: tooltip for the left triangle arrow that selects the PREVIOUS tab/chip. Not a viewport scroll - it switches the selected gallery page."
+  },
   "galleryNextTab": "التالي",
+  "@galleryNextTab": {
+    "description": "Item detail dialog gallery: tooltip for the right triangle arrow that selects the NEXT tab/chip."
+  },
   "detailScrollDown": "التمرير لأسفل",
+  "@detailScrollDown": {
+    "description": "Item detail dialog (two-column layout): tooltip for the down-chevron button that scrolls the left info column down."
+  },
   "galleryLazyLoadFailed": "فشل تحميل الصورة",
+  "@galleryLazyLoadFailed": {
+    "description": "Item detail dialog gallery: message shown in the image area when lazy download of a gallery image fails."
+  },
   "actionRetry": "إعادة المحاولة",
+  "@actionRetry": {
+    "description": "Generic retry button label; used in item detail dialog gallery when lazy image download fails."
+  },
   "actionCopyImage": "نسخ الصورة",
+  "@actionCopyImage": {
+    "description": "Menu item in item detail image overflow menu: copy the current image to clipboard."
+  },
   "actionSaveImage": "حفظ الصورة",
+  "@actionSaveImage": {
+    "description": "Menu item in item detail image overflow menu: save the current image to a file."
+  },
   "actionRefetchImage": "إعادة جلب الصورة",
+  "@actionRefetchImage": {
+    "description": "Menu item in item detail image overflow menu: re-fetch the current image."
+  },
   "itemImageSavedTo": "تم حفظ الصورة في {path}",
+  "@itemImageSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    },
+    "description": "Snackbar after saving an item detail image to the given path."
+  },
   "itemImageSaveFailed": "فشل حفظ الصورة",
+  "@itemImageSaveFailed": {
+    "description": "Snackbar when saving an item detail image fails."
+  },
   "itemImageCopied": "تم نسخ الصورة إلى الحافظة",
+  "@itemImageCopied": {
+    "description": "Snackbar after copying an item detail image to clipboard."
+  },
   "itemImageCopyFailed": "فشل نسخ الصورة",
+  "@itemImageCopyFailed": {
+    "description": "Snackbar when copying an item detail image to clipboard fails."
+  },
   "actionCloseImagePreview": "إغلاق معاينة الصورة",
+  "@actionCloseImagePreview": {
+    "description": "Tooltip and semantic label for the close (X) button on the full-screen zoomable image overlay opened from the item detail dialog gallery."
+  },
   "actionZoomIn": "تكبير",
+  "@actionZoomIn": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is at fit (a click will zoom in)."
+  },
   "actionZoomOut": "تصغير",
+  "@actionZoomOut": {
+    "description": "Tooltip and semantic label for the zoom toggle button on the full-screen zoomable image overlay when the image is zoomed in (a click will zoom out)."
+  },
   "actionViewOnEncore": "عرض على encore.moe",
+  "@actionViewOnEncore": {
+    "description": "Item detail dialog actions: external link button to open the item's encore.moe page. 'encore.moe' is a brand name, do not translate."
+  },
   "progressManualInputLink": "إدخال رابط سجل الاستدعاء يدويًا",
+  "@progressManualInputLink": {
+    "description": "Link on the waiting screen that opens the manual convene record input dialog"
+  },
   "manualCredentialTitle": "إدخال رابط سجل الاستدعاء يدويًا",
+  "@manualCredentialTitle": {
+    "description": "Title of the manual convene record input dialog"
+  },
   "manualCredentialHint": "الصق رابط سجل الاستدعاء، أو أي نص يحتوي عليه.",
+  "@manualCredentialHint": {
+    "description": "Explanation above the text field of the manual input dialog"
+  },
   "manualCredentialFieldHint": "الصق الرابط...",
+  "@manualCredentialFieldHint": {
+    "description": "Placeholder of the text field in the manual input dialog"
+  },
   "manualCredentialPaste": "لصق من الحافظة",
+  "@manualCredentialPaste": {
+    "description": "Button that pastes the clipboard into the manual input field"
+  },
   "manualCredentialPickLog": "اختيار ملف Client.log",
+  "@manualCredentialPickLog": {
+    "description": "Button that lets the user choose the game's Client.log file. 'Client.log' is a file name, do not translate."
+  },
   "manualCredentialHowTo": "كيف أحصل على الرابط؟",
+  "@manualCredentialHowTo": {
+    "description": "Expandable heading that shows how to get the convene history URL"
+  },
   "manualCredentialNotFound": "لم يُعثر على رابط سجل الاستدعاء",
+  "@manualCredentialNotFound": {
+    "description": "Error shown when the pasted text contains no valid convene history URL"
+  },
   "manualCredentialNotFoundInLog": "لا يحتوي هذا الملف على رابط سجل الاستدعاء. افتح Convene Records في اللعبة أولًا، ثم اختر الملف مجددًا.",
+  "@manualCredentialNotFoundInLog": {
+    "description": "Error shown when the chosen Client.log file contains no valid convene history URL"
+  },
   "manualCredentialHelpAndroid": "الطريقة 1: وضع الطيران\n1. في اللعبة، انتقل إلى شاشة Convene\n2. فعّل وضع الطيران، ثم اضغط على Convene Records\n3. ستفشل الصفحة في التحميل: اضغط مطولًا ← تحديد الكل ← نسخ\n4. أوقف وضع الطيران والصق النص كاملًا هنا\n\nالطريقة 2: لديك ملف Client.log بالفعل\nاضغط «اختيار ملف Client.log» وسيعثر التطبيق على الرابط تلقائيًا.",
+  "@manualCredentialHelpAndroid": {
+    "description": "Help text in the manual input dialog on Android. Keep the line breaks."
+  },
   "manualCredentialHelpWindows": "اختيار ملف Client.log\n1. افتح Convene Records في اللعبة\n2. اضغط «اختيار ملف Client.log». يوجد الملف في:\nمجلد اللعبة\\Client\\Saved\\Logs\\Client.log\n\nرابط من أداة أخرى\nيمكن لصق الرابط الذي حصلت عليه من أدوات مثل WuWa Tracker مباشرةً.",
+  "@manualCredentialHelpWindows": {
+    "description": "Help text in the manual input dialog on Windows. Keep the line breaks and the file path."
+  },
   "manualCredentialWarning": "يحتوي الرابط على بيانات اعتماد حسابك. لا تشاركه علنًا. تنتهي صلاحيته بعد فترة.",
+  "@manualCredentialWarning": {
+    "description": "Security warning at the bottom of the manual input help"
+  },
   "manualCredentialSubmit": "موافق",
+  "@manualCredentialSubmit": {
+    "description": "Confirm button of the manual convene record input dialog"
+  },
   "progressWaitingLog": "في انتظار فتحك صفحة Convene Records في اللعبة...",
+  "@progressWaitingLog": {
+    "description": "Android waiting screen title while the app watches the game log for the convene history URL"
+  },
   "progressCheckingLogAccess": "جارٍ التحضير لقراءة ملف سجل أحداث اللعبة...",
+  "@progressCheckingLogAccess": {
+    "description": "Android waiting screen title while the app checks whether it can read the game log automatically (no open-game button yet)"
+  },
   "progressLogUnavailableTitle": "تعذّر الحصول على رابط سجل الاستدعاء تلقائيًا",
+  "@progressLogUnavailableTitle": {
+    "description": "Android waiting screen title when the game log cannot be read automatically"
+  },
   "logUnavailableNotPaired": "لم يتم إعداد قراءة ملف سجل أحداث اللعبة بعد. بعد إعداد لمرة واحدة، ستتم قراءته تلقائيًا عند كل تحديث.",
+  "@logUnavailableNotPaired": {
+    "description": "Reason shown when wireless debugging has not been paired yet"
+  },
   "logUnavailableNoWifi": "لا يعمل تصحيح الأخطاء اللاسلكي إلا عبر Wi‑Fi. اتصل بشبكة Wi‑Fi ثم عُد، وسيتابع التطبيق تلقائيًا. يمكنك أيضًا إدخال الرابط يدويًا.",
+  "@logUnavailableNoWifi": {
+    "description": "Reason shown when the device is not on Wi-Fi so wireless debugging cannot be used"
+  },
   "logRootDeniedHint": "تم العثور على صلاحية الروت، لكن لم يُمنح هذا التطبيق صلاحية الروت. للقراءة باستخدام الروت، اسمح لهذا التطبيق في مدير الروت (مثل قائمة Superuser في Magisk)، ثم عُد، وسيعيد التطبيق المحاولة تلقائيًا.",
+  "@logRootDeniedHint": {
+    "description": "Extra hint when the device has su but root access was denied or never granted (root managers like Magisk may remember the denial and stop asking)"
+  },
   "logUnavailableAdbFailed": "تعذّر الاتصال بتصحيح الأخطاء اللاسلكي. ربما انتهت صلاحية الإقران؛ يُرجى الإقران مجددًا.",
+  "@logUnavailableAdbFailed": {
+    "description": "Reason shown when the app is paired but cannot connect to wireless debugging"
+  },
   "logUnavailableWirelessOff": "لا يسمح جهازك لهذا التطبيق بتشغيل تصحيح الأخطاء اللاسلكي. شغّله من صفحة تصحيح الأخطاء اللاسلكي ثم عُد، وسيتابع التطبيق تلقائيًا.",
+  "@logUnavailableWirelessOff": {
+    "description": "Reason shown when wireless debugging is off and the app is not allowed to turn it on"
+  },
   "logUnavailableNetworkNotAllowed": "لم يُسمح بعد بشبكة Wi‑Fi هذه لتصحيح الأخطاء اللاسلكي. اضغط «سماح» في مطالبة النظام (حدّد «السماح دائمًا على هذه الشبكة» حتى لا يُطلب منك ذلك مجددًا) وسيتابع التطبيق تلقائيًا. إذا أغلقت المطالبة، فاضغط «إعادة المحاولة».",
+  "@logUnavailableNetworkNotAllowed": {
+    "description": "Reason shown when the current Wi-Fi network has not been allowed for wireless debugging yet and the system is showing its allow prompt"
+  },
   "logUnavailableStorage": "يلزم إذن التخزين لقراءة ملف سجل أحداث اللعبة.",
+  "@logUnavailableStorage": {
+    "description": "Reason shown on Android 10 or older when storage permission was denied"
+  },
   "logUnavailableUnsupported": "لا يمكن لهذا الجهاز قراءة ملف سجل أحداث اللعبة تلقائيًا. يُرجى إدخال الرابط يدويًا.",
+  "@logUnavailableUnsupported": {
+    "description": "Reason shown when the device cannot read the game log automatically"
+  },
   "actionOpenGame": "فتح Wuthering Waves",
+  "@actionOpenGame": {
+    "description": "Button that opens Wuthering Waves from the waiting screen"
+  },
   "actionOpenWirelessDebugging": "فتح تصحيح الأخطاء اللاسلكي",
+  "@actionOpenWirelessDebugging": {
+    "description": "Button that opens the system Wireless debugging settings page"
+  },
   "actionRegrantStorage": "منح الإذن",
+  "@actionRegrantStorage": {
+    "description": "Button that asks for storage permission again"
+  },
   "progressLogConnectionLost": "انقطع الاتصال بتصحيح الأخطاء اللاسلكي، جارٍ إعادة الاتصال... إذا لم يُستعد الاتصال، فتحقق من Wi‑Fi أو أدخل الرابط يدويًا.",
+  "@progressLogConnectionLost": {
+    "description": "Warning on the waiting screen when the wireless debugging connection dropped and the app is retrying"
+  },
   "progressWirelessLeftOnHint": "لا يزال تصحيح الأخطاء اللاسلكي قيد التشغيل. يمكنك إيقافه من إعدادات النظام.",
+  "@progressWirelessLeftOnHint": {
+    "description": "Note on the completion screen when wireless debugging was left on because the app may not turn it off"
+  },
   "actionSetupLogAccess": "إعداد",
+  "@actionSetupLogAccess": {
+    "description": "Waiting screen button that opens the log access setup page"
+  },
   "actionRepair": "الإقران مجددًا",
+  "@actionRepair": {
+    "description": "Waiting screen button that opens the setup page to pair wireless debugging again"
+  },
   "setupTitle": "قراءة ملف سجل أحداث اللعبة",
+  "@setupTitle": {
+    "description": "App bar title of the log access setup disclosure page"
+  },
   "setupWhyTitle": "لماذا هذا مطلوب؟",
+  "@setupWhyTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhyBody": "لا يسمح Android للتطبيقات بقراءة ملفات التطبيقات الأخرى مباشرةً. يستخدم هذا التطبيق ميزة تصحيح الأخطاء اللاسلكي المضمّنة لقراءة ملف سجل أحداث Wuthering Waves والحصول منه على رابط سجل الاستدعاء.",
+  "@setupWhyBody": {
+    "description": "Disclosure page: why the app needs wireless debugging"
+  },
   "setupWhatTitle": "ما يفعله هذا التطبيق",
+  "@setupWhatTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupWhatBody": "• يقرأ ملف سجل أحداث Wuthering Waves فقط\n• يقطع الاتصال فور انتهاء القراءة، ويوقف تصحيح الأخطاء اللاسلكي إذا كان هذا التطبيق هو من شغّله\n• يمنح نفسه إذن تشغيل تصحيح الأخطاء اللاسلكي وإيقافه، فلا تحتاج إلى إعداده مجددًا\n• يمكنك إزالة ذلك في أي وقت من الإعدادات",
+  "@setupWhatBody": {
+    "description": "Disclosure page bullet list. Keep the line breaks."
+  },
   "setupNeedTitle": "المتطلبات",
+  "@setupNeedTitle": {
+    "description": "Disclosure page card title"
+  },
   "setupNeedBody": "Android 11 أو أحدث، وWi‑Fi، والسماح بالإشعارات",
+  "@setupNeedBody": {
+    "description": "Disclosure page requirements"
+  },
   "setupStart": "بدء الإعداد",
+  "@setupStart": {
+    "description": "Disclosure page primary button"
+  },
   "setupUseManual": "إدخال الرابط يدويًا بدلًا من ذلك",
+  "@setupUseManual": {
+    "description": "Disclosure page link to manual input instead"
+  },
   "setupPairTitle": "إقران تصحيح الأخطاء اللاسلكي",
+  "@setupPairTitle": {
+    "description": "App bar title of the pairing guide page"
+  },
   "setupStepDevOptions": "1. تفعيل خيارات المطوّرين",
+  "@setupStepDevOptions": {
+    "description": "Pairing guide step 1 title"
+  },
   "setupStepDevOptionsBody": "1. افتح صفحة «حول» في إعدادات النظام (مثل «لمحة عن الهاتف» أو «لمحة عن الجهاز اللوحي»)\n2. ابحث عن «رقم الإصدار» واضغط عليه 7 مرات\n3. عندما تظهر رسالة «أنت الآن مطوّر»، عُد إلى هذا التطبيق",
+  "@setupStepDevOptionsBody": {
+    "description": "Pairing guide step 1 instructions. Keep the line breaks."
+  },
   "setupOpenAbout": "فتح صفحة «حول»",
+  "@setupOpenAbout": {
+    "description": "Button that opens the system About page"
+  },
   "setupStepDevOptionsDone": "1. خيارات المطوّرين مفعّلة",
+  "@setupStepDevOptionsDone": {
+    "description": "Pairing guide step 1 done"
+  },
   "setupStepNotifications": "2. السماح بالإشعارات",
+  "@setupStepNotifications": {
+    "description": "Pairing guide step 2 title"
+  },
   "setupStepNotificationsBody": "ستُدخل رمز الإقران من خلال إشعار، لذا اسمح لهذا التطبيق بعرض الإشعارات.",
+  "@setupStepNotificationsBody": {
+    "description": "Pairing guide step 2 explanation"
+  },
   "setupAllowNotifications": "السماح بالإشعارات",
+  "@setupAllowNotifications": {
+    "description": "Button that requests notification permission"
+  },
   "setupOpenNotificationSettings": "فتح إعدادات الإشعارات",
+  "@setupOpenNotificationSettings": {
+    "description": "Button that opens the app's notification settings after the permission was denied"
+  },
   "setupStepNotificationsDone": "2. الإشعارات مسموح بها",
+  "@setupStepNotificationsDone": {
+    "description": "Pairing guide step 2 done"
+  },
   "setupStepPair": "3. الإقران",
+  "@setupStepPair": {
+    "description": "Pairing guide step 3 title"
+  },
   "setupStepPairBody": "1. اضغط على الزر أدناه لفتح تصحيح الأخطاء اللاسلكي\n2. فعّل «استخدام تصحيح الأخطاء اللاسلكي» واضغط «إقران الجهاز باستخدام رمز إقران»\n3. اسحب من أعلى الشاشة لأسفل، وفي إشعار هذا التطبيق أدخل رمز الإقران المكوّن من 6 أرقام الظاهر في شاشة الإقران ضمن تصحيح الأخطاء اللاسلكي",
+  "@setupStepPairBody": {
+    "description": "Pairing guide step 3 instructions. Keep the line breaks."
+  },
   "setupWaitingCode": "في انتظار إدخالك رمز الإقران في الإشعار...\nأدخله بينما لا تزال شاشة الإقران في تصحيح الأخطاء اللاسلكي مفتوحة.",
+  "@setupWaitingCode": {
+    "description": "Pairing guide while waiting for the code. Keep the line break."
+  },
   "setupOpenWirelessAgain": "فتح تصحيح الأخطاء اللاسلكي مجددًا",
+  "@setupOpenWirelessAgain": {
+    "description": "Button to open Wireless debugging again while waiting"
+  },
   "setupPairing": "جارٍ الإقران...",
+  "@setupPairing": {
+    "description": "Shown while pairing and granting permission"
+  },
   "setupGrantFailedTitle": "تم الإقران، تبقّت خطوة واحدة",
+  "@setupGrantFailedTitle": {
+    "description": "Card title when pairing worked but the permission grant failed"
+  },
   "setupGrantFailedBody": "لدى جهازك قيد أمان إضافي. فعّل خيارًا إضافيًا واحدًا حتى يتمكن هذا التطبيق من تشغيل تصحيح الأخطاء اللاسلكي وإيقافه تلقائيًا.",
+  "@setupGrantFailedBody": {
+    "description": "Explanation when the permission grant failed"
+  },
   "setupGrantHowTitle": "طريقة التفعيل",
+  "@setupGrantHowTitle": {
+    "description": "Card title for how to enable the extra option"
+  },
   "setupGrantHowBody": "1. افتح خيارات المطوّرين\n2. ابحث عن المفتاح المتعلق بأمان تصحيح أخطاء USB أو مراقبة الأذونات وفعّله، على سبيل المثال:\n• Xiaomi: «تصحيح أخطاء USB (إعدادات الأمان)»\n• OPPO / realme: «تعطيل مراقبة الأذونات»\n3. تأكد من تفعيل تصحيح الأخطاء اللاسلكي، ثم عُد واضغط «إعادة المحاولة»",
+  "@setupGrantHowBody": {
+    "description": "Generic steps to enable the vendor-specific security option, with examples. Keep the line breaks."
+  },
   "setupOpenDeveloperOptions": "فتح خيارات المطوّرين",
+  "@setupOpenDeveloperOptions": {
+    "description": "Button that opens Developer options"
+  },
   "setupRetry": "إعادة المحاولة",
+  "@setupRetry": {
+    "description": "Button to retry granting the permission"
+  },
   "setupSkipGrant": "تخطٍّ (شغّل تصحيح الأخطاء اللاسلكي بنفسك عند كل تحديث)",
+  "@setupSkipGrant": {
+    "description": "Link to skip the grant and use manual toggle mode"
+  },
   "setupDoneTitle": "كل شيء جاهز",
+  "@setupDoneTitle": {
+    "description": "Title when setup finished"
+  },
   "setupDoneBody": "من الآن فصاعدًا، سيقرأ «تحديث» السجل تلقائيًا. لا حاجة إلى أي إعداد آخر.",
+  "@setupDoneBody": {
+    "description": "Body when setup finished"
+  },
   "setupDoneManualBody": "عند الضغط على «تحديث»، شغّل تصحيح الأخطاء اللاسلكي عندما يُطلب منك ذلك.",
+  "@setupDoneManualBody": {
+    "description": "Body when setup finished in manual toggle mode"
+  },
   "setupDoneReturning": "جارٍ العودة وبدء التحديث...",
+  "@setupDoneReturning": {
+    "description": "Shown just before returning and starting the update"
+  },
   "settingsLogAccess": "الوصول إلى ملف سجل أحداث اللعبة",
+  "@settingsLogAccess": {
+    "description": "Settings section title (Android only) for how the app reads the game log"
+  },
   "settingsLogAccessMethod": "الطريقة",
+  "@settingsLogAccessMethod": {
+    "description": "Settings row label: the current log access method"
+  },
   "logAccessMethodRoot": "Root",
+  "@logAccessMethodRoot": {
+    "description": "Log access method name: root. 'root' is a technical term, keep it."
+  },
   "logAccessMethodLegacy": "وصول مباشر",
+  "@logAccessMethodLegacy": {
+    "description": "Log access method name: direct file access on Android 10 or older"
+  },
   "logAccessMethodWireless": "تصحيح الأخطاء اللاسلكي",
+  "@logAccessMethodWireless": {
+    "description": "Log access method name: wireless debugging"
+  },
   "logAccessMethodNone": "لم يتم الإعداد",
+  "@logAccessMethodNone": {
+    "description": "Log access method not set up yet"
+  },
   "settingsPairingStatus": "الإقران",
+  "@settingsPairingStatus": {
+    "description": "Settings row label: wireless debugging pairing status"
+  },
   "settingsPaired": "مقترن",
+  "@settingsPaired": {
+    "description": "Pairing status: paired and the app can toggle wireless debugging"
+  },
   "settingsPairedManual": "مقترن (شغّل تصحيح الأخطاء اللاسلكي يدويًا)",
+  "@settingsPairedManual": {
+    "description": "Pairing status: paired but the user has to turn wireless debugging on each time"
+  },
   "settingsRetryGrant": "إعادة محاولة منح الإذن",
+  "@settingsRetryGrant": {
+    "description": "Settings button to retry granting the permission to toggle wireless debugging"
+  },
   "settingsSetupLogAccess": "إعداد",
+  "@settingsSetupLogAccess": {
+    "description": "Settings button that opens the log access setup page"
+  },
   "settingsUnpair": "إزالة الإقران",
+  "@settingsUnpair": {
+    "description": "Settings button to remove the wireless debugging pairing"
+  },
   "settingsUnpairConfirmTitle": "إزالة الإقران؟",
+  "@settingsUnpairConfirmTitle": {
+    "description": "Confirm dialog title for removing the pairing"
+  },
   "settingsUnpairConfirmBody": "سيؤدي هذا إلى حذف مفتاح الإقران الخاص بهذا التطبيق وإزالة إذن هذا التطبيق بتشغيل تصحيح الأخطاء اللاسلكي وإيقافه. ستحتاج إلى الإقران مجددًا لاستخدام تصحيح الأخطاء اللاسلكي لاحقًا.",
+  "@settingsUnpairConfirmBody": {
+    "description": "Confirm dialog body for removing the pairing"
+  },
   "settingsUnpairDone": "تمت إزالة الإقران",
+  "@settingsUnpairDone": {
+    "description": "Title of the dialog after the pairing was removed"
+  },
   "settingsUnpairDoneBody": "تم حذف مفتاح الإقران لهذا التطبيق وإزالة إذنه بتشغيل تصحيح الأخطاء اللاسلكي وإيقافه.",
+  "@settingsUnpairDoneBody": {
+    "description": "Body of the dialog after unpairing wireless debugging when the permission was revoked"
+  },
   "settingsUnpairUnreachableTitle": "تم حذف مفتاح الإقران",
+  "@settingsUnpairUnreachableTitle": {
+    "description": "Title of the dialog after unpairing when wireless debugging could not be reached to revoke the permission"
+  },
   "settingsUnpairUnreachableBody": "تم حذف مفتاح الإقران لهذا التطبيق، لكن تعذّر الاتصال بتصحيح الأخطاء اللاسلكي هذه المرة، لذا لم تتم إزالة إذن تشغيل تصحيح الأخطاء اللاسلكي وإيقافه.",
+  "@settingsUnpairUnreachableBody": {
+    "description": "First paragraph when unpairing could not reach wireless debugging; the key is deleted but the WRITE_SECURE_SETTINGS grant remains"
+  },
   "settingsUnpairUnreachableRevokeHint": "لا يستخدم هذا التطبيق هذا الإذن أثناء عدم الإقران. لإزالته تمامًا، اتصل بشبكة Wi‑Fi وأقرن مجددًا ثم ألغِ الإقران مرة أخرى.",
+  "@settingsUnpairUnreachableRevokeHint": {
+    "description": "Second paragraph: the app does not use the remaining permission while unpaired and how to revoke it completely"
+  },
   "settingsUnpairLeftover": "ستظل قائمة تصحيح الأخطاء اللاسلكي ← الأجهزة المقترنة في النظام تعرض \"{name}\". لم يعد بإمكانه الاتصال، لذا يمكنك تركه؛ ولإزالته، انقر عليه ثم احذفه.",
+  "@settingsUnpairLeftover": {
+    "description": "Explains that the system Wireless debugging paired devices list still shows this app's entry ({name}) and how to delete it",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsUnpairLeftoverAlso": "تعرض قائمة تصحيح الأخطاء اللاسلكي ← الأجهزة المقترنة في النظام أيضًا \"{name}\"؛ انقر عليه لحذفه.",
+  "@settingsUnpairLeftoverAlso": {
+    "description": "Same as settingsUnpairLeftover but shorter, used after the unreachable paragraphs",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "progressCredentialReady": "تم الحصول على رابط سجل الاستدعاء. سيبدأ جلب سجل الاستدعاء عند عودتك إلى هذا التطبيق.",
+  "@progressCredentialReady": {
+    "description": "Android waiting screen once the convene URL was found while the app was in the background; fetching starts when the user returns"
+  },
   "actionShare": "مشاركة",
   "shareFailed": "تعذّرت المشاركة",
   "dialogSaveAsTitle": "حفظ باسم",
@@ -456,10 +1500,37 @@
   "actionSave": "حفظ",
   "settingsLogsShare": "مشاركة السجلات",
   "logUnavailableGameNotInstalled": "لم يتم العثور على الإصدار العالمي من Wuthering Waves على هذا الجهاز. بعد التثبيت عُد إلى هنا وسيتم اكتشافه تلقائيًا.",
+  "@logUnavailableGameNotInstalled": {
+    "description": "Waiting screen on Android when no global Wuthering Waves app is installed on the device (phone or tablet)"
+  },
   "actionRedetectGame": "إعادة الفحص",
+  "@actionRedetectGame": {
+    "description": "Button that checks again whether Wuthering Waves is installed"
+  },
   "logChooseGameVersion": "يوجد أكثر من إصدار من Wuthering Waves مثبت على هذا الجهاز. أي إصدار تريد قراءة سجلاته؟",
+  "@logChooseGameVersion": {
+    "description": "Shown above a list of installed Wuthering Waves versions (Google Play, Galaxy Store) so the user picks which one to read"
+  },
   "gameVersionGooglePlay": "إصدار Google Play",
+  "@gameVersionGooglePlay": {
+    "description": "Name of the Wuthering Waves version installed from Google Play. \"Google Play\" is a store name, do not translate."
+  },
   "gameVersionGalaxyStore": "إصدار Galaxy Store",
+  "@gameVersionGalaxyStore": {
+    "description": "Name of the Wuthering Waves version installed from Samsung Galaxy Store. \"Galaxy Store\" is a store name, do not translate."
+  },
   "progressGameVersion": "إصدار Wuthering Waves: {name}",
-  "actionSwitchGameVersion": "تبديل الإصدار"
+  "@progressGameVersion": {
+    "description": "Waiting screen line showing which Wuthering Waves version is being read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Galaxy Store"
+      }
+    }
+  },
+  "actionSwitchGameVersion": "تبديل الإصدار",
+  "@actionSwitchGameVersion": {
+    "description": "Button on the waiting screen to pick another installed Wuthering Waves version"
+  }
 }
