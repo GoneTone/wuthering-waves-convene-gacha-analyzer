@@ -430,6 +430,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
   - 服務帳戶在 Play Console 只給「查看應用程式資訊（唯讀）」與「將應用程式發布至測試群組」，**不給「發布正式版」**：CI 就算出錯也發不到正式版。Cloud 端不給任何專案角色，只要啟用 Google Play Android Developer API。
   - 2023 年 11 月之後註冊的個人開發者帳號，發正式版前要先跑 12 人、連續 14 天的封閉測試（本專案帳號不受此限）。
 - **rc 與正式版都走 CI**（2026-11-13 起，從 rc.21 開始）：Actions 的 `release` 輸入 `vX.Y.Z-rc.N` 並勾選 prerelease，Android 直接推出到內部測試（內測只有開發者自己，不必先在模擬器實跑，推出後用手機從 Play 更新確認即可）。**同一個 tag 不能重跑整個 workflow**：版本代碼由 tag 算出，Play 已有的代碼不能再上傳；Android 已經上傳過時要換下一個 rc 編號。
+  - **Windows 安裝檔以前從沒建過預覽版**：Inno Setup 的 `VersionInfoVersion`／`VersionInfoProductVersion` 只接受 `n.n.n.n`，傳 `1.9.0-rc.22` 會 `Value of [Setup] section directive "VersionInfoVersion" is invalid`。`installer.iss` 用 ISPP 去掉 `-rc.N` 給這兩欄，完整字串放 `VersionInfoTextVersion`／`VersionInfoProductTextVersion`（2026-11-13，rc.22）。
 - **以前 rc 是手動發**（rc.1～rc.20）：rc 在本機建 AAB 後用 `tool/play_upload_internal.py <服務帳戶 JSON> <aab> <版本名稱> [--notes-en <英文版本資訊>]` 上傳並推出到內部測試（`--notes-en` 會填 `en-US` 的「新功能」；只靠 `cryptography` 簽 JWT 換權杖，不需要 Google 的 API 套件；流程是建立編輯 → 上傳 → 設定 internal 版本為 completed → 提交，失敗會刪掉編輯）。手動上傳過的 rc 已用掉版本代碼，CI 要用比它們大的 rc 編號。這個工具現在只在 CI 不能用時備用。第一次用它上傳成功，也順便證明服務帳戶權限正確（CI 用同一個帳戶）。
 - 修改 workflow 後用 actionlint 檢查（`go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/*.yml`）。
 - **actionlint 抓到 `ci.yml` 的既有問題**：自動提交 ARB 正規化的步驟把 `${{ github.head_ref }}` 直接拼進 shell，分支名稱裡的 `$(...)` 會被當成指令執行。改成 `env: HEAD_REF: ${{ github.head_ref }}`，指令裡用 `"$HEAD_REF"`。原神版的 `ci.yml` 是同一份底稿，要一起檢查。
