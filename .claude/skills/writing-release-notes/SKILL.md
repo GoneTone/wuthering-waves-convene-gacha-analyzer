@@ -1,9 +1,15 @@
 ---
 name: writing-release-notes
-description: Use when drafting GitHub release notes or changelog content for this project (Genshin Impact Wish Gacha Analyzer). Triggers when the user asks to write release content for a new version, summarize a tag-to-tag diff (e.g. "v1.0.0...v1.1.0"), or produce "更新內容 / 版本說明 / release note". Produces bilingual (zh-Hant on top, en on bottom) Discord-style prose for headline features with a short bullet list for minor items — NOT a corporate-style changelog with one section header per category.
+description: Use when drafting GitHub release notes or changelog content for this project (Wuthering Waves Convene Gacha Analyzer, Windows + Android). Triggers when the user asks to write release content for a new version, summarize a tag-to-tag diff (e.g. "v1.0.0...v1.1.0"), or produce "更新內容 / 版本說明 / release note". Produces bilingual (zh-Hant on top, en on bottom) Discord-style prose for headline features with a short bullet list for minor items — NOT a corporate-style changelog with one section header per category.
 ---
 
 # Writing Release Notes (this project)
+
+本技能沿用自原神姐妹專案（Genshin Impact Wish Gacha Analyzer），下面的 Gold Standard 範例也是原神版的 v1.1.0，只拿來參考**風格**。寫這個專案時用鳴潮的用語（喚取、5★、共鳴者等，見 `docs/術語表.md`），不要照抄範例裡的原神名詞（祈願、HoYoWiki、刻晴、原神資訊站）。
+
+**這個專案使用者校稿過的偏好（2026-11-14，v1.9.0）**：
+- **篇幅要短**：hero 散文每段兩三句就好，不要鋪陳太長；bullet 也只留使用者會在意的。
+- **emoji 直接用 Unicode 字元**（📱、☁️），不要用 `:iphone:` 這類 GitHub shortcode。
 
 ## 風格摘要
 
