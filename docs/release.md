@@ -1,6 +1,6 @@
 # Release SOP
 
-如何發 Genshin Impact Wish Gacha Analyzer 新版本（Windows installer）。
+如何發鳴潮喚取卡池分析（Wuthering Waves Convene Gacha Analyzer）新版本：Windows 安裝檔發到 GitHub Release，Android AAB 上傳到 Google Play。
 
 ## 前置條件
 
@@ -23,8 +23,8 @@
 
 3. **確認 installer 已附上**
    - CI 成功後會自動建立一個 **草稿** release（標題 = tag），到該草稿頁面確認
-   - Assets 區應該有 `Genshin_Impact_Wish_Gacha_Analyzer-Setup-X.Y.Z.exe`
-   - Release notes = 自動產生的 What's Changed ＋ 固定附帶的翻譯邀請／防毒說明（維護於 `.github/release-footer.md`），Publish 前可自行編輯
+   - Assets 區應該有 `Wuthering_Waves_Convene_Gacha_Analyzer-Setup-X.Y.Z.exe`
+   - Release notes = 自動產生的 What's Changed ＋ 固定附帶的下載徽章／翻譯邀請／防毒說明（維護於 `.github/release-footer.md`；其中 `{{INSTALLER_URL}}` 由 workflow 換成這個版本安裝檔的直接下載網址，Publish 後才有效），Publish 前可自行編輯
    - Workflow run 的 step summary 會顯示 SHA-256 / size / release commit
 
 4. **Publish**

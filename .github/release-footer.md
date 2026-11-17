@@ -1,3 +1,14 @@
+## 下載 Download
+
+<a href="{{INSTALLER_URL}}"><img src="https://raw.githubusercontent.com/GoneTone/wuthering-waves-convene-gacha-analyzer/master/docs/images/en/download-windows.svg" alt="Download for Windows" height="80"></a> <a href="https://play.google.com/store/apps/details?id=tw.reh.wuwa.gacha"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80"></a>
+
+> [!CAUTION]
+> Google Play 版需要經過商店審核，通常會比這裡晚幾小時到幾天才更新到這個版本；商店還沒出現新版本時請稍後再查看。
+>
+> The Google Play version must pass store review, so it usually updates to this version a few hours to a few days later than this page. If the store doesn't show the new version yet, please check back later.
+
+<sub>Google Play 和 Google Play 標誌是 Google LLC 的商標。Google Play and the Google Play logo are trademarks of Google LLC.</sub>
+
 ## 貢獻翻譯 Contribute Translation
 
 請協助我們將軟體翻譯成各國語言！

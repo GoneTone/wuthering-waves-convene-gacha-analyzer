@@ -774,14 +774,14 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 刻意不改：廣告要隱藏時（開鍵盤、切到沒有內容的頁面）直接移除並釋放，不改成保留在畫面外。保留的話，隱藏期間仍可能被計算曝光；代價是再次出現時要重新載入。同意查詢失敗時，這次啟動不重試（沿用上次結果，下次啟動再查）。
 
 **上架與 AdMob 後台待辦**
-- Play Console：「廣告」聲明改成「含廣告」；資料安全依 `private/play-store/data-safety.md` 補廣告列（2026-11-09 已填，含廣告聲明）；`AD_ID` 權限用途填「廣告或行銷」；商店頁「開發人員網站」填 `https://reh.tw`（`app-ads.txt` 已在該網域）。
+- Play Console：「廣告」聲明改成「含廣告」；資料安全依 `private/play-store/data-safety.md` 補廣告列（2026-11-09 已填，含廣告聲明）；`AD_ID` 權限用途填「廣告或行銷」；商店頁「開發人員網站」要填有 `app-ads.txt` 的網域，現在填 `https://blog.reh.tw/wuthering-waves-convene-gacha-analyzer`（會轉址到 GitHub repo）。**不能填 GitHub 網址**：AdMob 只到商店頁網站的主機名稱（子網域最多一層）根目錄找 `app-ads.txt`，填 GitHub 會去找 `github.com/app-ads.txt`，驗證失敗並顯示「app-ads.txt 與 AdMob 帳戶中的資訊不符」（2026-11-17 遇過）。`blog.reh.tw` 與 `reh.tw` 根目錄都放了同一行 `app-ads.txt`，部落格改版或搬家時要保留。
 - AdMob 後台（2026-11-09 已完成）：
-  - 建立 App（尚未上架，正式上架後要回來連結商店頁並送審）與橫幅廣告單元。單元保留影片廣告、自動重新整理與底價由 Google 最佳化。
+  - 建立 App 與橫幅廣告單元（建立時尚未上架；2026-11-17 正式上架後已在 AdMob 連結商店頁，接著要通過 `app-ads.txt` 驗證，見上一條的網站設定）。單元保留影片廣告、自動重新整理與底價由 Google 最佳化。
   - 「隱私權與訊息」已發布歐洲（GDPR，31 種語言）與美國州級的訊息。歐洲訊息的「不同意」按鈕維持關閉。帳戶層級的「啟用同意聲明收集功能」開關呈灰色是正常的：那是給沒有建立訊息的 App 用的備用機制，帳戶層級已經開啟，不需要處理。
   - 封鎖控制：決定不設，維持預設。這和設計文件刻意不同：設計時原本打算在後台封鎖博弈、賭博等敏感類別，最後決定不設。敏感類別和廣告內容分級是兩套獨立的控制，程式裡的 `maxAdContentRating: T` 不會擋掉這些類別。
 - 正式 ID 驗證：用 `secrets/ads_defines.json` 建 release，Manifest 的 `com.google.android.gms.ads.APPLICATION_ID` 與 `libapp.so` 裡的單元 ID 都是正式值；GitHub secrets `ADMOB_APP_ID`／`ADMOB_BANNER_UNIT_ID` 已設定（2026-11-10 補上 `ADMOB_NATIVE_UNIT_ID`），CI 的「Write ads defines from secrets」步驟用 actionlint 檢查過。
 - **自己和內測者的手機要在 AdMob「設定 → 測試裝置」登記**（用手機的廣告 ID）：從 Play 安裝的 rc 版與正式版帶的是正式廣告 ID，開發者點到自己的廣告會被判無效流量，嚴重時整個帳號（`reh.tw/app-ads.txt` 用的同一個發布商 ID）被停權。手機重設過廣告 ID 後，舊的登記就會失效，要重新登記新的 ID（2026-11-09 遇過）。
-- AdMob 新 App 要等 Play 商店頁公開、在 AdMob 連結商店頁並通過審查後才會正常投放。**內部測試版看不到正式廣告是正常的**；開發版用測試廣告不受影響。正式上架後要回 AdMob 連結商店頁。
+- AdMob 新 App 要等 Play 商店頁公開、在 AdMob 連結商店頁並通過審查後才會正常投放。**內部測試版看不到正式廣告是正常的**；開發版用測試廣告不受影響。正式上架後已回 AdMob 連結商店頁（2026-11-17）。
 
 **模擬器驗證（API 36，2026-11-09，debug 版＝測試廣告）**
 - 綜合頁沒有資料時沒有廣告；匯入 12 筆假資料後，「角色活動」頁底部出現「測試廣告」，在「最後更新」狀態列上方、中間有分隔線；空的「武器活動」頁（此卡池無紀錄）沒有廣告；設定頁一律有廣告。
@@ -989,4 +989,8 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 
 **功能描述要對照實際 UI**：這次順便發現分享圖寫的「自動複製到剪貼簿」早就不是這樣了，實際上是對話框讓使用者選「複製圖片」或「儲存圖片」，Android 還多一顆系統分享。改 README 時把每一條功能描述都對照現在的畫面看一次。
 
-**要等上架後才能改的**：「下載軟體」段的 Google Play 連結，以及註明防毒軟體那段只適用 Windows 版。
+**上架後補上的（2026-11-17）**：「下載軟體」段最上面放兩個下載徽章。Google Play 用 Google 官方各語言徽章（`play.google.com/intl/en_us/badges/...`），段落最後附 Google 要求的商標聲明。Windows 徽章是自製的 `docs/images/<語言>/download-windows.svg`，連到 `releases/latest`，會自動指向最新正式版、跳過 rc。防毒軟體那段改成只講 Windows 版。
+
+Windows 徽章的版面是量 Play 徽章像素對齊的（框的位置、圓角、邊框、圖示範圍、文字基準線），排法也照各語言的 Play 徽章：英文小字在上，中日文大字在上（簡中例外，和 Play 一樣小字在上）。文字用 `textLength` 固定寬度，因為 SVG 用讀者電腦上的字型，不固定會超出框外；圖示用一般螢幕，不用 Windows 標誌（商標限制）。
+
+GitHub Release 頁的 footer（`.github/release-footer.md`）也有下載段：Windows 徽章直接下載這個版本的安裝檔，網址由 `release.yml` 把 `{{INSTALLER_URL}}` 換成 `releases/download/<tag>/<安裝檔名>`（草稿沒有 tag，Publish 後才有效）；Google Play 徽章底下用 `> [!CAUTION]` 提醒商店要審核、會比 GitHub 晚幾小時到幾天（GitHub 會拿掉 `style`，沒辦法直接寫紅字）。footer 的圖片要用 `raw.githubusercontent.com` 的絕對網址，Release 頁讀不到 repo 的相對路徑。

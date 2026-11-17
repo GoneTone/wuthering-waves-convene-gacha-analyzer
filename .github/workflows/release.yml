@@ -402,13 +402,16 @@ jobs:
             gh release create @createArgs
 
             # 在自動產生的 What's Changed 上下用 `---` 包夾，並於底部附上固定文案
-            # （翻譯邀請／防毒說明，維護於 .github/release-footer.md）。
+            # （下載徽章／翻譯邀請／防毒說明，維護於 .github/release-footer.md）。
             # 上方分隔線預留給維護者編輯 draft 時手動補上的版本說明文案，使最終結構為：
             #   [手動版本說明]\n\n---\n\n## What's Changed ...\n\n---\n\n[footer]
             # ConvertFrom-Json 取 body 為單一字串，避免 pwsh 把多行 stdout 切成陣列。
             # TrimEnd 去掉上游可能帶的尾換行，確保與 `---` 之間固定剛好一個空行。
             $generated = (gh release view "$tag" --json body | ConvertFrom-Json).body.TrimEnd()
             $footer = Get-Content .github/release-footer.md -Raw -Encoding UTF8
+            # footer 的 Windows 下載徽章直接連到這個版本的安裝檔；草稿沒有 tag，Publish 後網址才有效。
+            $installerUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$tag/$([uri]::EscapeDataString($env:INSTALLER_NAME))"
+            $footer = $footer.Replace('{{INSTALLER_URL}}', $installerUrl)
             $bodyFile = Join-Path $env:RUNNER_TEMP "release_body.md"
             Set-Content -Path $bodyFile -Value "---`n`n$generated`n`n---`n`n$footer" -Encoding UTF8 -NoNewline
             gh release edit "$tag" --notes-file $bodyFile

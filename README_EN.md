@@ -25,9 +25,11 @@ Please help us translate this software.
 
 ## Download Software
 
-The utility may trigger anti-virus software during installation and execution. This is because it generates and installs a local root certificate, and when you press *Update* it launches an interception helper with administrator privileges (bundling the [WinDivert](https://github.com/basil00/WinDivert) kernel driver) that redirects the convene-record page request to your local machine — behavior (installing a certificate, loading a kernel driver, redirecting traffic) that resembles malware and is especially prone to false positives. However, the utility only intercepts the official convene history API, the certificate stays on your computer, and the source code is open for inspection. If the utility doesn't function correctly, please try disabling any anti-virus software you have installed. We guarantee this utility is safe and virus-free.
+<a href="https://play.google.com/store/apps/details?id=tw.reh.wuwa.gacha"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80"></a> <a href="https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/releases/latest"><img src="docs/images/en/download-windows.svg" alt="Download for Windows" height="80"></a>
 
-<https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/releases>
+The Windows version may trigger anti-virus software during installation and execution. This is because it generates and installs a local root certificate, and when you press *Update* it launches an interception helper with administrator privileges (bundling the [WinDivert](https://github.com/basil00/WinDivert) kernel driver) that redirects the convene-record page request to your local machine — behavior (installing a certificate, loading a kernel driver, redirecting traffic) that resembles malware and is especially prone to false positives. However, the utility only intercepts the official convene history API, the certificate stays on your computer, and the source code is open for inspection. If the utility doesn't function correctly, please try disabling any anti-virus software you have installed. We guarantee this utility is safe and virus-free.
+
+<sub>Google Play and the Google Play logo are trademarks of Google LLC.</sub>
 
 ### Versions for Other Games
 

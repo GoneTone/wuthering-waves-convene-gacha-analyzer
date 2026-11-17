@@ -25,9 +25,11 @@ Android 版無法攔截連線，改為讀取鳴潮自己寫下的 log 檔，從�
 
 ## 下載軟體
 
-軟體在安裝或執行時有可能會被防毒軟體阻擋。原因是本軟體會自行產生並安裝一張本機根憑證，並在按下更新時以系統管理員權限啟動一個攔截程式（內含 [WinDivert](https://github.com/basil00/WinDivert) 核心驅動）把鳴潮喚取記錄頁面的請求重導向到本機解析──這類行為（安裝憑證、載入核心驅動、重導向流量）與惡意程式相似，特別容易被防毒誤判。但本軟體只攔截官方喚取歷史 API、憑證只留在您的電腦、且為開源可自行檢視原始碼。如果無法正常執行，請嘗試關閉防毒軟體後再執行看看，本軟體保證無毒。
+<a href="https://play.google.com/store/apps/details?id=tw.reh.wuwa.gacha"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/zh-tw_badge_web_generic.png" alt="立即下載 Google Play" height="80"></a> <a href="https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/releases/latest"><img src="docs/images/zh-Hant/download-windows.svg" alt="立即下載 Windows 版" height="80"></a>
 
-<https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/releases>
+Windows 版在安裝或執行時有可能會被防毒軟體阻擋。原因是本軟體會自行產生並安裝一張本機根憑證，並在按下更新時以系統管理員權限啟動一個攔截程式（內含 [WinDivert](https://github.com/basil00/WinDivert) 核心驅動）把鳴潮喚取記錄頁面的請求重導向到本機解析──這類行為（安裝憑證、載入核心驅動、重導向流量）與惡意程式相似，特別容易被防毒誤判。但本軟體只攔截官方喚取歷史 API、憑證只留在您的電腦、且為開源可自行檢視原始碼。如果無法正常執行，請嘗試關閉防毒軟體後再執行看看，本軟體保證無毒。
+
+<sub>Google Play 和 Google Play 標誌是 Google LLC 的商標。</sub>
 
 ### 也有支援其他遊戲的版本
 

@@ -25,9 +25,11 @@ Android 版は通信を傍受できないため、鳴潮が書き出すログフ
 
 ## ソフトウェアのダウンロード
 
-本ソフトウェアはインストールや実行時にウイルス対策ソフトによってブロックされることがあります。これは、本ソフトウェアがローカルのルート証明書を自ら生成してインストールし、更新を押した際にシステム管理者権限で傍受プログラム（[WinDivert](https://github.com/basil00/WinDivert) カーネルドライバーを内蔵）を起動して、鳴潮の集音履歴ページのリクエストをローカルへリダイレクトして解析するためです。こうした挙動（証明書のインストール、カーネルドライバーの読み込み、通信のリダイレクト）はマルウェアと似ているため、特に誤検知されやすくなっています。しかし本ソフトウェアは公式の集音履歴 API のみを傍受し、証明書はお使いのコンピューターに留まり、オープンソースなのでソースコードをご自身で確認できます。正常に実行できない場合は、ウイルス対策ソフトを無効にしてから実行してみてください。本ソフトウェアは無害であることを保証します。
+<a href="https://play.google.com/store/apps/details?id=tw.reh.wuwa.gacha"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/ja_badge_web_generic.png" alt="Google Play で手に入れよう" height="80"></a> <a href="https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/releases/latest"><img src="docs/images/ja-JP/download-windows.svg" alt="Windows 版をダウンロード" height="80"></a>
 
-<https://github.com/GoneTone/wuthering-waves-convene-gacha-analyzer/releases>
+Windows 版はインストールや実行時にウイルス対策ソフトによってブロックされることがあります。これは、本ソフトウェアがローカルのルート証明書を自ら生成してインストールし、更新を押した際にシステム管理者権限で傍受プログラム（[WinDivert](https://github.com/basil00/WinDivert) カーネルドライバーを内蔵）を起動して、鳴潮の集音履歴ページのリクエストをローカルへリダイレクトして解析するためです。こうした挙動（証明書のインストール、カーネルドライバーの読み込み、通信のリダイレクト）はマルウェアと似ているため、特に誤検知されやすくなっています。しかし本ソフトウェアは公式の集音履歴 API のみを傍受し、証明書はお使いのコンピューターに留まり、オープンソースなのでソースコードをご自身で確認できます。正常に実行できない場合は、ウイルス対策ソフトを無効にしてから実行してみてください。本ソフトウェアは無害であることを保証します。
+
+<sub>Google Play および Google Play ロゴは Google LLC の商標です。</sub>
 
 ### 他のゲームに対応したバージョンもあります
 
