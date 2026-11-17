@@ -1,3 +1,5 @@
+![集音分析 for 鳴潮](docs/images/play-store/feature-graphic-ja.png)
+
 # 鳴潮集音分析ツール Wuthering Waves Convene Gacha Analyzer
 
 [繁體中文](README.md) | [简体中文](README_ZH-HANS.md) | [English](README_EN.md) | 日本語

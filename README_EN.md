@@ -1,3 +1,5 @@
+![Convene Analyzer for WuWa](docs/images/play-store/feature-graphic-en.png)
+
 # 鳴潮喚取卡池分析 Wuthering Waves Convene Gacha Analyzer
 
 [繁體中文](README.md) | [简体中文](README_ZH-HANS.md) | English | [日本語](README_JA-JP.md)

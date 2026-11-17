@@ -1,3 +1,5 @@
+![唤取卡池分析 for 鸣潮](docs/images/play-store/feature-graphic-zh-CN.png)
+
 # 鸣潮唤取卡池分析 Wuthering Waves Convene Gacha Analyzer
 
 [繁體中文](README.md) | 简体中文 | [English](README_EN.md) | [日本語](README_JA-JP.md)

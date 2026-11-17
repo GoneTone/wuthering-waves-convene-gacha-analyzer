@@ -989,7 +989,7 @@ Huawei AppGallery、OPPO、vivo、小米、OneStore 沒有查到國際服版本�
 
 **功能描述要對照實際 UI**：這次順便發現分享圖寫的「自動複製到剪貼簿」早就不是這樣了，實際上是對話框讓使用者選「複製圖片」或「儲存圖片」，Android 還多一顆系統分享。改 README 時把每一條功能描述都對照現在的畫面看一次。
 
-**上架後補上的（2026-11-17）**：「下載軟體」段最上面放兩個下載徽章。Google Play 用 Google 官方各語言徽章（`play.google.com/intl/en_us/badges/...`），段落最後附 Google 要求的商標聲明。Windows 徽章是自製的 `docs/images/<語言>/download-windows.svg`，連到 `releases/latest`，會自動指向最新正式版、跳過 rc。防毒軟體那段改成只講 Windows 版。
+**上架後補上的（2026-11-17）**：「下載軟體」段最上面放兩個下載徽章。Google Play 用 Google 官方各語言徽章（`play.google.com/intl/en_us/badges/...`），段落最後附 Google 要求的商標聲明。Windows 徽章是自製的 `docs/images/<語言>/download-windows.svg`，連到 `releases/latest`，會自動指向最新正式版、跳過 rc。防毒軟體那段改成只講 Windows 版。README 最上面（標題上方）也放了 Play 商店的主題圖片 `docs/images/play-store/feature-graphic-<語言>.png`，重做商店主題圖片時 README 會跟著變。
 
 Windows 徽章的版面是量 Play 徽章像素對齊的（框的位置、圓角、邊框、圖示範圍、文字基準線），排法也照各語言的 Play 徽章：英文小字在上，中日文大字在上（簡中例外，和 Play 一樣小字在上）。文字用 `textLength` 固定寬度，因為 SVG 用讀者電腦上的字型，不固定會超出框外；圖示用一般螢幕，不用 Windows 標誌（商標限制）。
 
