@@ -198,7 +198,7 @@
   "progressDone": "Päivitys valmis",
   "progressFailed": "Epäonnistui",
   "progressOpenGameHint": "Avaa Wuthering Waves → Convene → Convene Records",
-  "progressFallbackHint": "(Edellinen sieppaus on vanhentunut. Avaa Convene Records -sivu uudelleen.)",
+  "progressFallbackHint": "(Aiemmin haetut tiedot ovat vanhentuneet. Avaa Convene Records -sivu uudelleen.)",
   "progressCaptureUnavailableHint": "Sieppausapuria ei voitu käynnistää (Windowsin käyttöoikeuskehote on ehkä hylätty). Haetaan nyt vain pelin lokitiedostosta. Avaa pelissä Convene Records -sivu.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
