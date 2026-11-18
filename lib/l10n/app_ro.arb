@@ -198,7 +198,7 @@
   "progressDone": "Actualizare finalizată",
   "progressFailed": "Eșuat",
   "progressOpenGameHint": "Deschideți Wuthering Waves → Convene → Convene Records",
-  "progressFallbackHint": "(Captura anterioară a expirat. Redeschideți pagina Convene Records.)",
+  "progressFallbackHint": "(URL-ul anterior al istoricului convocărilor a expirat. Redeschideți pagina Convene Records.)",
   "progressCaptureUnavailableHint": "Nu s-a putut porni utilitarul de captură (este posibil ca solicitarea de permisiune Windows să fi fost refuzată). Acum se detectează doar din fișierul jurnal al jocului. Deschideți pagina Convene Records în joc.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

@@ -198,7 +198,7 @@
   "progressDone": "Güncelleme tamamlandı",
   "progressFailed": "Başarısız",
   "progressOpenGameHint": "Wuthering Waves'i açın → Convene → Convene Records",
-  "progressFallbackHint": "(Önceki yakalamanın süresi doldu. Lütfen Convene Records sayfasını yeniden açın.)",
+  "progressFallbackHint": "(Önceki çağrı geçmişi URL'sinin süresi doldu. Lütfen Convene Records sayfasını yeniden açın.)",
   "progressCaptureUnavailableHint": "Yakalama yardımcısı başlatılamadı (Windows izin istemi reddedilmiş olabilir). Şu anda yalnızca oyunun günlük dosyasından algılama yapılıyor. Lütfen oyunda Convene Records sayfasını açın.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

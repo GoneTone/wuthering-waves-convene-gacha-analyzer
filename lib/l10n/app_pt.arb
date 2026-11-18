@@ -198,7 +198,7 @@
   "progressDone": "Atualização concluída",
   "progressFailed": "Falhou",
   "progressOpenGameHint": "Abra Wuthering Waves → Invocação → Registros de invocação",
-  "progressFallbackHint": "(A captura anterior expirou. Volte a abrir a página Registros de invocação.)",
+  "progressFallbackHint": "(O URL anterior do histórico de invocações expirou. Volte a abrir a página Registros de invocação.)",
   "progressCaptureUnavailableHint": "Não foi possível iniciar o assistente de captura (o pedido de permissão do Windows pode ter sido recusado). A deteção passa a ser feita apenas a partir do ficheiro de log do jogo. Abra a página Registros de invocação no jogo.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

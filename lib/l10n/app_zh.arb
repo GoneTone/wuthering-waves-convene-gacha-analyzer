@@ -163,7 +163,7 @@
   "progressDone": "更新完成",
   "progressFailed": "失敗",
   "progressOpenGameHint": "請開啟鳴潮 → 喚取 → 喚取記錄",
-  "progressFallbackHint": "（先前的擷取已失效，需重新取得）",
+  "progressFallbackHint": "（先前的喚取記錄網址已失效，需重新取得）",
   "progressCaptureUnavailableHint": "無法啟動攔截程式（可能是 Windows 權限提示被拒絕），改為只從遊戲 log 檔偵測。請在遊戲中開啟喚取記錄頁。",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
