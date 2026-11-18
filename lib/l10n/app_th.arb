@@ -198,7 +198,7 @@
   "progressDone": "อัปเดตเสร็จสิ้น",
   "progressFailed": "ล้มเหลว",
   "progressOpenGameHint": "เปิด Wuthering Waves → หน้าอัญเชิญ → บันทึกการอัญเชิญ",
-  "progressFallbackHint": "(การดักจับครั้งก่อนหมดอายุแล้ว โปรดเปิดหน้าบันทึกการอัญเชิญอีกครั้ง)",
+  "progressFallbackHint": "(ข้อมูลที่ได้รับครั้งก่อนหมดอายุแล้ว โปรดเปิดหน้าบันทึกการอัญเชิญอีกครั้ง)",
   "progressCaptureUnavailableHint": "ไม่สามารถเริ่มตัวช่วยดักจับได้ (คุณอาจปฏิเสธคำขอสิทธิ์ของ Windows) ตอนนี้จะตรวจจับจากไฟล์ล็อกของเกมเท่านั้น โปรดเปิดหน้าบันทึกการอัญเชิญในเกม",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

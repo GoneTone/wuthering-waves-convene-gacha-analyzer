@@ -198,7 +198,7 @@
   "progressDone": "Оновлення завершено",
   "progressFailed": "Помилка",
   "progressOpenGameHint": "Відкрийте Wuthering Waves → Convene → Convene Records",
-  "progressFallbackHint": "(Попередні дані перехоплення застаріли. Відкрийте сторінку Convene Records ще раз.)",
+  "progressFallbackHint": "(Раніше отримані дані застаріли. Відкрийте сторінку Convene Records ще раз.)",
   "progressCaptureUnavailableHint": "Не вдалося запустити помічник перехоплення (можливо, запит дозволів Windows було відхилено). Зараз пошук ведеться лише за лог-файлом гри. Відкрийте сторінку Convene Records у грі.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
