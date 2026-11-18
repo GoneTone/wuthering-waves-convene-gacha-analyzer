@@ -79,7 +79,7 @@ final class LogAccessReady extends LogAccessOutcome {
   /// 回傳 true 代表照規則應該關掉無線偵錯，但沒有權限關（手動開關模式），需要提示玩家自行關閉。
   final Future<bool> Function() release;
 
-  /// 連線健康狀態變化（false＝中斷、true＝恢復）；root、直接讀為空 stream。
+  /// 連線健康狀態變化（false＝中斷、true＝恢復）；直接讀為空 stream。
   final Stream<bool> healthChanges;
 }
 
@@ -294,6 +294,7 @@ class LogAccessResolver {
       method: LogAccessMethod.root,
       game: game,
       games: games,
+      healthChanges: root.healthChanges,
       release: () async {
         await root.close();
         return false;
