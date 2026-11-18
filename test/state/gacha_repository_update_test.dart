@@ -1315,6 +1315,39 @@ void main() {
         );
       });
 
+      test('logs the credential source as manual or log', () async {
+        final sources = <String>[];
+        final sub = Logger('gacha.clientLog').onRecord.listen((r) {
+          if (r.message.startsWith('credential source=')) {
+            sources.add(r.message);
+          }
+        });
+        addTearDown(sub.cancel);
+        final capture = _ControlledCapture(completeOnCancel: true);
+        final watch = _FakeWatch();
+        final t = raceContainer(
+          capture: capture,
+          watch: watch,
+          locator: _FakeLocator(loc),
+        );
+        final repo = await bootstrap(t.container);
+
+        var done = repo.update();
+        await waitUntil(() => watch.hits.isNotEmpty);
+        await repo.submitManualCredential(_cred());
+        await done;
+        done = repo.forceRecaptureAndUpdate();
+        await waitUntil(() => watch.hits.length == 2);
+        watch.hits[1].complete(_cred());
+        await done;
+
+        expect(sources, [
+          'credential source=manual (completing wait)',
+          'credential source=manual',
+          'credential source=log',
+        ]);
+      });
+
       test('when idle starts an update without capturing', () async {
         final capture = _ControlledCapture();
         final watch = _FakeWatch();
