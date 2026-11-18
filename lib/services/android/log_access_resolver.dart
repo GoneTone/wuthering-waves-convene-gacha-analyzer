@@ -136,6 +136,8 @@ class LogAccessResolver {
     this.discoverAttempts = 5,
     this.discoverRetryDelay = const Duration(seconds: 1),
     this.enableSettleDelay = const Duration(milliseconds: 500),
+    this.connectRetryDelay = const Duration(milliseconds: 1500),
+    this.connectRetryAttempts = 3,
   });
 
   /// 系統功能。
@@ -158,6 +160,12 @@ class LogAccessResolver {
 
   /// 打開無線偵錯後等多久再讀回開關（系統擋下時會立刻改回關閉）。
   final Duration enableSettleDelay;
+
+  /// 連不上時等多久再重新找連接埠（無線偵錯剛關又開時，NSD 會先回報上一輪的連接埠）。
+  final Duration connectRetryDelay;
+
+  /// 連不上時保持無線偵錯開著、重新找連接埠再連的最多次數。
+  final int connectRetryAttempts;
 
   /// 本 resolver 的 logger。
   static final _log = Logger('capture.android');
@@ -259,6 +267,7 @@ class LogAccessResolver {
           game,
           games,
           forceDisableAfterUse,
+          isAborted,
         ),
       };
       if (outcome is LogAccessReady) {
@@ -340,10 +349,13 @@ class LogAccessResolver {
   }
 
   /// 無線偵錯：檢查配對與 Wi‑Fi、必要時打開無線偵錯、連線、補授權。
+  ///
+  /// 連不上時保持開著重新找連接埠再試；[isAborted] 為 true 後不再重試。
   Future<LogAccessOutcome?> _tryWireless(
     String game,
     List<String> games,
     bool forceDisableAfterUse,
+    bool Function() isAborted,
   ) async {
     if (await platform.sdkInt() < 30) return null;
     if (!await keyStore.hasKey()) {
@@ -375,7 +387,28 @@ class LogAccessResolver {
         return discoverConnectPorts();
       },
     );
-    if (!await client.connectAny(await discoverConnectPorts())) {
+    final tried = {...await discoverConnectPorts()};
+    var connected = await client.connectAny(tried.toList());
+    // 剛關又開時 adbd 換了連接埠但 NSD 還回報舊的；再切一次開關只會讓 NSD 一直落後一輪，所以保持開著等它跟上。
+    // 完全找不到連接埠不是這種情況，重試只會讓「連不上」更晚出現。
+    for (
+      var attempt = 1;
+      !connected &&
+          tried.isNotEmpty &&
+          !isAborted() &&
+          attempt <= connectRetryAttempts;
+      attempt++
+    ) {
+      await Future<void>.delayed(connectRetryDelay);
+      if (isAborted()) break;
+      final ports = await discoverConnectPorts();
+      _log.info('adb connect retry attempt=$attempt ports=$ports tried=$tried');
+      final fresh = ports.where((p) => !tried.contains(p)).toList();
+      if (fresh.isEmpty) continue;
+      tried.addAll(fresh);
+      connected = await client.connectAny(fresh);
+    }
+    if (!connected) {
       await client.close();
       final turnOff = !wasOn || forceDisableAfterUse;
       final leftOn = turnOff && !await platform.setAdbWifiEnabled(false);
