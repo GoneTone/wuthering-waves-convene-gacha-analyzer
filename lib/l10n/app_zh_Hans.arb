@@ -194,7 +194,7 @@
   "progressDone": "更新完成",
   "progressFailed": "失败",
   "progressOpenGameHint": "请打开鸣潮 → 唤取 → 唤取记录",
-  "progressFallbackHint": "（先前的拦截已失效，需重新拦截）",
+  "progressFallbackHint": "（先前获取的内容已失效，需重新获取）",
   "progressCaptureUnavailableHint": "无法启动拦截程序（可能是 Windows 权限提示被拒绝），改为只从游戏 log 文件检测。请在游戏中打开唤取记录页。",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
