@@ -198,7 +198,7 @@
   "progressDone": "Mise à jour terminée",
   "progressFailed": "Échec",
   "progressOpenGameHint": "Ouvrez Wuthering Waves → Convier → Historique de Convier",
-  "progressFallbackHint": "(La capture précédente a expiré. Veuillez rouvrir la page Historique de Convier.)",
+  "progressFallbackHint": "(L'URL précédente de l'historique de Convier a expiré. Veuillez rouvrir la page Historique de Convier.)",
   "progressCaptureUnavailableHint": "Impossible de lancer l'outil de capture (l'invite d'autorisation Windows a peut-être été refusée). La détection se fait désormais uniquement via le fichier journal du jeu. Veuillez ouvrir la page Historique de Convier dans le jeu.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

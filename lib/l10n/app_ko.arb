@@ -198,7 +198,7 @@
   "progressDone": "업데이트 완료",
   "progressFailed": "실패",
   "progressOpenGameHint": "명조 실행 → 튜닝 → 튜닝 기록을 열어 주세요",
-  "progressFallbackHint": "(이전 캡처가 만료되었습니다. 튜닝 기록 페이지를 다시 열어 주세요.)",
+  "progressFallbackHint": "(이전 튜닝 기록 URL이 만료되었습니다. 튜닝 기록 페이지를 다시 열어 주세요.)",
   "progressCaptureUnavailableHint": "캡처 도우미를 시작할 수 없습니다(Windows 권한 요청이 거부되었을 수 있습니다). 지금은 게임 로그 파일에서만 감지합니다. 게임에서 튜닝 기록 페이지를 열어 주세요.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

@@ -79,7 +79,7 @@ final class LogAccessReady extends LogAccessOutcome {
   /// 回傳 true 代表照規則應該關掉無線偵錯，但沒有權限關（手動開關模式），需要提示玩家自行關閉。
   final Future<bool> Function() release;
 
-  /// 連線健康狀態變化（false＝中斷、true＝恢復）；root、直接讀為空 stream。
+  /// 連線健康狀態變化（false＝中斷、true＝恢復）；直接讀為空 stream。
   final Stream<bool> healthChanges;
 }
 
@@ -90,6 +90,7 @@ final class LogAccessBlocked extends LogAccessOutcome {
     this.reason, {
     this.rootDenied = false,
     this.enabledWireless = false,
+    this.wirelessLeftOn = false,
     this.games = const [],
   });
 
@@ -102,9 +103,12 @@ final class LogAccessBlocked extends LogAccessOutcome {
   /// 裝置有 `su` 但沒拿到 root 授權（被拒或沒按允許）；root 工具可能已記成永久拒絕而不再詢問。
   final bool rootDenied;
 
-  /// 這次判斷曾由 App 打開無線偵錯（原本是關的）。之後若由系統打開（例如玩家在詢問視窗按允許），
-  /// 重試時不能當成玩家原本就開著而在用完後留著。
+  /// 這次判斷曾由 App 打開無線偵錯（原本是關的），或照規則用完要關（剛配對完、玩家照引導打開）。
+  /// 之後若由系統打開（例如玩家在詢問視窗按允許），重試時不能當成玩家原本就開著而在用完後留著。
   final bool enabledWireless;
+
+  /// 照規則該關掉無線偵錯，但沒有權限關而留著開；更新完成時要提示玩家自行關閉。
+  final bool wirelessLeftOn;
 }
 
 /// 本 App 的套件名稱（授權 `WRITE_SECURE_SETTINGS` 用）。
@@ -132,6 +136,8 @@ class LogAccessResolver {
     this.discoverAttempts = 5,
     this.discoverRetryDelay = const Duration(seconds: 1),
     this.enableSettleDelay = const Duration(milliseconds: 500),
+    this.connectRetryDelay = const Duration(milliseconds: 1500),
+    this.connectRetryAttempts = 3,
   });
 
   /// 系統功能。
@@ -154,6 +160,12 @@ class LogAccessResolver {
 
   /// 打開無線偵錯後等多久再讀回開關（系統擋下時會立刻改回關閉）。
   final Duration enableSettleDelay;
+
+  /// 連不上時等多久再重新找連接埠（無線偵錯剛關又開時，NSD 會先回報上一輪的連接埠）。
+  final Duration connectRetryDelay;
+
+  /// 連不上時保持無線偵錯開著、重新找連接埠再連的最多次數。
+  final int connectRetryAttempts;
 
   /// 本 resolver 的 logger。
   static final _log = Logger('capture.android');
@@ -255,6 +267,7 @@ class LogAccessResolver {
           game,
           games,
           forceDisableAfterUse,
+          isAborted,
         ),
       };
       if (outcome is LogAccessReady) {
@@ -270,6 +283,7 @@ class LogAccessResolver {
       blocked?.reason ?? LogAccessUnavailable.unsupported,
       rootDenied: rootDenied,
       enabledWireless: blocked?.enabledWireless ?? false,
+      wirelessLeftOn: blocked?.wirelessLeftOn ?? false,
     );
     _log.info(
       'log access blocked reason=${result.reason.name} rootDenied=$rootDenied '
@@ -294,6 +308,7 @@ class LogAccessResolver {
       method: LogAccessMethod.root,
       game: game,
       games: games,
+      healthChanges: root.healthChanges,
       release: () async {
         await root.close();
         return false;
@@ -334,10 +349,13 @@ class LogAccessResolver {
   }
 
   /// 無線偵錯：檢查配對與 Wi‑Fi、必要時打開無線偵錯、連線、補授權。
+  ///
+  /// 連不上時保持開著重新找連接埠再試；[isAborted] 為 true 後不再重試。
   Future<LogAccessOutcome?> _tryWireless(
     String game,
     List<String> games,
     bool forceDisableAfterUse,
+    bool Function() isAborted,
   ) async {
     if (await platform.sdkInt() < 30) return null;
     if (!await keyStore.hasKey()) {
@@ -369,12 +387,41 @@ class LogAccessResolver {
         return discoverConnectPorts();
       },
     );
-    if (!await client.connectAny(await discoverConnectPorts())) {
+    final tried = {...await discoverConnectPorts()};
+    var connected = await client.connectAny(tried.toList());
+    // 剛關又開時 adbd 換了連接埠但 NSD 還回報舊的；再切一次開關只會讓 NSD 一直落後一輪，所以保持開著等它跟上。
+    // 完全找不到連接埠不是這種情況，重試只會讓「連不上」更晚出現。
+    for (
+      var attempt = 1;
+      !connected &&
+          tried.isNotEmpty &&
+          !isAborted() &&
+          attempt <= connectRetryAttempts;
+      attempt++
+    ) {
+      await Future<void>.delayed(connectRetryDelay);
+      if (isAborted()) break;
+      final ports = await discoverConnectPorts();
+      _log.info('adb connect retry attempt=$attempt ports=$ports tried=$tried');
+      final fresh = ports.where((p) => !tried.contains(p)).toList();
+      if (fresh.isEmpty) continue;
+      tried.addAll(fresh);
+      connected = await client.connectAny(fresh);
+    }
+    if (!connected) {
       await client.close();
-      if (!wasOn) await platform.setAdbWifiEnabled(false);
+      final turnOff = !wasOn || forceDisableAfterUse;
+      final leftOn = turnOff && !await platform.setAdbWifiEnabled(false);
+      if (leftOn) {
+        _log.info(
+          'wireless debugging left on after connect failure: '
+          'no permission to turn it off',
+        );
+      }
       return LogAccessBlocked(
         LogAccessUnavailable.adbConnectFailed,
-        enabledWireless: !wasOn,
+        enabledWireless: turnOff,
+        wirelessLeftOn: leftOn,
       );
     }
     if (!await platform.hasWriteSecureSettings()) {

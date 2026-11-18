@@ -198,7 +198,7 @@
   "progressDone": "A frissítés befejeződött",
   "progressFailed": "Sikertelen",
   "progressOpenGameHint": "Nyissa meg: Wuthering Waves → Convene → Convene Records",
-  "progressFallbackHint": "(Az előző rögzítés lejárt. Nyissa meg újra a Convene Records oldalt.)",
+  "progressFallbackHint": "(Az idézési előzmények előző URL-je lejárt. Nyissa meg újra a Convene Records oldalt.)",
   "progressCaptureUnavailableHint": "Nem sikerült elindítani a rögzítő segédprogramot (lehet, hogy elutasította a Windows engedélykérését). Az észlelés most csak a játék naplófájljából történik. Nyissa meg a játékban a Convene Records oldalt.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

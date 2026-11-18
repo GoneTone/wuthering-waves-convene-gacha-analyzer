@@ -198,7 +198,7 @@
   "progressDone": "Ажурирање је завршено",
   "progressFailed": "Неуспешно",
   "progressOpenGameHint": "Отворите Wuthering Waves → Convene → Convene Records",
-  "progressFallbackHint": "(Претходно пресретање је истекло. Поново отворите страницу Convene Records.)",
+  "progressFallbackHint": "(Претходни URL историје сазива је истекао. Поново отворите страницу Convene Records.)",
   "progressCaptureUnavailableHint": "Помоћник за пресретање није могао да се покрене (можда је Windows захтев за дозволу одбијен). Сада се претражује само лог датотека игре. Отворите страницу Convene Records у игри.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

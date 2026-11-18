@@ -11,6 +11,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dar
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/client_log_source.dart';
@@ -255,6 +256,7 @@ class GachaRepository extends Notifier<GachaState> {
     final hit = _logHit;
     if (hit != null && !hit.isCompleted) {
       _clientLog.info('credential source=manual (completing wait)');
+      _manualHit = true;
       hit.complete(cred);
       return;
     }
@@ -277,6 +279,7 @@ class GachaRepository extends Notifier<GachaState> {
     final done = _updateDone = Completer<void>();
     _cancelTriggered = false;
     _afterPairing = afterPairing;
+    _androidWaitRan = false;
     _wirelessLeftOn = false;
     _log.info('update start, forceRecapture=$forceRecapture');
 
@@ -408,6 +411,7 @@ class GachaRepository extends Notifier<GachaState> {
       _log.severe('update failed while acquiring credential', e, st);
       state = state.copyWith(progress: UpdateFailed(_friendlyError(e)));
     } finally {
+      await _disableWirelessIfPairingUnused();
       _activeCancellable?.client.close();
       _activeCancellable = null;
       _cancelTriggered = false;
@@ -429,6 +433,7 @@ class GachaRepository extends Notifier<GachaState> {
     _captureCancelRequested = false;
     final logHit = Completer<GachaCredential>();
     _logHit = logHit;
+    _manualHit = false;
     final waitCancelled = Completer<void>();
     _waitCancelled = waitCancelled;
     _log.info('MITM ${isFallback ? "fallback" : "primary"} session started');
@@ -461,9 +466,9 @@ class GachaRepository extends Notifier<GachaState> {
         (cred, fromLog) = await _waitLogOnly(isFallback, logHit, waitCancelled);
       }
       if (fromLog && captureFinished) {
-        if (cred != null) _clientLog.info('credential source=log');
+        if (cred != null) _logCredentialSource();
       } else if (fromLog) {
-        _clientLog.info('credential source=log');
+        _logCredentialSource();
         // cancel() 丟錯也要等 result：它完成才代表 WinDivert 重導向已還原，之後才能拉取。
         for (final step in [session.cancel, () => session.result]) {
           try {
@@ -499,7 +504,7 @@ class GachaRepository extends Notifier<GachaState> {
 
   /// 清掉記住的鳴潮版本、結束這次更新，等它真的結束後重新開始，讓玩家重新選版本。
   ///
-  /// 連線中斷時進行中的讀取可能要等逾時才停，不能只等固定秒數，否則重新開始會被防重入擋掉。
+  /// 取消後停輪詢、release 在背景做（連線中斷時要等逾時才停），重新開始的等待會先等它做完。
   Future<void> switchGameVersion() async {
     _androidLog.info('game switch requested');
     await ref.read(settingsProvider.notifier).setGamePackage(null);
@@ -532,8 +537,11 @@ class GachaRepository extends Notifier<GachaState> {
   /// Android 的等待流程：決定讀取方式、監看 Client.log，等命中、手動輸入或取消。null 代表使用者取消。
   ///
   /// 沒有自動讀取方式時改顯示原因並只等手動輸入，[retryLogAccess] 可以重新判斷。
-  /// 結束時一律停監看並 release（中斷連線、依規則關閉無線偵錯）。
+  /// 結束時一律先停監看再 release（中斷連線、依規則關閉無線偵錯）；
+  /// 沒拿到憑證（取消）時這段收尾改在背景做、接到 [_androidTeardown]，取消才不會卡在重連中的輪詢。
   Future<GachaCredential?> _runAndroidWait({required bool isFallback}) async {
+    _androidWaitRan = true;
+    _manualHit = false;
     state = state.copyWith(
       progress: WaitingForCapture(
         isFallback: isFallback,
@@ -546,7 +554,11 @@ class GachaRepository extends Notifier<GachaState> {
     _waitCancelled = cancelled;
     _captureCancelRequested = false;
     LogAccessReady? ready;
+    Future<CaptureSession>? starting;
     CaptureSession? watch;
+    var gotCred = false;
+    // 最後一次判斷沒有讀取方式、又沒權限關掉無線偵錯；之後拿到讀取方式就交給 release 決定。
+    var blockedLeftOn = false;
     StreamSubscription<bool>? healthSub;
     try {
       // 只有第一次判斷可以跳權限詢問；回到前景的自動重試只檢查，否則永久拒絕時會一直跳去設定頁。
@@ -557,6 +569,13 @@ class GachaRepository extends Notifier<GachaState> {
         logHit.future,
         cancelled.future.then((_) => null),
       ]);
+      final previous = _androidTeardown;
+      if (previous != null) {
+        _androidLog.info('waiting for the previous android teardown');
+        await Future.any<Object?>([previous, stop]);
+        if (_captureCancelRequested || !ref.mounted) return null;
+        if (logHit.isCompleted) return await logHit.future;
+      }
       while (true) {
         final resolving = ref
             .read(logAccessResolverProvider)
@@ -571,10 +590,11 @@ class GachaRepository extends Notifier<GachaState> {
         if (first is! LogAccessOutcome) {
           _androidLog.info('log access resolve abandoned');
           // 晚到的結果也要 release，否則連線或打開的無線偵錯會留著。
-          unawaited(
+          _queueAndroidTeardown(
             resolving.then((late) async {
               if (late is LogAccessReady) await late.release();
             }),
+            'late log access release',
           );
           if (first is GachaCredential && !_captureCancelRequested) {
             return first;
@@ -582,6 +602,7 @@ class GachaRepository extends Notifier<GachaState> {
           return null;
         }
         final outcome = first;
+        blockedLeftOn = outcome is LogAccessBlocked && outcome.wirelessLeftOn;
         // 找遊戲、選版本時還沒試過讀取方式，權限詢問要留給真正試的那一次。
         if (outcome is! LogAccessBlocked || !_isGameStep(outcome.reason)) {
           requestPermissions = false;
@@ -601,8 +622,11 @@ class GachaRepository extends Notifier<GachaState> {
         if (_captureCancelRequested || !ref.mounted) return null;
         if (logHit.isCompleted) return await logHit.future;
         final blocked = outcome as LogAccessBlocked;
-        // 這次是 App 打開過無線偵錯；之後重試看到它開著，多半是系統（玩家按了允許）開的，用完要關回去。
-        if (blocked.enabledWireless) forceDisableAfterUse = true;
+        // App 這次打開過無線偵錯，或請玩家自己打開；之後重試看到它開著，是系統（玩家按了允許）或玩家照引導開的，用完要關回去。
+        if (blocked.enabledWireless ||
+            blocked.reason == LogAccessUnavailable.wirelessDebuggingOff) {
+          forceDisableAfterUse = true;
+        }
         state = state.copyWith(
           progress: WaitingForCapture(
             isFallback: isFallback,
@@ -646,9 +670,17 @@ class GachaRepository extends Notifier<GachaState> {
           ),
         );
       });
-      final session = await ref
-          .read(clientLogWatchProvider)
-          .start(ready.source);
+      final start = ref.read(clientLogWatchProvider).start(ready.source);
+      starting = start;
+      // start 要先讀一次檔案長度當起點才回傳；連線卡住時這段期間的取消與手動輸入也要立刻生效。
+      final session = await Future.any<Object?>([start, stop]);
+      if (session is! CaptureSession) {
+        _androidLog.info('client log watch start abandoned');
+        if (session is GachaCredential && !_captureCancelRequested) {
+          return session;
+        }
+        return null;
+      }
       watch = session;
       _logSession = session;
       if (_captureCancelRequested || !ref.mounted) return null;
@@ -662,7 +694,7 @@ class GachaRepository extends Notifier<GachaState> {
         cancelled.future.then((_) => null),
       ]);
       if (cred == null || _captureCancelRequested) return null;
-      _clientLog.info('credential source=log or manual');
+      _logCredentialSource();
       final foreground = ref.read(appForegroundProvider);
       if (!foreground.isForeground) {
         _androidLog.info('credential ready, waiting for the app to return');
@@ -680,28 +712,95 @@ class GachaRepository extends Notifier<GachaState> {
         ]);
         if (!resumed || _captureCancelRequested || !ref.mounted) return null;
       }
+      gotCred = true;
       return cred;
     } finally {
       _logHit = null;
       _waitCancelled = null;
       _logAccessRetry = null;
       await healthSub?.cancel();
-      await _stopClientLogWatch();
-      // 取消時 [cancelCapture] 已先拿走 session；仍要等進行中的輪詢停下再 release，
-      // 否則讀取失敗會觸發重連、把剛關掉的無線偵錯又打開。
-      try {
-        await watch?.cancel();
-      } catch (e) {
-        _clientLog.warning(
-          'client log watch stop failed error=${e.runtimeType}',
-        );
-      }
-      if (ready != null) {
-        if (await ready.release()) _wirelessLeftOn = true;
-        // 連上時可能順便補回授權，設定頁的配對狀態要重讀。
-        if (ref.mounted) ref.invalidate(wirelessPairingStatusProvider);
+      if (blockedLeftOn) _wirelessLeftOn = true;
+      // 取消時 [cancelCapture] 已先拿走 session；這裡由 [_stopWatchThenRelease] 停 [starting] 的監看。
+      if (identical(_logSession, watch)) _logSession = null;
+      final r = ready;
+      if (r != null) {
+        final teardown = _stopWatchThenRelease(starting, r);
+        if (gotCred) {
+          if (await teardown) _wirelessLeftOn = true;
+        } else {
+          // 監看可能還在取起點或卡在重連中的輪詢：不讓取消卡在這裡，照樣先停監看再 release。
+          _queueAndroidTeardown(
+            teardown.then((leftOn) {
+              if (leftOn) {
+                _androidLog.info(
+                  'wireless debugging left on after a cancelled wait',
+                );
+              }
+            }),
+            'android teardown',
+          );
+        }
       }
     }
+  }
+
+  /// 依 [_manualHit] 記下這次憑證的來源（手動輸入或 Client.log）。
+  void _logCredentialSource() =>
+      _clientLog.info('credential source=${_manualHit ? "manual" : "log"}');
+
+  /// 等背景還在做的 Android 收尾（停監看、release）做完；沒有時立刻返回。
+  ///
+  /// 設定頁的設定與解除配對要先等它，否則晚到的 release 可能關掉剛為了配對打開的無線偵錯。
+  Future<void> waitAndroidTeardown() async => _androidTeardown;
+
+  /// 把背景收尾接到 [_androidTeardown] 後面（不取代還沒做完的前一段）；錯誤只記 warning，不讓下一次更新失敗。
+  void _queueAndroidTeardown(Future<void> teardown, String what) {
+    final chained = Future.wait<void>([
+      ?_androidTeardown,
+      teardown.catchError(
+        (Object e) =>
+            _androidLog.warning('$what failed error=${e.runtimeType}'),
+      ),
+    ]);
+    _androidTeardown = chained;
+    unawaited(
+      chained.then((_) {
+        if (identical(_androidTeardown, chained)) _androidTeardown = null;
+      }),
+    );
+  }
+
+  /// 剛配對完、這次卻沒跑 Android 等待（快取或手動憑證直接可用）時，關掉為了配對打開的無線偵錯；沒有權限關時讓完成畫面提示。
+  ///
+  /// 只做一次；有跑等待時改由無線偵錯的 release 依 [_afterPairing] 關閉，這裡不重複（等待改用 root 或手動輸入結束時不會關）。
+  Future<void> _disableWirelessIfPairingUnused() async {
+    if (!_afterPairing || _androidWaitRan || !ref.mounted) return;
+    _afterPairing = false;
+    final off = await ref
+        .read(logAccessPlatformProvider)
+        .setAdbWifiEnabled(false);
+    _androidLog.info(
+      'wireless debugging off after pairing without a wait ok=$off',
+    );
+    if (!off) _wirelessLeftOn = true;
+  }
+
+  /// 停掉 [starting] 的監看（還在啟動時等它回來，再等進行中的輪詢停下）再 release [ready]；回傳無線偵錯是否因沒有權限關而留著開。
+  ///
+  /// 進行中的輪詢停下前就 release，讀取失敗會觸發重連、把剛關掉的無線偵錯又打開。
+  Future<bool> _stopWatchThenRelease(
+    Future<CaptureSession>? starting,
+    LogAccessReady ready,
+  ) async {
+    try {
+      await (await starting)?.cancel();
+    } catch (e) {
+      _clientLog.warning('client log watch stop failed error=${e.runtimeType}');
+    }
+    final leftOn = await ready.release();
+    // 連上時可能順便補回授權，設定頁的配對狀態要重讀。
+    if (ref.mounted) ref.invalidate(wirelessPairingStatusProvider);
+    return leftOn;
   }
 
   /// 等 [logStart]（監看啟動流程）跑完後，判斷攔截失效時能否改為只等 Client.log。
@@ -962,6 +1061,8 @@ class GachaRepository extends Notifier<GachaState> {
       state = state.copyWith(clearProgress: true);
       return;
     }
+    await _disableWirelessIfPairingUnused();
+    if (!ref.mounted) return;
     state = state.copyWith(
       progress: UpdateCompleted(
         totalNewRecords: totalNew,
@@ -978,6 +1079,14 @@ class GachaRepository extends Notifier<GachaState> {
 
   /// 本次更新讀完後無線偵錯是否因沒有權限而留著開（完成畫面要提示）。
   bool _wirelessLeftOn = false;
+
+  /// 本次更新是否跑過 Android 等待（[_afterPairing] 已交給它處理）。
+  bool _androidWaitRan = false;
+
+  /// 沒拿到憑證的 Android 等待還在背景做的收尾（停監看、release）；下一次等待開始前先等它做完。
+  ///
+  /// root shell 與無線偵錯是共用的：下一次等待若搶先開始，晚到的 release 會關掉它剛拿到的 `su` 或剛打開的無線偵錯。
+  Future<void>? _androidTeardown;
 
   /// Android 沒有自動讀取方式而等待時，[retryLogAccess] 會完成它以重新判斷。
   Completer<void>? _logAccessRetry;
@@ -996,6 +1105,9 @@ class GachaRepository extends Notifier<GachaState> {
 
   /// 本次等待攔截期間的 log 命中；不在等待時為 null。
   Completer<GachaCredential>? _logHit;
+
+  /// 本次等待是否由 [submitManualCredential] 完成（記錄憑證來源用）。
+  bool _manualHit = false;
 
   /// 目前的 Client.log 監看 session。
   CaptureSession? _logSession;

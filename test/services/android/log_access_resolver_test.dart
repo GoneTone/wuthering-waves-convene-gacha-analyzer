@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/adb_shell_client.dart';
@@ -51,8 +52,19 @@ class _FakePlatform extends LogAccessPlatform {
 
   @override
   Future<bool> hasWriteSecureSettings() async => wss;
+
+  /// 依序回傳的 NSD 結果；用完後改回傳 [ports]。
+  final discoveries = <List<int>>[];
+
+  /// NSD 查詢次數。
+  int discoverCalls = 0;
+
   @override
-  Future<List<int>> discoverAdbConnectPorts() async => ports;
+  Future<List<int>> discoverAdbConnectPorts() async {
+    discoverCalls++;
+    return discoveries.isNotEmpty ? discoveries.removeAt(0) : ports;
+  }
+
   @override
   Future<bool> hasStoragePermission() async => storage;
 
@@ -86,6 +98,12 @@ class _FakeRoot extends RootShell {
 
   @override
   Future<Uint8List> exec(String command) async => Uint8List(0);
+
+  /// 健康狀態事件來源。
+  final healthController = StreamController<bool>.broadcast();
+
+  @override
+  Stream<bool> get healthChanges => healthController.stream;
 
   /// close 被呼叫的次數。
   int closes = 0;
@@ -123,6 +141,8 @@ void main() {
   late _FakeKeys keys;
   late _Session session;
   late bool connectable;
+  late Set<int> refusedPorts;
+  late List<int> attemptedPorts;
 
   setUp(() {
     platform = _FakePlatform();
@@ -130,17 +150,81 @@ void main() {
     keys = _FakeKeys();
     session = _Session();
     connectable = true;
+    refusedPorts = {};
+    attemptedPorts = [];
   });
 
-  LogAccessResolver resolver() => LogAccessResolver(
+  LogAccessResolver resolver({
+    Duration connectRetryDelay = Duration.zero,
+    int connectRetryAttempts = 3,
+  }) => LogAccessResolver(
     platform: platform,
     root: root,
     keyStore: keys,
-    makeConnector: () async =>
-        (port) async => connectable ? session : null,
+    makeConnector: () async => (port) async {
+      attemptedPorts.add(port);
+      return connectable && !refusedPorts.contains(port) ? session : null;
+    },
     discoverRetryDelay: Duration.zero,
     enableSettleDelay: Duration.zero,
+    connectRetryDelay: connectRetryDelay,
+    connectRetryAttempts: connectRetryAttempts,
   );
+
+  group('connect retry after a stale port', () {
+    test('rediscovers and connects to the new port without toggling', () async {
+      // 無線偵錯剛關又開時，NSD 還會回報上一輪的連接埠；不能再切一次開關，要等它跟上。
+      platform
+        ..ports = [37001, 41002]
+        ..discoveries.add([37001]);
+      refusedPorts = {37001};
+      final r = await resolver().resolve() as LogAccessReady;
+      expect(r.method, LogAccessMethod.wirelessDebugging);
+      expect(attemptedPorts, [37001, 41002]);
+      expect(platform.adbWifiWrites, [true]);
+    });
+
+    test('gives up after the configured attempts and turns it off', () async {
+      platform.ports = [37001];
+      refusedPorts = {37001};
+      final r =
+          await resolver(connectRetryAttempts: 2).resolve() as LogAccessBlocked;
+      expect(r.reason, LogAccessUnavailable.adbConnectFailed);
+      expect(platform.discoverCalls, 3);
+      expect(attemptedPorts, [37001], reason: 'refused ports are not retried');
+      expect(platform.adbWifiWrites, [true, false]);
+    });
+
+    test('no port found at all fails without retrying', () async {
+      platform.ports = [];
+      final res = resolver();
+      final r = await res.resolve() as LogAccessBlocked;
+      expect(r.reason, LogAccessUnavailable.adbConnectFailed);
+      expect(platform.discoverCalls, res.discoverAttempts);
+      expect(platform.adbWifiWrites, [true, false]);
+    });
+
+    test('abort during the retry wait stops further attempts', () {
+      fakeAsync((async) {
+        connectable = false;
+        final abort = Completer<void>();
+        LogAccessOutcome? outcome;
+        resolver(
+          connectRetryDelay: const Duration(seconds: 1),
+        ).resolve(abort: abort.future).then((o) => outcome = o);
+        async.elapse(const Duration(milliseconds: 1));
+        expect(platform.discoverCalls, 1);
+        abort.complete();
+        async.elapse(const Duration(seconds: 5));
+        expect(
+          (outcome! as LogAccessBlocked).reason,
+          LogAccessUnavailable.adbConnectFailed,
+        );
+        expect(platform.discoverCalls, 1);
+        expect(platform.adbWifiWrites, [true, false]);
+      });
+    });
+  });
 
   test(
     'abort while root verify waits closes su and tries nothing else',
@@ -192,6 +276,33 @@ void main() {
     expect(r.enabledWireless, isTrue);
   });
 
+  test(
+    'connect failure turns wireless off when it must be off after use',
+    () async {
+      // 玩家照引導打開（或剛配對完）時開著，連不上也要關回去，之後的重試仍要關。
+      connectable = false;
+      platform.adbWifiOn = true;
+      final r =
+          await resolver().resolve(forceDisableAfterUse: true)
+              as LogAccessBlocked;
+      expect(platform.adbWifiWrites, [false]);
+      expect(r.enabledWireless, isTrue);
+      expect(r.wirelessLeftOn, isFalse);
+    },
+  );
+
+  test('connect failure without permission reports it left on', () async {
+    connectable = false;
+    platform
+      ..adbWifiOn = true
+      ..canWriteSettings = false;
+    final r =
+        await resolver().resolve(forceDisableAfterUse: true)
+            as LogAccessBlocked;
+    expect(r.enabledWireless, isTrue);
+    expect(r.wirelessLeftOn, isTrue);
+  });
+
   test('connect failure with wireless already on is not flagged', () async {
     connectable = false;
     platform.adbWifiOn = true;
@@ -207,6 +318,20 @@ void main() {
     expect(r.method, LogAccessMethod.root);
     expect(r.source, isA<ShellLogSource>());
     expect(platform.adbWifiWrites, isEmpty);
+  });
+
+  test('root ready reports the su session health', () async {
+    // su 意外結束時等待畫面要顯示連線中斷。
+    root
+      ..present = true
+      ..granted = true;
+    final r = await resolver().resolve() as LogAccessReady;
+    final health = <bool>[];
+    final sub = r.healthChanges.listen(health.add);
+    root.healthController.add(false);
+    await Future<void>.delayed(Duration.zero);
+    expect(health, [false]);
+    await sub.cancel();
   });
 
   test(

@@ -198,7 +198,7 @@
   "progressDone": "Bijwerken voltooid",
   "progressFailed": "Mislukt",
   "progressOpenGameHint": "Open Wuthering Waves → Convene → Convene Records",
-  "progressFallbackHint": "(De vorige onderschepping is verlopen. Open de pagina Convene Records opnieuw.)",
+  "progressFallbackHint": "(De vorige URL van Convene-geschiedenis is verlopen. Open de pagina Convene Records opnieuw.)",
   "progressCaptureUnavailableHint": "De onderscheppingshulp kon niet worden gestart (mogelijk is de Windows-machtigingsprompt geweigerd). Er wordt nu alleen in het logbestand van de game gezocht. Open de pagina Convene Records in de game.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

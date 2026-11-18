@@ -198,7 +198,7 @@
   "progressDone": "העדכון הושלם",
   "progressFailed": "נכשל",
   "progressOpenGameHint": "פתחו את Wuthering Waves ← Convene ← Convene Records",
-  "progressFallbackHint": "(תוקף הלכידה הקודמת פג. פתחו שוב את דף Convene Records.)",
+  "progressFallbackHint": "(תוקף כתובת ה-URL הקודמת של היסטוריית הזימונים פג. פתחו שוב את דף Convene Records.)",
   "progressCaptureUnavailableHint": "לא ניתן היה להפעיל את רכיב הלכידה (ייתכן שבקשת ההרשאה של Windows נדחתה). כעת מתבצע זיהוי מקובץ היומן של המשחק בלבד. פתחו את דף Convene Records במשחק.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

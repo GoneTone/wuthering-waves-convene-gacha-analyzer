@@ -198,7 +198,7 @@
   "progressDone": "Bywerking voltooi",
   "progressFailed": "Misluk",
   "progressOpenGameHint": "Maak Wuthering Waves oop → Convene → Convene Records",
-  "progressFallbackHint": "(Die vorige vaslegging het verval. Maak asseblief die Convene Records-bladsy weer oop.)",
+  "progressFallbackHint": "(Die vorige Convene Records-URL het verval. Maak asseblief die Convene Records-bladsy weer oop.)",
   "progressCaptureUnavailableHint": "Kon nie die vasleggingshulpmiddel begin nie (die Windows-toestemmingsvraag is dalk geweier). Bespeur nou slegs uit die speletjie se loglêer. Maak asseblief die Convene Records-bladsy in die speletjie oop.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

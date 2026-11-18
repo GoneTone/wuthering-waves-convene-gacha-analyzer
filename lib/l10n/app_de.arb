@@ -198,7 +198,7 @@
   "progressDone": "Aktualisierung abgeschlossen",
   "progressFailed": "Fehlgeschlagen",
   "progressOpenGameHint": "Öffne Wuthering Waves → Zusammenrufen → Zusammenrufen-Informationen",
-  "progressFallbackHint": "(Die vorherige Erfassung ist abgelaufen. Bitte öffne die Zusammenrufen-Informationen erneut.)",
+  "progressFallbackHint": "(Die vorherige URL der Zusammenrufen-Informationen ist abgelaufen. Bitte öffne die Zusammenrufen-Informationen erneut.)",
   "progressCaptureUnavailableHint": "Das Erfassungsprogramm konnte nicht gestartet werden (möglicherweise wurde die Windows-Berechtigungsabfrage abgelehnt). Die Erkennung läuft jetzt nur über die Logdatei des Spiels. Bitte öffne im Spiel die Zusammenrufen-Informationen.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

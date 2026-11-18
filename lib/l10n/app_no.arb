@@ -198,7 +198,7 @@
   "progressDone": "Oppdatering fullført",
   "progressFailed": "Mislyktes",
   "progressOpenGameHint": "Åpne Wuthering Waves → Convene → Convene Records",
-  "progressFallbackHint": "(Forrige henting er utløpt. Åpne siden Convene Records på nytt.)",
+  "progressFallbackHint": "(Den forrige URL-en til Convene-historikken er utløpt. Åpne siden Convene Records på nytt.)",
   "progressCaptureUnavailableHint": "Kunne ikke starte hentehjelperen (Windows-forespørselen om tillatelse kan ha blitt avvist). Leter nå bare i spillets loggfil. Åpne siden Convene Records i spillet.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

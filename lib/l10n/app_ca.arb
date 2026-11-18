@@ -198,7 +198,7 @@
   "progressDone": "Actualització completada",
   "progressFailed": "Error",
   "progressOpenGameHint": "Obre Wuthering Waves → Convene → Convene Records",
-  "progressFallbackHint": "(La captura anterior ha caducat. Torna a obrir la pàgina Convene Records.)",
+  "progressFallbackHint": "(L'URL anterior de l'historial de convocacions ha caducat. Torna a obrir la pàgina Convene Records.)",
   "progressCaptureUnavailableHint": "No s'ha pogut iniciar l'assistent de captura (potser s'ha rebutjat la sol·licitud de permís de Windows). Ara només es detecta a partir del fitxer de registre del joc. Obre la pàgina Convene Records al joc.",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"

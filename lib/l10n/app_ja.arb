@@ -198,7 +198,7 @@
   "progressDone": "更新完了",
   "progressFailed": "失敗",
   "progressOpenGameHint": "鳴潮 → 集音 → 集音履歴 を開いてください",
-  "progressFallbackHint": "（前回の取得が失効しました。集音履歴ページを開き直してください）",
+  "progressFallbackHint": "（前回の集音履歴の URL が失効しました。集音履歴ページを開き直してください）",
   "progressCaptureUnavailableHint": "キャプチャ用プログラムを起動できませんでした（Windows の権限確認が拒否された可能性があります）。ゲームのログファイルのみで検出します。ゲームで集音履歴ページを開いてください。",
   "@progressCaptureUnavailableHint": {
     "description": "Notice on the capture-waiting screen when the elevated capture helper could not run (e.g. the UAC prompt was declined); the app keeps waiting by reading the game's Client.log only"
