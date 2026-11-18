@@ -556,6 +556,8 @@ class GachaRepository extends Notifier<GachaState> {
     LogAccessReady? ready;
     CaptureSession? watch;
     var gotCred = false;
+    // 最後一次判斷沒有讀取方式、又沒權限關掉無線偵錯；之後拿到讀取方式就交給 release 決定。
+    var blockedLeftOn = false;
     StreamSubscription<bool>? healthSub;
     try {
       // 只有第一次判斷可以跳權限詢問；回到前景的自動重試只檢查，否則永久拒絕時會一直跳去設定頁。
@@ -599,6 +601,7 @@ class GachaRepository extends Notifier<GachaState> {
           return null;
         }
         final outcome = first;
+        blockedLeftOn = outcome is LogAccessBlocked && outcome.wirelessLeftOn;
         // 找遊戲、選版本時還沒試過讀取方式，權限詢問要留給真正試的那一次。
         if (outcome is! LogAccessBlocked || !_isGameStep(outcome.reason)) {
           requestPermissions = false;
@@ -707,6 +710,7 @@ class GachaRepository extends Notifier<GachaState> {
       _waitCancelled = null;
       _logAccessRetry = null;
       await healthSub?.cancel();
+      if (blockedLeftOn) _wirelessLeftOn = true;
       // 取消時 [cancelCapture] 已先拿走 session；這裡由 [_stopWatchThenRelease] 停 [watch]。
       if (identical(_logSession, watch)) _logSession = null;
       final r = ready;
@@ -736,6 +740,8 @@ class GachaRepository extends Notifier<GachaState> {
       _clientLog.info('credential source=${_manualHit ? "manual" : "log"}');
 
   /// 等背景還在做的 Android 收尾（停監看、release）做完；沒有時立刻返回。
+  ///
+  /// 設定頁的設定與解除配對要先等它，否則晚到的 release 可能關掉剛為了配對打開的無線偵錯。
   Future<void> waitAndroidTeardown() async => _androidTeardown;
 
   /// 把背景收尾接到 [_androidTeardown] 後面（不取代還沒做完的前一段）；錯誤只記 warning，不讓下一次更新失敗。

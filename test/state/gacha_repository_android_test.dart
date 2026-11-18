@@ -754,6 +754,45 @@ void main() {
     },
   );
 
+  group('connect failure that left wireless debugging on', () {
+    /// 連不上又沒權限關掉無線偵錯的判斷結果。
+    LogAccessBlocked leftOn() => const LogAccessBlocked(
+      LogAccessUnavailable.adbConnectFailed,
+      enabledWireless: true,
+      wirelessLeftOn: true,
+    );
+
+    test('shows the hint when manual input completes the update', () async {
+      resolver.results.add(leftOn);
+      final r = await repo();
+      final done = r.update();
+      await waitUntil(
+        () => (progress() as WaitingForCapture?)?.logAccessUnavailable != null,
+      );
+      await r.submitManualCredential(_cred());
+      await done;
+      expect((progress()! as UpdateCompleted).wirelessDebuggingLeftOn, isTrue);
+    });
+
+    test('leaves it to the release once a retry connects', () async {
+      final ready = _Ready();
+      resolver.results
+        ..add(leftOn)
+        ..add(ready.outcome);
+      final r = await repo();
+      final done = r.update();
+      await waitUntil(
+        () => (progress() as WaitingForCapture?)?.logAccessUnavailable != null,
+      );
+      await r.retryLogAccess();
+      await waitUntil(() => watch.hits.isNotEmpty);
+      expect(resolver.calls.last.force, isTrue);
+      watch.hits[0].complete(_cred());
+      await done;
+      expect((progress()! as UpdateCompleted).wirelessDebuggingLeftOn, isFalse);
+    });
+  });
+
   test('credential source is logged as log or manual', () async {
     final sources = <String>[];
     final sub = Logger.root.onRecord.listen((r) {
@@ -897,12 +936,17 @@ void main() {
         await done.timeout(const Duration(seconds: 1));
         expect(progress(), isNull);
         expect(first.released, 0, reason: 'the poll has not stopped yet');
+        var waited = false;
+        unawaited(r.waitAndroidTeardown().then((_) => waited = true));
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        expect(waited, isFalse, reason: 'the settings page waits for it');
 
         done = r.update();
         await Future<void>.delayed(const Duration(milliseconds: 20));
         expect(resolver.calls, hasLength(1));
         watch.cancelGate!.complete();
         await waitUntil(() => watch.hits.length == 2);
+        expect(waited, isTrue);
         expect(first.released, 1);
         watch.hits[1].complete(_cred());
         await done;

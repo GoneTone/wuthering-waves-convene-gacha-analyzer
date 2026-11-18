@@ -7,6 +7,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/android/flutter_
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/adb_pairing.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
@@ -24,6 +25,9 @@ class LogAccessSection extends ConsumerStatefulWidget {
 class _LogAccessSectionState extends ConsumerState<LogAccessSection> {
   /// 是否正在解除配對（要連上無線偵錯收回權限，可能要好幾秒）。
   bool _unpairing = false;
+
+  /// 是否正在開啟設定頁（等背景收尾時重複點擊只開一次）。
+  bool _openingSetup = false;
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +114,15 @@ class _LogAccessSectionState extends ConsumerState<LogAccessSection> {
     BuildContext context, {
     bool retryGrant = false,
   }) async {
-    await openLogAccessSetup(context, retryGrant: retryGrant);
+    if (_openingSetup) return;
+    _openingSetup = true;
+    try {
+      await ref.read(gachaRepositoryProvider.notifier).waitAndroidTeardown();
+      if (!context.mounted) return;
+      await openLogAccessSetup(context, retryGrant: retryGrant);
+    } finally {
+      _openingSetup = false;
+    }
     if (mounted) ref.invalidate(wirelessPairingStatusProvider);
   }
 
@@ -138,6 +150,7 @@ class _LogAccessSectionState extends ConsumerState<LogAccessSection> {
     setState(() => _unpairing = true);
     final bool revoked;
     try {
+      await ref.read(gachaRepositoryProvider.notifier).waitAndroidTeardown();
       revoked = await ref.read(unpairWirelessDebuggingProvider)();
     } finally {
       if (mounted) setState(() => _unpairing = false);
