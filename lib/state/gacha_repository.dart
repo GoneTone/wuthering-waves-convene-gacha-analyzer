@@ -554,6 +554,7 @@ class GachaRepository extends Notifier<GachaState> {
     _waitCancelled = cancelled;
     _captureCancelRequested = false;
     LogAccessReady? ready;
+    Future<CaptureSession>? starting;
     CaptureSession? watch;
     var gotCred = false;
     // 最後一次判斷沒有讀取方式、又沒權限關掉無線偵錯；之後拿到讀取方式就交給 release 決定。
@@ -669,9 +670,17 @@ class GachaRepository extends Notifier<GachaState> {
           ),
         );
       });
-      final session = await ref
-          .read(clientLogWatchProvider)
-          .start(ready.source);
+      final start = ref.read(clientLogWatchProvider).start(ready.source);
+      starting = start;
+      // start 要先讀一次檔案長度當起點才回傳；連線卡住時這段期間的取消與手動輸入也要立刻生效。
+      final session = await Future.any<Object?>([start, stop]);
+      if (session is! CaptureSession) {
+        _androidLog.info('client log watch start abandoned');
+        if (session is GachaCredential && !_captureCancelRequested) {
+          return session;
+        }
+        return null;
+      }
       watch = session;
       _logSession = session;
       if (_captureCancelRequested || !ref.mounted) return null;
@@ -711,15 +720,15 @@ class GachaRepository extends Notifier<GachaState> {
       _logAccessRetry = null;
       await healthSub?.cancel();
       if (blockedLeftOn) _wirelessLeftOn = true;
-      // 取消時 [cancelCapture] 已先拿走 session；這裡由 [_stopWatchThenRelease] 停 [watch]。
+      // 取消時 [cancelCapture] 已先拿走 session；這裡由 [_stopWatchThenRelease] 停 [starting] 的監看。
       if (identical(_logSession, watch)) _logSession = null;
       final r = ready;
       if (r != null) {
-        final teardown = _stopWatchThenRelease(watch, r);
+        final teardown = _stopWatchThenRelease(starting, r);
         if (gotCred) {
           if (await teardown) _wirelessLeftOn = true;
         } else {
-          // 輪詢可能卡在重連中：不讓取消卡在這裡，照樣先停監看再 release。
+          // 監看可能還在取起點或卡在重連中的輪詢：不讓取消卡在這裡，照樣先停監看再 release。
           _queueAndroidTeardown(
             teardown.then((leftOn) {
               if (leftOn) {
@@ -776,15 +785,15 @@ class GachaRepository extends Notifier<GachaState> {
     if (!off) _wirelessLeftOn = true;
   }
 
-  /// 停掉 [watch]（等進行中的輪詢停下）再 release [ready]；回傳無線偵錯是否因沒有權限關而留著開。
+  /// 停掉 [starting] 的監看（還在啟動時等它回來，再等進行中的輪詢停下）再 release [ready]；回傳無線偵錯是否因沒有權限關而留著開。
   ///
   /// 進行中的輪詢停下前就 release，讀取失敗會觸發重連、把剛關掉的無線偵錯又打開。
   Future<bool> _stopWatchThenRelease(
-    CaptureSession? watch,
+    Future<CaptureSession>? starting,
     LogAccessReady ready,
   ) async {
     try {
-      await watch?.cancel();
+      await (await starting)?.cancel();
     } catch (e) {
       _clientLog.warning('client log watch stop failed error=${e.runtimeType}');
     }

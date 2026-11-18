@@ -75,7 +75,14 @@ class _FakeResolver extends LogAccessResolver {
 
 /// 記錄 release 次數、可控制 health stream 的 ready 結果。
 class _Ready {
-  _Ready({this.leftOn = false, this.games = const [wuwaGlobalPackage]});
+  _Ready({
+    this.leftOn = false,
+    this.games = const [wuwaGlobalPackage],
+    this.events,
+  });
+
+  /// 與監看替身共用的事件順序紀錄。
+  final List<String>? events;
 
   /// 手機上裝的版本；讀的是第一個。
   final List<String> games;
@@ -104,6 +111,7 @@ class _Ready {
     healthChanges: health.stream,
     release: () async {
       released++;
+      events?.add('release');
       return leftOn;
     },
   );
@@ -118,17 +126,25 @@ class _FakeWatch implements ClientLogWatch {
   /// 設定後 cancel 會等它完成才返回，模擬還在讀取的輪詢。
   Completer<void>? cancelGate;
 
+  /// 設定後 start 會等它完成才回傳 session，模擬取起點的第一次讀取卡住。
+  Completer<void>? startGate;
+
+  /// 與 ready 共用的事件順序紀錄。
+  List<String>? events;
+
   @override
   Future<CaptureSession> start(ClientLogSource source) async {
     final i = hits.length;
     final c = Completer<GachaCredential?>();
     hits.add(c);
     sources.add(source);
+    await startGate?.future;
     return CaptureSession(
       result: c.future,
       cancel: () async {
         cancelled.add(i);
         await cancelGate?.future;
+        events?.add('cancel');
         if (!c.isCompleted) c.complete(null);
       },
     );
@@ -496,6 +512,46 @@ void main() {
     watch.cancelGate!.complete();
     await done;
     await waitUntil(() => ready.released == 1);
+  });
+
+  test(
+    'cancel while the watch is starting returns at once, then stops it before release',
+    () async {
+      // 監看要先讀一次檔案長度當起點才拿得到 session；連線卡住時這段期間取消要立刻有反應。
+      final events = watch.events = <String>[];
+      final ready = _Ready(events: events);
+      resolver.results.add(ready.outcome);
+      final gate = watch.startGate = Completer<void>();
+      final r = await repo();
+
+      final done = r.update();
+      await waitUntil(() => watch.hits.isNotEmpty);
+      await r.cancelCapture();
+      await done.timeout(const Duration(seconds: 1));
+      expect(progress(), isNull);
+      expect(ready.released, 0, reason: 'the watch is still starting');
+
+      gate.complete();
+      await waitUntil(() => ready.released == 1);
+      expect(watch.cancelled, [0]);
+      expect(events, ['cancel', 'release']);
+    },
+  );
+
+  test('manual input while the watch is starting is used at once', () async {
+    final ready = _Ready();
+    resolver.results.add(ready.outcome);
+    final gate = watch.startGate = Completer<void>();
+    final r = await repo();
+
+    final done = r.update();
+    await waitUntil(() => watch.hits.isNotEmpty);
+    await r.submitManualCredential(_cred());
+    await done.timeout(const Duration(seconds: 1));
+    expect(progress(), isA<UpdateCompleted>());
+    gate.complete();
+    await waitUntil(() => ready.released == 1);
+    expect(watch.cancelled, [0]);
   });
 
   test(
@@ -887,6 +943,32 @@ void main() {
       expect(first.released, 1);
       expect(resolver.calls, hasLength(2));
       watch.hits[0].complete(_cred());
+      await done;
+      expect(progress(), isA<UpdateCompleted>());
+    });
+
+    test('late teardown of a watch that was still starting', () async {
+      final events = watch.events = <String>[];
+      final first = _Ready(events: events);
+      resolver.results
+        ..add(first.outcome)
+        ..add(_Ready().outcome);
+      final gate = watch.startGate = Completer<void>();
+      final r = await repo();
+      var done = r.update();
+      await waitUntil(() => watch.hits.isNotEmpty);
+      await r.cancelCapture();
+      await done;
+
+      watch.startGate = null;
+      done = r.update();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(resolver.calls, hasLength(1));
+      gate.complete();
+      await waitUntil(() => watch.hits.length == 2);
+      expect(events, ['cancel', 'release']);
+      expect(resolver.calls, hasLength(2));
+      watch.hits[1].complete(_cred());
       await done;
       expect(progress(), isA<UpdateCompleted>());
     });
