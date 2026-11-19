@@ -180,6 +180,16 @@ void main() {
     },
   );
 
+  test('denied notification permission is remembered for the UI', () async {
+    platform
+      ..notifications = false
+      ..grantNotifications = false;
+    await ctl().startSetup();
+    await ctl().requestNotifications();
+    expect(phase(), PairingPhase.needNotifications);
+    expect(c.read(adbPairingProvider).notificationsDenied, isTrue);
+  });
+
   test('service is not started until openWirelessDebugging', () async {
     await ctl().startSetup();
     expect(platform.serviceStarts, 0);
