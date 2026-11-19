@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Ontwikkelaarsopties worden nog steeds niet gedetecteerd. Weet je zeker dat ze aanstaan, dan kun je toch doorgaan.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Ze staan aan, doorgaan",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Kan Draadloze foutopsporing niet openen. Controleer of Ontwikkelaarsopties aanstaan en probeer het opnieuw.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Pagina Over openen",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

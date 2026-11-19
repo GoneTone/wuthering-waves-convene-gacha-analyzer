@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Опције за програмере и даље нису откривене. Ако сте сигурни да су укључене, ипак можете да наставите.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Укључене су, настави",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Није могуће отворити бежично отклањање грешака. Проверите да ли су опције за програмере укључене и покушајте поново.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Отвори „О телефону“",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

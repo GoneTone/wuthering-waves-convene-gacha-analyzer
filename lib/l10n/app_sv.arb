@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Utvecklaralternativ upptäcks fortfarande inte. Om du är säker på att de är aktiverade kan du fortsätta ändå.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "De är aktiverade, fortsätt",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Det gick inte att öppna Trådlös felsökning. Kontrollera att Utvecklaralternativ är aktiverade och försök igen.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Öppna sidan Om",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

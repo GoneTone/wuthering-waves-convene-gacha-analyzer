@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Οι επιλογές για προγραμματιστές εξακολουθούν να μην εντοπίζονται. Αν είστε βέβαιοι ότι είναι ενεργοποιημένες, μπορείτε να συνεχίσετε.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Είναι ενεργοποιημένες, συνέχεια",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Δεν ήταν δυνατό το άνοιγμα του ασύρματου εντοπισμού σφαλμάτων. Βεβαιωθείτε ότι οι επιλογές για προγραμματιστές είναι ενεργοποιημένες και δοκιμάστε ξανά.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Άνοιγμα σελίδας «Σχετικά»",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

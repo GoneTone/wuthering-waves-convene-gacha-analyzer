@@ -50,7 +50,10 @@ class _FakePlatform extends LogAccessPlatform {
   int opens = 0;
 
   @override
-  Future<void> openWirelessDebugging() async => opens++;
+  Future<bool> openWirelessDebugging() async {
+    opens++;
+    return true;
+  }
 }
 
 void main() {

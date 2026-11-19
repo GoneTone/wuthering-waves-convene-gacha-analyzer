@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Geliştirici seçenekleri hâlâ algılanamıyor. Açık olduğundan eminseniz yine de devam edebilirsiniz.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Açık, devam et",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Kablosuz hata ayıklama açılamadı. Geliştirici seçeneklerinin açık olduğundan emin olup yeniden deneyin.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Hakkında sayfasını aç",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

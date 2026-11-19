@@ -20,6 +20,7 @@ class _Platform extends LogAccessPlatform {
   bool wss = false;
   int serviceStarts = 0;
   int wirelessOpens = 0;
+  bool wirelessOpenWorks = true;
   Future<({bool ok, String message})> Function(int, String)? handler;
 
   @override
@@ -40,7 +41,11 @@ class _Platform extends LogAccessPlatform {
   @override
   Future<void> stopPairingService() async => serviceRunning = false;
   @override
-  Future<void> openWirelessDebugging() async => wirelessOpens++;
+  Future<bool> openWirelessDebugging() async {
+    wirelessOpens++;
+    return wirelessOpenWorks;
+  }
+
   @override
   Future<bool> hasWriteSecureSettings() async => wss;
   bool adbWifiOn = true;
@@ -166,6 +171,45 @@ void main() {
     await ctl().refresh();
     expect(phase(), PairingPhase.ready);
   });
+
+  test(
+    'escape appears only after a re-check still finds dev options off',
+    () async {
+      platform.dev = false;
+      await ctl().startSetup();
+      expect(c.read(adbPairingProvider).devOptionsUndetected, isFalse);
+      await ctl().refresh();
+      expect(phase(), PairingPhase.needDevOptions);
+      expect(c.read(adbPairingProvider).devOptionsUndetected, isTrue);
+    },
+  );
+
+  test('skipping the dev options check moves on and sticks', () async {
+    platform.dev = false;
+    await ctl().startSetup();
+    await ctl().refresh();
+    await ctl().skipDevOptionsCheck();
+    expect(phase(), PairingPhase.ready);
+    await ctl().refresh();
+    expect(phase(), PairingPhase.ready);
+  });
+
+  test(
+    'wireless page that cannot open stays ready and stops the service',
+    () async {
+      platform.wirelessOpenWorks = false;
+      await ctl().startSetup();
+      await ctl().openWirelessDebugging();
+      expect(phase(), PairingPhase.ready);
+      expect(c.read(adbPairingProvider).wirelessOpenFailed, isTrue);
+      expect(platform.serviceRunning, isFalse);
+
+      platform.wirelessOpenWorks = true;
+      await ctl().openWirelessDebugging();
+      expect(phase(), PairingPhase.waitingCode);
+      expect(c.read(adbPairingProvider).wirelessOpenFailed, isFalse);
+    },
+  );
 
   test('denied notification permission is remembered for the UI', () async {
     platform

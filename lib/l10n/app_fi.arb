@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Kehittäjäasetuksia ei vieläkään tunnisteta. Jos olet varma, että ne ovat käytössä, voit silti jatkaa.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Ne ovat käytössä, jatka",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Langatonta virheenkorjausta ei voitu avata. Varmista, että kehittäjäasetukset ovat käytössä, ja yritä uudelleen.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Avaa Tietoja-sivu",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

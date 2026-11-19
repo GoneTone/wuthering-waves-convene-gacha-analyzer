@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Možnosti pro vývojáře se stále nedaří rozpoznat. Pokud jste si jistí, že jsou zapnuté, můžete přesto pokračovat.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Jsou zapnuté, pokračovat",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Bezdrátové ladění se nepodařilo otevřít. Zkontrolujte, že jsou zapnuté Možnosti pro vývojáře, a zkuste to znovu.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Otevřít informace o zařízení",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

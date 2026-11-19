@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Les Options pour les développeurs ne sont toujours pas détectées. Si vous êtes sûr qu'elles sont activées, vous pouvez continuer quand même.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Elles sont activées, continuer",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Impossible d'ouvrir Débogage sans fil. Vérifiez que les Options pour les développeurs sont activées, puis réessayez.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Ouvrir la page À propos",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

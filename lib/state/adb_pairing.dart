@@ -42,7 +42,12 @@ enum PairingPhase {
 /// 設定流程的狀態。
 class AdbPairingState {
   /// 建立狀態。
-  const AdbPairingState(this.phase, {this.notificationsDenied = false});
+  const AdbPairingState(
+    this.phase, {
+    this.notificationsDenied = false,
+    this.devOptionsUndetected = false,
+    this.wirelessOpenFailed = false,
+  });
 
   /// 目前階段。
   final PairingPhase phase;
@@ -50,9 +55,24 @@ class AdbPairingState {
   /// 玩家拒絕過通知權限（畫面改為引導到 App 通知設定）。
   final bool notificationsDenied;
 
-  /// 換階段，保留其他欄位。
-  AdbPairingState to(PairingPhase next) =>
-      AdbPairingState(next, notificationsDenied: notificationsDenied);
+  /// 玩家回到 App 後仍偵測不到開發人員選項（畫面提供略過檢查的出口）。
+  final bool devOptionsUndetected;
+
+  /// 上次按「開啟無線偵錯」時系統開不了頁面（多半是開發人員選項其實沒開）。
+  final bool wirelessOpenFailed;
+
+  /// 複製並替換指定欄位。
+  AdbPairingState copyWith({
+    PairingPhase? phase,
+    bool? notificationsDenied,
+    bool? devOptionsUndetected,
+    bool? wirelessOpenFailed,
+  }) => AdbPairingState(
+    phase ?? this.phase,
+    notificationsDenied: notificationsDenied ?? this.notificationsDenied,
+    devOptionsUndetected: devOptionsUndetected ?? this.devOptionsUndetected,
+    wirelessOpenFailed: wirelessOpenFailed ?? this.wirelessOpenFailed,
+  );
 }
 
 /// 無線偵錯設定流程：說明頁 → 開發人員選項 → 通知權限 → 配對 → 授權。
@@ -72,9 +92,15 @@ class AdbPairingController extends Notifier<AdbPairingState> {
   /// 開始設定時無線偵錯是否本來就開著；是的話設定完的那次更新不關它（只關照引導才打開的）。
   bool wirelessWasOnAtStart = false;
 
+  /// 是否已檢查過一次開發人員選項（之後再偵測不到才提供略過的出口）。
+  bool _devOptionsChecked = false;
+
+  /// 玩家選擇略過開發人員選項檢查（部分廠牌讀不到正確的狀態）。
+  bool _devOptionsSkipped = false;
+
   /// 切換階段；玩家已離開設定頁（provider 已回收）時忽略。
   void _go(PairingPhase phase) {
-    if (ref.mounted) state = state.to(phase);
+    if (ref.mounted) state = state.copyWith(phase: phase);
   }
 
   @override
@@ -118,8 +144,17 @@ class AdbPairingController extends Notifier<AdbPairingState> {
             PairingPhase.doneManual) {
       return;
     }
-    if (!await _platform.isDevelopmentSettingsEnabled()) {
-      _go(PairingPhase.needDevOptions);
+    if (!_devOptionsSkipped &&
+        !await _platform.isDevelopmentSettingsEnabled()) {
+      // 第一次檢查在按「開始設定」時；之後回到 App 仍偵測不到，才提供略過的出口。
+      final undetected = _devOptionsChecked;
+      _devOptionsChecked = true;
+      if (ref.mounted) {
+        state = state.copyWith(
+          phase: PairingPhase.needDevOptions,
+          devOptionsUndetected: state.devOptionsUndetected || undetected,
+        );
+      }
       return;
     }
     if (!await _platform.areNotificationsEnabled()) {
@@ -141,19 +176,33 @@ class AdbPairingController extends Notifier<AdbPairingState> {
     final granted = await _platform.requestNotificationPermission();
     _log.info('notification permission granted=$granted');
     if (!granted) {
-      if (ref.mounted) {
-        state = AdbPairingState(state.phase, notificationsDenied: true);
-      }
+      if (ref.mounted) state = state.copyWith(notificationsDenied: true);
       return;
     }
     await refresh();
   }
 
+  /// 玩家確認已開啟開發人員選項、略過偵測：直接進下一步。
+  Future<void> skipDevOptionsCheck() async {
+    _log.info('development settings check skipped by user');
+    _devOptionsSkipped = true;
+    await refresh();
+  }
+
   /// 啟動配對服務並跳到「無線偵錯」頁；約 3 分鐘的上限從這裡開始算。
+  ///
+  /// 系統開不了頁面時停掉配對服務、留在這一步並提示玩家確認開發人員選項。
   Future<void> openWirelessDebugging() async {
     await _platform.startPairingService();
-    await _platform.openWirelessDebugging();
-    _go(PairingPhase.waitingCode);
+    final opened = await _platform.openWirelessDebugging();
+    if (!opened) await _platform.stopPairingService();
+    if (!ref.mounted) return;
+    state = opened
+        ? state.copyWith(
+            phase: PairingPhase.waitingCode,
+            wirelessOpenFailed: false,
+          )
+        : state.copyWith(wirelessOpenFailed: true);
   }
 
   /// 配對服務收到配對碼時呼叫：配對、連線並授權自己開關無線偵錯。回傳給通知顯示的結果（不含配對碼）。

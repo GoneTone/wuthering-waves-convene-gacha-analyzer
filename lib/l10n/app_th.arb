@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "ยังตรวจไม่พบตัวเลือกสำหรับนักพัฒนาแอป หากแน่ใจว่าเปิดไว้แล้ว ก็สามารถดำเนินการต่อได้เลย",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "เปิดแล้ว ดำเนินการต่อ",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "เปิดการแก้ไขข้อบกพร่องแบบไร้สายไม่ได้ โปรดตรวจสอบว่าเปิดตัวเลือกสำหรับนักพัฒนาแอปแล้ว จากนั้นลองอีกครั้ง",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "เปิดหน้าเกี่ยวกับ",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

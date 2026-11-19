@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Indstillinger for udviklere kan stadig ikke registreres. Hvis du er sikker på, at de er slået til, kan du fortsætte alligevel.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "De er slået til, fortsæt",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Trådløs fejlretning kunne ikke åbnes. Kontrollér, at Indstillinger for udviklere er slået til, og prøv igen.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Åbn siden Om",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "A Fejlesztői beállítások továbbra sem észlelhetők. Ha biztos benne, hogy be vannak kapcsolva, ettől függetlenül folytathatja.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Be vannak kapcsolva, tovább",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Nem sikerült megnyitni a Vezeték nélküli hibakeresést. Ellenőrizze, hogy a Fejlesztői beállítások be vannak-e kapcsolva, majd próbálja újra.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Névjegyoldal megnyitása",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

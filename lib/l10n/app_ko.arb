@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "아직 개발자 옵션이 켜진 것으로 확인되지 않습니다. 켜 둔 것이 확실하다면 그대로 계속할 수 있습니다.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "켜져 있음, 계속",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "무선 디버깅을 열 수 없습니다. 개발자 옵션이 켜져 있는지 확인한 후 다시 시도하세요.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "정보 화면 열기",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

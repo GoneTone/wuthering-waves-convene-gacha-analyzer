@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "لا يزال يتعذّر اكتشاف خيارات المطوّرين. إذا كنت متأكدًا من تفعيلها، يمكنك المتابعة على أي حال.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "إنها مفعّلة، متابعة",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "تعذّر فتح تصحيح الأخطاء اللاسلكي. تأكّد من تفعيل خيارات المطوّرين، ثم أعد المحاولة.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "فتح صفحة «حول»",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

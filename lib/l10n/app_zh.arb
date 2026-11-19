@@ -1067,6 +1067,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "還是偵測不到開發人員選項。如果你確定已經開啟，可以直接繼續。",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "已經開啟了，繼續",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "無法開啟「無線偵錯」頁面，請確認開發人員選項已開啟後再試一次。",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "開啟「關於」頁面",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

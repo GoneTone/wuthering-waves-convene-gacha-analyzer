@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "האפשרויות למפתחים עדיין לא מזוהות. אם אתם בטוחים שהן מופעלות, אפשר להמשיך בכל זאת.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "הן מופעלות, להמשיך",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "לא ניתן לפתוח את ניפוי הבאגים האלחוטי. ודאו שהאפשרויות למפתחים מופעלות ונסו שוב.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "פתיחת דף המידע",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

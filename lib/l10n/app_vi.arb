@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Vẫn chưa phát hiện Tùy chọn cho nhà phát triển. Nếu bạn chắc chắn đã bật, bạn vẫn có thể tiếp tục.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Đã bật, tiếp tục",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Không mở được Gỡ lỗi không dây. Hãy kiểm tra xem Tùy chọn cho nhà phát triển đã được bật chưa rồi thử lại.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Mở trang Giới thiệu",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

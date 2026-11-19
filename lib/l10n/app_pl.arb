@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Nadal nie wykryto Opcji programistycznych. Jeśli masz pewność, że są włączone, możesz mimo to kontynuować.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Są włączone, kontynuuj",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Nie udało się otworzyć Debugowania bezprzewodowego. Sprawdź, czy Opcje programistyczne są włączone, i spróbuj ponownie.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Otwórz informacje o urządzeniu",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

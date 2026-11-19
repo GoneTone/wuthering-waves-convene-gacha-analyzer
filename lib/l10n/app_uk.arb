@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Параметри розробника досі не виявлено. Якщо ви впевнені, що їх увімкнено, можна продовжити.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Їх увімкнено, продовжити",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "Не вдалося відкрити бездротове налагодження. Переконайтеся, що параметри розробника ввімкнено, і повторіть спробу.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Відкрити «Про телефон»",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

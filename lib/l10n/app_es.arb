@@ -1302,6 +1302,18 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Todavía no se detectan las Opciones para desarrolladores. Si estás seguro de que están activadas, puedes continuar de todos modos.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
+  },
+  "setupDevOptionsContinue": "Ya están activadas, continuar",
+  "@setupDevOptionsContinue": {
+    "description": "Pairing guide step 1 button that skips the developer options check."
+  },
+  "setupOpenWirelessFailed": "No se pudo abrir Depuración inalámbrica. Comprueba que las Opciones para desarrolladores estén activadas y vuelve a intentarlo.",
+  "@setupOpenWirelessFailed": {
+    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
+  },
   "setupOpenAbout": "Abrir información del dispositivo",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"
