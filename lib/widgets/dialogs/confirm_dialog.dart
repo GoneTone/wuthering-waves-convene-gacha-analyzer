@@ -189,7 +189,11 @@ class _ConfirmDialogState extends State<_ConfirmDialog> {
           TextField(
             controller: _ctrl,
             autofocus: true,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
+            // 手機橫向會改在全螢幕輸入頁打字，看不到對話框的說明，提示要輸入的內容。
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: widget.expectedText,
+            ),
             onChanged: (_) => setState(() {}),
           ),
           if (widget.checkboxLabel != null) ...[
