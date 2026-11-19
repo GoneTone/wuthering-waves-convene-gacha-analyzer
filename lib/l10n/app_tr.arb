@@ -1302,6 +1302,10 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Geliştirici seçenekleri hâlâ kapalı. \"Derleme numarası\"na dokunduğunuzda sistem başka bir işlem gerekmediğini söylediyse (örneğin \"Zaten geliştiricisiniz\"), Geliştirici seçeneklerinin ana anahtarı kapalıdır. Geliştirici seçeneklerini açın, en üstteki anahtarı açın ve ardından bu uygulamaya dönün.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
+  },
   "setupOpenAbout": "Hakkında sayfasını aç",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

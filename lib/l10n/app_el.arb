@@ -1302,6 +1302,10 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Οι επιλογές για προγραμματιστές είναι ακόμη απενεργοποιημένες. Αν το σύστημα ανέφερε ότι δεν χρειάζεται κάτι άλλο όταν πατήσατε τον «Αριθμό έκδοσης» (π.χ. «Είστε ήδη προγραμματιστής»), ο κύριος διακόπτης των επιλογών για προγραμματιστές είναι απενεργοποιημένος. Ανοίξτε τις Επιλογές για προγραμματιστές, ενεργοποιήστε τον διακόπτη στο επάνω μέρος και επιστρέψτε σε αυτή την εφαρμογή.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
+  },
   "setupOpenAbout": "Άνοιγμα σελίδας «Σχετικά»",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

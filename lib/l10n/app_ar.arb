@@ -1302,6 +1302,10 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "لا تزال خيارات المطوّرين غير مفعّلة. إذا أخبرك النظام عند الضغط على «رقم الإصدار» بأنه لا حاجة لأي إجراء آخر (مثل «أنت مطوّر بالفعل»)، فهذا يعني أن المفتاح الرئيسي لخيارات المطوّرين متوقف. افتح خيارات المطوّرين، وفعّل المفتاح في الأعلى، ثم عُد إلى هذا التطبيق.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
+  },
   "setupOpenAbout": "فتح صفحة «حول»",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

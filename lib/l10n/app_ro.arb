@@ -1302,6 +1302,10 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Opțiunile dezvoltator sunt în continuare dezactivate. Dacă, atunci când ați atins „Numărul versiunii”, sistemul a afișat că nu mai este nevoie de nicio acțiune (de exemplu „Sunteți deja dezvoltator”), comutatorul principal pentru Opțiuni dezvoltator este dezactivat. Deschideți Opțiuni dezvoltator, activați comutatorul din partea de sus, apoi reveniți în această aplicație.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
+  },
   "setupOpenAbout": "Deschide pagina Despre",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

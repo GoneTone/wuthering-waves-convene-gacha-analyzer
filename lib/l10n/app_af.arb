@@ -1302,6 +1302,10 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "Ontwikkelaaropsies is steeds af. As die stelsel gesê het daar is niks meer om te doen nie toe jy op “Bounommer” getik het (byvoorbeeld “Jy is reeds ’n ontwikkelaar”), is die hoofskakelaar van Ontwikkelaaropsies af. Maak Ontwikkelaaropsies oop, skakel die skakelaar heel bo aan en kom dan terug na hierdie app.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
+  },
   "setupOpenAbout": "Maak Meer oor-bladsy oop",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

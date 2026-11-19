@@ -1302,6 +1302,10 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
+  "setupDevOptionsUndetected": "개발자 옵션이 아직 꺼져 있습니다. “빌드 번호”를 눌렀을 때 더 이상 할 필요가 없다고 표시되었다면(예: “이미 개발자입니다”), 개발자 옵션의 기본 스위치가 꺼져 있는 것입니다. 개발자 옵션을 열어 맨 위의 스위치를 켠 후 이 앱으로 돌아오세요.",
+  "@setupDevOptionsUndetected": {
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
+  },
   "setupOpenAbout": "정보 화면 열기",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

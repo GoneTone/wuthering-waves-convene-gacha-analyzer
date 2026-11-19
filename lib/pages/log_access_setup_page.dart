@@ -140,6 +140,7 @@ class _LogAccessSetupPageState extends ConsumerState<LogAccessSetupPage> {
     final notifDone = devDone && phase != PairingPhase.needNotifications;
     final pairing = phase == PairingPhase.pairing;
     final waiting = phase == PairingPhase.waitingCode;
+    final warning = TextStyle(color: Theme.of(context).gacha.stateWarning);
 
     return [
       _Step(
@@ -154,6 +155,15 @@ class _LogAccessSetupPageState extends ConsumerState<LogAccessSetupPage> {
                   onPressed: platform.openDeviceInfoSettings,
                   child: Text(l.setupOpenAbout),
                 ),
+                if (s.devOptionsUndetected) ...[
+                  const SizedBox(height: AppSpacing.m),
+                  Text(l.setupDevOptionsUndetected, style: warning),
+                  const SizedBox(height: AppSpacing.s),
+                  OutlinedButton(
+                    onPressed: platform.openDeveloperOptions,
+                    child: Text(l.setupOpenDeveloperOptions),
+                  ),
+                ],
               ],
       ),
       _Step(
