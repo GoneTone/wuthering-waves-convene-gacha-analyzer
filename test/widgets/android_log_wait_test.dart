@@ -68,11 +68,8 @@ class _Platform extends LogAccessPlatform {
   }
 
   @override
-  Future<bool> openWirelessDebugging() async {
-    calls.add('openWirelessDebugging');
-    return true;
-  }
-
+  Future<void> openWirelessDebugging() async =>
+      calls.add('openWirelessDebugging');
   @override
   Future<bool> requestStoragePermission({
     bool openSettingsIfBlocked = false,

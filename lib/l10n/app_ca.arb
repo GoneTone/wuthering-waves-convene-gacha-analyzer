@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "No s'ha pogut obrir Depuració sense fil. Comprova que les opcions per a desenvolupadors estiguin activades i torna-ho a provar.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "Obre la pàgina d'informació",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

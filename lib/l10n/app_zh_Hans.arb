@@ -1306,10 +1306,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "无法打开「无线调试」页面，请确认开发者选项已开启后再试一次。",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "打开「关于」页面",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

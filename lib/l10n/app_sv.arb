@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "Det gick inte att öppna Trådlös felsökning. Kontrollera att Utvecklaralternativ är aktiverade och försök igen.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "Öppna sidan Om",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

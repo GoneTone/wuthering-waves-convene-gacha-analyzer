@@ -1075,10 +1075,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "無法開啟「無線偵錯」頁面，請確認開發人員選項已開啟後再試一次。",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "開啟「關於」頁面",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

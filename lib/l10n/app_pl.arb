@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "Nie udało się otworzyć Debugowania bezprzewodowego. Sprawdź, czy Opcje programistyczne są włączone, i spróbuj ponownie.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "Otwórz informacje o urządzeniu",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

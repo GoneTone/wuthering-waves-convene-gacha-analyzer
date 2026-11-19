@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "Kon nie Draadlose ontfouting oopmaak nie. Maak seker dat Ontwikkelaaropsies aan is en probeer dan weer.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "Maak Meer oor-bladsy oop",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

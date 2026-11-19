@@ -87,7 +87,7 @@ void main() {
     expect(await p.hasWriteSecureSettings(), isFalse);
     expect(await p.sdkInt(), 0);
     expect(await p.discoverAdbConnectPorts(), isEmpty);
-    expect(await p.openWirelessDebugging(), isFalse);
+    await p.openWirelessDebugging();
     expect(await p.isDevelopmentSettingsEnabled(), isFalse);
   });
 
@@ -103,12 +103,5 @@ void main() {
       expect(await p.isDevelopmentSettingsEnabled(), on, reason: '$raw');
       expect(calls.single.method, 'developmentSettingsEnabledRaw');
     }
-  });
-
-  test('openWirelessDebugging reports whether a page opened', () async {
-    respond((_) => false);
-    expect(await LogAccessPlatform().openWirelessDebugging(), isFalse);
-    respond((_) => true);
-    expect(await LogAccessPlatform().openWirelessDebugging(), isTrue);
   });
 }

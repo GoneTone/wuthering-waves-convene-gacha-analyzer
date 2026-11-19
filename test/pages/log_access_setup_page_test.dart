@@ -147,19 +147,6 @@ void main() {
     expect(ctl.calls, contains('skipDevOptions'));
   });
 
-  testWidgets('ready step warns when wireless debugging could not open', (
-    tester,
-  ) async {
-    final l = await pump(tester, const AdbPairingState(PairingPhase.ready));
-    expect(find.text(l.setupOpenWirelessFailed), findsNothing);
-    ctl.state = const AdbPairingState(
-      PairingPhase.ready,
-      wirelessOpenFailed: true,
-    );
-    await tester.pump();
-    expect(find.text(l.setupOpenWirelessFailed), findsOneWidget);
-  });
-
   testWidgets('notifications step asks, then offers settings when denied', (
     tester,
   ) async {

@@ -64,11 +64,13 @@ class LogAccessPlatform {
     return [for (final p in ports) p as int];
   }
 
-  /// 開啟系統的「無線偵錯」頁（不支援時退回開發人員選項）；兩者都開不了時回 false。
-  Future<bool> openWirelessDebugging() async {
-    final opened = await _call('openWirelessDebugging', false);
-    if (!opened) _log.warning('could not open wireless debugging settings');
-    return opened;
+  /// 開啟系統的「無線偵錯」頁（不支援時退回開發人員選項）；兩者都找不到頁面時記 warning。
+  ///
+  /// 開發人員選項沒開時，系統通常會打開頁面再自己關掉並跳提示，這裡無法得知。
+  Future<void> openWirelessDebugging() async {
+    if (!await _call('openWirelessDebugging', false)) {
+      _log.warning('wireless debugging settings not found');
+    }
   }
 
   /// 開啟開發人員選項。

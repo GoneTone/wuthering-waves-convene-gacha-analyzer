@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "Impossible d'ouvrir Débogage sans fil. Vérifiez que les Options pour les développeurs sont activées, puis réessayez.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "Ouvrir la page À propos",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

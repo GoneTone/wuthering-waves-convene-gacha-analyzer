@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "무선 디버깅을 열 수 없습니다. 개발자 옵션이 켜져 있는지 확인한 후 다시 시도하세요.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "정보 화면 열기",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

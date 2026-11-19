@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "Remedierea erorilor wireless nu a putut fi deschisă. Verificați dacă Opțiuni dezvoltator sunt activate, apoi reîncercați.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "Deschide pagina Despre",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

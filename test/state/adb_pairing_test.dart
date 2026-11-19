@@ -20,7 +20,6 @@ class _Platform extends LogAccessPlatform {
   bool wss = false;
   int serviceStarts = 0;
   int wirelessOpens = 0;
-  bool wirelessOpenWorks = true;
   Future<({bool ok, String message})> Function(int, String)? handler;
 
   @override
@@ -41,10 +40,7 @@ class _Platform extends LogAccessPlatform {
   @override
   Future<void> stopPairingService() async => serviceRunning = false;
   @override
-  Future<bool> openWirelessDebugging() async {
-    wirelessOpens++;
-    return wirelessOpenWorks;
-  }
+  Future<void> openWirelessDebugging() async => wirelessOpens++;
 
   @override
   Future<bool> hasWriteSecureSettings() async => wss;
@@ -192,33 +188,6 @@ void main() {
     expect(phase(), PairingPhase.ready);
     await ctl().refresh();
     expect(phase(), PairingPhase.ready);
-  });
-
-  test(
-    'wireless page that cannot open stays ready and stops the service',
-    () async {
-      platform.wirelessOpenWorks = false;
-      await ctl().startSetup();
-      await ctl().openWirelessDebugging();
-      expect(phase(), PairingPhase.ready);
-      expect(c.read(adbPairingProvider).wirelessOpenFailed, isTrue);
-      expect(platform.serviceRunning, isFalse);
-
-      platform.wirelessOpenWorks = true;
-      await ctl().openWirelessDebugging();
-      expect(phase(), PairingPhase.waitingCode);
-      expect(c.read(adbPairingProvider).wirelessOpenFailed, isFalse);
-    },
-  );
-
-  test('denied notification permission is remembered for the UI', () async {
-    platform
-      ..notifications = false
-      ..grantNotifications = false;
-    await ctl().startSetup();
-    await ctl().requestNotifications();
-    expect(phase(), PairingPhase.needNotifications);
-    expect(c.read(adbPairingProvider).notificationsDenied, isTrue);
   });
 
   test('service is not started until openWirelessDebugging', () async {

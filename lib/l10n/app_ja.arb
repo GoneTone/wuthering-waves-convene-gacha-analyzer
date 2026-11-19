@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "「ワイヤレスデバッグ」を開けませんでした。開発者向けオプションがオンになっていることを確認してから、もう一度お試しください。",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "「デバイス情報」を開く",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

@@ -201,7 +201,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 系統設定沒有公開「無線偵錯」頁的 Activity。但快速設定磚長按的入口可以用：送 `android.service.quicksettings.action.QS_TILE_PREFERENCES`，**只指定套件 `com.android.settings`、不要寫死類別**（接這個 action 的 Activity 各版本名稱不同：Android 13 是 `Settings$DevelopmentSettingsDashboardActivity`，ASUS Android 16 是 `Settings$DevelopmentSettingsActivity`；系統介面處理磚長按時也是只指定套件），並帶 `Intent.EXTRA_COMPONENT_NAME = com.android.settings/.development.qstile.DevelopmentTiles$WirelessDebugging`，就會直接開「無線偵錯」頁。這不是公開保證的介面，其他廠牌要另外驗證。
 - **這個 intent 一定要加 `FLAG_ACTIVITY_NO_HISTORY`**：開發人員選項處理完磚的 intent 後會留在無線偵錯頁底下，每次回到它（例如橫向 App 跳過去、返回時被重建）都會再開一次無線偵錯頁，玩家按返回永遠回不到 App。加上 NO_HISTORY 讓它開完頁面就結束，返回一次就回到 App。退回開發人員選項的那條路沒有這個問題。
 - Shizuku 的做法是開 `Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS`，帶 `":settings:fragment_args_key" = "toggle_adb_wireless"`，系統會捲到「無線偵錯」那一項。把這個參數也加在上面的 intent 上，系統不認得直接開頁時，至少會捲到正確位置。
-- **開發人員選項關閉時，`ACTION_APPLICATION_DEVELOPMENT_SETTINGS` 不會找不到 Activity**（2026-11-19，Android 14 模擬器）：AOSP 會把它導到 `development.DevelopmentSettingsDisabledActivity`，只跳「無法使用」的提示就關掉，`startActivity` 照樣成功。所以退回這條路之前要先 `resolveActivity` 看解析結果，是這個類別就當成開不了，畫面提示玩家確認開發人員選項（磚的入口則是直接找不到 Activity，`startActivity` 會丟例外）。
+- **開發人員選項關閉時，App 無法事先得知開不了「無線偵錯」頁**（2026-11-19）：系統照樣接受 intent，由設定 App 自己判斷後跳提示並關掉頁面，`startActivity` 不會失敗。Android 14 模擬器（原生）：磚的入口找不到 Activity（會丟例外），退回的 `ACTION_APPLICATION_DEVELOPMENT_SETTINGS` 被導到 `development.DevelopmentSettingsDisabledActivity`，跳「請先啟用開發人員選項。」就關掉。ROG Phone 9（ASUS Android 16）：設定 App 根本沒有 `DevelopmentSettingsDisabledActivity`，開或關都由 `Settings$DevelopmentSettingsActivity` 接磚的入口，打開開發人員選項頁後跳提示並立刻關掉。所以不能靠解析出來的類別名稱判斷，也不要靠「多快回到 App」這種時間判斷（不準）；我們不自己判斷，交給系統的提示。兩種開法都找不到 Activity（極少見）時記 warning 到 App 的 log。
 - 用 `adb shell am start` 測試時，PowerShell 要注意 `$` 的跳脫：在雙引號字串裡用 `` `$ ``，不要用 `\$`，否則 `\` 會被原樣送到手機上，導致找不到 Activity。
 
 **配對期間的前景服務**
@@ -277,7 +277,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 **開發人員選項的偵測**（2026-11-19）
 - 讀 `Settings.Global.DEVELOPMENT_SETTINGS_ENABLED` 的原始字串，跟 AOSP 設定 App 一樣「不是 0 就算開啟」，讀到的值會記進 log（`capture.android`）。
 - 有玩家回報 vivo X200 FE（OriginOS 7、Android 17）連點版本號碼後系統提示「已顯示開發人員選項入口，無需進行此操作」，App 卻一直停在步驟 1。原因未確認（沒有 vivo 實機，網路上也查不到相關說明）。Shizuku 完全不讀這個值，只提供跳到開發人員選項的按鈕。
-- 我們保留偵測（原生 Android 上會自動跳下一步），但玩家回到 App 仍偵測不到時，步驟 1 會多出「已經開啟了，繼續」可以略過。略過後如果其實沒開，步驟 3 開不了「無線偵錯」頁會提示玩家確認，而不是停在等待配對碼。
+- 我們保留偵測（原生 Android 上會自動跳下一步），但玩家回到 App 仍偵測不到時，步驟 1 會多出「已經開啟了，繼續」可以略過。略過後如果其實沒開，按「前往無線偵錯」時系統會跳提示並關掉頁面（見上方「直接跳到『無線偵錯』頁」），App 會停在等待配對碼，玩家可以回頭去開開發人員選項。
 
 ---
 

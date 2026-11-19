@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "Bezdrátové ladění se nepodařilo otevřít. Zkontrolujte, že jsou zapnuté Možnosti pro vývojáře, a zkuste to znovu.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "Otevřít informace o zařízení",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

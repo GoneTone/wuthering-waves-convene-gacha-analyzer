@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "No se pudo abrir Depuración inalámbrica. Comprueba que las Opciones para desarrolladores estén activadas y vuelve a intentarlo.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "Abrir información del dispositivo",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

@@ -213,10 +213,6 @@ class _LogAccessSetupPageState extends ConsumerState<LogAccessSetupPage> {
                     onPressed: ctl.openWirelessDebugging,
                     child: Text(l.actionOpenWirelessDebugging),
                   ),
-                  if (s.wirelessOpenFailed) ...[
-                    const SizedBox(height: AppSpacing.s),
-                    Text(l.setupOpenWirelessFailed, style: warning),
-                  ],
                 ],
               ],
       ),

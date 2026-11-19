@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "Trådløs fejlretning kunne ikke åbnes. Kontrollér, at Indstillinger for udviklere er slået til, og prøv igen.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "Åbn siden Om",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

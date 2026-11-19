@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "Kablosuz hata ayıklama açılamadı. Geliştirici seçeneklerinin açık olduğundan emin olup yeniden deneyin.",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "Hakkında sayfasını aç",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"

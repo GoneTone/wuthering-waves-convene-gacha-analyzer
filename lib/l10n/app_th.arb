@@ -1310,10 +1310,6 @@
   "@setupDevOptionsContinue": {
     "description": "Pairing guide step 1 button that skips the developer options check."
   },
-  "setupOpenWirelessFailed": "เปิดการแก้ไขข้อบกพร่องแบบไร้สายไม่ได้ โปรดตรวจสอบว่าเปิดตัวเลือกสำหรับนักพัฒนาแอปแล้ว จากนั้นลองอีกครั้ง",
-  "@setupOpenWirelessFailed": {
-    "description": "Pairing guide step 3 warning when the system could not open the Wireless debugging page."
-  },
   "setupOpenAbout": "เปิดหน้าเกี่ยวกับ",
   "@setupOpenAbout": {
     "description": "Button that opens the system About page"
