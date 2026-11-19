@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/landscape_input_field.dart';
 
 /// 開出「編輯別名」對話框；回傳去頭尾空白後的別名，空字串代表移除別名，取消時回傳 null。
 ///
@@ -60,7 +61,7 @@ class _EditAliasDialogState extends State<_EditAliasDialog> {
             style: const TextStyle(fontFeatures: kTabularFigures),
           ),
           const SizedBox(height: AppSpacing.m),
-          TextField(
+          LandscapeInputField(
             controller: _ctrl,
             autofocus: true,
             textInputAction: TextInputAction.done,
