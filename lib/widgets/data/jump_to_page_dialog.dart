@@ -4,7 +4,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_locali
 
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/landscape_input_field.dart';
 
 /// 開出「前往頁數」對話框；回傳使用者輸入的 0-based 頁碼，取消時回傳 null。
 ///
@@ -89,7 +88,7 @@ class _JumpToPageDialogState extends State<_JumpToPageDialog> {
             ),
             const SizedBox(height: AppSpacing.m),
           ],
-          LandscapeInputField(
+          TextField(
             controller: _ctrl,
             autofocus: true,
             keyboardType: TextInputType.number,

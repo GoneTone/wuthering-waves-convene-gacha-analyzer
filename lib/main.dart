@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/layout.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/landscape_input_host.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/app_info.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/routing/app_router.dart';
@@ -194,6 +195,7 @@ class _MainAppState extends ConsumerState<MainApp> {
       localeListResolutionCallback: localeListResolution,
       routerConfig: _router,
       actions: appActions,
+      builder: (context, child) => LandscapeInputHost(child: child!),
     );
   }
 }

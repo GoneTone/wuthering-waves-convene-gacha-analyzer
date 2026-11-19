@@ -14,7 +14,6 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
-import 'package:wuthering_waves_convene_gacha_analyzer/widgets/landscape_input_field.dart';
 
 /// 本對話框的 logger。
 final _log = Logger('capture.manual');
@@ -133,7 +132,7 @@ class _ManualCredentialDialogState
         children: [
           Text(l.manualCredentialHint),
           const SizedBox(height: AppSpacing.s),
-          LandscapeInputField(
+          TextField(
             controller: _controller,
             minLines: 2,
             maxLines: 4,
