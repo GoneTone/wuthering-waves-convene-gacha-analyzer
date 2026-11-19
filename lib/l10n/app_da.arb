@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Indstillinger for udviklere kan stadig ikke registreres. Hvis systemet siger, at du allerede er udvikler (eller at Indstillinger for udviklere allerede vises), er kontakten til Indstillinger for udviklere slået fra. Åbn Indstillinger for udviklere, slå kontakten øverst til, og vend derefter tilbage til denne app.",
+  "setupDevOptionsUndetected": "Indstillinger for udviklere er stadig slået fra. Hvis systemet sagde, at der ikke var mere at gøre, da du trykkede på \"Buildnummer\" (f.eks. \"Du er allerede udvikler\"), er hovedkontakten til Indstillinger for udviklere slået fra. Åbn Indstillinger for udviklere, slå kontakten øverst til, og vend derefter tilbage til denne app.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },

@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Utvecklaralternativ upptäcks fortfarande inte. Om systemet säger att du redan är utvecklare (eller att Utvecklaralternativ redan visas) är reglaget för Utvecklaralternativ avstängt. Öppna Utvecklaralternativ, aktivera reglaget högst upp och gå sedan tillbaka till den här appen.",
+  "setupDevOptionsUndetected": "Utvecklaralternativ är fortfarande avstängda. Om systemet sa att inget mer behövdes när du tryckte på \"Versionsnummer\" (till exempel \"Du är redan utvecklare\") är huvudreglaget för Utvecklaralternativ avstängt. Öppna Utvecklaralternativ, aktivera reglaget högst upp och gå sedan tillbaka till den här appen.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },

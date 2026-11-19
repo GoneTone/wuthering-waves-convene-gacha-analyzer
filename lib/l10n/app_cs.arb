@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Možnosti pro vývojáře se stále nedaří rozpoznat. Pokud systém hlásí, že už jste vývojář (nebo že se Možnosti pro vývojáře už zobrazují), je vypínač Možností pro vývojáře vypnutý. Otevřete Možnosti pro vývojáře, zapněte vypínač nahoře a vraťte se do této aplikace.",
+  "setupDevOptionsUndetected": "Možnosti pro vývojáře jsou stále vypnuté. Pokud vám systém při klepání na „Číslo sestavení“ oznámil, že už není co dělat (například „Už jste vývojář“), je hlavní vypínač Možností pro vývojáře vypnutý. Otevřete Možnosti pro vývojáře, zapněte vypínač nahoře a vraťte se do této aplikace.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },

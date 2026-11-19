@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "האפשרויות למפתחים עדיין לא מזוהות. אם המערכת מציינת שכבר הפכתם למפתחים (או שהאפשרויות למפתחים כבר מוצגות), המתג של האפשרויות למפתחים כבוי. פתחו את האפשרויות למפתחים, הפעילו את המתג שבראש המסך וחזרו לאפליקציה.",
+  "setupDevOptionsUndetected": "האפשרויות למפתחים עדיין כבויות. אם בהקשה על \"מספר Build\" המערכת הודיעה שאין צורך בפעולה נוספת (למשל \"כבר הפכת למפתח\"), המתג הראשי של האפשרויות למפתחים כבוי. פתחו את האפשרויות למפתחים, הפעילו את המתג שבראש המסך וחזרו לאפליקציה.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },

@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Die Entwickleroptionen werden weiterhin nicht erkannt. Wenn das System meldet, dass du bereits Entwickler bist (oder die Entwickleroptionen schon angezeigt werden), ist der Schalter der Entwickleroptionen ausgeschaltet. Öffne die Entwickleroptionen, schalte den Schalter ganz oben ein und kehre dann zu dieser App zurück.",
+  "setupDevOptionsUndetected": "Die Entwickleroptionen sind noch deaktiviert. Wenn das System beim Tippen auf „Build-Nummer“ gemeldet hat, dass nichts mehr zu tun ist (z. B. „Du bist bereits Entwickler“), ist der Hauptschalter der Entwickleroptionen ausgeschaltet. Öffne die Entwickleroptionen, schalte den Schalter ganz oben ein und kehre dann zu dieser App zurück.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },

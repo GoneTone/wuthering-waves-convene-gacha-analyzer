@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Опције за програмере и даље нису откривене. Ако систем каже да сте већ програмер (или да се опције за програмере већ приказују), прекидач опција за програмере је искључен. Отворите опције за програмере, укључите прекидач на врху и вратите се у ову апликацију.",
+  "setupDevOptionsUndetected": "Опције за програмере су и даље искључене. Ако је систем при додиру „Броја верзије“ рекао да више ништа не треба да урадите (на пример „Већ сте програмер“), главни прекидач опција за програмере је искључен. Отворите опције за програмере, укључите прекидач на врху и вратите се у ову апликацију.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },

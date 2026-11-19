@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Nadal nie wykryto Opcji programistycznych. Jeśli system informuje, że już jesteś programistą (lub że Opcje programistyczne są już widoczne), przełącznik Opcji programistycznych jest wyłączony. Otwórz Opcje programistyczne, włącz przełącznik na górze i wróć do tej aplikacji.",
+  "setupDevOptionsUndetected": "Opcje programistyczne są nadal wyłączone. Jeśli po dotknięciu „Numeru kompilacji” system poinformował, że nic więcej nie trzeba robić (na przykład „Już jesteś programistą”), główny przełącznik Opcji programistycznych jest wyłączony. Otwórz Opcje programistyczne, włącz przełącznik na górze i wróć do tej aplikacji.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },

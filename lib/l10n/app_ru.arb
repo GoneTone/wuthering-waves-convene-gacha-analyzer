@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Режим разработчика по-прежнему не обнаружен. Если система сообщает, что вы уже разработчик (или что раздел «Для разработчиков» уже отображается), значит переключатель режима разработчика выключен. Откройте раздел «Для разработчиков», включите переключатель вверху и вернитесь в это приложение.",
+  "setupDevOptionsUndetected": "Режим разработчика по-прежнему выключен. Если при нажатии на «Номер сборки» система сообщила, что больше ничего делать не нужно (например, «Вы уже разработчик»), значит главный переключатель раздела «Для разработчиков» выключен. Откройте раздел «Для разработчиков», включите переключатель вверху и вернитесь в это приложение.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },

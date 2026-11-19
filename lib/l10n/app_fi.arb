@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Kehittäjäasetuksia ei vieläkään tunnisteta. Jos järjestelmä kertoo, että olet jo kehittäjä (tai että kehittäjäasetukset näkyvät jo), kehittäjäasetusten kytkin on pois päältä. Avaa kehittäjäasetukset, laita ylimmäinen kytkin päälle ja palaa sitten tähän sovellukseen.",
+  "setupDevOptionsUndetected": "Kehittäjäasetukset ovat yhä pois käytöstä. Jos järjestelmä ilmoitti ”Koontiversion numeroa” napauttaessasi, ettei mitään tarvitse enää tehdä (esimerkiksi ”Olet jo kehittäjä”), kehittäjäasetusten pääkytkin on pois päältä. Avaa kehittäjäasetukset, laita ylimmäinen kytkin päälle ja palaa sitten tähän sovellukseen.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },

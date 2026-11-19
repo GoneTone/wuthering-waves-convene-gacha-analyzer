@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "As Opções de programador continuam sem ser detetadas. Se o sistema indicar que já é programador (ou que as Opções de programador já são apresentadas), o interruptor das Opções de programador está desativado. Abra as Opções de programador, ative o interruptor no topo e volte a esta aplicação.",
+  "setupDevOptionsUndetected": "As Opções de programador continuam desativadas. Se, ao tocar em \"Número de compilação\", o sistema indicou que não era preciso fazer mais nada (por exemplo, \"Já é programador\"), o interruptor principal das Opções de programador está desativado. Abra as Opções de programador, ative o interruptor no topo e volte a esta aplicação.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },

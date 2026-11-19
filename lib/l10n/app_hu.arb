@@ -1302,7 +1302,7 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "A Fejlesztői beállítások továbbra sem észlelhetők. Ha a rendszer azt jelzi, hogy Ön már fejlesztő (vagy a Fejlesztői beállítások már megjelennek), akkor a Fejlesztői beállítások kapcsolója ki van kapcsolva. Nyissa meg a Fejlesztői beállításokat, kapcsolja be a legfelső kapcsolót, majd térjen vissza ebbe az alkalmazásba.",
+  "setupDevOptionsUndetected": "A Fejlesztői beállítások továbbra is ki vannak kapcsolva. Ha a „Buildszám” koppintásakor a rendszer azt jelezte, hogy nincs több teendő (például „Ön már fejlesztő”), akkor a Fejlesztői beállítások főkapcsolója ki van kapcsolva. Nyissa meg a Fejlesztői beállításokat, kapcsolja be a legfelső kapcsolót, majd térjen vissza ebbe az alkalmazásba.",
   "@setupDevOptionsUndetected": {
     "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
