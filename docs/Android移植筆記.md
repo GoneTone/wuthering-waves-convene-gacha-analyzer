@@ -201,6 +201,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 系統設定沒有公開「無線偵錯」頁的 Activity。但快速設定磚長按的入口可以用：送 `android.service.quicksettings.action.QS_TILE_PREFERENCES`，**只指定套件 `com.android.settings`、不要寫死類別**（接這個 action 的 Activity 各版本名稱不同：Android 13 是 `Settings$DevelopmentSettingsDashboardActivity`，ASUS Android 16 是 `Settings$DevelopmentSettingsActivity`；系統介面處理磚長按時也是只指定套件），並帶 `Intent.EXTRA_COMPONENT_NAME = com.android.settings/.development.qstile.DevelopmentTiles$WirelessDebugging`，就會直接開「無線偵錯」頁。這不是公開保證的介面，其他廠牌要另外驗證。
 - **這個 intent 一定要加 `FLAG_ACTIVITY_NO_HISTORY`**：開發人員選項處理完磚的 intent 後會留在無線偵錯頁底下，每次回到它（例如橫向 App 跳過去、返回時被重建）都會再開一次無線偵錯頁，玩家按返回永遠回不到 App。加上 NO_HISTORY 讓它開完頁面就結束，返回一次就回到 App。退回開發人員選項的那條路沒有這個問題。
 - Shizuku 的做法是開 `Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS`，帶 `":settings:fragment_args_key" = "toggle_adb_wireless"`，系統會捲到「無線偵錯」那一項。把這個參數也加在上面的 intent 上，系統不認得直接開頁時，至少會捲到正確位置。
+- **開發人員選項關閉時，`ACTION_APPLICATION_DEVELOPMENT_SETTINGS` 不會找不到 Activity**（2026-11-19，Android 14 模擬器）：AOSP 會把它導到 `development.DevelopmentSettingsDisabledActivity`，只跳「無法使用」的提示就關掉，`startActivity` 照樣成功。所以退回這條路之前要先 `resolveActivity` 看解析結果，是這個類別就當成開不了，畫面提示玩家確認開發人員選項（磚的入口則是直接找不到 Activity，`startActivity` 會丟例外）。
 - 用 `adb shell am start` 測試時，PowerShell 要注意 `$` 的跳脫：在雙引號字串裡用 `` `$ ``，不要用 `\$`，否則 `\` 會被原樣送到手機上，導致找不到 Activity。
 
 **配對期間的前景服務**
@@ -208,7 +209,7 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - 服務類型用 `shortService`（Android 14 起）：不需要額外的類型權限，上限約 3 分鐘。比 `connectedDevice` 單純，後者在 Android 14 還要另外宣告前置權限。
 - 通知的 RemoteInput 回覆要用 `PendingIntent.getForegroundService`（`FLAG_MUTABLE`）送回服務；服務每次收到指令都要再呼叫一次 `startForeground`。
 - 服務用 NsdManager 找 `_adb-tls-pairing._tcp` 取得配對連接埠，玩家只要輸入 6 位數。配對碼經 MethodChannel 交給 Dart，由 `flutter_adb` 的 `AdbPairing.pair` 完成。實測找到連接埠後約 2 秒配對成功。
-- **Shizuku 沒有處理 3 分鐘逾時**（沒覆寫 `onTimeout`，「重試」按鈕的程式碼被註解掉了）。我們的做法：確認開發人員選項已開啟、通知也已允許後才啟動服務（Android 13 起通知要另外要求權限，沒允許的話玩家看不到輸入配對碼的通知）；服務自己計時 3 分鐘（`TIMEOUT_MS`），逾時就停止服務並發通知讓玩家重新開始。各版本行為一致：`shortService` 的系統上限只在 Android 14 以上才有，Android 11～13 沒有系統逾時。
+- **Shizuku 沒有處理 3 分鐘逾時**（沒覆寫 `onTimeout`，「重試」按鈕的程式碼被註解掉了）。我們的做法：確認開發人員選項已開啟（玩家回到 App 仍偵測不到時可以略過，見下方「開發人員選項的偵測」）、通知也已允許後才啟動服務（Android 13 起通知要另外要求權限，沒允許的話玩家看不到輸入配對碼的通知）；服務自己計時 3 分鐘（`TIMEOUT_MS`），逾時就停止服務並發通知讓玩家重新開始。各版本行為一致：`shortService` 的系統上限只在 Android 14 以上才有，Android 11～13 沒有系統逾時。
 - NSD 找到的配對服務只採用本機位址（loopback 或本機網卡位址），區網內其他裝置也可能正在配對。啟動服務時先清掉上一次的結果通知。
 
 **一鍵恢復與重開機**
@@ -270,7 +271,13 @@ encore API 回傳的圖片網址變成 `https://api-v2.encore.moe/api/resource/.
 - **`adb shell input text` 會受輸入法影響**：注音輸入法下數字會變成注音符號，要先切到數字鍵盤再點按鍵。`&` 在裝置 shell 的雙引號內不需要跳脫，加了 `\` 會被原樣輸入。
 - **ROG 手機閒置時可能自動進入「鎖定觸控模式」**，要雙指上滑才能解除，adb 做不到，需要人工操作。
 - **Android 13 模擬器要用 `-gpu host` 啟動**：用 `swiftshader_indirect`（即使加 `-feature -Vulkan`）時，一打開 Flutter App 模擬器就會 Segmentation fault；API 28／29 沒有這個問題。
-- **用 `settings put global development_settings_enabled 1` 開開發人員選項不完整**：設定 App 不會啟用開發人員選項相關的頁面，直接跳轉會找不到 Activity。測試時要用正規方式（連點版本號碼 7 次）。
+- **用 `settings put global development_settings_enabled 1` 開開發人員選項不完整**：設定 App 不會啟用開發人員選項相關的頁面，直接跳轉會找不到 Activity。測試時要用正規方式（連點版本號碼 7 次）。值和頁面不一致時，連點版本號碼只會提示「你已經是開發人員」、不會修正；要先 `settings put ... 0` 再連點 7 次才會恢復。
+- **測試「偵測不到開發人員選項」的流程**：`settings put global development_settings_enabled 0` 即可，設定 App 之後會把開發人員選項的頁面一併停用（跟真的關掉一樣）。
+
+**開發人員選項的偵測**（2026-11-19）
+- 讀 `Settings.Global.DEVELOPMENT_SETTINGS_ENABLED` 的原始字串，跟 AOSP 設定 App 一樣「不是 0 就算開啟」，讀到的值會記進 log（`capture.android`）。
+- 有玩家回報 vivo X200 FE（OriginOS 7、Android 17）連點版本號碼後系統提示「已顯示開發人員選項入口，無需進行此操作」，App 卻一直停在步驟 1。原因未確認（沒有 vivo 實機，網路上也查不到相關說明）。Shizuku 完全不讀這個值，只提供跳到開發人員選項的按鈕。
+- 我們保留偵測（原生 Android 上會自動跳下一步），但玩家回到 App 仍偵測不到時，步驟 1 會多出「已經開啟了，繼續」可以略過。略過後如果其實沒開，步驟 3 開不了「無線偵錯」頁會提示玩家確認，而不是停在等待配對碼。
 
 ---
 
