@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Geliştirici seçenekleri hâlâ algılanamıyor. Açık olduğundan eminseniz yine de devam edebilirsiniz.",
+  "setupDevOptionsUndetected": "Geliştirici seçenekleri hâlâ algılanamıyor. Sistem zaten geliştirici olduğunuzu (veya Geliştirici seçeneklerinin zaten gösterildiğini) söylüyorsa Geliştirici seçenekleri anahtarı kapalıdır. Geliştirici seçeneklerini açın, en üstteki anahtarı açın ve ardından bu uygulamaya dönün.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "Açık, devam et",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Hakkında sayfasını aç",
   "@setupOpenAbout": {

@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Οι επιλογές για προγραμματιστές εξακολουθούν να μην εντοπίζονται. Αν είστε βέβαιοι ότι είναι ενεργοποιημένες, μπορείτε να συνεχίσετε.",
+  "setupDevOptionsUndetected": "Οι επιλογές για προγραμματιστές εξακολουθούν να μην εντοπίζονται. Αν το σύστημα αναφέρει ότι είστε ήδη προγραμματιστής (ή ότι οι επιλογές για προγραμματιστές εμφανίζονται ήδη), ο διακόπτης των επιλογών για προγραμματιστές είναι απενεργοποιημένος. Ανοίξτε τις Επιλογές για προγραμματιστές, ενεργοποιήστε τον διακόπτη στο επάνω μέρος και επιστρέψτε σε αυτή την εφαρμογή.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "Είναι ενεργοποιημένες, συνέχεια",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Άνοιγμα σελίδας «Σχετικά»",
   "@setupOpenAbout": {

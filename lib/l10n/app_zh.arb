@@ -1067,13 +1067,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "還是偵測不到開發人員選項。如果你確定已經開啟，可以直接繼續。",
+  "setupDevOptionsUndetected": "還是偵測不到開發人員選項。如果系統提示你已經是開發人員（或已顯示開發人員選項），代表開發人員選項的開關被關掉了，請到「開發人員選項」把最上方的開關打開，再回到本 App。",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "已經開啟了，繼續",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "開啟「關於」頁面",
   "@setupOpenAbout": {

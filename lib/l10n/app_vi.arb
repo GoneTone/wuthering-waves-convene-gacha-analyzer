@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Vẫn chưa phát hiện Tùy chọn cho nhà phát triển. Nếu bạn chắc chắn đã bật, bạn vẫn có thể tiếp tục.",
+  "setupDevOptionsUndetected": "Vẫn chưa phát hiện Tùy chọn cho nhà phát triển. Nếu hệ thống báo bạn đã là nhà phát triển (hoặc Tùy chọn cho nhà phát triển đã hiển thị), nghĩa là công tắc Tùy chọn cho nhà phát triển đang tắt. Hãy mở Tùy chọn cho nhà phát triển, bật công tắc trên cùng rồi quay lại ứng dụng này.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "Đã bật, tiếp tục",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Mở trang Giới thiệu",
   "@setupOpenAbout": {

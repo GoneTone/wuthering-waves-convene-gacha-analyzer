@@ -31,8 +31,6 @@ class _Ctl extends AdbPairingController {
   @override
   Future<void> retryGrant() async => calls.add('retryGrant');
   @override
-  Future<void> skipDevOptionsCheck() async => calls.add('skipDevOptions');
-  @override
   void skipGrant() => state = state.copyWith(phase: PairingPhase.doneManual);
 
   /// 測試直接切換階段。
@@ -128,14 +126,15 @@ void main() {
     expect(platform.calls, ['about']);
   });
 
-  testWidgets('dev options escape shows only when still undetected', (
+  testWidgets('dev options switch hint shows only when still undetected', (
     tester,
   ) async {
     final l = await pump(
       tester,
       const AdbPairingState(PairingPhase.needDevOptions),
     );
-    expect(find.text(l.setupDevOptionsContinue), findsNothing);
+    expect(find.text(l.setupDevOptionsUndetected), findsNothing);
+    expect(find.text(l.setupOpenDeveloperOptions), findsNothing);
 
     ctl.state = const AdbPairingState(
       PairingPhase.needDevOptions,
@@ -143,8 +142,8 @@ void main() {
     );
     await tester.pump();
     expect(find.text(l.setupDevOptionsUndetected), findsOneWidget);
-    await tester.tap(find.text(l.setupDevOptionsContinue));
-    expect(ctl.calls, contains('skipDevOptions'));
+    await tester.tap(find.text(l.setupOpenDeveloperOptions));
+    expect(platform.calls, ['dev']);
   });
 
   testWidgets('notifications step asks, then offers settings when denied', (

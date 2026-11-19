@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Ontwikkelaarsopties worden nog steeds niet gedetecteerd. Weet je zeker dat ze aanstaan, dan kun je toch doorgaan.",
+  "setupDevOptionsUndetected": "Ontwikkelaarsopties worden nog steeds niet gedetecteerd. Zegt het systeem dat je al ontwikkelaar bent (of dat Ontwikkelaarsopties al worden getoond), dan staat de schakelaar van Ontwikkelaarsopties uit. Open Ontwikkelaarsopties, zet de schakelaar bovenaan aan en ga dan terug naar deze app.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "Ze staan aan, doorgaan",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Pagina Over openen",
   "@setupOpenAbout": {

@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Les Options pour les développeurs ne sont toujours pas détectées. Si vous êtes sûr qu'elles sont activées, vous pouvez continuer quand même.",
+  "setupDevOptionsUndetected": "Les Options pour les développeurs ne sont toujours pas détectées. Si le système indique que vous êtes déjà développeur (ou que les Options pour les développeurs sont déjà affichées), l'interrupteur des Options pour les développeurs est désactivé. Ouvrez les Options pour les développeurs, activez l'interrupteur en haut, puis revenez à cette application.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "Elles sont activées, continuer",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Ouvrir la page À propos",
   "@setupOpenAbout": {

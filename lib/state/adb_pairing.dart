@@ -54,7 +54,7 @@ class AdbPairingState {
   /// 玩家拒絕過通知權限（畫面改為引導到 App 通知設定）。
   final bool notificationsDenied;
 
-  /// 玩家回到 App 後仍偵測不到開發人員選項（畫面提供略過檢查的出口）。
+  /// 玩家回到 App 後仍偵測不到開發人員選項（畫面改提示總開關可能被關掉）。
   final bool devOptionsUndetected;
 
   /// 複製並替換指定欄位。
@@ -86,11 +86,8 @@ class AdbPairingController extends Notifier<AdbPairingState> {
   /// 開始設定時無線偵錯是否本來就開著；是的話設定完的那次更新不關它（只關照引導才打開的）。
   bool wirelessWasOnAtStart = false;
 
-  /// 是否已檢查過一次開發人員選項（之後再偵測不到才提供略過的出口）。
+  /// 是否已檢查過一次開發人員選項（之後再偵測不到才顯示總開關的提示）。
   bool _devOptionsChecked = false;
-
-  /// 玩家選擇略過開發人員選項檢查（部分廠牌讀不到正確的狀態）。
-  bool _devOptionsSkipped = false;
 
   /// 切換階段；玩家已離開設定頁（provider 已回收）時忽略。
   void _go(PairingPhase phase) {
@@ -138,9 +135,9 @@ class AdbPairingController extends Notifier<AdbPairingState> {
             PairingPhase.doneManual) {
       return;
     }
-    if (!_devOptionsSkipped &&
-        !await _platform.isDevelopmentSettingsEnabled()) {
-      // 第一次檢查在按「開始設定」時；之後回到 App 仍偵測不到，才提供略過的出口。
+    if (!await _platform.isDevelopmentSettingsEnabled()) {
+      // 第一次檢查在按「開始設定」時；之後回到 App 仍偵測不到，多半是入口還在但總開關被關掉
+      // （例如 vivo 連點版本號碼只會說入口已顯示），才提示玩家去開總開關。
       final undetected = _devOptionsChecked;
       _devOptionsChecked = true;
       if (ref.mounted) {
@@ -173,13 +170,6 @@ class AdbPairingController extends Notifier<AdbPairingState> {
       if (ref.mounted) state = state.copyWith(notificationsDenied: true);
       return;
     }
-    await refresh();
-  }
-
-  /// 玩家確認已開啟開發人員選項、略過偵測：直接進下一步。
-  Future<void> skipDevOptionsCheck() async {
-    _log.info('development settings check skipped by user');
-    _devOptionsSkipped = true;
     await refresh();
   }
 

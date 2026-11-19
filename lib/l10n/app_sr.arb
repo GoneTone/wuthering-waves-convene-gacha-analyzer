@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Опције за програмере и даље нису откривене. Ако сте сигурни да су укључене, ипак можете да наставите.",
+  "setupDevOptionsUndetected": "Опције за програмере и даље нису откривене. Ако систем каже да сте већ програмер (или да се опције за програмере већ приказују), прекидач опција за програмере је искључен. Отворите опције за програмере, укључите прекидач на врху и вратите се у ову апликацију.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "Укључене су, настави",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Отвори „О телефону“",
   "@setupOpenAbout": {

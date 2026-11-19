@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "아직 개발자 옵션이 켜진 것으로 확인되지 않습니다. 켜 둔 것이 확실하다면 그대로 계속할 수 있습니다.",
+  "setupDevOptionsUndetected": "아직 개발자 옵션이 켜진 것으로 확인되지 않습니다. 시스템에서 이미 개발자라고 표시되거나 개발자 옵션이 이미 보인다면, 개발자 옵션 스위치가 꺼져 있는 것입니다. 개발자 옵션을 열어 맨 위의 스위치를 켠 후 이 앱으로 돌아오세요.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "켜져 있음, 계속",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "정보 화면 열기",
   "@setupOpenAbout": {

@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Параметри розробника досі не виявлено. Якщо ви впевнені, що їх увімкнено, можна продовжити.",
+  "setupDevOptionsUndetected": "Параметри розробника досі не виявлено. Якщо система повідомляє, що ви вже розробник (або що «Параметри розробника» вже відображаються), значить перемикач параметрів розробника вимкнено. Відкрийте «Параметри розробника», увімкніть перемикач угорі й поверніться до цього застосунку.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "Їх увімкнено, продовжити",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Відкрити «Про телефон»",
   "@setupOpenAbout": {

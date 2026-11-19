@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Utvikleralternativer blir fortsatt ikke oppdaget. Hvis du er sikker på at de er slått på, kan du fortsette likevel.",
+  "setupDevOptionsUndetected": "Utvikleralternativer blir fortsatt ikke oppdaget. Hvis systemet sier at du allerede er utvikler (eller at Utvikleralternativer allerede vises), er bryteren for Utvikleralternativer slått av. Åpne Utvikleralternativer, slå på bryteren øverst og gå deretter tilbake til denne appen.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "De er slått på, fortsett",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Åpne Om-siden",
   "@setupOpenAbout": {

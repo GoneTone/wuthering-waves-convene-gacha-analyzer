@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Opțiunile dezvoltator încă nu sunt detectate. Dacă sunteți sigur că sunt activate, puteți continua oricum.",
+  "setupDevOptionsUndetected": "Opțiunile dezvoltator încă nu sunt detectate. Dacă sistemul afișează că sunteți deja dezvoltator (sau că Opțiuni dezvoltator sunt deja afișate), comutatorul pentru Opțiuni dezvoltator este dezactivat. Deschideți Opțiuni dezvoltator, activați comutatorul din partea de sus, apoi reveniți în această aplicație.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "Sunt activate, continuă",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Deschide pagina Despre",
   "@setupOpenAbout": {

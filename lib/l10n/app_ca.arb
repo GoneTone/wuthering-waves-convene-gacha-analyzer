@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Encara no es detecten les opcions per a desenvolupadors. Si estàs segur que estan activades, pots continuar igualment.",
+  "setupDevOptionsUndetected": "Encara no es detecten les opcions per a desenvolupadors. Si el sistema diu que ja ets desenvolupador (o que les opcions per a desenvolupadors ja es mostren), l'interruptor de les opcions per a desenvolupadors està desactivat. Obre les opcions per a desenvolupadors, activa l'interruptor de la part superior i torna a aquesta aplicació.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "Ja estan activades, continua",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Obre la pàgina d'informació",
   "@setupOpenAbout": {

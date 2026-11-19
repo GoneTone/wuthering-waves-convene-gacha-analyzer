@@ -169,7 +169,7 @@ void main() {
   });
 
   test(
-    'escape appears only after a re-check still finds dev options off',
+    'switch hint appears only after a re-check still finds dev options off',
     () async {
       platform.dev = false;
       await ctl().startSetup();
@@ -179,16 +179,6 @@ void main() {
       expect(c.read(adbPairingProvider).devOptionsUndetected, isTrue);
     },
   );
-
-  test('skipping the dev options check moves on and sticks', () async {
-    platform.dev = false;
-    await ctl().startSetup();
-    await ctl().refresh();
-    await ctl().skipDevOptionsCheck();
-    expect(phase(), PairingPhase.ready);
-    await ctl().refresh();
-    expect(phase(), PairingPhase.ready);
-  });
 
   test('service is not started until openWirelessDebugging', () async {
     await ctl().startSetup();

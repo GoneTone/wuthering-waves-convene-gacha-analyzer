@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "Indstillinger for udviklere kan stadig ikke registreres. Hvis du er sikker på, at de er slået til, kan du fortsætte alligevel.",
+  "setupDevOptionsUndetected": "Indstillinger for udviklere kan stadig ikke registreres. Hvis systemet siger, at du allerede er udvikler (eller at Indstillinger for udviklere allerede vises), er kontakten til Indstillinger for udviklere slået fra. Åbn Indstillinger for udviklere, slå kontakten øverst til, og vend derefter tilbage til denne app.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "De er slået til, fortsæt",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "Åbn siden Om",
   "@setupOpenAbout": {

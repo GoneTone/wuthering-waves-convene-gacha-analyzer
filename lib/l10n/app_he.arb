@@ -1302,13 +1302,9 @@
   "@setupStepDevOptionsBody": {
     "description": "Pairing guide step 1 instructions. Keep the line breaks."
   },
-  "setupDevOptionsUndetected": "האפשרויות למפתחים עדיין לא מזוהות. אם אתם בטוחים שהן מופעלות, אפשר להמשיך בכל זאת.",
+  "setupDevOptionsUndetected": "האפשרויות למפתחים עדיין לא מזוהות. אם המערכת מציינת שכבר הפכתם למפתחים (או שהאפשרויות למפתחים כבר מוצגות), המתג של האפשרויות למפתחים כבוי. פתחו את האפשרויות למפתחים, הפעילו את המתג שבראש המסך וחזרו לאפליקציה.",
   "@setupDevOptionsUndetected": {
-    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still not detected (some brands report it wrongly)."
-  },
-  "setupDevOptionsContinue": "הן מופעלות, להמשיך",
-  "@setupDevOptionsContinue": {
-    "description": "Pairing guide step 1 button that skips the developer options check."
+    "description": "Pairing guide step 1 hint shown after the user returns to the app and developer options are still off: the entry can stay visible while the developer options switch is off, so tell them to turn that switch on."
   },
   "setupOpenAbout": "פתיחת דף המידע",
   "@setupOpenAbout": {

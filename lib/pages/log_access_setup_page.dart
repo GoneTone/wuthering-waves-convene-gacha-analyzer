@@ -158,9 +158,10 @@ class _LogAccessSetupPageState extends ConsumerState<LogAccessSetupPage> {
                 if (s.devOptionsUndetected) ...[
                   const SizedBox(height: AppSpacing.m),
                   Text(l.setupDevOptionsUndetected, style: warning),
-                  TextButton(
-                    onPressed: ctl.skipDevOptionsCheck,
-                    child: Text(l.setupDevOptionsContinue),
+                  const SizedBox(height: AppSpacing.s),
+                  OutlinedButton(
+                    onPressed: platform.openDeveloperOptions,
+                    child: Text(l.setupOpenDeveloperOptions),
                   ),
                 ],
               ],
