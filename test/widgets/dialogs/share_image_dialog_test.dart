@@ -12,6 +12,7 @@ Widget _host(
   void Function(({ShareImageOptions options, ShareImageAction action})? r)
   onResult, {
   bool android = false,
+  Locale locale = const Locale('zh'),
 }) {
   return ProviderScope(
     overrides: [isAndroidProvider.overrideWithValue(android)],
@@ -19,7 +20,7 @@ Widget _host(
       theme: buildDarkTheme(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('zh'),
+      locale: locale,
       home: Builder(
         builder: (ctx) => Scaffold(
           body: Center(
@@ -109,4 +110,34 @@ void main() {
     final l = await AppLocalizations.delegate.load(const Locale('zh'));
     expect(find.text(l.actionShare), findsNothing);
   });
+
+  for (final size in const [Size(360, 800), Size(800, 360)]) {
+    for (final locale in const [
+      Locale('zh', 'Hant'),
+      Locale('en'),
+      Locale('fr'),
+    ]) {
+      testWidgets('Android share image buttons fit $size in $locale', (
+        t,
+      ) async {
+        t.view.physicalSize = size;
+        t.view.devicePixelRatio = 1;
+        addTearDown(t.view.reset);
+        await t.pumpWidget(_host((_) {}, android: true, locale: locale));
+        await t.tap(find.text('open'));
+        await t.pumpAndSettle();
+
+        final l = lookupAppLocalizations(locale);
+        expect(t.takeException(), isNull);
+        for (final label in [
+          l.actionCancel,
+          l.actionCopyImage,
+          l.actionShare,
+          l.actionSaveImage,
+        ]) {
+          expect(find.text(label), findsOneWidget, reason: label);
+        }
+      });
+    }
+  }
 }

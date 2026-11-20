@@ -96,6 +96,7 @@ Future<bool?> showConfirmDialog({
             )
           : null;
       return AppDialog(
+        scrollable: true,
         title: Text(title),
         content: Text(body),
         actions: [
@@ -179,6 +180,7 @@ class _ConfirmDialogState extends State<_ConfirmDialog> {
     final matches = _ctrl.text == widget.expectedText;
     return AppDialog(
       // size 預設 sm，符合短訊息語意，不必顯式傳。
+      scrollable: true,
       title: Text(widget.title),
       content: Column(
         mainAxisSize: MainAxisSize.min,
