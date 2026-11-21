@@ -479,7 +479,7 @@ class LogAccessResolver {
         'client log missing game=$game found=${found.split('\n').join(' | ')}',
       );
     } on Object catch (e) {
-      _log.info('client log missing check failed error=${e.runtimeType}');
+      _log.info('client log missing check failed', e);
     }
   }
 }

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -48,8 +47,8 @@ class PollingClientLogWatch implements ClientLogWatch {
       id = p.id;
     } on Object catch (e) {
       _log.warning(
-        'client log baseline failed source=${source.logLabel} '
-        '${_describe(e)}; using offset=0',
+        'client log baseline failed source=${source.logLabel}; using offset=0',
+        e,
       );
     }
     var carry = Uint8List(0);
@@ -119,9 +118,7 @@ class PollingClientLogWatch implements ClientLogWatch {
         }
         handle(scan.cred, scan.tail, scan.rejected);
       } on Object catch (e) {
-        _log.warning(
-          'client log read failed source=${source.logLabel} ${_describe(e)}',
-        );
+        _log.warning('client log read failed source=${source.logLabel}', e);
       } finally {
         polling = false;
       }
@@ -153,11 +150,6 @@ const _maxCarryBytes = 1024 * 1024;
 
 /// 換行字元（解碼後）。
 const _newline = 0x0A;
-
-/// 描述例外但不含原始路徑（`FileSystemException.toString()` 會帶路徑）。
-String _describe(Object e) => e is FileSystemException
-    ? 'os=${e.osError?.message}'
-    : 'error=${e.runtimeType}';
 
 /// [scanClientLogBackward] 的結果：最新的合法憑證、區間最後一段還沒換行的內容（已解碼）、被拒網址的原因。
 typedef ClientLogBackwardScan = ({

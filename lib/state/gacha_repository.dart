@@ -457,7 +457,7 @@ class GachaRepository extends Notifier<GachaState> {
       } catch (e) {
         // 攔截出錯（例如 UAC 被拒）：改為只等 log（沒有 log 時提示使用者選資料夾）。
         if (!await _canWaitLogOnly(logStart)) rethrow;
-        _clientLog.warning('capture failed error=${e.runtimeType}');
+        _clientLog.warning('capture failed', e);
         captureFinished = true;
         (cred, fromLog) = await _waitLogOnly(isFallback, logHit, waitCancelled);
       }
@@ -761,10 +761,7 @@ class GachaRepository extends Notifier<GachaState> {
   void _queueAndroidTeardown(Future<void> teardown, String what) {
     final chained = Future.wait<void>([
       ?_androidTeardown,
-      teardown.catchError(
-        (Object e) =>
-            _androidLog.warning('$what failed error=${e.runtimeType}'),
-      ),
+      teardown.catchError((Object e) => _androidLog.warning('$what failed', e)),
     ]);
     _androidTeardown = chained;
     unawaited(
@@ -799,7 +796,7 @@ class GachaRepository extends Notifier<GachaState> {
     try {
       await (await starting)?.cancel();
     } catch (e) {
-      _clientLog.warning('client log watch stop failed error=${e.runtimeType}');
+      _clientLog.warning('client log watch stop failed', e);
     }
     final leftOn = await ready.release();
     // 連上時可能順便補回授權，設定頁的配對狀態要重讀。
@@ -882,9 +879,7 @@ class GachaRepository extends Notifier<GachaState> {
       _syncLogOnlyNotice();
     } catch (e) {
       // FileSystemException 的字串會帶原始路徑，只記型別。
-      _clientLog.warning(
-        'client log watch start failed error=${e.runtimeType}',
-      );
+      _clientLog.warning('client log watch start failed', e);
     }
   }
 
@@ -910,7 +905,7 @@ class GachaRepository extends Notifier<GachaState> {
     try {
       await watch?.cancel();
     } catch (e) {
-      _clientLog.warning('client log watch stop failed error=${e.runtimeType}');
+      _clientLog.warning('client log watch stop failed', e);
     }
   }
 
