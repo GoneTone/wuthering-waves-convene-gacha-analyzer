@@ -122,6 +122,8 @@
       }
     }
   },
+  "emptyNoRecords": "Nessun record per questo banner",
+  "emptyNoFilterMatch": "Nessun record corrisponde al filtro attuale",
   "emptyNoGachaRecords": "Nessuna convocazione registrata",
   "statsTotal": "Tiri totali",
   "statsRankCount": "Numero di {star}",
@@ -264,6 +266,14 @@
       }
     }
   },
+  "progressDoneSummary": "{count, plural, one{Aggiunto {count} nuovo record} other{Aggiunti {count} nuovi record}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, one{Scaricata {count} immagine oggetto} other{Scaricate {count} immagini oggetto}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -328,10 +338,12 @@
     }
   },
   "errorGachaFailed": "Impossibile recuperare i record anche dopo una nuova acquisizione. Il server potrebbe essere temporaneamente non disponibile, riprova più tardi.",
+  "errorNoRecords": "Questo account non ha ancora convocazioni registrate",
   "errorNetwork": "Connessione di rete non riuscita. Controlla la connessione e riprova.",
   "errorUnexpected": "Si è verificato un errore imprevisto. Riprova più tardi.",
   "pageOverviewTitle": "Panoramica (tutti i banner)",
   "pageOverviewGachaSection": "Panoramica convocazioni",
+  "pageBannerRecordList": "Elenco record",
   "rarityOverviewTitle": "Panoramica {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -521,6 +533,14 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineNoRecordsForRank": "Nessun {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
         "type": "String"
       }
     }
@@ -802,6 +822,18 @@
     }
   },
   "settingsImportConfirmTitle": "Conferma importazione",
+  "settingsImportConfirmIntro": "Stai per importare {accounts} account ({records} record in totale):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportConfirmMergeHeader": "I seguenti account verranno uniti ai dati locali; i record esistenti non verranno eliminati:",
   "settingsImportConfirmNoConflict": "Nessun conflitto di dati.",
   "settingsImportConfirmPreserveFooter": "Gli altri account esistenti ({uids}) verranno mantenuti.",
   "@settingsImportConfirmPreserveFooter": {
@@ -836,6 +868,14 @@
   "settingsImportSelectTitle": "Seleziona gli account da importare",
   "settingsImportMergeBadge": "Unisci",
   "accountsPickerSelectAll": "Seleziona tutto",
+  "accountRecordCount": "{n} record",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Conferma",
   "confirmClearActiveBody": "Verranno eliminate definitivamente tutte le convocazioni dell'UID {uid}. Digita l'UID per confermare:",
   "@confirmClearActiveBody": {
