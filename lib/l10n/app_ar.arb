@@ -122,6 +122,8 @@
       }
     }
   },
+  "emptyNoRecords": "لا توجد سجلات لهذا البانر",
+  "emptyNoFilterMatch": "لا توجد سجلات تطابق عامل التصفية الحالي",
   "emptyNoGachaRecords": "لا توجد سجلات استدعاء بعد",
   "statsTotal": "إجمالي السحبات",
   "statsRankCount": "عدد {star}",
@@ -264,6 +266,14 @@
       }
     }
   },
+  "progressDoneSummary": "{count, plural, zero{لم تتم إضافة سجلات جديدة} one{تمت إضافة سجل جديد واحد} two{تمت إضافة سجلين جديدين} few{تمت إضافة {count} سجلات جديدة} many{تمت إضافة {count} سجلًا جديدًا} other{تمت إضافة {count} سجل جديد}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, zero{لم يتم تنزيل أي صور للعناصر} one{تم تنزيل صورة عنصر واحدة} two{تم تنزيل صورتين للعناصر} few{تم تنزيل {count} صور للعناصر} many{تم تنزيل {count} صورة للعناصر} other{تم تنزيل {count} صورة للعناصر}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -328,10 +338,12 @@
     }
   },
   "errorGachaFailed": "تعذّر جلب السجلات حتى بعد إعادة الالتقاط. قد يكون الخادم غير متاح مؤقتًا، يُرجى المحاولة لاحقًا.",
+  "errorNoRecords": "لا توجد سجلات استدعاء لهذا الحساب بعد",
   "errorNetwork": "فشل الاتصال بالشبكة. يُرجى التحقق من اتصالك والمحاولة مجددًا.",
   "errorUnexpected": "حدث خطأ غير متوقع. يُرجى المحاولة لاحقًا.",
   "pageOverviewTitle": "نظرة عامة (كل البانرات)",
   "pageOverviewGachaSection": "نظرة عامة على الاستدعاء",
+  "pageBannerRecordList": "قائمة السجلات",
   "rarityOverviewTitle": "نظرة عامة على {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -521,6 +533,14 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineNoRecordsForRank": "لا توجد سجلات {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
         "type": "String"
       }
     }
@@ -802,6 +822,18 @@
     }
   },
   "settingsImportConfirmTitle": "تأكيد الاستيراد",
+  "settingsImportConfirmIntro": "سيتم استيراد {accounts, plural, zero{0 حساب} one{حساب واحد} two{حسابين} few{{accounts} حسابات} many{{accounts} حسابًا} other{{accounts} حساب}} (إجمالي السجلات: {records}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportConfirmMergeHeader": "سيتم دمج الحسابات التالية مع البيانات المحلية دون حذف السجلات الموجودة:",
   "settingsImportConfirmNoConflict": "لا توجد تعارضات في البيانات.",
   "settingsImportConfirmPreserveFooter": "سيتم الاحتفاظ بالحسابات الأخرى الموجودة ({uids}).",
   "@settingsImportConfirmPreserveFooter": {
@@ -836,6 +868,14 @@
   "settingsImportSelectTitle": "اختر الحسابات المراد استيرادها",
   "settingsImportMergeBadge": "دمج",
   "accountsPickerSelectAll": "تحديد الكل",
+  "accountRecordCount": "{n, plural, zero{لا توجد سجلات} one{سجل واحد} two{سجلان} few{{n} سجلات} many{{n} سجلًا} other{{n} سجل}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "تأكيد",
   "confirmClearActiveBody": "سيؤدي هذا إلى حذف كل سجلات الاستدعاء الخاصة بـ UID {uid} نهائيًا. اكتب UID للتأكيد:",
   "@confirmClearActiveBody": {
