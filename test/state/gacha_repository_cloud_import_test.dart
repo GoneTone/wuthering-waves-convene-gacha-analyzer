@@ -151,4 +151,42 @@ void main() {
       throwsA(isA<CloudSyncBusyException>()),
     );
   });
+
+  test(
+    '每一種進行中的 progress 都讓 importBundleForCloudSync 拋 CloudSyncBusyException',
+    () async {
+      const inFlight = <UpdateProgress>[
+        Preparing(),
+        WaitingForCapture(),
+        FetchingBanner(
+          displayName: 'x',
+          poolIndex: 1,
+          poolCount: 10,
+          newRecordsSoFar: 0,
+        ),
+        FetchingItemImages(
+          phase: ItemImagePhase.checking,
+          doneCount: 0,
+          totalCount: 1,
+        ),
+        FetchingItemImages(
+          phase: ItemImagePhase.downloading,
+          doneCount: 0,
+          totalCount: 1,
+        ),
+      ];
+      final container = makeContainer();
+      final repo = container.read(gachaRepositoryProvider.notifier);
+      await repo.waitForBootstrap();
+
+      for (final progress in inFlight) {
+        repo.debugSetProgress(progress);
+        await expectLater(
+          repo.importBundleForCloudSync(_bundle('800000001')),
+          throwsA(isA<CloudSyncBusyException>()),
+          reason: '${progress.runtimeType}',
+        );
+      }
+    },
+  );
 }
