@@ -511,33 +511,6 @@ void main() {
     expect(container.read(settingsProvider).uidAliases['100000001'], '主帳');
   });
 
-  test('同步輪失敗的 log 不帶 playerId、路徑與例外物件', () async {
-    final records = <LogRecord>[];
-    final sub = Logger.root.onRecord
-        .where((r) => r.loggerName == 'cloudsync.sync')
-        .listen(records.add);
-    addTearDown(sub.cancel);
-    final storage = GachaStorage(tempDir);
-    await storage.save(_localBannerStorage('800000001'));
-    remote.content = _cloudBundleJson('800000001');
-    final container = makeContainer();
-    await container.read(settingsProvider.notifier).waitForLoad();
-    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
-    final notifier = container.read(cloudSyncProvider.notifier);
-    await notifier.link();
-
-    storage.recordsFile('800000001').writeAsStringSync('{ not json');
-    await notifier.syncNow(manual: true);
-
-    final failed = records.singleWhere(
-      (r) => r.message.startsWith('sync round failed'),
-    );
-    expect(failed.error, isNull);
-    expect(failed.stackTrace, isNotNull);
-    expect(failed.message, isNot(contains('800000001')));
-    expect(failed.message, isNot(contains(tempDir.path)));
-  });
-
   test('上傳內容同時含有記錄檔的帳號（背景讀檔）與只在記憶體的帳號', () async {
     final onDisk = _localBannerStorage('100000001');
     await GachaStorage(tempDir).save(onDisk);
@@ -994,9 +967,7 @@ void main() {
     final failedAt = messages.indexWhere(
       (m) => m.startsWith('dataChange check failed'),
     );
-    expect(errors[failedAt], isNull);
-    expect(messages[failedAt], isNot(contains('800000001')));
-    expect(messages[failedAt], isNot(contains(tempDir.path)));
+    expect(errors[failedAt], isA<FormatException>());
 
     file.writeAsStringSync(good);
     repo.debugSeedAccount(_localBannerStorage('800000003'));

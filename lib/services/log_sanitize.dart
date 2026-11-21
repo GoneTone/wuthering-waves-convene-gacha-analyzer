@@ -1,11 +1,4 @@
 import 'dart:convert';
-import 'dart:io' show FileSystemException, SocketException;
-
-import 'package:flutter/services.dart' show PlatformException;
-import 'package:google_sign_in/google_sign_in.dart' show GoogleSignInException;
-import 'package:googleapis/drive/v3.dart' show DetailedApiRequestError;
-import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart'
-    show GachaApiException;
 
 /// 把 authkey / authkey_ver / sign_type / game_biz 等敏感 query value 改成 `***`,
 /// 其餘 query 保留。malformed URL 回 `<malformed url>`。
@@ -40,14 +33,33 @@ String sanitizeUid(String uid) {
   return '${uid.substring(0, 3)}****${uid.substring(uid.length - 3)}';
 }
 
-/// 掃描自由文字 log 訊息中內嵌的 http(s) URL,逐段套 [sanitizeUrl] 後原位替換,
-/// 非 URL 內容原樣保留。Rust log 跨橋進 Dart 時統一呼叫,作為單一脫敏匣道,
-/// 避免在 Rust 端複製脫敏邏輯。
-String sanitizeLogMessage(String message) {
-  // log 訊息中 URL 皆為末段或後接空白,以非空白序列界定 token 邊界即足夠。
-  final urlPattern = RegExp(r'https?://\S+', caseSensitive: false);
-  return message.replaceAllMapped(urlPattern, (m) => sanitizeUrl(m.group(0)!));
-}
+/// log 文字中的 http(s) 網址；網址皆為末段或後接空白，以非空白序列界定邊界即足夠。
+final _urlPattern = RegExp(r'https?://\S+', caseSensitive: false);
+
+/// log 文字中任意位置的家目錄路徑：group(1) 是保留的前綴，group(2) 是使用者名稱。
+///
+/// 涵蓋 `C:\Users\<name>`、`file:///C:/Users/<name>`、`/Users/<name>`、`/home/<name>`；
+/// 斜線開頭的形式要求前面不是網址或路徑片段，避免誤遮 `https://host/home/...`。
+final _homeDirPattern = RegExp(
+  r'''((?:[A-Za-z]:|(?<![\w.%:-]))[\\/](?:Users|home)[\\/])([^\\/'"\r\n]+)''',
+  caseSensitive: false,
+);
+
+/// 記錄檔與憑證檔檔名（`<playerId>.records.json`、`<playerId>.cred.json`，含 `.tmp`）裡的 playerId：group(1) 是路徑分隔符號。
+final _uidFilePattern = RegExp(r'([\\/])(\d{6,})(?=\.(?:records|cred)\.json)');
+
+/// 把要寫進 log 的整段文字脫敏：網址套 [sanitizeUrl]、家目錄的使用者名稱換成 `***`、
+/// 記錄檔名裡的 playerId 套 [sanitizeUid]，其餘內容原樣保留。
+///
+/// `LogService` 寫入每一筆 log 前統一呼叫，涵蓋訊息、例外物件與 stack trace，
+/// 呼叫端照常把例外物件傳給 `Logger` 即可。
+String sanitizeLogMessage(String message) => message
+    .replaceAllMapped(_urlPattern, (m) => sanitizeUrl(m.group(0)!))
+    .replaceAllMapped(_homeDirPattern, (m) => '${m.group(1)}***')
+    .replaceAllMapped(
+      _uidFilePattern,
+      (m) => '${m.group(1)}${sanitizeUid(m.group(2)!)}',
+    );
 
 /// 把檔案路徑內的 home 段 username 換成 `***`，避免 log 洩漏使用者名稱。
 ///
@@ -102,21 +114,4 @@ String sanitizeCredential(String bodyJson) {
 String _maskHash(String raw) {
   if (raw.length < 9) return '***';
   return '${raw.substring(0, 4)}****${raw.substring(raw.length - 4)}';
-}
-
-/// 回傳可安全寫進 log 的錯誤摘要：型別，加上少數已知型別的非敏感代碼
-/// （檔案／socket 的系統錯誤碼、Drive API 狀態碼、喚取 API code、Google 授權與 platform channel 的錯誤代碼）。
-///
-/// 例外訊息可能帶完整檔案路徑（含使用者名稱、playerId）、檔案內容片段或網址，不可直接寫進 log。
-String describeErrorForLog(Object e) {
-  final detail = switch (e) {
-    FileSystemException(:final osError?) => 'os=${osError.errorCode}',
-    SocketException(:final osError?) => 'os=${osError.errorCode}',
-    DetailedApiRequestError(:final status?) => 'status=$status',
-    GachaApiException(:final code) => 'code=$code',
-    GoogleSignInException(:final code) => 'code=${code.name}',
-    PlatformException(:final code) => 'code=$code',
-    _ => null,
-  };
-  return 'error=${e.runtimeType}${detail == null ? '' : ' $detail'}';
 }

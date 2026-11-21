@@ -159,22 +159,6 @@ void main() {
     expect(banners.containsKey('301'), isFalse);
   });
 
-  test('invalid JSON 的 log 不含檔案內容', () {
-    final records = <LogRecord>[];
-    final sub = Logger.root.onRecord.listen(records.add);
-    addTearDown(sub.cancel);
-
-    expect(
-      () => importAccounts('SECRET-CONTENT-800000001'),
-      throwsA(isA<FormatException>()),
-    );
-
-    final warning = records.singleWhere((r) => r.level == Level.WARNING);
-    expect(warning.message, contains('invalid JSON error=FormatException'));
-    expect(warning.message, isNot(contains('SECRET')));
-    expect(warning.error, isNull);
-  });
-
   test('duplicate playerId 的 log 不含完整 playerId', () {
     final records = <LogRecord>[];
     final sub = Logger.root.onRecord.listen(records.add);

@@ -377,18 +377,14 @@ class GachaRepository extends Notifier<GachaState> {
             state = state.copyWith(clearProgress: true);
           } else {
             _log.warning(
-              'http client error (post-recapture) ${describeErrorForLog(e2)}'
+              'http client error (post-recapture): ${e2.message}'
               '${e2.uri != null ? " uri=${sanitizeUrl(e2.uri!.toString())}" : ""}',
             );
             state = state.copyWith(progress: UpdateFailed(_friendlyError(e2)));
           }
         } catch (e2, st) {
           if (!ref.mounted) return;
-          _log.severe(
-            'update unexpected error (post-recapture) ${describeErrorForLog(e2)}',
-            null,
-            st,
-          );
+          _log.severe('update unexpected error (post-recapture)', e2, st);
           state = state.copyWith(progress: UpdateFailed(_friendlyError(e2)));
         }
       } on _NoRecordsException {
@@ -403,28 +399,20 @@ class GachaRepository extends Notifier<GachaState> {
           state = state.copyWith(clearProgress: true);
         } else {
           _log.warning(
-            'http client error ${describeErrorForLog(e)}'
+            'http client error: ${e.message}'
             '${e.uri != null ? " uri=${sanitizeUrl(e.uri!.toString())}" : ""}',
           );
           state = state.copyWith(progress: UpdateFailed(_friendlyError(e)));
         }
       } catch (e, st) {
         if (!ref.mounted) return;
-        _log.severe(
-          'update unexpected error ${describeErrorForLog(e)}',
-          null,
-          st,
-        );
+        _log.severe('update unexpected error', e, st);
         state = state.copyWith(progress: UpdateFailed(_friendlyError(e)));
       }
     } catch (e, st) {
       // 攔截錯誤（例如 UAC 被拒）原本會逃出 update()、讓等待畫面卡住，在此轉成更新失敗。
       if (!ref.mounted) return;
-      _log.severe(
-        'update failed while acquiring credential ${describeErrorForLog(e)}',
-        null,
-        st,
-      );
+      _log.severe('update failed while acquiring credential', e, st);
       state = state.copyWith(progress: UpdateFailed(_friendlyError(e)));
     } finally {
       await _disableWirelessIfPairingUnused();
@@ -1006,7 +994,7 @@ class GachaRepository extends Notifier<GachaState> {
         // 池，直接丟全池失效訊號交由 _runUpdate 自動重攔。
         if (abortOnFirstPoolFailure && i == 0) {
           _log.warning(
-            'first pool ${t.key} failed ${describeErrorForLog(e)}, '
+            'first pool ${t.key} failed code=${e.code} msg=${e.message}, '
             'aborting to recapture',
           );
           throw _AllPoolsFailedException(e);
@@ -1014,7 +1002,7 @@ class GachaRepository extends Notifier<GachaState> {
         // 單池 code!=0：保留舊資料、記入 failed，繼續抓其他池；全池皆失敗時於迴圈後
         // 轉成 _AllPoolsFailedException 觸發自動重攔。http.ClientException 不在此攔截，
         // 往上拋給 _runUpdate 當作網路層失敗。
-        _log.warning('pool ${t.key} failed ${describeErrorForLog(e)}');
+        _log.warning('pool ${t.key} failed code=${e.code} msg=${e.message}');
         lastApiError = e;
         mergedBanners[t.key] = existing.banners[t.key] ?? const <GachaRecord>[];
         failed.add(t.nameKey);
@@ -1070,11 +1058,7 @@ class GachaRepository extends Notifier<GachaState> {
     try {
       itemImagesDownloaded = (await _fetchItemImages(client)).imagesDownloaded;
     } catch (e, st) {
-      _log.warning(
-        'image stage threw (ignored) ${describeErrorForLog(e)}',
-        null,
-        st,
-      );
+      _log.warning('image stage threw (ignored)', e, st);
     }
     if (!ref.mounted) return;
     if (_cancelTriggered) {
@@ -1203,7 +1187,7 @@ class GachaRepository extends Notifier<GachaState> {
         if (!ref.mounted) return;
         _refetchLog.info('wiped (index+cache cleared)');
       } catch (e, st) {
-        _refetchLog.severe('wipeFailed ${describeErrorForLog(e)}', null, st);
+        _refetchLog.severe('wipeFailed', e, st);
         if (!ref.mounted) return;
         state = state.copyWith(
           progress: UpdateFailed(
@@ -1219,11 +1203,7 @@ class GachaRepository extends Notifier<GachaState> {
           cancellable.client,
         )).imagesDownloaded;
       } catch (e, st) {
-        _refetchLog.warning(
-          'item image stage threw (ignored) ${describeErrorForLog(e)}',
-          null,
-          st,
-        );
+        _refetchLog.warning('item image stage threw (ignored)', e, st);
       }
       if (!ref.mounted) return;
 
@@ -1285,11 +1265,7 @@ class GachaRepository extends Notifier<GachaState> {
           pruneStaleLangs: true,
         );
       } catch (e, st) {
-        _refreshDetailsLog.warning(
-          'item detail stage threw (ignored) ${describeErrorForLog(e)}',
-          null,
-          st,
-        );
+        _refreshDetailsLog.warning('item detail stage threw (ignored)', e, st);
       }
       if (!ref.mounted) return;
 
@@ -1395,11 +1371,7 @@ class GachaRepository extends Notifier<GachaState> {
           cancellable.client,
         )).imagesDownloaded;
       } catch (e, st) {
-        _importLog.warning(
-          'item image stage threw (ignored) ${describeErrorForLog(e)}',
-          null,
-          st,
-        );
+        _importLog.warning('item image stage threw (ignored)', e, st);
       }
       if (!ref.mounted) return result;
 
@@ -1686,8 +1658,8 @@ class GachaRepository extends Notifier<GachaState> {
         agg = agg + out.result;
       } catch (e, st) {
         Logger('wish.langconvert').warning(
-          'unify skip playerId=${sanitizeUid(entry.key)} target=$target ${describeErrorForLog(e)}',
-          null,
+          'unify skip playerId=${sanitizeUid(entry.key)} target=$target',
+          e,
           st,
         );
       }
@@ -1704,9 +1676,7 @@ class GachaRepository extends Notifier<GachaState> {
     try {
       await _fetchItemImages(cancellable.client);
     } catch (e, st) {
-      Logger(
-        'wish.langconvert',
-      ).warning('unify image fetch failed ${describeErrorForLog(e)}', null, st);
+      Logger('wish.langconvert').warning('unify image fetch failed', e, st);
     } finally {
       cancellable.client.close();
     }
@@ -1740,8 +1710,8 @@ class GachaRepository extends Notifier<GachaState> {
     } catch (e, st) {
       Logger('wish.langconvert').warning(
         'convert failed for playerId=${sanitizeUid(data.playerId)} '
-        'target=$target, keeping original data ${describeErrorForLog(e)}',
-        null,
+        'target=$target, keeping original data',
+        e,
         st,
       );
       return data;
@@ -2089,11 +2059,7 @@ class GachaRepository extends Notifier<GachaState> {
       try {
         result = await _fetchItemImages(cancellable.client);
       } catch (e, st) {
-        _cloudSyncLog.warning(
-          'image fetch failed (ignored) ${describeErrorForLog(e)}',
-          null,
-          st,
-        );
+        _cloudSyncLog.warning('image fetch failed (ignored)', e, st);
       }
       if (!ref.mounted) return;
       final didWork =
