@@ -240,7 +240,6 @@ class GachaRepository extends Notifier<GachaState> {
   void clearProgress() {
     state = state.copyWith(clearProgress: true);
     if (_imageFetchPending) {
-      _imageFetchPending = false;
       _cloudSyncLog.info('image fetch resumed: result dialog closed');
       unawaited(fetchItemImagesForCloudSync());
     }
@@ -1424,6 +1423,9 @@ class GachaRepository extends Notifier<GachaState> {
       return await _runImport(bundle);
     } finally {
       _isUpdating = false;
+      if (_imageFetchPending && state.progress == null) {
+        unawaited(fetchItemImagesForCloudSync());
+      }
     }
   }
 
@@ -2041,9 +2043,13 @@ class GachaRepository extends Notifier<GachaState> {
       }
     }
     if (state.isBootstrapping || progress != null || _isUpdating) {
-      _cloudSyncLog.info('image fetch skipped: busy');
+      _cloudSyncLog.info(
+        'image fetch skipped: progress=${progress?.runtimeType} '
+        'updating=$_isUpdating bootstrapping=${state.isBootstrapping}',
+      );
       return;
     }
+    _imageFetchPending = false;
     _isUpdating = true;
     _cancelTriggered = false;
     final cancellable = ref.read(cancellableHttpClientFactoryProvider)();

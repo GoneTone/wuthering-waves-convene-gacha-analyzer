@@ -935,8 +935,11 @@ void main() {
 
   test('變動檢查的匯出丟錯 → 記 warning、不外溢，之後的變動仍能同步', () async {
     final messages = <String>[];
+    final errors = <Object?>[];
     final sub = Logger.root.onRecord.listen((r) {
-      if (r.loggerName == 'cloudsync.sync') messages.add(r.message);
+      if (r.loggerName != 'cloudsync.sync') return;
+      messages.add(r.message);
+      errors.add(r.error);
     });
     addTearDown(sub.cancel);
 
@@ -961,6 +964,12 @@ void main() {
       () => messages.any((m) => m.startsWith('dataChange check failed')),
     );
     expect(remote.uploads, uploadsAfterLink);
+    final failedAt = messages.indexWhere(
+      (m) => m.startsWith('dataChange check failed'),
+    );
+    expect(errors[failedAt], isNull);
+    expect(messages[failedAt], isNot(contains('800000001')));
+    expect(messages[failedAt], isNot(contains(tempDir.path)));
 
     file.writeAsStringSync(good);
     repo.debugSeedAccount(_localBannerStorage('800000003'));
