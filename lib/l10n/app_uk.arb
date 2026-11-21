@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "У цьому банері немає записів",
-  "emptyNoFilterMatch": "Немає записів, що відповідають фільтру",
   "emptyNoGachaRecords": "Записів скликань поки немає",
   "statsTotal": "Усього круток",
   "statsRankCount": "Усього {star}",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count, plural, one{Додано {count} новий запис} few{Додано {count} нові записи} many{Додано {count} нових записів} other{Додано {count} нового запису}}",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, one{Завантажено {count} зображення предмета} few{Завантажено {count} зображення предметів} many{Завантажено {count} зображень предметів} other{Завантажено {count} зображення предметів}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Не вдалося отримати записи навіть після повторного перехоплення. Можливо, сервер тимчасово недоступний — спробуйте пізніше.",
-  "errorNoRecords": "У цього акаунта поки немає записів скликань",
   "errorNetwork": "Помилка мережевого з’єднання. Перевірте підключення і спробуйте знову.",
   "errorUnexpected": "Сталася неочікувана помилка. Спробуйте пізніше.",
   "pageOverviewTitle": "Огляд (усі банери)",
   "pageOverviewGachaSection": "Огляд скликань",
-  "pageBannerRecordList": "Список записів",
   "rarityOverviewTitle": "Огляд {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "Немає записів {star}",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Підтвердження імпорту",
-  "settingsImportConfirmIntro": "Буде імпортовано акаунтів: {accounts} (усього записів: {records}):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "Наведені нижче акаунти буде об’єднано з локальними даними, наявні записи не видаляться:",
   "settingsImportConfirmNoConflict": "Конфліктів даних немає.",
   "settingsImportConfirmPreserveFooter": "Інші акаунти ({uids}) збережуться.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Виберіть акаунти для імпорту",
   "settingsImportMergeBadge": "Об’єднання",
   "accountsPickerSelectAll": "Вибрати всі",
-  "accountRecordCount": "{n, plural, one{{n} запис} few{{n} записи} many{{n} записів} other{{n} запису}}",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Підтвердження",
   "confirmClearActiveBody": "Усі записи скликань для UID {uid} буде остаточно видалено. Для підтвердження введіть UID:",
   "@confirmClearActiveBody": {
