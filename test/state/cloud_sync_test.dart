@@ -470,6 +470,46 @@ void main() {
     expect(file.lastModifiedSync(), modifiedBefore);
   });
 
+  test('雲端 A、B／本機 B、C，B 相同 → 同步後三個帳號都在本機', () async {
+    final b = _localBannerStorage('200000002');
+    await GachaStorage(tempDir).save(b);
+    await GachaStorage(tempDir).save(_localBannerStorage('300000003'));
+    final cloud =
+        jsonDecode(_cloudBundleJsonWithRecord('100000001'))
+            as Map<String, dynamic>;
+    (cloud['accounts'] as List).add(b.toJson());
+    remote.content = jsonEncode(cloud);
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+    await container.read(cloudSyncProvider.notifier).link();
+
+    expect(container.read(gachaRepositoryProvider).byUid.keys.toSet(), {
+      '100000001',
+      '200000002',
+      '300000003',
+    });
+  });
+
+  test('雲端帳號有別名、本機沒有（記錄相同）→ 同步後別名進到設定', () async {
+    final local = _localBannerStorage('100000001');
+    await GachaStorage(tempDir).save(local);
+    final cloud =
+        jsonDecode(_cloudBundleJson('100000001')) as Map<String, dynamic>;
+    cloud['accounts'] = [
+      {...local.toJson(), 'alias': '主帳'},
+    ];
+    remote.content = jsonEncode(cloud);
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+    await container.read(cloudSyncProvider.notifier).link();
+
+    expect(container.read(settingsProvider).uidAliases['100000001'], '主帳');
+  });
+
   test('上傳內容同時含有記錄檔的帳號（背景讀檔）與只在記憶體的帳號', () async {
     final onDisk = _localBannerStorage('100000001');
     await GachaStorage(tempDir).save(onDisk);
