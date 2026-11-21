@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "이 배너에는 기록이 없습니다",
-  "emptyNoFilterMatch": "현재 필터와 일치하는 기록이 없습니다",
   "emptyNoGachaRecords": "아직 튜닝 기록이 없습니다",
   "statsTotal": "총 튜닝 횟수",
   "statsRankCount": "{star} 획득 수",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "새 기록 {count}건을 추가했습니다",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, other{아이템 이미지 {count}개를 다운로드했습니다}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "다시 캡처했지만 기록을 가져오지 못했습니다. 서버가 일시적으로 응답하지 않을 수 있습니다. 잠시 후 다시 시도해 주세요.",
-  "errorNoRecords": "이 계정에는 아직 튜닝 기록이 없습니다",
   "errorNetwork": "네트워크 연결에 실패했습니다. 연결 상태를 확인한 후 다시 시도해 주세요.",
   "errorUnexpected": "예기치 않은 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
   "pageOverviewTitle": "개요 (전체 배너)",
   "pageOverviewGachaSection": "튜닝 개요",
-  "pageBannerRecordList": "기록 목록",
   "rarityOverviewTitle": "{star} 목록",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "{star} 기록 없음",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "가져오기 확인",
-  "settingsImportConfirmIntro": "계정 {accounts}개(총 {records}건)를 가져옵니다:",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "다음 계정은 로컬 데이터와 병합되며, 기존 기록은 삭제되지 않습니다:",
   "settingsImportConfirmNoConflict": "데이터 충돌이 없습니다.",
   "settingsImportConfirmPreserveFooter": "다른 기존 계정({uids})은 유지됩니다.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "가져올 계정 선택",
   "settingsImportMergeBadge": "병합",
   "accountsPickerSelectAll": "모두 선택",
-  "accountRecordCount": "{n}건",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "확인",
   "confirmClearActiveBody": "UID {uid}의 모든 튜닝 기록이 영구적으로 삭제됩니다. 확인하려면 UID를 입력하세요:",
   "@confirmClearActiveBody": {
