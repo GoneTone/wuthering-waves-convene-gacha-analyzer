@@ -47,14 +47,16 @@ class RustGachaCapture implements GachaCapture {
           );
         } catch (e) {
           // 命中目標 host 但 body 非預期 JSON → 視為未命中，繼續等下一筆。
-          _log.warning('failed to parse captured body host=${event.host}: $e');
+          _log.warning(
+            'failed to parse captured body host=${event.host} ${describeErrorForLog(e)}',
+          );
         }
         // 不在此 complete：等 stream onDone（MITM graceful shutdown + helper 停止、
         // WinDivert 重導向已還原），此時呼叫 HTTP fetcher 才不會被重導向誤導。
       },
       onError: (Object e) {
         // 含 UAC 被拒等啟動失敗；呼叫端會改走 Client.log，故記 warning 而非 severe。
-        _log.warning('capture error: $e');
+        _log.warning('capture error ${describeErrorForLog(e)}');
         if (!completer.isCompleted) completer.completeError(e);
       },
       onDone: () {

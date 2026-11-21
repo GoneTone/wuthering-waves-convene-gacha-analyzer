@@ -327,6 +327,60 @@ void main() {
     expect((progress as UpdateFailed).error, isA<UpdateErrorNetwork>());
   });
 
+  test('update 失敗的 log 只帶型別，不帶例外內容', () async {
+    final records = <LogRecord>[];
+    final sub = Logger.root.onRecord.listen(records.add);
+    addTearDown(sub.cancel);
+
+    final storage = GachaStorage(tempDir);
+    await storage.save(
+      BannerStorage(
+        playerId: '100000001',
+        languageCode: 'zh-Hant',
+        lastUpdated: DateTime.utc(2026),
+        banners: const {},
+      ),
+    );
+    await storage.saveCapturedCredential(
+      '100000001',
+      _fakeCred().toJsonString(),
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        noGameDirOverride,
+        gachaStorageProvider.overrideWithValue(storage),
+        gachaCaptureProvider.overrideWithValue(_FakeCapture(null)),
+        cancellableHttpClientFactoryProvider.overrideWithValue(
+          () => CancellableHttpClient(
+            client: MockClient(
+              (_) async => throw const FormatException(
+                'C:/Users/bob/secret recordId=LEAKED',
+              ),
+            ),
+            cancel: () {},
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container.read(gachaRepositoryProvider);
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    await container.read(gachaRepositoryProvider.notifier).update();
+
+    expect(
+      records.any((r) => r.message.contains('error=FormatException')),
+      isTrue,
+    );
+    for (final r in records) {
+      expect(r.message, isNot(contains('LEAKED')));
+      expect(r.message, isNot(contains('bob')));
+      expect(r.error?.toString() ?? '', isNot(contains('LEAKED')));
+    }
+  });
+
   test('clearProgress 把 progress 重設為 null', () async {
     final container = ProviderContainer(
       overrides: [

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' show DetailedApiRequestError;
 
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
 void main() {
@@ -255,6 +256,13 @@ void main() {
         ),
       );
       expect(out, 'error=GoogleSignInException code=interrupted');
+    });
+
+    test('GachaApiException → code, no message', () {
+      expect(
+        describeErrorForLog(const GachaApiException(-1, 'recordId=abc')),
+        'error=GachaApiException code=-1',
+      );
     });
 
     test('PlatformException → code, no message or details', () {

@@ -4,6 +4,8 @@ import 'dart:io' show FileSystemException, SocketException;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:google_sign_in/google_sign_in.dart' show GoogleSignInException;
 import 'package:googleapis/drive/v3.dart' show DetailedApiRequestError;
+import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_fetcher.dart'
+    show GachaApiException;
 
 /// 把 authkey / authkey_ver / sign_type / game_biz 等敏感 query value 改成 `***`,
 /// 其餘 query 保留。malformed URL 回 `<malformed url>`。
@@ -103,7 +105,7 @@ String _maskHash(String raw) {
 }
 
 /// 回傳可安全寫進 log 的錯誤摘要：型別，加上少數已知型別的非敏感代碼
-/// （檔案／socket 的系統錯誤碼、Drive API 狀態碼、Google 授權與 platform channel 的錯誤代碼）。
+/// （檔案／socket 的系統錯誤碼、Drive API 狀態碼、喚取 API code、Google 授權與 platform channel 的錯誤代碼）。
 ///
 /// 例外訊息可能帶完整檔案路徑（含使用者名稱、playerId）、檔案內容片段或網址，不可直接寫進 log。
 String describeErrorForLog(Object e) {
@@ -111,6 +113,7 @@ String describeErrorForLog(Object e) {
     FileSystemException(:final osError?) => 'os=${osError.errorCode}',
     SocketException(:final osError?) => 'os=${osError.errorCode}',
     DetailedApiRequestError(:final status?) => 'status=$status',
+    GachaApiException(:final code) => 'code=$code',
     GoogleSignInException(:final code) => 'code=${code.name}',
     PlatformException(:final code) => 'code=$code',
     _ => null,
