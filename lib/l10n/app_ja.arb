@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "この集音に記録がありません",
-  "emptyNoFilterMatch": "条件に一致する記録がありません",
   "emptyNoGachaRecords": "集音の記録がまだありません",
   "statsTotal": "累計回数",
   "statsRankCount": "{star} 件数",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count} 件の記録を追加しました",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "アイテム画像を {count} 件ダウンロード",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "再取得しても記録を取得できませんでした。サーバーが一時的に不安定な可能性があります。しばらくしてから再試行してください。",
-  "errorNoRecords": "このアカウントには集音の記録がまだありません",
   "errorNetwork": "ネットの接続に失敗、設定を確認しもう一度お試しください",
   "errorUnexpected": "予期しないエラー、しばらくしてからもう一度お試しください",
   "pageOverviewTitle": "総合データ（全集音合計）",
   "pageOverviewGachaSection": "集音総合",
-  "pageBannerRecordList": "記録一覧",
   "rarityOverviewTitle": "{star} 一覧",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "{star} の記録はまだありません",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "インポートの確認",
-  "settingsImportConfirmIntro": "{accounts} 個のアカウント（計 {records} 件の記録）をインポートします：",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "以下のアカウントはローカルデータと結合されます。既存の記録は削除されません：",
   "settingsImportConfirmNoConflict": "データの競合はありません。",
   "settingsImportConfirmPreserveFooter": "その他の既存アカウント（{uids}）は保持されます。",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "インポートするアカウントを選択",
   "settingsImportMergeBadge": "結合",
   "accountsPickerSelectAll": "すべて選択",
-  "accountRecordCount": "{n} 件の記録",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "操作の確認",
   "confirmClearActiveBody": "UID {uid} のすべての集音履歴を完全に削除します。確認のため UID を入力してください：",
   "@confirmClearActiveBody": {
