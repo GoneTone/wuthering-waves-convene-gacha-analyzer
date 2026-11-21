@@ -131,4 +131,63 @@ void main() {
     expect(await File('${tempDir.path}/701.records.json').exists(), isFalse);
     expect(await File('${tempDir.path}/701.cred.json').exists(), isFalse);
   });
+
+  group('背景讀檔占住記錄檔時（Windows 無 FILE_SHARE_DELETE）', () {
+    /// 先存一份舊資料，回傳以唯讀開啟 `<playerId>.records.json` 的 handle。
+    Future<RandomAccessFile> holdOpen(String playerId) async {
+      await storage.save(makeStorage(playerId));
+      return storage.recordsFile(playerId).open();
+    }
+
+    test('save retries when the records file is briefly held open', () async {
+      final raf = await holdOpen('42');
+      Future<void>.delayed(
+        const Duration(milliseconds: 50),
+      ).then((_) => raf.close());
+
+      await storage.save(
+        makeStorage('42').copyWith(lastUpdated: DateTime.utc(2026, 6, 1)),
+      );
+
+      final loaded = await storage.load('42');
+      expect(loaded!.lastUpdated, DateTime.utc(2026, 6, 1));
+    }, skip: !Platform.isWindows);
+
+    test('save still throws when the records file stays locked', () async {
+      final raf = await holdOpen('42');
+      addTearDown(raf.close);
+
+      await expectLater(
+        storage.save(
+          makeStorage('42').copyWith(lastUpdated: DateTime.utc(2026, 6, 1)),
+        ),
+        throwsA(isA<PathAccessException>()),
+      );
+      expect(await storage.listKnownUids(), ['42']);
+      final kept = await storage.recordsFile('42').readAsString();
+      expect(kept, contains('2026-05-21'));
+    }, skip: !Platform.isWindows);
+
+    test('delete retries when the records file is briefly held open', () async {
+      final raf = await holdOpen('42');
+      Future<void>.delayed(
+        const Duration(milliseconds: 50),
+      ).then((_) => raf.close());
+
+      await storage.delete('42');
+
+      expect(await storage.recordsFile('42').exists(), isFalse);
+    }, skip: !Platform.isWindows);
+
+    test('clearAll retries when a records file is briefly held open', () async {
+      final raf = await holdOpen('42');
+      Future<void>.delayed(
+        const Duration(milliseconds: 50),
+      ).then((_) => raf.close());
+
+      await storage.clearAll();
+
+      expect(await storage.recordsFile('42').exists(), isFalse);
+    }, skip: !Platform.isWindows);
+  });
 }

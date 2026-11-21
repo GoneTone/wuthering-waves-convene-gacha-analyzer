@@ -67,6 +67,7 @@ class GachaStorage {
       await _atomicWrite(
         recordsFile(data.playerId),
         await _encodeInBackground(data),
+        data.playerId,
       );
       final total = data.banners.values.fold<int>(0, (a, b) => a + b.length);
       _log.fine('saved playerId=${sanitizeUid(data.playerId)} records=$total');
@@ -104,7 +105,7 @@ class GachaStorage {
 
   /// 將攔到的憑證 [bodyJson]（整份 body）寫入 [playerId] 的憑證檔。
   Future<void> saveCapturedCredential(String playerId, String bodyJson) async {
-    await _atomicWrite(_credFile(playerId), bodyJson);
+    await _atomicWrite(_credFile(playerId), bodyJson, playerId);
     _log.fine(
       'saved captured credential for playerId=${sanitizeUid(playerId)}',
     );
@@ -124,7 +125,7 @@ class GachaStorage {
   /// 刪除 [playerId] 的所有本地資料（記錄檔 + 憑證檔）。
   Future<void> delete(String playerId) async {
     final f = recordsFile(playerId);
-    if (await f.exists()) await f.delete();
+    if (await f.exists()) await _retryWhileHeld(f.delete, playerId);
     await deleteCapturedCredential(playerId);
     _log.info('delete playerId=${sanitizeUid(playerId)}');
   }
@@ -135,18 +136,53 @@ class GachaStorage {
     final entries = await baseDir.list().toList();
     for (final e in entries) {
       if (e is File && e.path.endsWith('.json')) {
-        await e.delete();
+        await _retryWhileHeld(e.delete, e.uri.pathSegments.last);
       }
     }
     _log.info('clear all gacha data');
   }
 
   /// 先寫入 `.tmp` 再 rename，確保寫入的原子性。
-  Future<void> _atomicWrite(File target, String content) async {
+  Future<void> _atomicWrite(
+    File target,
+    String content,
+    String playerId,
+  ) async {
     final tmp = File('${target.path}.tmp');
     await tmp.writeAsString(content);
-    await tmp.rename(target.path); // atomic on same volume
+    await _retryWhileHeld(
+      () => tmp.rename(target.path), // atomic on same volume
+      playerId,
+    );
   }
+
+  /// 執行 [op]；Windows 上背景 isolate 讀檔會暫時占住檔案，遇 [PathAccessException] 時短暫退避重試。
+  Future<void> _retryWhileHeld(
+    Future<Object?> Function() op,
+    String playerId,
+  ) async {
+    // Dart 開檔不帶 FILE_SHARE_DELETE，讀檔期間 rename／delete 會被擋；讀檔只持續毫秒級，不需要鎖。
+    var delay = const Duration(milliseconds: 20);
+    for (var attempt = 1; ; attempt++) {
+      try {
+        await op();
+        if (attempt > 1) {
+          _log.info(
+            'file op succeeded after retry playerId=${sanitizeUid(playerId)} '
+            'retries=${attempt - 1}',
+          );
+        }
+        return;
+      } on PathAccessException {
+        if (attempt == _maxAttempts) rethrow;
+        await Future<void>.delayed(delay);
+        delay *= 2;
+      }
+    }
+  }
+
+  /// [_retryWhileHeld] 的最多嘗試次數（等待 20、40、80、160 ms，合計約 300 ms）。
+  static const _maxAttempts = 5;
 }
 
 /// 在背景 isolate 把 [data] 編成 JSON：大帳號的 jsonEncode 在主 isolate 實機量到數十毫秒。
