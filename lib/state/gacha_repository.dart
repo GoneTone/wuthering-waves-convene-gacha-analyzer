@@ -1396,8 +1396,15 @@ class GachaRepository extends Notifier<GachaState> {
   /// 不啟動 progress UI、不抓物品圖片。
   ///
   /// bootstrap 未完成、已有更新或匯入進行中時拋 [CloudSyncBusyException]，由雲端同步層重排。
+  /// 進度停在 [UpdateCompleted]／[UpdateFailed] 只是結果視窗還沒關，不算忙碌：
+  /// 否則視窗開著期間同步會每輪重下載雲端檔再被擋下。
   Future<ImportResult> importBundleForCloudSync(AccountsBundle bundle) async {
-    if (state.isBootstrapping || state.progress != null || _isUpdating) {
+    final progress = state.progress;
+    final inFlight =
+        progress != null &&
+        progress is! UpdateCompleted &&
+        progress is! UpdateFailed;
+    if (state.isBootstrapping || inFlight || _isUpdating) {
       _importLog.info('cloud sync import rejected: busy');
       throw const CloudSyncBusyException();
     }

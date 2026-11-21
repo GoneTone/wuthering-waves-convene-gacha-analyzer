@@ -110,4 +110,45 @@ void main() {
     expect(second.addedRecords, 0);
     expect(second.duplicateRecords, 1);
   });
+
+  test('更新完成視窗還開著時照常合併，進度維持原狀', () async {
+    final container = makeContainer();
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    final completed = UpdateCompleted(
+      totalNewRecords: 0,
+      failedBanners: const [],
+      updatedAt: DateTime.utc(2026, 11, 21),
+      itemImagesDownloaded: 0,
+    );
+    repo.debugSetProgress(completed);
+
+    final result = await repo.importBundleForCloudSync(_bundle('100000001'));
+
+    expect(result.addedRecords, 1);
+    expect(container.read(gachaRepositoryProvider).progress, same(completed));
+  });
+
+  test('更新失敗視窗還開著時照常合併', () async {
+    final container = makeContainer();
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    repo.debugSetProgress(const UpdateFailed(UpdateErrorUnexpected()));
+
+    final result = await repo.importBundleForCloudSync(_bundle('100000001'));
+
+    expect(result.addedRecords, 1);
+  });
+
+  test('更新進行中仍視為忙碌', () async {
+    final container = makeContainer();
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    repo.debugSetProgress(const Preparing());
+
+    await expectLater(
+      repo.importBundleForCloudSync(_bundle('100000001')),
+      throwsA(isA<CloudSyncBusyException>()),
+    );
+  });
 }
