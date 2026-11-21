@@ -1,5 +1,5 @@
 {
-  "@@locale": "pt",
+  "@@locale": "pt-PT",
   "localeNativeName": "Português (Portugal)",
   "localeTranslator": "<a href=\"https://claude.com/claude-code\">Claude Code</a>",
   "localeTranslatorLabel": "Tradução: {translator}",
@@ -122,6 +122,8 @@
       }
     }
   },
+  "emptyNoRecords": "Não há registos neste banner",
+  "emptyNoFilterMatch": "Nenhum registo corresponde ao filtro atual",
   "emptyNoGachaRecords": "Ainda não há registos de Invocação",
   "statsTotal": "Total de invocações",
   "statsRankCount": "Quantidade de {star}",
@@ -264,6 +266,14 @@
       }
     }
   },
+  "progressDoneSummary": "{count, plural, =1{Foi adicionado 1 registo novo} other{Foram adicionados {count} registos novos}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, =1{Foi transferida {count} imagem de item} other{Foram transferidas {count} imagens de itens}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -328,10 +338,12 @@
     }
   },
   "errorGachaFailed": "Mesmo após nova captura, não foi possível obter os registos. O servidor pode estar temporariamente indisponível. Tente novamente mais tarde.",
+  "errorNoRecords": "Esta conta ainda não tem registos de Invocação",
   "errorNetwork": "Falha na ligação à rede. Verifique a sua ligação e tente novamente.",
   "errorUnexpected": "Ocorreu um erro inesperado. Tente novamente mais tarde.",
   "pageOverviewTitle": "Resumo (todos os banners)",
   "pageOverviewGachaSection": "Resumo de Invocações",
+  "pageBannerRecordList": "Lista de registos",
   "rarityOverviewTitle": "Resumo de {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -521,6 +533,14 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineNoRecordsForRank": "Sem registos de {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
         "type": "String"
       }
     }
@@ -802,6 +822,18 @@
     }
   },
   "settingsImportConfirmTitle": "Confirmar importação",
+  "settingsImportConfirmIntro": "{accounts, plural, =1{Vai ser importada 1 conta} other{Vão ser importadas {accounts} contas}} ({records, plural, =1{1 registo} other{{records} registos}} no total):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportConfirmMergeHeader": "As seguintes contas serão combinadas com os dados locais; os registos existentes não serão eliminados:",
   "settingsImportConfirmNoConflict": "Sem conflitos de dados.",
   "settingsImportConfirmPreserveFooter": "As restantes contas existentes ({uids}) serão mantidas.",
   "@settingsImportConfirmPreserveFooter": {
@@ -836,6 +868,14 @@
   "settingsImportSelectTitle": "Selecione as contas a importar",
   "settingsImportMergeBadge": "Combinar",
   "accountsPickerSelectAll": "Selecionar tudo",
+  "accountRecordCount": "{n, plural, =1{1 registo} other{{n} registos}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Confirmar",
   "confirmClearActiveBody": "Todos os registos de Invocação do UID {uid} serão eliminados permanentemente. Escreva o UID para confirmar:",
   "@confirmClearActiveBody": {
