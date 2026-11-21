@@ -93,6 +93,27 @@ void main() {
     expect(warnings.single.error, isNull);
   });
 
+  test('save 失敗 → 記 severe log，不帶例外物件與路徑', () async {
+    final blocker = File('${tempDir.path}/blocker');
+    await blocker.writeAsString('x');
+    final broken = GachaStorage(Directory('${blocker.path}/sub'));
+    final records = <LogRecord>[];
+    final sub = Logger.root.onRecord.listen(records.add);
+    addTearDown(sub.cancel);
+
+    await expectLater(
+      broken.save(makeStorage('800000001')),
+      throwsA(isA<FileSystemException>()),
+    );
+
+    final severe = records.singleWhere((r) => r.level == Level.SEVERE);
+    expect(severe.message, startsWith('save failed for playerId='));
+    expect(severe.message, contains('error='));
+    expect(severe.message, isNot(contains('800000001')));
+    expect(severe.message, isNot(contains(tempDir.path)));
+    expect(severe.error, isNull);
+  });
+
   test('listKnownUids 只列 <playerId>.records.json，忽略 cred 與 metadata', () async {
     await File('${tempDir.path}/701.records.json').writeAsString('{}');
     await File('${tempDir.path}/abc.records.json').writeAsString('{}');

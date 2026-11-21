@@ -5,6 +5,7 @@ import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_auth.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/cloud_sync_config.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cloud_sync/google_authorization_gateway.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 
 /// Android 的 [CloudAuth]：以 Play services 授權 API 取短效通行證，不保存 refresh token。
 class AndroidCloudAuth implements CloudAuth {
@@ -119,7 +120,7 @@ class AndroidCloudAuth implements CloudAuth {
     try {
       await step();
     } catch (e) {
-      _log.warning('android $label failed (ignored): $e');
+      _log.warning('android $label failed (ignored) ${describeErrorForLog(e)}');
     }
   }
 }

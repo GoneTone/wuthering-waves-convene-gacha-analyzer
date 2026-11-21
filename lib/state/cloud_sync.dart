@@ -103,7 +103,9 @@ final windowForegroundProvider = Provider<Future<void> Function()>(
       await windowManager.show();
       await windowManager.focus();
     } catch (e) {
-      Logger('cloudsync.sync').warning('bring-to-foreground failed: $e');
+      Logger(
+        'cloudsync.sync',
+      ).warning('bring-to-foreground failed ${describeErrorForLog(e)}');
     }
   },
 );
@@ -190,7 +192,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
       state = const CloudSyncState(phase: CloudSyncPhase.reauthRequired);
       return;
     } catch (e) {
-      _log.warning('startup restore failed: $e');
+      _log.warning('startup restore failed ${describeErrorForLog(e)}');
       state = const CloudSyncState(
         phase: CloudSyncPhase.error,
         errorToken: 'network',
@@ -250,7 +252,7 @@ class CloudSyncNotifier extends Notifier<CloudSyncState> {
       );
     } catch (e) {
       if (!ref.mounted || gen != _authGeneration) return;
-      _log.warning('link failed: $e');
+      _log.warning('link failed ${describeErrorForLog(e)}');
       state = const CloudSyncState(
         phase: CloudSyncPhase.error,
         errorToken: 'authFailed',

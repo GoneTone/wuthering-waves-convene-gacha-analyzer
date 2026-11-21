@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
 
@@ -156,5 +157,21 @@ void main() {
     final banners = bundle.accounts.single.data.banners;
     expect(banners.keys, ['1']);
     expect(banners.containsKey('301'), isFalse);
+  });
+
+  test('invalid JSON 的 log 不含檔案內容', () {
+    final records = <LogRecord>[];
+    final sub = Logger.root.onRecord.listen(records.add);
+    addTearDown(sub.cancel);
+
+    expect(
+      () => importAccounts('SECRET-CONTENT-800000001'),
+      throwsA(isA<FormatException>()),
+    );
+
+    final warning = records.singleWhere((r) => r.level == Level.WARNING);
+    expect(warning.message, contains('invalid JSON error=FormatException'));
+    expect(warning.message, isNot(contains('SECRET')));
+    expect(warning.error, isNull);
   });
 }

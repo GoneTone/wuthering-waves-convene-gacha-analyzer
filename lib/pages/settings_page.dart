@@ -799,7 +799,11 @@ class _DataManagement extends ConsumerWidget {
         dialogTitle: l.dialogSaveAsTitle,
       );
     } catch (e, st) {
-      Logger('accounts.io').severe('export failed name=$fileName', e, st);
+      Logger('accounts.io').severe(
+        'export failed name=$fileName ${describeErrorForLog(e)}',
+        null,
+        st,
+      );
       if (!ctx.mounted) return;
       await showExportResultDialog(
         ctx,
@@ -832,9 +836,11 @@ class _DataManagement extends ConsumerWidget {
         dialogTitle: l.dialogOpenTitle,
       );
     } catch (e, st) {
-      Logger(
-        'accounts.io',
-      ).warning('import failed: unable to read file', e, st);
+      Logger('accounts.io').warning(
+        'import failed: unable to read file ${describeErrorForLog(e)}',
+        null,
+        st,
+      );
       if (!ctx.mounted) return;
       _showSnack(ctx, l.settingsImportFailed(l.importReasonUnreadable));
       return;
@@ -990,9 +996,11 @@ class _DataManagement extends ConsumerWidget {
         dialogTitle: l.dialogOpenTitle,
       );
     } catch (e, st) {
-      Logger(
-        'wish.import.platform',
-      ).warning('platform import: unable to read file', e, st);
+      Logger('wish.import.platform').warning(
+        'platform import: unable to read file ${describeErrorForLog(e)}',
+        null,
+        st,
+      );
       if (!ctx.mounted) return;
       _showSnack(ctx, l.settingsImportFailed(l.importReasonUnreadable));
       return;
@@ -1039,9 +1047,11 @@ class _DataManagement extends ConsumerWidget {
       if (catalog.idByName.isEmpty) return null;
       return catalog.resolveByName;
     } catch (e, st) {
-      Logger(
-        'wish.import.platform',
-      ).warning('platform import: encore name resolver fetch failed', e, st);
+      Logger('wish.import.platform').warning(
+        'platform import: encore name resolver fetch failed ${describeErrorForLog(e)}',
+        null,
+        st,
+      );
       return null;
     } finally {
       client.close();
@@ -1288,9 +1298,11 @@ class _ImageCacheSectionState extends ConsumerState<_ImageCacheSection> {
         'item_image.usage',
       ).info('user cleared illustration cache: $removed files');
     } catch (e, st) {
-      Logger(
-        'item_image.usage',
-      ).warning('clear illustration cache failed', e, st);
+      Logger('item_image.usage').warning(
+        'clear illustration cache failed ${describeErrorForLog(e)}',
+        null,
+        st,
+      );
       if (!ctx.mounted) return;
       ref.invalidate(itemImageCacheUsageProvider);
       _showSnack(ctx, l.settingsImageCacheClearGalleryFailed);
@@ -1528,7 +1540,11 @@ class _LogsSection extends ConsumerWidget {
     try {
       bundle = await _buildBundle(ref);
     } catch (e, st) {
-      Logger('accounts.io').severe('logs export failed: build bundle', e, st);
+      Logger('accounts.io').severe(
+        'logs export failed: build bundle ${describeErrorForLog(e)}',
+        null,
+        st,
+      );
       if (!ctx.mounted) return;
       await showExportResultDialog(
         ctx,
@@ -1548,7 +1564,11 @@ class _LogsSection extends ConsumerWidget {
         dialogTitle: l.dialogSaveAsTitle,
       );
     } catch (e, st) {
-      Logger('accounts.io').severe('logs export failed name=$fileName', e, st);
+      Logger('accounts.io').severe(
+        'logs export failed name=$fileName ${describeErrorForLog(e)}',
+        null,
+        st,
+      );
       if (!ctx.mounted) return;
       await showExportResultDialog(
         ctx,
@@ -1576,7 +1596,11 @@ class _LogsSection extends ConsumerWidget {
     try {
       bundle = await _buildBundle(ref);
     } catch (e, st) {
-      Logger('accounts.io').severe('logs share failed: build bundle', e, st);
+      Logger('accounts.io').severe(
+        'logs share failed: build bundle ${describeErrorForLog(e)}',
+        null,
+        st,
+      );
       if (!ctx.mounted) return;
       await showExportResultDialog(
         ctx,
