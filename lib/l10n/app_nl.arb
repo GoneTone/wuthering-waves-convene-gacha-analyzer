@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "Geen records voor deze banner",
-  "emptyNoFilterMatch": "Geen records die aan het filter voldoen",
   "emptyNoGachaRecords": "Nog geen Convene-records",
   "statsTotal": "Totaal aantal pulls",
   "statsRankCount": "Aantal {star}",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count, plural, =1{1 nieuw record toegevoegd} other{{count} nieuwe records toegevoegd}}",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, =1{{count} afbeelding van voorwerp gedownload} other{{count} afbeeldingen van voorwerpen gedownload}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Ook na opnieuw onderscheppen konden de records niet worden opgehaald. De server is mogelijk tijdelijk onbereikbaar. Probeer het later opnieuw.",
-  "errorNoRecords": "Dit account heeft nog geen Convene-records",
   "errorNetwork": "Netwerkverbinding mislukt. Controleer je verbinding en probeer het opnieuw.",
   "errorUnexpected": "Er is een onverwachte fout opgetreden. Probeer het later opnieuw.",
   "pageOverviewTitle": "Overzicht (alle banners)",
   "pageOverviewGachaSection": "Convene-overzicht",
-  "pageBannerRecordList": "Recordlijst",
   "rarityOverviewTitle": "Overzicht {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "Geen {star}-records",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Import bevestigen",
-  "settingsImportConfirmIntro": "{accounts, plural, =1{1 account wordt geïmporteerd} other{{accounts} accounts worden geïmporteerd}} ({records, plural, =1{1 record} other{{records} records}} in totaal):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "De volgende accounts worden samengevoegd met de lokale gegevens; bestaande records worden niet verwijderd:",
   "settingsImportConfirmNoConflict": "Geen conflicten in de gegevens.",
   "settingsImportConfirmPreserveFooter": "Andere bestaande accounts ({uids}) blijven behouden.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Kies accounts om te importeren",
   "settingsImportMergeBadge": "Samenvoegen",
   "accountsPickerSelectAll": "Alles selecteren",
-  "accountRecordCount": "{n, plural, =1{1 record} other{{n} records}}",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Bevestigen",
   "confirmClearActiveBody": "Hiermee worden alle Convene-records van UID {uid} definitief verwijderd. Typ de UID ter bevestiging:",
   "@confirmClearActiveBody": {
