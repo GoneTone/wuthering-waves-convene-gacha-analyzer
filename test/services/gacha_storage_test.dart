@@ -89,7 +89,8 @@ void main() {
       warnings.single.message,
       startsWith('skip unparseable records file'),
     );
-    expect(warnings.single.error, isA<FormatException>());
+    expect(warnings.single.message, contains('error=FormatException'));
+    expect(warnings.single.error, isNull);
   });
 
   test('listKnownUids 只列 <playerId>.records.json，忽略 cred 與 metadata', () async {
@@ -208,6 +209,28 @@ void main() {
       expect(await storage.recordsFile('42').exists(), isFalse);
     }, skip: !Platform.isWindows);
   });
+
+  test(
+    'load failure log carries neither the playerId nor the path nor an error object',
+    () async {
+      final records = <LogRecord>[];
+      final sub = Logger.root.onRecord
+          .where((r) => r.loggerName == 'gacha.storage')
+          .listen(records.add);
+      addTearDown(sub.cancel);
+      storage.recordsFile('800000001').writeAsStringSync('{ not json');
+
+      expect(await storage.load('800000001'), isNull);
+
+      final failed = records.singleWhere(
+        (r) => r.message.startsWith('skip unparseable records file'),
+      );
+      expect(failed.error, isNull);
+      expect(failed.stackTrace, isNotNull);
+      expect(failed.message, isNot(contains('800000001')));
+      expect(failed.message, isNot(contains(tempDir.path)));
+    },
+  );
 
   group('retryWhileHeld', () {
     /// 前 [failures] 次丟 [error]、之後成功的操作；[calls] 記錄被呼叫次數。

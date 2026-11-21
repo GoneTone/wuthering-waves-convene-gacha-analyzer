@@ -52,8 +52,8 @@ class GachaStorage {
     } catch (e, st) {
       _log.warning(
         'skip unparseable records file (legacy/incompatible schema) for '
-        'playerId=${sanitizeUid(playerId)}',
-        e,
+        'playerId=${sanitizeUid(playerId)} ${describeErrorForLog(e)}',
+        null,
         st,
       );
       return null;
@@ -72,8 +72,9 @@ class GachaStorage {
       _log.fine('saved playerId=${sanitizeUid(data.playerId)} records=$total');
     } catch (e, st) {
       _log.severe(
-        'save failed for playerId=${sanitizeUid(data.playerId)}',
-        e,
+        'save failed for playerId=${sanitizeUid(data.playerId)} '
+        '${describeErrorForLog(e)}',
+        null,
         st,
       );
       rethrow;
