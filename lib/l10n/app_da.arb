@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "Ingen poster for dette banner",
-  "emptyNoFilterMatch": "Ingen poster matcher det aktuelle filter",
   "emptyNoGachaRecords": "Ingen Convene-poster endnu",
   "statsTotal": "Pulls i alt",
   "statsRankCount": "Antal {star}",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count, plural, =1{1 ny post tilføjet} other{{count} nye poster tilføjet}}",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, =1{{count} genstandsbillede downloadet} other{{count} genstandsbilleder downloadet}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Posterne kunne stadig ikke hentes efter ny opsnapning. Serveren er muligvis midlertidigt utilgængelig. Prøv igen senere.",
-  "errorNoRecords": "Denne konto har ingen Convene-poster endnu",
   "errorNetwork": "Netværksforbindelsen mislykkedes. Tjek din forbindelse, og prøv igen.",
   "errorUnexpected": "Der opstod en uventet fejl. Prøv igen senere.",
   "pageOverviewTitle": "Oversigt (alle bannere)",
   "pageOverviewGachaSection": "Convene-oversigt",
-  "pageBannerRecordList": "Postliste",
   "rarityOverviewTitle": "Oversigt over {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "Ingen {star}-poster",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Bekræft import",
-  "settingsImportConfirmIntro": "{accounts, plural, =1{1 konto importeres} other{{accounts} konti importeres}} ({records, plural, =1{1 post} other{{records} poster}} i alt):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "Følgende konti flettes med de lokale data; eksisterende poster slettes ikke:",
   "settingsImportConfirmNoConflict": "Ingen datakonflikter.",
   "settingsImportConfirmPreserveFooter": "Andre eksisterende konti ({uids}) bevares.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Vælg konti, der skal importeres",
   "settingsImportMergeBadge": "Flet",
   "accountsPickerSelectAll": "Vælg alle",
-  "accountRecordCount": "{n, plural, =1{1 post} other{{n} poster}}",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Bekræft",
   "confirmClearActiveBody": "Dette sletter permanent alle Convene-poster for UID {uid}. Skriv UID'et for at bekræfte:",
   "@confirmClearActiveBody": {
