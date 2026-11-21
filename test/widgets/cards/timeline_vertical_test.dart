@@ -12,6 +12,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/item_image_index.da
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_colors.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_node.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/timeline_vertical.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/gacha_item_icon.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/luck_legend.dart';
@@ -62,6 +63,32 @@ Color? richSpanColor(WidgetTester tester, String text) {
 }
 
 void main() {
+  testWidgets('every node is centred on the rail', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        (ctx, colors) => TimelineVertical(
+          entries: [
+            _e('A', '1', 70, DateTime(2026, 6, 2)),
+            _e('B', '2', 30, DateTime(2026, 5, 20)),
+          ],
+          colors: colors,
+          targetRank: 5,
+          nowPulls: 5,
+        ),
+      ),
+    );
+    await tester.pump();
+    final rail = find.byWidgetPredicate((w) => w is Positioned && w.width == 2);
+    final railX = tester.getCenter(rail).dx;
+    expect(find.byType(TimelineNode), findsNWidgets(3));
+    for (final node in find.byType(TimelineNode).evaluate()) {
+      expect(
+        tester.getCenter(find.byWidget(node.widget)).dx,
+        closeTo(railX, 0.5),
+      );
+    }
+  });
+
   testWidgets('empty + no nowPulls → shows timelineNoRecords', (tester) async {
     await tester.pumpWidget(
       _wrap(

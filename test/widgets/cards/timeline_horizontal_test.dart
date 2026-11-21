@@ -538,7 +538,7 @@ void main() {
     for (final node in find.byType(TimelineNode).evaluate()) {
       expect(
         tester.getCenter(find.byWidget(node.widget)).dy,
-        closeTo(axisY, 1.5),
+        closeTo(axisY, 0.5),
       );
     }
     expect(tester.takeException(), isNull);
@@ -551,6 +551,32 @@ void main() {
       (w) => w is Container && w.constraints?.maxHeight == 2,
     ),
   );
+
+  for (final scale in [1.0, 1.3]) {
+    testWidgets('now and entry nodes sit on the axis line at ${scale}x', (
+      tester,
+    ) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpWidget(
+        _wrap(
+          (ctx, colors) => TimelineHorizontal(
+            entries: [_e('A', '1', 70, DateTime(2026, 6, 2))],
+            targetRank: 5,
+            nowPulls: 5,
+          ),
+        ),
+      );
+      final axisY = tester.getCenter(axisLine()).dy;
+      expect(find.byType(TimelineNode), findsNWidgets(2));
+      for (final node in find.byType(TimelineNode).evaluate()) {
+        expect(
+          tester.getCenter(find.byWidget(node.widget)).dy,
+          closeTo(axisY, 0.5),
+        );
+      }
+    });
+  }
 
   testWidgets('unbounded height leaves no blank band under the date row', (
     tester,
@@ -577,7 +603,7 @@ void main() {
     for (final node in find.byType(TimelineNode).evaluate()) {
       expect(
         tester.getCenter(find.byWidget(node.widget)).dy,
-        closeTo(axisY, 1.5),
+        closeTo(axisY, 0.5),
       );
     }
   });
