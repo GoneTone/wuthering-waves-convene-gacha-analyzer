@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "No records for this banner",
-  "emptyNoFilterMatch": "No records match the current filter",
   "emptyNoGachaRecords": "No Convene records yet",
   "statsTotal": "Total pulls",
   "statsRankCount": "{star} Count",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count, plural, =1{Added 1 new record} other{Added {count} new records}}",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, =1{Downloaded {count} item image} other{Downloaded {count} item images}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Still couldn't fetch records after re-capturing. The server may be temporarily unavailable — please try again later.",
-  "errorNoRecords": "This account has no Convene records yet",
   "errorNetwork": "Network connection failed. Please check your connection and try again.",
   "errorUnexpected": "An unexpected error occurred. Please try again later.",
   "pageOverviewTitle": "Overview (all banners)",
   "pageOverviewGachaSection": "Convene Overview",
-  "pageBannerRecordList": "Record list",
   "rarityOverviewTitle": "{star} Overview",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "No {star} records",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Import confirmation",
-  "settingsImportConfirmIntro": "{accounts, plural, =1{About to import 1 account} other{About to import {accounts} accounts}} ({records, plural, =1{1 record} other{{records} records}} total):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "The following accounts will be merged with local data; existing records won't be deleted:",
   "settingsImportConfirmNoConflict": "No data conflicts.",
   "settingsImportConfirmPreserveFooter": "Other existing accounts ({uids}) will be preserved.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Select accounts to import",
   "settingsImportMergeBadge": "Merge",
   "accountsPickerSelectAll": "Select all",
-  "accountRecordCount": "{n, plural, =1{1 record} other{{n} records}}",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Confirm",
   "confirmClearActiveBody": "This will permanently delete all Convene records for UID {uid}. Type the UID to confirm:",
   "@confirmClearActiveBody": {
