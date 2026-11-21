@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "Ehhez a bannerhez nincsenek rekordok",
-  "emptyNoFilterMatch": "Egy rekord sem felel meg a szűrőnek",
   "emptyNoGachaRecords": "Még nincsenek idézési rekordok",
   "statsTotal": "Összes húzás",
   "statsRankCount": "{star} darabszám",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count} új rekord hozzáadva",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, one{{count} tárgykép letöltve} other{{count} tárgykép letöltve}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Az újbóli rögzítés után sem sikerült lekérni a rekordokat. Lehet, hogy a szerver átmenetileg nem érhető el – próbálja újra később.",
-  "errorNoRecords": "Ennek a fióknak még nincsenek idézési rekordjai",
   "errorNetwork": "Sikertelen hálózati kapcsolat. Ellenőrizze a kapcsolatot, és próbálja újra.",
   "errorUnexpected": "Váratlan hiba történt. Próbálja újra később.",
   "pageOverviewTitle": "Áttekintés (minden banner)",
   "pageOverviewGachaSection": "Idézések áttekintése",
-  "pageBannerRecordList": "Rekordlista",
   "rarityOverviewTitle": "{star} áttekintés",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "Nincs {star} rekord",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Importálás megerősítése",
-  "settingsImportConfirmIntro": "{accounts} fiók importálása következik (összesen {records} rekord):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "Az alábbi fiókok egyesülnek a helyi adatokkal; a meglévő rekordok nem törlődnek:",
   "settingsImportConfirmNoConflict": "Nincs adatütközés.",
   "settingsImportConfirmPreserveFooter": "A többi meglévő fiók ({uids}) megmarad.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Importálandó fiókok kiválasztása",
   "settingsImportMergeBadge": "Egyesítés",
   "accountsPickerSelectAll": "Összes kijelölése",
-  "accountRecordCount": "{n} rekord",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Megerősítés",
   "confirmClearActiveBody": "Ez véglegesen törli a(z) {uid} UID összes idézési rekordját. A megerősítéshez írja be az UID-t:",
   "@confirmClearActiveBody": {
