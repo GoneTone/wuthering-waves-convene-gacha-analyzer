@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "Pro tento banner nejsou žádné záznamy",
-  "emptyNoFilterMatch": "Aktuálnímu filtru neodpovídají žádné záznamy",
   "emptyNoGachaRecords": "Zatím žádné záznamy přivolání",
   "statsTotal": "Celkem tahů",
   "statsRankCount": "Počet {star}",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count, plural, one{Přidán {count} nový záznam} few{Přidány {count} nové záznamy} many{Přidáno {count} nového záznamu} other{Přidáno {count} nových záznamů}}",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, one{Stažen {count} obrázek předmětu} few{Staženy {count} obrázky předmětů} many{Staženo {count} obrázku předmětů} other{Staženo {count} obrázků předmětů}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Ani po opětovném zachycení se záznamy nepodařilo načíst. Server může být dočasně nedostupný – zkuste to prosím později.",
-  "errorNoRecords": "Tento účet zatím nemá žádné záznamy přivolání",
   "errorNetwork": "Připojení k síti selhalo. Zkontrolujte připojení a zkuste to znovu.",
   "errorUnexpected": "Došlo k neočekávané chybě. Zkuste to prosím později.",
   "pageOverviewTitle": "Přehled (všechny bannery)",
   "pageOverviewGachaSection": "Přehled přivolání",
-  "pageBannerRecordList": "Seznam záznamů",
   "rarityOverviewTitle": "Přehled {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "Žádné záznamy {star}",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Potvrzení importu",
-  "settingsImportConfirmIntro": "K importu – účty: {accounts}, záznamy celkem: {records}:",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "Následující účty budou sloučeny s místními daty; existující záznamy se nesmažou:",
   "settingsImportConfirmNoConflict": "Žádné konflikty dat.",
   "settingsImportConfirmPreserveFooter": "Ostatní existující účty ({uids}) zůstanou zachovány.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Vyberte účty k importu",
   "settingsImportMergeBadge": "Sloučit",
   "accountsPickerSelectAll": "Vybrat vše",
-  "accountRecordCount": "{n, plural, one{{n} záznam} few{{n} záznamy} many{{n} záznamu} other{{n} záznamů}}",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Potvrzení",
   "confirmClearActiveBody": "Tímto trvale smažete všechny záznamy přivolání pro UID {uid}. Pro potvrzení zadejte UID:",
   "@confirmClearActiveBody": {
