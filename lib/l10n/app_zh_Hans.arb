@@ -1,5 +1,5 @@
 {
-  "@@locale": "zh_Hans",
+  "@@locale": "zh-CN",
   "localeNativeName": "简体中文",
   "localeTranslatorLabel": "翻译者：{translator}",
   "@localeNativeName": {
@@ -118,8 +118,6 @@
       }
     }
   },
-  "emptyNoRecords": "此卡池无记录",
-  "emptyNoFilterMatch": "没有符合条件的记录",
   "emptyNoGachaRecords": "暂无唤取记录",
   "statsTotal": "总抽数",
   "statsRankCount": "{star} 件数",
@@ -262,14 +260,6 @@
       }
     }
   },
-  "progressDoneSummary": "新增 {count} 条记录",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "下载 {count} 张物品图片",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -334,12 +324,10 @@
     }
   },
   "errorGachaFailed": "重新拦截后仍无法获取记录，服务器可能暂时异常，请稍后再试",
-  "errorNoRecords": "此账号尚无任何卡池记录",
   "errorNetwork": "网络连接失败，请检查网络后重试",
   "errorUnexpected": "发生意外错误，请稍后再试",
   "pageOverviewTitle": "综合数据（全卡池合计）",
   "pageOverviewGachaSection": "唤取综合",
-  "pageBannerRecordList": "记录列表",
   "rarityOverviewTitle": "{star} 一览",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -529,14 +517,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "暂无 {star} 记录",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -818,18 +798,6 @@
     }
   },
   "settingsImportConfirmTitle": "导入确认",
-  "settingsImportConfirmIntro": "即将导入 {accounts} 个账号（共 {records} 条记录）：",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "以下账号将与本机数据合并，不会删除既有记录：",
   "settingsImportConfirmNoConflict": "无数据冲突。",
   "settingsImportConfirmPreserveFooter": "其他现有账号（{uids}）将保留。",
   "@settingsImportConfirmPreserveFooter": {
@@ -864,14 +832,6 @@
   "settingsImportSelectTitle": "选择要导入的账号",
   "settingsImportMergeBadge": "合并",
   "accountsPickerSelectAll": "全选",
-  "accountRecordCount": "{n} 条记录",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "确认操作",
   "confirmClearActiveBody": "这会永久删除 UID {uid} 的所有唤取记录。输入 UID 确认：",
   "@confirmClearActiveBody": {
