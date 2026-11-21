@@ -122,6 +122,8 @@
       }
     }
   },
+  "emptyNoRecords": "Δεν υπάρχουν εγγραφές για αυτό το banner",
+  "emptyNoFilterMatch": "Καμία εγγραφή δεν ταιριάζει με το φίλτρο",
   "emptyNoGachaRecords": "Δεν υπάρχει ακόμα ιστορικό Convene",
   "statsTotal": "Σύνολο τραβηγμάτων",
   "statsRankCount": "Πλήθος {star}",
@@ -264,6 +266,14 @@
       }
     }
   },
+  "progressDoneSummary": "{count, plural, =1{Προστέθηκε 1 νέα εγγραφή} other{Προστέθηκαν {count} νέες εγγραφές}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, =1{Λήφθηκε {count} εικόνα αντικειμένου} other{Λήφθηκαν {count} εικόνες αντικειμένων}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -328,10 +338,12 @@
     }
   },
   "errorGachaFailed": "Δεν ήταν δυνατή η λήψη των εγγραφών ούτε μετά από νέα καταγραφή. Ο διακομιστής ίσως δεν είναι προσωρινά διαθέσιμος. Δοκιμάστε ξανά αργότερα.",
+  "errorNoRecords": "Αυτός ο λογαριασμός δεν έχει ακόμα ιστορικό Convene",
   "errorNetwork": "Η σύνδεση δικτύου απέτυχε. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.",
   "errorUnexpected": "Παρουσιάστηκε μη αναμενόμενο σφάλμα. Δοκιμάστε ξανά αργότερα.",
   "pageOverviewTitle": "Επισκόπηση (όλα τα banner)",
   "pageOverviewGachaSection": "Επισκόπηση Convene",
+  "pageBannerRecordList": "Λίστα εγγραφών",
   "rarityOverviewTitle": "Επισκόπηση {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -521,6 +533,14 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineNoRecordsForRank": "Καμία εγγραφή {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
         "type": "String"
       }
     }
@@ -802,6 +822,18 @@
     }
   },
   "settingsImportConfirmTitle": "Επιβεβαίωση εισαγωγής",
+  "settingsImportConfirmIntro": "{accounts, plural, =1{Πρόκειται να εισαχθεί 1 λογαριασμός} other{Πρόκειται να εισαχθούν {accounts} λογαριασμοί}} ({records, plural, =1{1 εγγραφή} other{{records} εγγραφές}} συνολικά):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportConfirmMergeHeader": "Οι παρακάτω λογαριασμοί θα συγχωνευτούν με τα τοπικά δεδομένα. Οι υπάρχουσες εγγραφές δεν θα διαγραφούν:",
   "settingsImportConfirmNoConflict": "Δεν υπάρχουν διενέξεις δεδομένων.",
   "settingsImportConfirmPreserveFooter": "Οι άλλοι υπάρχοντες λογαριασμοί ({uids}) θα διατηρηθούν.",
   "@settingsImportConfirmPreserveFooter": {
@@ -836,6 +868,14 @@
   "settingsImportSelectTitle": "Επιλέξτε λογαριασμούς για εισαγωγή",
   "settingsImportMergeBadge": "Συγχώνευση",
   "accountsPickerSelectAll": "Επιλογή όλων",
+  "accountRecordCount": "{n, plural, =1{1 εγγραφή} other{{n} εγγραφές}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Επιβεβαίωση",
   "confirmClearActiveBody": "Θα διαγραφεί οριστικά όλο το ιστορικό Convene για το UID {uid}. Πληκτρολογήστε το UID για επιβεβαίωση:",
   "@confirmClearActiveBody": {
