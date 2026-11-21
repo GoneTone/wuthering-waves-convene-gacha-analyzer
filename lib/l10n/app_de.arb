@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "Keine Einträge für dieses Banner",
-  "emptyNoFilterMatch": "Keine Einträge entsprechen dem aktuellen Filter",
   "emptyNoGachaRecords": "Noch keine Zusammenrufen-Einträge",
   "statsTotal": "Ziehungen gesamt",
   "statsRankCount": "Anzahl {star}",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count, plural, =1{1 neuer Eintrag hinzugefügt} other{{count} neue Einträge hinzugefügt}}",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, =1{{count} Gegenstandsbild heruntergeladen} other{{count} Gegenstandsbilder heruntergeladen}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Auch nach erneuter Erfassung konnten keine Einträge abgerufen werden. Der Server ist möglicherweise vorübergehend nicht erreichbar – bitte versuche es später erneut.",
-  "errorNoRecords": "Dieses Konto hat noch keine Zusammenrufen-Einträge",
   "errorNetwork": "Netzwerkverbindung fehlgeschlagen. Bitte prüfe deine Verbindung und versuche es erneut.",
   "errorUnexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später erneut.",
   "pageOverviewTitle": "Übersicht (alle Banner)",
   "pageOverviewGachaSection": "Zusammenrufen-Übersicht",
-  "pageBannerRecordList": "Einträge",
   "rarityOverviewTitle": "Übersicht {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "Keine {star}-Einträge",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Import bestätigen",
-  "settingsImportConfirmIntro": "{accounts, plural, =1{Es wird 1 Konto importiert} other{Es werden {accounts} Konten importiert}} ({records, plural, =1{1 Eintrag} other{{records} Einträge}} insgesamt):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "Folgende Konten werden mit den lokalen Daten zusammengeführt; vorhandene Einträge werden nicht gelöscht:",
   "settingsImportConfirmNoConflict": "Keine Datenkonflikte.",
   "settingsImportConfirmPreserveFooter": "Andere vorhandene Konten ({uids}) bleiben erhalten.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Konten für den Import wählen",
   "settingsImportMergeBadge": "Zusammenführen",
   "accountsPickerSelectAll": "Alle auswählen",
-  "accountRecordCount": "{n, plural, =1{1 Eintrag} other{{n} Einträge}}",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Bestätigen",
   "confirmClearActiveBody": "Alle Zusammenrufen-Einträge der UID {uid} werden endgültig gelöscht. Gib zur Bestätigung die UID ein:",
   "@confirmClearActiveBody": {
