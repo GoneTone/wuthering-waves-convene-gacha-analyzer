@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "В этом баннере нет записей",
-  "emptyNoFilterMatch": "Нет записей, подходящих под фильтр",
   "emptyNoGachaRecords": "Записей созыва пока нет",
   "statsTotal": "Всего круток",
   "statsRankCount": "Всего {star}",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count, plural, one{Добавлена {count} новая запись} few{Добавлено {count} новые записи} many{Добавлено {count} новых записей} other{Добавлено {count} новой записи}}",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, one{Загружено {count} изображение предмета} few{Загружено {count} изображения предметов} many{Загружено {count} изображений предметов} other{Загружено {count} изображения предметов}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Не удалось получить записи даже после повторного перехвата. Возможно, сервер временно недоступен — попробуйте позже.",
-  "errorNoRecords": "У этого аккаунта пока нет записей созыва",
   "errorNetwork": "Ошибка сетевого подключения. Проверьте соединение и попробуйте снова.",
   "errorUnexpected": "Произошла непредвиденная ошибка. Попробуйте позже.",
   "pageOverviewTitle": "Обзор (все баннеры)",
   "pageOverviewGachaSection": "Обзор созывов",
-  "pageBannerRecordList": "Список записей",
   "rarityOverviewTitle": "Обзор {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "Нет записей {star}",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Подтверждение импорта",
-  "settingsImportConfirmIntro": "Будет импортировано аккаунтов: {accounts} (всего записей: {records}):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "Следующие аккаунты будут объединены с локальными данными, существующие записи не удалятся:",
   "settingsImportConfirmNoConflict": "Конфликтов данных нет.",
   "settingsImportConfirmPreserveFooter": "Остальные аккаунты ({uids}) сохранятся.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Выберите аккаунты для импорта",
   "settingsImportMergeBadge": "Объединение",
   "accountsPickerSelectAll": "Выбрать все",
-  "accountRecordCount": "{n, plural, one{{n} запись} few{{n} записи} many{{n} записей} other{{n} записи}}",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Подтверждение",
   "confirmClearActiveBody": "Все записи созыва для UID {uid} будут безвозвратно удалены. Для подтверждения введите UID:",
   "@confirmClearActiveBody": {
