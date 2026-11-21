@@ -122,6 +122,8 @@
       }
     }
   },
+  "emptyNoRecords": "Nicio înregistrare pentru acest banner",
+  "emptyNoFilterMatch": "Nicio înregistrare nu corespunde filtrului curent",
   "emptyNoGachaRecords": "Încă nu există înregistrări de convocări",
   "statsTotal": "Total trageri",
   "statsRankCount": "Număr {star}",
@@ -264,6 +266,14 @@
       }
     }
   },
+  "progressDoneSummary": "{count, plural, one{S-a adăugat {count} înregistrare nouă} few{S-au adăugat {count} înregistrări noi} other{S-au adăugat {count} de înregistrări noi}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, one{S-a descărcat {count} imagine de obiect} few{S-au descărcat {count} imagini de obiecte} other{S-au descărcat {count} de imagini de obiecte}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -328,10 +338,12 @@
     }
   },
   "errorGachaFailed": "Înregistrările tot nu au putut fi preluate după o nouă captură. Este posibil ca serverul să fie temporar indisponibil. Încercați din nou mai târziu.",
+  "errorNoRecords": "Acest cont nu are încă înregistrări de convocări",
   "errorNetwork": "Conexiunea la rețea a eșuat. Verificați conexiunea și încercați din nou.",
   "errorUnexpected": "A apărut o eroare neașteptată. Încercați din nou mai târziu.",
   "pageOverviewTitle": "Prezentare generală (toate bannerele)",
   "pageOverviewGachaSection": "Prezentare generală convocări",
+  "pageBannerRecordList": "Lista înregistrărilor",
   "rarityOverviewTitle": "Prezentare generală {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -521,6 +533,14 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineNoRecordsForRank": "Nicio înregistrare {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
         "type": "String"
       }
     }
@@ -802,6 +822,18 @@
     }
   },
   "settingsImportConfirmTitle": "Confirmare import",
+  "settingsImportConfirmIntro": "{accounts, plural, one{Se va importa {accounts} cont} few{Se vor importa {accounts} conturi} other{Se vor importa {accounts} de conturi}} (înregistrări în total: {records}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportConfirmMergeHeader": "Următoarele conturi vor fi combinate cu datele locale; înregistrările existente nu vor fi șterse:",
   "settingsImportConfirmNoConflict": "Niciun conflict de date.",
   "settingsImportConfirmPreserveFooter": "Celelalte conturi existente ({uids}) vor fi păstrate.",
   "@settingsImportConfirmPreserveFooter": {
@@ -836,6 +868,14 @@
   "settingsImportSelectTitle": "Selectați conturile de importat",
   "settingsImportMergeBadge": "Combinare",
   "accountsPickerSelectAll": "Selectează tot",
+  "accountRecordCount": "{n, plural, one{{n} înregistrare} few{{n} înregistrări} other{{n} de înregistrări}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Confirmare",
   "confirmClearActiveBody": "Toate înregistrările de convocări pentru UID-ul {uid} vor fi șterse definitiv. Introduceți UID-ul pentru confirmare:",
   "@confirmClearActiveBody": {
