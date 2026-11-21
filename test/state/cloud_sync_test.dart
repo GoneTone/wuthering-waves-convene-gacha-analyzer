@@ -26,6 +26,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 import '../helpers/cloud_sync_fakes.dart';
 import '../helpers/no_game_dir.dart';
+import '../helpers/wait_until.dart';
 
 /// signIn 卡在 completer 不返回，供測試模擬「cancelLink 後瀏覽器仍完成授權」的情境。
 class _DelayedSignInAuthService extends FakeAuthService {
@@ -930,6 +931,40 @@ void main() {
     expect(container.read(settingsProvider).cloudAccountEmail, isNull);
     expect(tokenStore.token, isNull);
     expect(remote.uploads, 0);
+  });
+
+  test('變動檢查的匯出丟錯 → 記 warning、不外溢，之後的變動仍能同步', () async {
+    final messages = <String>[];
+    final sub = Logger.root.onRecord.listen((r) {
+      if (r.loggerName == 'cloudsync.sync') messages.add(r.message);
+    });
+    addTearDown(sub.cancel);
+
+    final storage = GachaStorage(tempDir);
+    await storage.save(_localBannerStorage('800000001'));
+    remote.content = _cloudBundleJson('800000001');
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    final notifier = container.read(cloudSyncProvider.notifier);
+    notifier.debounceDelay = const Duration(milliseconds: 10);
+    await notifier.link();
+    final uploadsAfterLink = remote.uploads;
+    final repo = container.read(gachaRepositoryProvider.notifier);
+
+    // 檔案在 existsSync 之後才壞掉的情境以損毀的記錄檔模擬：背景讀檔會丟錯。
+    final file = storage.recordsFile('800000001');
+    final good = file.readAsStringSync();
+    file.writeAsStringSync('{ not json');
+    repo.debugSeedAccount(_localBannerStorage('800000002'));
+    await waitUntil(
+      () => messages.any((m) => m.startsWith('dataChange check failed')),
+    );
+    expect(remote.uploads, uploadsAfterLink);
+
+    file.writeAsStringSync(good);
+    repo.debugSeedAccount(_localBannerStorage('800000003'));
+    await waitUntil(() => remote.uploads > uploadsAfterLink);
   });
 
   test(
