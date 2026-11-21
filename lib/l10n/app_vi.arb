@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "Banner này chưa có lịch sử",
-  "emptyNoFilterMatch": "Không có lịch sử nào khớp với bộ lọc hiện tại",
   "emptyNoGachaRecords": "Chưa có lịch sử triệu hồi",
   "statsTotal": "Tổng số lượt",
   "statsRankCount": "Số {star}",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "Đã thêm {count} lịch sử mới",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, other{Đã tải {count} ảnh vật phẩm}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Đã bắt lại dữ liệu nhưng vẫn không tải được lịch sử. Máy chủ có thể đang tạm thời không khả dụng. Vui lòng thử lại sau.",
-  "errorNoRecords": "Tài khoản này chưa có lịch sử triệu hồi",
   "errorNetwork": "Kết nối mạng thất bại. Vui lòng kiểm tra kết nối và thử lại.",
   "errorUnexpected": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.",
   "pageOverviewTitle": "Tổng quan (tất cả banner)",
   "pageOverviewGachaSection": "Tổng quan triệu hồi",
-  "pageBannerRecordList": "Danh sách lịch sử",
   "rarityOverviewTitle": "Tổng quan {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "Không có lịch sử {star}",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Xác nhận nhập",
-  "settingsImportConfirmIntro": "Sắp nhập {accounts} tài khoản (tổng cộng {records} lịch sử):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "Các tài khoản sau sẽ được gộp với dữ liệu trên máy; lịch sử hiện có sẽ không bị xóa:",
   "settingsImportConfirmNoConflict": "Không có xung đột dữ liệu.",
   "settingsImportConfirmPreserveFooter": "Các tài khoản hiện có khác ({uids}) sẽ được giữ nguyên.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Chọn tài khoản để nhập",
   "settingsImportMergeBadge": "Gộp",
   "accountsPickerSelectAll": "Chọn tất cả",
-  "accountRecordCount": "{n} lịch sử",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Xác nhận",
   "confirmClearActiveBody": "Thao tác này sẽ xóa vĩnh viễn toàn bộ lịch sử triệu hồi của UID {uid}. Nhập UID để xác nhận:",
   "@confirmClearActiveBody": {
