@@ -239,6 +239,10 @@ class GachaRepository extends Notifier<GachaState> {
   /// 清除目前的更新進度狀態。
   void clearProgress() {
     state = state.copyWith(clearProgress: true);
+    if (_imageFetchPending) {
+      _cloudSyncLog.info('image fetch resumed: result dialog closed');
+      unawaited(fetchItemImagesForCloudSync());
+    }
   }
 
   /// 啟動喚取資料更新，優先使用快取 URL，無快取則等待取得憑證（電腦版攔截＋Client.log，Android 讀遊戲記錄）。
@@ -453,7 +457,7 @@ class GachaRepository extends Notifier<GachaState> {
       } catch (e) {
         // 攔截出錯（例如 UAC 被拒）：改為只等 log（沒有 log 時提示使用者選資料夾）。
         if (!await _canWaitLogOnly(logStart)) rethrow;
-        _clientLog.warning('capture failed error=${e.runtimeType}');
+        _clientLog.warning('capture failed', e);
         captureFinished = true;
         (cred, fromLog) = await _waitLogOnly(isFallback, logHit, waitCancelled);
       }
@@ -757,10 +761,7 @@ class GachaRepository extends Notifier<GachaState> {
   void _queueAndroidTeardown(Future<void> teardown, String what) {
     final chained = Future.wait<void>([
       ?_androidTeardown,
-      teardown.catchError(
-        (Object e) =>
-            _androidLog.warning('$what failed error=${e.runtimeType}'),
-      ),
+      teardown.catchError((Object e) => _androidLog.warning('$what failed', e)),
     ]);
     _androidTeardown = chained;
     unawaited(
@@ -795,7 +796,7 @@ class GachaRepository extends Notifier<GachaState> {
     try {
       await (await starting)?.cancel();
     } catch (e) {
-      _clientLog.warning('client log watch stop failed error=${e.runtimeType}');
+      _clientLog.warning('client log watch stop failed', e);
     }
     final leftOn = await ready.release();
     // 連上時可能順便補回授權，設定頁的配對狀態要重讀。
@@ -878,9 +879,7 @@ class GachaRepository extends Notifier<GachaState> {
       _syncLogOnlyNotice();
     } catch (e) {
       // FileSystemException 的字串會帶原始路徑，只記型別。
-      _clientLog.warning(
-        'client log watch start failed error=${e.runtimeType}',
-      );
+      _clientLog.warning('client log watch start failed', e);
     }
   }
 
@@ -906,7 +905,7 @@ class GachaRepository extends Notifier<GachaState> {
     try {
       await watch?.cancel();
     } catch (e) {
-      _clientLog.warning('client log watch stop failed error=${e.runtimeType}');
+      _clientLog.warning('client log watch stop failed', e);
     }
   }
 
@@ -1093,6 +1092,9 @@ class GachaRepository extends Notifier<GachaState> {
 
   /// 防 re-entrancy 旗標，update 進行中為 true。
   bool _isUpdating = false;
+
+  /// 雲端同步合併時結果視窗還開著而延後的補圖；視窗關閉（[clearProgress]）時補跑一次。
+  bool _imageFetchPending = false;
 
   /// 最近一次 [_runUpdate] 結束時完成。
   Completer<void>? _updateDone;
@@ -1396,8 +1398,15 @@ class GachaRepository extends Notifier<GachaState> {
   /// 不啟動 progress UI、不抓物品圖片。
   ///
   /// bootstrap 未完成、已有更新或匯入進行中時拋 [CloudSyncBusyException]，由雲端同步層重排。
+  /// 進度停在 [UpdateCompleted]／[UpdateFailed] 只是結果視窗還沒關，不算忙碌：
+  /// 否則視窗開著期間同步會每輪重下載雲端檔再被擋下。
   Future<ImportResult> importBundleForCloudSync(AccountsBundle bundle) async {
-    if (state.isBootstrapping || state.progress != null || _isUpdating) {
+    final progress = state.progress;
+    final inFlight =
+        progress != null &&
+        progress is! UpdateCompleted &&
+        progress is! UpdateFailed;
+    if (state.isBootstrapping || inFlight || _isUpdating) {
       _importLog.info('cloud sync import rejected: busy');
       throw const CloudSyncBusyException();
     }
@@ -1409,6 +1418,9 @@ class GachaRepository extends Notifier<GachaState> {
       return await _runImport(bundle);
     } finally {
       _isUpdating = false;
+      if (_imageFetchPending && state.progress == null) {
+        unawaited(fetchItemImagesForCloudSync());
+      }
     }
   }
 
@@ -2014,10 +2026,25 @@ class GachaRepository extends Notifier<GachaState> {
   /// best-effort：補圖失敗僅記 log，仍照常收尾；更新／匯入進行中或
   /// bootstrap 未完成時直接略過，缺圖留待下次「更新」自然補齊。
   Future<void> fetchItemImagesForCloudSync() async {
-    if (state.isBootstrapping || state.progress != null || _isUpdating) {
-      _cloudSyncLog.info('image fetch skipped: busy');
+    final progress = state.progress;
+    if (progress != null) {
+      // 只是結果視窗還開著（合併可在此時進行）：等視窗關閉（[clearProgress]）再補。
+      if ((progress is UpdateCompleted || progress is UpdateFailed) &&
+          !_isUpdating &&
+          !state.isBootstrapping) {
+        _imageFetchPending = true;
+        _cloudSyncLog.info('image fetch deferred: result dialog still open');
+        return;
+      }
+    }
+    if (state.isBootstrapping || progress != null || _isUpdating) {
+      _cloudSyncLog.info(
+        'image fetch skipped: progress=${progress?.runtimeType} '
+        'updating=$_isUpdating bootstrapping=${state.isBootstrapping}',
+      );
       return;
     }
+    _imageFetchPending = false;
     _isUpdating = true;
     _cancelTriggered = false;
     final cancellable = ref.read(cancellableHttpClientFactoryProvider)();

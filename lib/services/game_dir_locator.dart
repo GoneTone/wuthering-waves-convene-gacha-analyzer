@@ -88,9 +88,7 @@ class GameDirLocator {
         final value = key.getStringValue('InstallPath')?.trim();
         if (value != null && value.isNotEmpty) paths.add(value);
       } on Exception catch (e) {
-        _log.warning(
-          'registry value read failed hive=${hive.name} error=${e.runtimeType}',
-        );
+        _log.warning('registry value read failed hive=${hive.name}', e);
       } finally {
         key.close();
       }

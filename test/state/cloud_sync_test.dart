@@ -26,6 +26,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 
 import '../helpers/cloud_sync_fakes.dart';
 import '../helpers/no_game_dir.dart';
+import '../helpers/wait_until.dart';
 
 /// signIn 卡在 completer 不返回，供測試模擬「cancelLink 後瀏覽器仍完成授權」的情境。
 class _DelayedSignInAuthService extends FakeAuthService {
@@ -470,6 +471,46 @@ void main() {
     expect(file.lastModifiedSync(), modifiedBefore);
   });
 
+  test('雲端 A、B／本機 B、C，B 相同 → 同步後三個帳號都在本機', () async {
+    final b = _localBannerStorage('200000002');
+    await GachaStorage(tempDir).save(b);
+    await GachaStorage(tempDir).save(_localBannerStorage('300000003'));
+    final cloud =
+        jsonDecode(_cloudBundleJsonWithRecord('100000001'))
+            as Map<String, dynamic>;
+    (cloud['accounts'] as List).add(b.toJson());
+    remote.content = jsonEncode(cloud);
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+    await container.read(cloudSyncProvider.notifier).link();
+
+    expect(container.read(gachaRepositoryProvider).byUid.keys.toSet(), {
+      '100000001',
+      '200000002',
+      '300000003',
+    });
+  });
+
+  test('雲端帳號有別名、本機沒有（記錄相同）→ 同步後別名進到設定', () async {
+    final local = _localBannerStorage('100000001');
+    await GachaStorage(tempDir).save(local);
+    final cloud =
+        jsonDecode(_cloudBundleJson('100000001')) as Map<String, dynamic>;
+    cloud['accounts'] = [
+      {...local.toJson(), 'alias': '主帳'},
+    ];
+    remote.content = jsonEncode(cloud);
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+
+    await container.read(cloudSyncProvider.notifier).link();
+
+    expect(container.read(settingsProvider).uidAliases['100000001'], '主帳');
+  });
+
   test('上傳內容同時含有記錄檔的帳號（背景讀檔）與只在記憶體的帳號', () async {
     final onDisk = _localBannerStorage('100000001');
     await GachaStorage(tempDir).save(onDisk);
@@ -890,6 +931,47 @@ void main() {
     expect(container.read(settingsProvider).cloudAccountEmail, isNull);
     expect(tokenStore.token, isNull);
     expect(remote.uploads, 0);
+  });
+
+  test('變動檢查的匯出丟錯 → 記 warning、不外溢，之後的變動仍能同步', () async {
+    final messages = <String>[];
+    final errors = <Object?>[];
+    final sub = Logger.root.onRecord.listen((r) {
+      if (r.loggerName != 'cloudsync.sync') return;
+      messages.add(r.message);
+      errors.add(r.error);
+    });
+    addTearDown(sub.cancel);
+
+    final storage = GachaStorage(tempDir);
+    await storage.save(_localBannerStorage('800000001'));
+    remote.content = _cloudBundleJson('800000001');
+    final container = makeContainer();
+    await container.read(settingsProvider.notifier).waitForLoad();
+    await container.read(gachaRepositoryProvider.notifier).waitForBootstrap();
+    final notifier = container.read(cloudSyncProvider.notifier);
+    notifier.debounceDelay = const Duration(milliseconds: 10);
+    await notifier.link();
+    final uploadsAfterLink = remote.uploads;
+    final repo = container.read(gachaRepositoryProvider.notifier);
+
+    // 檔案在 existsSync 之後才壞掉的情境以損毀的記錄檔模擬：背景讀檔會丟錯。
+    final file = storage.recordsFile('800000001');
+    final good = file.readAsStringSync();
+    file.writeAsStringSync('{ not json');
+    repo.debugSeedAccount(_localBannerStorage('800000002'));
+    await waitUntil(
+      () => messages.any((m) => m.startsWith('dataChange check failed')),
+    );
+    expect(remote.uploads, uploadsAfterLink);
+    final failedAt = messages.indexWhere(
+      (m) => m.startsWith('dataChange check failed'),
+    );
+    expect(errors[failedAt], isA<FormatException>());
+
+    file.writeAsStringSync(good);
+    repo.debugSeedAccount(_localBannerStorage('800000003'));
+    await waitUntil(() => remote.uploads > uploadsAfterLink);
   });
 
   test(

@@ -56,6 +56,38 @@ void main() {
     expect(content, contains('should-appear'));
   });
 
+  test('寫入前遮罩訊息、例外物件與 stack trace 裡的敏感資料，錯誤原因照留', () async {
+    svc = await LogService.bootstrap(tempDir);
+    const path =
+        r'C:\Users\Jane Doe\AppData\Roaming\tw.reh\gacha\800123456.records.json';
+    Logger('test').warning(
+      'load failed url=https://x.example.com/y?authkey=SECRET&size=5',
+      const PathAccessException(
+        path,
+        OSError('The process cannot access the file', 32),
+        'Cannot open file',
+      ),
+      StackTrace.fromString(
+        '#0 load (file:///C:/Users/Jane%20Doe/src/gacha_storage.dart:12:5)',
+      ),
+    );
+    await svc.flush();
+
+    final file = (await Directory('${tempDir.path}/logs').list().toList())
+        .whereType<File>()
+        .firstWhere((f) => f.path.endsWith('.log'));
+    final content = await file.readAsString();
+    expect(content, isNot(contains('Jane')));
+    expect(content, isNot(contains('800123456')));
+    expect(content, isNot(contains('SECRET')));
+    expect(content, contains(r'C:\Users\***\AppData'));
+    expect(content, contains(r'\800****456.records.json'));
+    expect(content, contains('file:///C:/Users/***/src'));
+    expect(content, contains('authkey=***'));
+    expect(content, contains('The process cannot access the file'));
+    expect(content, contains('errno = 32'));
+  });
+
   test('clearAll deletes all .log files and reopens sink', () async {
     svc = await LogService.bootstrap(tempDir);
     Logger('test').info('before clear');

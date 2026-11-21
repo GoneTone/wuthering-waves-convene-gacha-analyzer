@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/cancellable_http_client.dart';
@@ -12,6 +13,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.da
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_capture.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import '../helpers/no_game_dir.dart';
+import '../helpers/wait_until.dart';
 
 /// 不會被觸發的 fake capture。
 class _FakeCapture implements GachaCapture {
@@ -109,5 +111,160 @@ void main() {
 
     expect(second.addedRecords, 0);
     expect(second.duplicateRecords, 1);
+  });
+
+  test('更新完成視窗還開著時照常合併，進度維持原狀', () async {
+    final container = makeContainer();
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    final completed = UpdateCompleted(
+      totalNewRecords: 0,
+      failedBanners: const [],
+      updatedAt: DateTime.utc(2026, 11, 21),
+      itemImagesDownloaded: 0,
+    );
+    repo.debugSetProgress(completed);
+
+    final result = await repo.importBundleForCloudSync(_bundle('100000001'));
+
+    expect(result.addedRecords, 1);
+    expect(container.read(gachaRepositoryProvider).progress, same(completed));
+  });
+
+  test('更新失敗視窗還開著時照常合併', () async {
+    final container = makeContainer();
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    repo.debugSetProgress(const UpdateFailed(UpdateErrorUnexpected()));
+
+    final result = await repo.importBundleForCloudSync(_bundle('100000001'));
+
+    expect(result.addedRecords, 1);
+  });
+
+  test('更新進行中仍視為忙碌', () async {
+    final container = makeContainer();
+    final repo = container.read(gachaRepositoryProvider.notifier);
+    await repo.waitForBootstrap();
+    repo.debugSetProgress(const Preparing());
+
+    await expectLater(
+      repo.importBundleForCloudSync(_bundle('100000001')),
+      throwsA(isA<CloudSyncBusyException>()),
+    );
+  });
+
+  test(
+    '每一種進行中的 progress 都讓 importBundleForCloudSync 拋 CloudSyncBusyException',
+    () async {
+      const inFlight = <UpdateProgress>[
+        Preparing(),
+        WaitingForCapture(),
+        FetchingBanner(
+          displayName: 'x',
+          poolIndex: 1,
+          poolCount: 10,
+          newRecordsSoFar: 0,
+        ),
+        FetchingItemImages(
+          phase: ItemImagePhase.checking,
+          doneCount: 0,
+          totalCount: 1,
+        ),
+        FetchingItemImages(
+          phase: ItemImagePhase.downloading,
+          doneCount: 0,
+          totalCount: 1,
+        ),
+      ];
+      final container = makeContainer();
+      final repo = container.read(gachaRepositoryProvider.notifier);
+      await repo.waitForBootstrap();
+
+      for (final progress in inFlight) {
+        repo.debugSetProgress(progress);
+        await expectLater(
+          repo.importBundleForCloudSync(_bundle('800000001')),
+          throwsA(isA<CloudSyncBusyException>()),
+          reason: '${progress.runtimeType}',
+        );
+      }
+    },
+  );
+
+  group('結果視窗開著時的補圖延後', () {
+    late List<String> messages;
+
+    setUp(() {
+      messages = [];
+      final sub = Logger.root.onRecord
+          .where((r) => r.loggerName == 'cloudsync.sync')
+          .listen((r) => messages.add(r.message));
+      addTearDown(sub.cancel);
+    });
+
+    /// 已完成的補圖次數。
+    int fetchRuns() =>
+        messages.where((m) => m.startsWith('image fetch done')).length;
+
+    test('結果視窗（UpdateCompleted）開著 → 先不補圖，clearProgress 後補一次', () async {
+      final container = makeContainer();
+      final repo = container.read(gachaRepositoryProvider.notifier);
+      await repo.waitForBootstrap();
+      final shown = UpdateCompleted(
+        totalNewRecords: 0,
+        failedBanners: const [],
+        updatedAt: DateTime.utc(2026, 7, 2),
+        itemImagesDownloaded: 0,
+      );
+      repo.debugSetProgress(shown);
+      await repo.importBundleForCloudSync(_bundle('800000001'));
+
+      await repo.fetchItemImagesForCloudSync();
+      expect(fetchRuns(), 0);
+      expect(container.read(gachaRepositoryProvider).progress, same(shown));
+
+      repo.clearProgress();
+      await waitUntil(() => fetchRuns() == 1);
+
+      repo.clearProgress();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(fetchRuns(), 1);
+    });
+
+    test('關閉視窗時另一輪匯入占著 → 延後的補圖不遺失，匯入結束後補跑', () async {
+      final container = makeContainer();
+      final repo = container.read(gachaRepositoryProvider.notifier);
+      await repo.waitForBootstrap();
+      repo.debugSetProgress(
+        UpdateCompleted(
+          totalNewRecords: 0,
+          failedBanners: const [],
+          updatedAt: DateTime.utc(2026, 7, 2),
+          itemImagesDownloaded: 0,
+        ),
+      );
+      await repo.fetchItemImagesForCloudSync();
+      expect(fetchRuns(), 0);
+
+      final importing = repo.importBundleForCloudSync(_bundle('800000002'));
+      repo.clearProgress();
+      await importing;
+      await waitUntil(() => fetchRuns() == 1);
+    });
+
+    test('進行中的 progress → 照舊略過，clearProgress 後不補跑', () async {
+      final container = makeContainer();
+      final repo = container.read(gachaRepositoryProvider.notifier);
+      await repo.waitForBootstrap();
+      repo.debugSetProgress(const Preparing());
+
+      await repo.fetchItemImagesForCloudSync();
+      repo.clearProgress();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(fetchRuns(), 0);
+      expect(container.read(gachaRepositoryProvider).progress, isNull);
+    });
   });
 }

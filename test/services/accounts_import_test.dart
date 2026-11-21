@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/accounts_import.dart';
 
@@ -156,5 +157,35 @@ void main() {
     final banners = bundle.accounts.single.data.banners;
     expect(banners.keys, ['1']);
     expect(banners.containsKey('301'), isFalse);
+  });
+
+  test('duplicate playerId 的 log 不含完整 playerId', () {
+    final records = <LogRecord>[];
+    final sub = Logger.root.onRecord.listen(records.add);
+    addTearDown(sub.cancel);
+    const account = '''
+{
+      "player_id": "800000001",
+      "language_code": "zh-Hant",
+      "last_updated": "2026-05-12T08:30:00.000Z",
+      "banners": {"1": []}
+    }''';
+    const text =
+        '''
+{
+  "schema_version": 2,
+  "app": "wuthering_waves_convene_gacha_analyzer",
+  "exported_at": "2026-05-12T08:30:00.000Z",
+  "app_version": "1.0.0",
+  "last_active_uid": null,
+  "accounts": [$account, $account]
+}
+''';
+
+    expect(() => importAccounts(text), throwsA(isA<FormatException>()));
+
+    final warning = records.singleWhere((r) => r.level == Level.WARNING);
+    expect(warning.message, contains('Duplicate playerId'));
+    expect(warning.message, isNot(contains('800000001')));
   });
 }

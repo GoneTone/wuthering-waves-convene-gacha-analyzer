@@ -1,3 +1,4 @@
+import 'package:wuthering_waves_convene_gacha_analyzer/services/log_sanitize.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 
 /// 本軟體的匯出識別字串，寫入備份檔的 `app` 欄位供匯入端辨識來源。
@@ -110,7 +111,7 @@ class AccountsBundle {
       }
       if (!seen.add(account.data.playerId)) {
         throw FormatException(
-          'Duplicate playerId in accounts: ${account.data.playerId}',
+          'Duplicate playerId in accounts: ${sanitizeUid(account.data.playerId)}',
         );
       }
       accounts.add(account);

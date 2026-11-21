@@ -328,6 +328,30 @@ void main() {
     );
   }, variant: windows);
 
+  testWidgets('a records file that fails to decode shows the export failed '
+      'dialog and saves nothing', (tester) async {
+    final records = <LogRecord>[];
+    final sub = Logger.root.onRecord
+        .where((r) => r.loggerName == 'accounts.io')
+        .listen(records.add);
+    addTearDown(sub.cancel);
+    final l = await pump(tester, android: false);
+    GachaStorage(tempDir!).recordsFile('1001').writeAsStringSync('{ not json');
+    await openBackupPicker(tester, l);
+    await tester.tap(find.widgetWithText(FilledButton, l.confirmExport));
+    final failedText = find.text(
+      l.settingsExportFailed(l.importReasonUnreadable),
+    );
+    await pumpUntil(tester, () => failedText.evaluate().isNotEmpty);
+    expect(failedText, findsOneWidget);
+    expect(saves, isEmpty);
+    expect(shares, isEmpty);
+    final failed = records.singleWhere(
+      (r) => r.message.startsWith('export failed'),
+    );
+    expect(failed.error, isA<FormatException>());
+  }, variant: windows);
+
   testWidgets('a failing logs save shows the logs export failed dialog', (
     tester,
   ) async {
