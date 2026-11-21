@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "Geen rekords vir hierdie banier nie",
-  "emptyNoFilterMatch": "Geen rekords pas by die huidige filter nie",
   "emptyNoGachaRecords": "Nog geen Convene-rekords nie",
   "statsTotal": "Totale trekke",
   "statsRankCount": "Aantal {star}",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count, plural, one{{count} nuwe rekord bygevoeg} other{{count} nuwe rekords bygevoeg}}",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, one{{count} itembeeld afgelaai} other{{count} itembeelde afgelaai}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Kon steeds nie rekords ophaal nie, selfs ná ’n nuwe vaslegging. Die bediener is dalk tydelik onbeskikbaar. Probeer asseblief later weer.",
-  "errorNoRecords": "Hierdie rekening het nog geen Convene-rekords nie",
   "errorNetwork": "Netwerkverbinding het misluk. Gaan jou verbinding na en probeer weer.",
   "errorUnexpected": "’n Onverwagte fout het voorgekom. Probeer asseblief later weer.",
   "pageOverviewTitle": "Oorsig (alle baniere)",
   "pageOverviewGachaSection": "Convene-oorsig",
-  "pageBannerRecordList": "Rekordlys",
   "rarityOverviewTitle": "{star}-oorsig",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "Geen {star}-rekords nie",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Bevestig invoer",
-  "settingsImportConfirmIntro": "{accounts, plural, one{Gaan {accounts} rekening invoer} other{Gaan {accounts} rekeninge invoer}} ({records, plural, =1{1 rekord} other{{records} rekords}} in totaal):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "Die volgende rekeninge sal met plaaslike data saamgevoeg word; bestaande rekords sal nie geskrap word nie:",
   "settingsImportConfirmNoConflict": "Geen datakonflikte nie.",
   "settingsImportConfirmPreserveFooter": "Ander bestaande rekeninge ({uids}) sal behou word.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Kies rekeninge om in te voer",
   "settingsImportMergeBadge": "Saamvoeging",
   "accountsPickerSelectAll": "Kies alles",
-  "accountRecordCount": "{n, plural, one{{n} rekord} other{{n} rekords}}",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Bevestig",
   "confirmClearActiveBody": "Dit skrap permanent alle Convene-rekords vir UID {uid}. Tik die UID om te bevestig:",
   "@confirmClearActiveBody": {
