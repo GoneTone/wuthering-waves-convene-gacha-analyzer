@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "Bu banner için kayıt yok",
-  "emptyNoFilterMatch": "Geçerli filtreyle eşleşen kayıt yok",
   "emptyNoGachaRecords": "Henüz Çağrı kaydı yok",
   "statsTotal": "Toplam çekiliş",
   "statsRankCount": "{star} Sayısı",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count} yeni kayıt eklendi",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, other{{count} eşya görseli indirildi}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Yeniden yakalamadan sonra da kayıtlar alınamadı. Sunucu geçici olarak kullanılamıyor olabilir, lütfen daha sonra tekrar deneyin.",
-  "errorNoRecords": "Bu hesabın henüz Çağrı kaydı yok",
   "errorNetwork": "Ağ bağlantısı başarısız oldu. Lütfen bağlantınızı kontrol edip tekrar deneyin.",
   "errorUnexpected": "Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
   "pageOverviewTitle": "Genel Bakış (tüm bannerlar)",
   "pageOverviewGachaSection": "Çağrı Genel Bakışı",
-  "pageBannerRecordList": "Kayıt listesi",
   "rarityOverviewTitle": "{star} Genel Bakışı",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "{star} kaydı yok",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "İçe aktarma onayı",
-  "settingsImportConfirmIntro": "{accounts} hesap (toplam {records} kayıt) içe aktarılmak üzere:",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "Aşağıdaki hesaplar yerel verilerle birleştirilecek; mevcut kayıtlar silinmeyecek:",
   "settingsImportConfirmNoConflict": "Veri çakışması yok.",
   "settingsImportConfirmPreserveFooter": "Diğer mevcut hesaplar ({uids}) korunacak.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "İçe aktarılacak hesapları seçin",
   "settingsImportMergeBadge": "Birleştir",
   "accountsPickerSelectAll": "Tümünü seç",
-  "accountRecordCount": "{n} kayıt",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Onayla",
   "confirmClearActiveBody": "Bu işlem şu UID'ye ait tüm Çağrı kayıtlarını kalıcı olarak silecek: {uid}. Onaylamak için UID'yi yazın:",
   "@confirmClearActiveBody": {
