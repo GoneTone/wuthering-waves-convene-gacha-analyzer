@@ -122,6 +122,8 @@
       }
     }
   },
+  "emptyNoRecords": "Tällä bannerilla ei ole tapahtumia",
+  "emptyNoFilterMatch": "Suodatinta vastaavia tapahtumia ei ole",
   "emptyNoGachaRecords": "Convene-historiaa ei vielä ole",
   "statsTotal": "Vetoja yhteensä",
   "statsRankCount": "{star}-määrä",
@@ -264,6 +266,14 @@
       }
     }
   },
+  "progressDoneSummary": "{count, plural, =1{Lisättiin 1 uusi tapahtuma} other{Lisättiin {count} uutta tapahtumaa}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, =1{Ladattiin {count} esinekuva} other{Ladattiin {count} esinekuvaa}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -328,10 +338,12 @@
     }
   },
   "errorGachaFailed": "Tapahtumia ei saatu haettua uudelleensieppauksenkaan jälkeen. Palvelin voi olla tilapäisesti poissa käytöstä – yritä myöhemmin uudelleen.",
+  "errorNoRecords": "Tällä tilillä ei ole vielä Convene-historiaa",
   "errorNetwork": "Verkkoyhteys epäonnistui. Tarkista yhteys ja yritä uudelleen.",
   "errorUnexpected": "Tapahtui odottamaton virhe. Yritä myöhemmin uudelleen.",
   "pageOverviewTitle": "Yleiskatsaus (kaikki bannerit)",
   "pageOverviewGachaSection": "Convene-yleiskatsaus",
+  "pageBannerRecordList": "Tapahtumaluettelo",
   "rarityOverviewTitle": "{star} – yleiskatsaus",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -521,6 +533,14 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineNoRecordsForRank": "Ei {star}-tapahtumia",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
         "type": "String"
       }
     }
@@ -802,6 +822,18 @@
     }
   },
   "settingsImportConfirmTitle": "Vahvista tuonti",
+  "settingsImportConfirmIntro": "{accounts, plural, =1{Tuodaan 1 tili} other{Tuodaan {accounts} tiliä}} (yhteensä {records, plural, =1{1 tapahtuma} other{{records} tapahtumaa}}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportConfirmMergeHeader": "Seuraavat tilit yhdistetään paikallisiin tietoihin. Olemassa olevia tapahtumia ei poisteta:",
   "settingsImportConfirmNoConflict": "Ei tietoristiriitoja.",
   "settingsImportConfirmPreserveFooter": "Muut olemassa olevat tilit ({uids}) säilytetään.",
   "@settingsImportConfirmPreserveFooter": {
@@ -836,6 +868,14 @@
   "settingsImportSelectTitle": "Valitse tuotavat tilit",
   "settingsImportMergeBadge": "Yhdistä",
   "accountsPickerSelectAll": "Valitse kaikki",
+  "accountRecordCount": "{n, plural, =1{1 tapahtuma} other{{n} tapahtumaa}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Vahvista",
   "confirmClearActiveBody": "Tämä poistaa pysyvästi kaiken Convene-historian UID:ltä {uid}. Vahvista kirjoittamalla UID:",
   "@confirmClearActiveBody": {
