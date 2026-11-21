@@ -122,6 +122,8 @@
       }
     }
   },
+  "emptyNoRecords": "Aucun enregistrement pour cette bannière",
+  "emptyNoFilterMatch": "Aucun enregistrement ne correspond au filtre actuel",
   "emptyNoGachaRecords": "Aucun historique de Convier",
   "statsTotal": "Total des tirages",
   "statsRankCount": "Nombre de {star}",
@@ -264,6 +266,14 @@
       }
     }
   },
+  "progressDoneSummary": "{count, plural, one{{count} nouvel enregistrement ajouté} other{{count} nouveaux enregistrements ajoutés}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, one{{count} image d'item téléchargée} other{{count} images d'items téléchargées}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -328,10 +338,12 @@
     }
   },
   "errorGachaFailed": "Impossible de récupérer l'historique même après une nouvelle capture. Le serveur est peut-être temporairement indisponible, veuillez réessayer plus tard.",
+  "errorNoRecords": "Ce compte n'a encore aucun historique de Convier",
   "errorNetwork": "Échec de la connexion réseau. Vérifiez votre connexion et réessayez.",
   "errorUnexpected": "Une erreur inattendue s'est produite. Veuillez réessayer plus tard.",
   "pageOverviewTitle": "Aperçu (toutes les bannières)",
   "pageOverviewGachaSection": "Aperçu de Convier",
+  "pageBannerRecordList": "Liste des enregistrements",
   "rarityOverviewTitle": "Aperçu des {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -521,6 +533,14 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineNoRecordsForRank": "Aucun {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
         "type": "String"
       }
     }
@@ -802,6 +822,18 @@
     }
   },
   "settingsImportConfirmTitle": "Confirmer l'importation",
+  "settingsImportConfirmIntro": "{accounts, plural, one{{accounts} compte va être importé} other{{accounts} comptes vont être importés}} ({records, plural, one{{records} enregistrement} other{{records} enregistrements}} au total) :",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportConfirmMergeHeader": "Les comptes suivants seront fusionnés avec les données locales ; les enregistrements existants ne seront pas supprimés :",
   "settingsImportConfirmNoConflict": "Aucun conflit de données.",
   "settingsImportConfirmPreserveFooter": "Les autres comptes existants ({uids}) seront conservés.",
   "@settingsImportConfirmPreserveFooter": {
@@ -836,6 +868,14 @@
   "settingsImportSelectTitle": "Choisir les comptes à importer",
   "settingsImportMergeBadge": "Fusion",
   "accountsPickerSelectAll": "Tout sélectionner",
+  "accountRecordCount": "{n, plural, one{{n} enregistrement} other{{n} enregistrements}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Confirmation",
   "confirmClearActiveBody": "Tout l'historique de Convier de l'UID {uid} sera définitivement supprimé. Saisissez l'UID pour confirmer :",
   "@confirmClearActiveBody": {
