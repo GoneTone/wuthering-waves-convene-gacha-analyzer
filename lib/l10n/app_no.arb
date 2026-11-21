@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "Ingen historikk for dette banneret",
-  "emptyNoFilterMatch": "Ingen oppføringer samsvarer med filteret",
   "emptyNoGachaRecords": "Ingen Convene-historikk ennå",
   "statsTotal": "Totalt antall trekk",
   "statsRankCount": "Antall {star}",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "{count, plural, =1{La til 1 ny oppføring} other{La til {count} nye oppføringer}}",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, =1{Lastet ned {count} bilde av gjenstand} other{Lastet ned {count} bilder av gjenstander}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "Kunne fortsatt ikke hente historikken etter ny henting. Serveren kan være midlertidig utilgjengelig – prøv igjen senere.",
-  "errorNoRecords": "Denne kontoen har ingen Convene-historikk ennå",
   "errorNetwork": "Nettverkstilkoblingen mislyktes. Sjekk tilkoblingen og prøv igjen.",
   "errorUnexpected": "Det oppstod en uventet feil. Prøv igjen senere.",
   "pageOverviewTitle": "Oversikt (alle bannere)",
   "pageOverviewGachaSection": "Convene-oversikt",
-  "pageBannerRecordList": "Historikk",
   "rarityOverviewTitle": "Oversikt over {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "Ingen {star} i historikken",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "Bekreft import",
-  "settingsImportConfirmIntro": "{accounts, plural, =1{Importerer 1 konto} other{Importerer {accounts} kontoer}} ({records, plural, =1{1 oppføring} other{{records} oppføringer}} totalt):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "Følgende kontoer slås sammen med lokale data. Eksisterende oppføringer slettes ikke:",
   "settingsImportConfirmNoConflict": "Ingen datakonflikter.",
   "settingsImportConfirmPreserveFooter": "Andre eksisterende kontoer ({uids}) beholdes.",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "Velg kontoer som skal importeres",
   "settingsImportMergeBadge": "Slå sammen",
   "accountsPickerSelectAll": "Velg alle",
-  "accountRecordCount": "{n, plural, =1{1 oppføring} other{{n} oppføringer}}",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "Bekreft",
   "confirmClearActiveBody": "Dette sletter all Convene-historikk for UID {uid} permanent. Skriv inn UID-en for å bekrefte:",
   "@confirmClearActiveBody": {
