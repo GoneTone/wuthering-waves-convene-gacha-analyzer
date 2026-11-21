@@ -122,6 +122,8 @@
       }
     }
   },
+  "emptyNoRecords": "No hi ha registres en aquest bàner",
+  "emptyNoFilterMatch": "Cap registre no coincideix amb el filtre actual",
   "emptyNoGachaRecords": "Encara no hi ha registres de convocacions",
   "statsTotal": "Total de tirades",
   "statsRankCount": "Nombre de {star}",
@@ -264,6 +266,14 @@
       }
     }
   },
+  "progressDoneSummary": "{count, plural, one{S'ha afegit {count} registre nou} other{S'han afegit {count} registres nous}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, one{S'ha baixat {count} imatge d'objecte} other{S'han baixat {count} imatges d'objectes}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -328,10 +338,12 @@
     }
   },
   "errorGachaFailed": "Tot i tornar a capturar, no s'han pogut obtenir els registres. És possible que el servidor no estigui disponible temporalment. Torna-ho a provar més tard.",
+  "errorNoRecords": "Aquest compte encara no té registres de convocacions",
   "errorNetwork": "Ha fallat la connexió de xarxa. Comprova la connexió i torna-ho a provar.",
   "errorUnexpected": "S'ha produït un error inesperat. Torna-ho a provar més tard.",
   "pageOverviewTitle": "Resum (tots els bàners)",
   "pageOverviewGachaSection": "Resum de convocacions",
+  "pageBannerRecordList": "Llista de registres",
   "rarityOverviewTitle": "Resum de {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -521,6 +533,14 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineNoRecordsForRank": "No hi ha registres de {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
         "type": "String"
       }
     }
@@ -802,6 +822,18 @@
     }
   },
   "settingsImportConfirmTitle": "Confirmació d'importació",
+  "settingsImportConfirmIntro": "{accounts, plural, one{S'importarà {accounts} compte} other{S'importaran {accounts} comptes}} (registres en total: {records}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportConfirmMergeHeader": "Els comptes següents es combinaran amb les dades locals; no s'eliminarà cap registre existent:",
   "settingsImportConfirmNoConflict": "No hi ha conflictes de dades.",
   "settingsImportConfirmPreserveFooter": "Es conservaran els altres comptes existents ({uids}).",
   "@settingsImportConfirmPreserveFooter": {
@@ -836,6 +868,14 @@
   "settingsImportSelectTitle": "Tria els comptes que vols importar",
   "settingsImportMergeBadge": "Combinació",
   "accountsPickerSelectAll": "Selecciona-ho tot",
+  "accountRecordCount": "{n, plural, one{{n} registre} other{{n} registres}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Confirmació",
   "confirmClearActiveBody": "S'eliminaran permanentment tots els registres de convocacions de l'UID {uid}. Escriu l'UID per confirmar-ho:",
   "@confirmClearActiveBody": {
