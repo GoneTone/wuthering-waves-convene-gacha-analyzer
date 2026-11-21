@@ -122,8 +122,6 @@
       }
     }
   },
-  "emptyNoRecords": "แบนเนอร์นี้ยังไม่มีบันทึก",
-  "emptyNoFilterMatch": "ไม่มีบันทึกที่ตรงกับตัวกรองปัจจุบัน",
   "emptyNoGachaRecords": "ยังไม่มีบันทึกการอัญเชิญ",
   "statsTotal": "อัญเชิญทั้งหมด",
   "statsRankCount": "จำนวน {star}",
@@ -266,14 +264,6 @@
       }
     }
   },
-  "progressDoneSummary": "เพิ่มบันทึกการอัญเชิญใหม่ {count} รายการ",
-  "@progressDoneSummary": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "progressDoneImagesSummary": "{count, plural, other{ดาวน์โหลดรูปไอเทม {count} รูปแล้ว}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -338,12 +328,10 @@
     }
   },
   "errorGachaFailed": "ดักจับใหม่แล้วแต่ยังดึงบันทึกการอัญเชิญไม่ได้ เซิร์ฟเวอร์อาจไม่พร้อมใช้งานชั่วคราว โปรดลองอีกครั้งในภายหลัง",
-  "errorNoRecords": "บัญชีนี้ยังไม่มีบันทึกการอัญเชิญ",
   "errorNetwork": "เชื่อมต่อเครือข่ายไม่สำเร็จ โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
   "errorUnexpected": "เกิดข้อผิดพลาดที่ไม่คาดคิด โปรดลองอีกครั้งในภายหลัง",
   "pageOverviewTitle": "ภาพรวม (ทุกแบนเนอร์)",
   "pageOverviewGachaSection": "ภาพรวมการอัญเชิญ",
-  "pageBannerRecordList": "รายการบันทึก",
   "rarityOverviewTitle": "ภาพรวม {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -533,14 +521,6 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
-        "type": "String"
-      }
-    }
-  },
-  "timelineNoRecordsForRank": "ไม่มีบันทึก {star}",
-  "@timelineNoRecordsForRank": {
-    "placeholders": {
-      "star": {
         "type": "String"
       }
     }
@@ -822,18 +802,6 @@
     }
   },
   "settingsImportConfirmTitle": "ยืนยันการนำเข้า",
-  "settingsImportConfirmIntro": "กำลังจะนำเข้า {accounts} บัญชี (รวม {records} รายการ):",
-  "@settingsImportConfirmIntro": {
-    "placeholders": {
-      "accounts": {
-        "type": "int"
-      },
-      "records": {
-        "type": "int"
-      }
-    }
-  },
-  "settingsImportConfirmMergeHeader": "บัญชีต่อไปนี้จะถูกรวมกับข้อมูลในเครื่อง โดยบันทึกเดิมจะไม่ถูกลบ:",
   "settingsImportConfirmNoConflict": "ไม่มีข้อมูลขัดแย้งกัน",
   "settingsImportConfirmPreserveFooter": "บัญชีอื่นที่มีอยู่ ({uids}) จะยังคงอยู่",
   "@settingsImportConfirmPreserveFooter": {
@@ -868,14 +836,6 @@
   "settingsImportSelectTitle": "เลือกบัญชีที่จะนำเข้า",
   "settingsImportMergeBadge": "รวม",
   "accountsPickerSelectAll": "เลือกทั้งหมด",
-  "accountRecordCount": "{n} รายการ",
-  "@accountRecordCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "confirmTitle": "ยืนยัน",
   "confirmClearActiveBody": "การดำเนินการนี้จะลบบันทึกการอัญเชิญทั้งหมดของ UID {uid} อย่างถาวร พิมพ์ UID เพื่อยืนยัน:",
   "@confirmClearActiveBody": {
