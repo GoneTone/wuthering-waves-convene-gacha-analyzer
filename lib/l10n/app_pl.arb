@@ -122,6 +122,8 @@
       }
     }
   },
+  "emptyNoRecords": "Brak rekordów dla tego banera",
+  "emptyNoFilterMatch": "Brak rekordów pasujących do filtra",
   "emptyNoGachaRecords": "Brak historii przywołań",
   "statsTotal": "Łącznie losowań",
   "statsRankCount": "Liczba {star}",
@@ -264,6 +266,14 @@
       }
     }
   },
+  "progressDoneSummary": "{count, plural, one{Dodano {count} nowy rekord} few{Dodano {count} nowe rekordy} many{Dodano {count} nowych rekordów} other{Dodano {count} nowego rekordu}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, one{Pobrano {count} obraz przedmiotu} few{Pobrano {count} obrazy przedmiotów} many{Pobrano {count} obrazów przedmiotów} other{Pobrano {count} obrazu przedmiotów}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -328,10 +338,12 @@
     }
   },
   "errorGachaFailed": "Mimo ponownego przechwycenia nadal nie udało się pobrać rekordów. Serwer może być chwilowo niedostępny – spróbuj ponownie później.",
+  "errorNoRecords": "To konto nie ma jeszcze historii przywołań",
   "errorNetwork": "Błąd połączenia sieciowego. Sprawdź połączenie i spróbuj ponownie.",
   "errorUnexpected": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.",
   "pageOverviewTitle": "Przegląd (wszystkie banery)",
   "pageOverviewGachaSection": "Przegląd przywołań",
+  "pageBannerRecordList": "Lista rekordów",
   "rarityOverviewTitle": "Przegląd {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -521,6 +533,14 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineNoRecordsForRank": "Brak rekordów {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
         "type": "String"
       }
     }
@@ -802,6 +822,18 @@
     }
   },
   "settingsImportConfirmTitle": "Potwierdzenie importu",
+  "settingsImportConfirmIntro": "Do zaimportowania – konta: {accounts}, rekordy łącznie: {records}:",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportConfirmMergeHeader": "Te konta zostaną scalone z danymi lokalnymi; istniejące rekordy nie zostaną usunięte:",
   "settingsImportConfirmNoConflict": "Brak konfliktów danych.",
   "settingsImportConfirmPreserveFooter": "Pozostałe istniejące konta ({uids}) zostaną zachowane.",
   "@settingsImportConfirmPreserveFooter": {
@@ -836,6 +868,14 @@
   "settingsImportSelectTitle": "Wybierz konta do importu",
   "settingsImportMergeBadge": "Scalanie",
   "accountsPickerSelectAll": "Zaznacz wszystko",
+  "accountRecordCount": "{n, plural, one{{n} rekord} few{{n} rekordy} many{{n} rekordów} other{{n} rekordu}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Potwierdź",
   "confirmClearActiveBody": "Spowoduje to trwałe usunięcie całej historii przywołań dla UID {uid}. Wpisz UID, aby potwierdzić:",
   "@confirmClearActiveBody": {
