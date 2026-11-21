@@ -122,6 +122,8 @@
       }
     }
   },
+  "emptyNoRecords": "Нема записа за овај банер",
+  "emptyNoFilterMatch": "Нема записа који одговарају филтеру",
   "emptyNoGachaRecords": "Још нема записа сазива",
   "statsTotal": "Укупно извлачења",
   "statsRankCount": "Укупно {star}",
@@ -264,6 +266,14 @@
       }
     }
   },
+  "progressDoneSummary": "{count, plural, one{Додат је {count} нови запис} few{Додата су {count} нова записа} other{Додато је {count} нових записа}}",
+  "@progressDoneSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "progressDoneImagesSummary": "{count, plural, one{Преузета је {count} слика предмета} few{Преузете су {count} слике предмета} other{Преузето је {count} слика предмета}}",
   "@progressDoneImagesSummary": {
     "description": "Completion summary additional line: how many official guide-server character images (icon/header) were successfully downloaded in this run. Shown after progressDoneSummary in update completion dialog. Always shown including count = 0.",
@@ -328,10 +338,12 @@
     }
   },
   "errorGachaFailed": "Записи нису преузети ни након поновног пресретања. Сервер је можда привремено недоступан — покушајте поново касније.",
+  "errorNoRecords": "Овај налог још нема записа сазива",
   "errorNetwork": "Мрежна веза није успела. Проверите везу и покушајте поново.",
   "errorUnexpected": "Дошло је до неочекиване грешке. Покушајте поново касније.",
   "pageOverviewTitle": "Преглед (сви банери)",
   "pageOverviewGachaSection": "Преглед сазива",
+  "pageBannerRecordList": "Листа записа",
   "rarityOverviewTitle": "Преглед {star}",
   "@rarityOverviewTitle": {
     "description": "Section title above the record list / timeline showing every unique item of the given rarity the user pulled, each with a badge of how many copies were obtained.",
@@ -521,6 +533,14 @@
   "@pityAverageInterval": {
     "placeholders": {
       "n": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineNoRecordsForRank": "Нема записа за {star}",
+  "@timelineNoRecordsForRank": {
+    "placeholders": {
+      "star": {
         "type": "String"
       }
     }
@@ -802,6 +822,18 @@
     }
   },
   "settingsImportConfirmTitle": "Потврда увоза",
+  "settingsImportConfirmIntro": "Биће увезено налога: {accounts} (укупно записа: {records}):",
+  "@settingsImportConfirmIntro": {
+    "placeholders": {
+      "accounts": {
+        "type": "int"
+      },
+      "records": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsImportConfirmMergeHeader": "Следећи налози ће бити спојени са локалним подацима; постојећи записи неће бити обрисани:",
   "settingsImportConfirmNoConflict": "Нема сукоба података.",
   "settingsImportConfirmPreserveFooter": "Остали постојећи налози ({uids}) ће бити задржани.",
   "@settingsImportConfirmPreserveFooter": {
@@ -836,6 +868,14 @@
   "settingsImportSelectTitle": "Изаберите налоге за увоз",
   "settingsImportMergeBadge": "Спајање",
   "accountsPickerSelectAll": "Изабери све",
+  "accountRecordCount": "{n, plural, one{{n} запис} few{{n} записа} other{{n} записа}}",
+  "@accountRecordCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "confirmTitle": "Потврда",
   "confirmClearActiveBody": "Ово ће трајно обрисати све записе сазива за UID {uid}. Унесите UID за потврду:",
   "@confirmClearActiveBody": {
