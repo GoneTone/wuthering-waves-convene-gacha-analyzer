@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/banner_storage.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/gacha_record.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/gacha_storage.dart';
@@ -72,6 +73,23 @@ void main() {
     );
     final loaded = await storage.load('legacy');
     expect(loaded, isNull);
+  });
+
+  test('load 損毀的 JSON → 回 null，主 isolate 記 warning log', () async {
+    await File('${tempDir.path}/bad.records.json').writeAsString('{not json');
+    final records = <LogRecord>[];
+    final sub = Logger.root.onRecord.listen(records.add);
+    addTearDown(sub.cancel);
+
+    expect(await storage.load('bad'), isNull);
+
+    final warnings = records.where((r) => r.level == Level.WARNING);
+    expect(warnings, hasLength(1));
+    expect(
+      warnings.single.message,
+      startsWith('skip unparseable records file'),
+    );
+    expect(warnings.single.error, isA<FormatException>());
   });
 
   test('listKnownUids 只列 <playerId>.records.json，忽略 cred 與 metadata', () async {
