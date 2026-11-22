@@ -80,7 +80,9 @@ ProviderContainer _container(_Gateway gateway) {
 List<String> _collectLogs() {
   final logs = <String>[];
   final sub = Logger.root.onRecord.listen(
-    (r) => logs.add('${r.level.name} ${r.message}'),
+    (r) => logs.add(
+      '${r.level.name} ${r.message}${r.error == null ? '' : ': ${r.error}'}',
+    ),
   );
   addTearDown(sub.cancel);
   return logs;

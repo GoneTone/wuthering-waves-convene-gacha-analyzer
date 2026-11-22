@@ -478,8 +478,8 @@ class LogAccessResolver {
       _log.warning(
         'client log missing game=$game found=${found.split('\n').join(' | ')}',
       );
-    } on Object catch (e) {
-      _log.info('client log missing check failed', e);
+    } on Object catch (e, st) {
+      _log.info('client log missing check failed', e, st);
     }
   }
 }

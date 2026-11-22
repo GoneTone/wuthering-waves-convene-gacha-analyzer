@@ -60,8 +60,8 @@ class WuwaTrackerImporter implements PlatformImporter {
     Object? raw;
     try {
       raw = jsonDecode(content);
-    } catch (e) {
-      _log.warning('wuwa_tracker import: invalid JSON ($e)');
+    } catch (e, st) {
+      _log.warning('wuwa_tracker import: invalid JSON', e, st);
       throw const FormatException('Invalid JSON');
     }
     if (raw is! Map<String, dynamic>) {

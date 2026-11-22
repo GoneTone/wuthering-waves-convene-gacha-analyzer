@@ -103,8 +103,8 @@ class InAppUpdatePlayGateway implements PlayUpdateGateway {
         fromStatus.complete(result);
       },
       // 事件串流出錯時仍以 startFlexibleUpdate 的回覆為準，不誤判成失敗。
-      onError: (Object e) =>
-          _log.warning('play install status stream error: $e'),
+      onError: (Object e, StackTrace st) =>
+          _log.warning('play install status stream error', e, st),
     );
     try {
       return await Future.any([_startFlexible(), fromStatus.future]);

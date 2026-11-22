@@ -87,8 +87,8 @@ class GameDirLocator {
       try {
         final value = key.getStringValue('InstallPath')?.trim();
         if (value != null && value.isNotEmpty) paths.add(value);
-      } on Exception catch (e) {
-        _log.warning('registry value read failed hive=${hive.name}', e);
+      } on Exception catch (e, st) {
+        _log.warning('registry value read failed hive=${hive.name}', e, st);
       } finally {
         key.close();
       }
@@ -132,8 +132,8 @@ class GameDirLocator {
   Future<List<String>> _safeRegistry() async {
     try {
       return await _readInstallPaths();
-    } catch (e) {
-      _log.warning('registry read failed error=$e');
+    } catch (e, st) {
+      _log.warning('registry read failed', e, st);
       return const [];
     }
   }

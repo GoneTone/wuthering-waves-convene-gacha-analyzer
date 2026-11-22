@@ -45,10 +45,11 @@ class PollingClientLogWatch implements ClientLogWatch {
       final p = await source.probe();
       offset = p.length;
       id = p.id;
-    } on Object catch (e) {
+    } on Object catch (e, st) {
       _log.warning(
         'client log baseline failed source=${source.logLabel}; using offset=0',
         e,
+        st,
       );
     }
     var carry = Uint8List(0);
@@ -117,8 +118,8 @@ class PollingClientLogWatch implements ClientLogWatch {
           );
         }
         handle(scan.cred, scan.tail, scan.rejected);
-      } on Object catch (e) {
-        _log.warning('client log read failed source=${source.logLabel}', e);
+      } on Object catch (e, st) {
+        _log.warning('client log read failed source=${source.logLabel}', e, st);
       } finally {
         polling = false;
       }
