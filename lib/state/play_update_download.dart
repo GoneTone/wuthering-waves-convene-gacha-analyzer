@@ -53,8 +53,8 @@ class PlayUpdateDownloadNotifier extends Notifier<PlayDownloadPhase> {
       } else {
         result = await gateway.downloadFlexible();
       }
-    } catch (e) {
-      _log.warning('play flexible update threw: $e');
+    } catch (e, st) {
+      _log.warning('play flexible update threw', e, st);
     }
     _log.info('play flexible update result=${result.name}');
     _starting = false;
@@ -98,8 +98,8 @@ class PlayUpdateDownloadNotifier extends Notifier<PlayDownloadPhase> {
     _log.info('play flexible update install');
     try {
       await ref.read(playUpdateGatewayProvider).completeFlexible();
-    } catch (e) {
-      _log.warning('play flexible update install failed: $e');
+    } catch (e, st) {
+      _log.warning('play flexible update install failed', e, st);
     }
   }
 }

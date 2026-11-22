@@ -158,7 +158,7 @@ final nativeAdProvider = FutureProvider.autoDispose
         ad = await load(key.placement, key.brightness);
       } catch (e, st) {
         // 例外若外洩，Riverpod 會自動重試；當成載入失敗。
-        _log.severe('native load threw placement=$placement: $e', e, st);
+        _log.severe('native load threw placement=$placement', e, st);
         return null;
       }
       if (!ref.mounted) {

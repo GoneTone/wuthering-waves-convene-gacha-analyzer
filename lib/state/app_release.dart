@@ -92,12 +92,12 @@ class AppReleaseNotifier extends Notifier<ReleaseCheckState> {
         currentVersion: currentVersion,
         client: client,
       );
-    } on ReleaseCheckError catch (e) {
+    } on ReleaseCheckError catch (e, st) {
       if (manual) {
-        Logger('release').warning('release check failed (manual): $e');
+        Logger('release').warning('release check failed (manual)', e, st);
         state = ReleaseCheckFailed(_localizeError(e));
       } else {
-        Logger('release').warning('release check failed (silent): $e');
+        Logger('release').warning('release check failed (silent)', e, st);
         state = const ReleaseIdle();
       }
       return;
@@ -134,8 +134,8 @@ class AppReleaseNotifier extends Notifier<ReleaseCheckState> {
     final PlayUpdateInfo info;
     try {
       info = await ref.read(playUpdateGatewayProvider).check();
-    } catch (e) {
-      log.warning('play update check failed type=${e.runtimeType}: $e');
+    } catch (e, st) {
+      log.warning('play update check failed', e, st);
       state = manual ? const ReleaseCheckFailed('play') : const ReleaseIdle();
       return;
     }
@@ -186,9 +186,9 @@ class AppReleaseNotifier extends Notifier<ReleaseCheckState> {
       releases = newer
           .where((r) => Version.parse(r.version) <= playVersion)
           .toList();
-    } catch (e) {
+    } catch (e, st) {
       // Android 的更新說明只是附加資訊，任何錯誤（含 TLS 等未轉換的例外）都照樣提示新版。
-      log.info('release notes unavailable, prompting without notes: $e');
+      log.info('release notes unavailable, prompting without notes', e, st);
     }
     state = ReleaseAvailable(releases, playTag: tag);
   }

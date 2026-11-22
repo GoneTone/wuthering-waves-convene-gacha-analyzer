@@ -368,9 +368,9 @@ void main() {
         client: _githubThree(),
       );
       await container.read(settingsProvider.notifier).waitForLoad();
-      final warnings = <String>[];
+      final warnings = <LogRecord>[];
       final sub = Logger.root.onRecord.listen((r) {
-        if (r.level == Level.WARNING) warnings.add(r.message);
+        if (r.level == Level.WARNING) warnings.add(r);
       });
       addTearDown(sub.cancel);
       final notifier = container.read(appReleaseProvider.notifier);
@@ -385,8 +385,9 @@ void main() {
       );
       expect(
         warnings.where(
-          (m) =>
-              m.startsWith('play update check failed type=PlatformException'),
+          (r) =>
+              r.message == 'play update check failed' &&
+              r.error is PlatformException,
         ),
         hasLength(2),
       );

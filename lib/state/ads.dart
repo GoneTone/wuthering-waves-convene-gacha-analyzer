@@ -52,13 +52,13 @@ class AdsController extends Notifier<AdsState> {
       _log.warning('consent update failed code=${e.code} message=${e.message}');
     } catch (e, st) {
       // 同樣沿用上次同意結果，交給 _enableIfAllowed 判斷。
-      _log.severe('ads consent failed: $e', e, st);
+      _log.severe('ads consent failed', e, st);
     }
     try {
       await _enableIfAllowed(platform);
     } catch (e, st) {
       // 非同意例外（如 PlatformException）不能變成未處理錯誤；狀態維持預設＝廣告關閉。
-      _log.severe('ads start failed: $e', e, st);
+      _log.severe('ads start failed', e, st);
     }
   }
 
@@ -76,7 +76,7 @@ class AdsController extends Notifier<AdsState> {
       await _enableIfAllowed(platform);
     } catch (e, st) {
       // 呼叫端是設定頁的按鈕，平台例外不能往上丟。
-      _log.severe('privacy options failed: $e', e, st);
+      _log.severe('privacy options failed', e, st);
     }
   }
 

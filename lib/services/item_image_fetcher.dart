@@ -341,8 +341,8 @@ class ItemImageFetcher {
         'catalog kind=$seg lang=$lang icons=${icons.length} names=${names.length}',
       );
       return (icons: icons, names: names);
-    } catch (e) {
-      _log.warning('catalog kind=$seg failed lang=$lang err=$e');
+    } catch (e, st) {
+      _log.warning('catalog kind=$seg failed lang=$lang', e, st);
       return empty;
     }
   }
@@ -422,9 +422,11 @@ class ItemImageFetcher {
         'iconHd=${iconHd.isNotEmpty} luckdraw=$hasLuckdraw',
       );
       return detail;
-    } catch (e) {
+    } catch (e, st) {
       _log.warning(
-        'detail kind=$seg id=$resourceId failed lang=$encLang err=$e',
+        'detail kind=$seg id=$resourceId failed lang=$encLang',
+        e,
+        st,
       );
       return null;
     }
@@ -482,8 +484,8 @@ class ItemImageFetcher {
         'download non-2xx status=${res.statusCode} url=${sanitizeUrl(url)}',
       );
       return failed;
-    } catch (e) {
-      _log.warning('download failed url=${sanitizeUrl(url)} err=$e');
+    } catch (e, st) {
+      _log.warning('download failed url=${sanitizeUrl(url)}', e, st);
       return failed;
     }
   }

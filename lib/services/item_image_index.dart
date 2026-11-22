@@ -262,8 +262,8 @@ class ItemImageIndexStorage {
         if (looksLikeImageBytes(head)) continue;
         await entity.delete();
         deleted++;
-      } catch (e) {
-        _log.warning('purgeNonImageFiles skip ${sanitizeFsPath(path)} err=$e');
+      } catch (e, st) {
+        _log.warning('purgeNonImageFiles skip ${sanitizeFsPath(path)}', e, st);
       }
     }
     await marker.writeAsString('');
