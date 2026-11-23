@@ -62,7 +62,7 @@
     }
   },
   "relativeNow": "Agora mesmo",
-  "relativeSecondsAgo": "{count, plural, =1{Há 1 segundo} other{Há {count} segundos}}",
+  "relativeSecondsAgo": "{count, plural, =1{Há {count} segundo} other{Há {count} segundos}}",
   "@relativeSecondsAgo": {
     "placeholders": {
       "count": {
@@ -70,7 +70,7 @@
       }
     }
   },
-  "relativeMinutesAgo": "{count, plural, =1{Há 1 minuto} other{Há {count} minutos}}",
+  "relativeMinutesAgo": "{count, plural, =1{Há {count} minuto} other{Há {count} minutos}}",
   "@relativeMinutesAgo": {
     "placeholders": {
       "count": {
@@ -78,7 +78,7 @@
       }
     }
   },
-  "relativeHoursAgo": "{count, plural, =1{Há 1 hora} other{Há {count} horas}}",
+  "relativeHoursAgo": "{count, plural, =1{Há {count} hora} other{Há {count} horas}}",
   "@relativeHoursAgo": {
     "placeholders": {
       "count": {
@@ -86,7 +86,7 @@
       }
     }
   },
-  "relativeDaysAgo": "{count, plural, =1{Há 1 dia} other{Há {count} dias}}",
+  "relativeDaysAgo": "{count, plural, =1{Há {count} dia} other{Há {count} dias}}",
   "@relativeDaysAgo": {
     "placeholders": {
       "count": {
@@ -94,7 +94,7 @@
       }
     }
   },
-  "relativeMonthsAgo": "{count, plural, =1{Há 1 mês} other{Há {count} meses}}",
+  "relativeMonthsAgo": "{count, plural, =1{Há {count} mês} other{Há {count} meses}}",
   "@relativeMonthsAgo": {
     "placeholders": {
       "count": {
@@ -102,7 +102,7 @@
       }
     }
   },
-  "relativeYearsAgo": "{count, plural, =1{Há 1 ano} other{Há {count} anos}}",
+  "relativeYearsAgo": "{count, plural, =1{Há {count} ano} other{Há {count} anos}}",
   "@relativeYearsAgo": {
     "placeholders": {
       "count": {
@@ -252,7 +252,7 @@
       }
     }
   },
-  "progressPoolStatus": "Banner {index}/{total}, {count, plural, =1{1 novo} other{{count} novos}}",
+  "progressPoolStatus": "Banner {index}/{total}, {count, plural, =1{{count} novo} other{{count} novos}}",
   "@progressPoolStatus": {
     "placeholders": {
       "index": {
@@ -266,7 +266,7 @@
       }
     }
   },
-  "progressDoneSummary": "{count, plural, =1{1 novo registro adicionado} other{{count} novos registros adicionados}}",
+  "progressDoneSummary": "{count, plural, =1{{count} novo registro adicionado} other{{count} novos registros adicionados}}",
   "@progressDoneSummary": {
     "placeholders": {
       "count": {
@@ -291,7 +291,7 @@
       }
     }
   },
-  "progressDoneImportSummary": "{accounts, plural, =1{1 conta importada} other{{accounts} contas importadas}}: {added, plural, =1{1 novo} other{{added} novos}}, {duplicate, plural, =1{1 já existente} other{{duplicate} já existentes}}",
+  "progressDoneImportSummary": "{accounts, plural, =1{{accounts} conta importada} other{{accounts} contas importadas}}: {added, plural, =1{{added} novo} other{{added} novos}}, {duplicate, plural, =1{{duplicate} já existente} other{{duplicate} já existentes}}",
   "@progressDoneImportSummary": {
     "description": "Completion dialog line shown when the import-then-merge flow finishes: accounts imported (records merged into existing UIDs), plus newly added vs already-present record counts.",
     "placeholders": {
@@ -504,7 +504,7 @@
       }
     }
   },
-  "pityDistance": "{n, plural, =1{Falta 1 tiro para a garantia} other{Faltam {n} tiros para a garantia}}",
+  "pityDistance": "{n, plural, =1{Falta {n} tiro para a garantia} other{Faltam {n} tiros para a garantia}}",
   "@pityDistance": {
     "placeholders": {
       "n": {
@@ -512,7 +512,7 @@
       }
     }
   },
-  "pityClose": "{n, plural, =1{Quase garantido! Falta 1 tiro} other{Quase garantido! Faltam {n} tiros}}",
+  "pityClose": "{n, plural, =1{Quase garantido! Falta {n} tiro} other{Quase garantido! Faltam {n} tiros}}",
   "@pityClose": {
     "placeholders": {
       "n": {
@@ -545,7 +545,7 @@
       }
     }
   },
-  "timelineSinceLast": "{n, plural, =1{1 tiro} other{{n} tiros}}",
+  "timelineSinceLast": "{n, plural, =1{{n} tiro} other{{n} tiros}}",
   "@timelineSinceLast": {
     "placeholders": {
       "n": {
@@ -557,7 +557,7 @@
   "luckTierAverage": "Na média",
   "luckTierUnlucky": "Azarado",
   "timelineNowLabel": "Agora",
-  "timelineNowPulls": "{n, plural, =1{1 tiro} other{{n} tiros}}",
+  "timelineNowPulls": "{n, plural, =1{{n} tiro} other{{n} tiros}}",
   "@timelineNowPulls": {
     "placeholders": {
       "n": {
@@ -565,7 +565,7 @@
       }
     }
   },
-  "timelineNowSinceLast": "{n, plural, =1{1 tiro desde o último {star}} other{{n} tiros desde o último {star}}}",
+  "timelineNowSinceLast": "{n, plural, =1{{n} tiro desde o último {star}} other{{n} tiros desde o último {star}}}",
   "@timelineNowSinceLast": {
     "placeholders": {
       "star": {
@@ -576,7 +576,7 @@
       }
     }
   },
-  "timelineNowSinceCrossPool": "{n, plural, =1{1 tiro desde o último {star} entre banners} other{{n} tiros desde o último {star} entre banners}}",
+  "timelineNowSinceCrossPool": "{n, plural, =1{{n} tiro desde o último {star} entre banners} other{{n} tiros desde o último {star} entre banners}}",
   "@timelineNowSinceCrossPool": {
     "placeholders": {
       "star": {
@@ -600,7 +600,7 @@
   },
   "timelineScrollLeft": "Rolar para a esquerda",
   "timelineScrollRight": "Rolar para a direita",
-  "timelineLoadMore": "{n, plural, =1{Carregar mais (1 restante)} other{Carregar mais ({n} restantes)}}",
+  "timelineLoadMore": "{n, plural, =1{Carregar mais ({n} restante)} other{Carregar mais ({n} restantes)}}",
   "@timelineLoadMore": {
     "placeholders": {
       "n": {
@@ -822,7 +822,7 @@
     }
   },
   "settingsImportConfirmTitle": "Confirmar importação",
-  "settingsImportConfirmIntro": "{accounts, plural, =1{1 conta será importada} other{{accounts} contas serão importadas}} ({records, plural, =1{1 registro} other{{records} registros}} no total):",
+  "settingsImportConfirmIntro": "{accounts, plural, =1{{accounts} conta será importada} other{{accounts} contas serão importadas}} ({records, plural, =1{{records} registro} other{{records} registros}} no total):",
   "@settingsImportConfirmIntro": {
     "placeholders": {
       "accounts": {
@@ -868,7 +868,7 @@
   "settingsImportSelectTitle": "Selecione as contas para importar",
   "settingsImportMergeBadge": "Mesclar",
   "accountsPickerSelectAll": "Selecionar tudo",
-  "accountRecordCount": "{n, plural, =1{1 registro} other{{n} registros}}",
+  "accountRecordCount": "{n, plural, =1{{n} registro} other{{n} registros}}",
   "@accountRecordCount": {
     "placeholders": {
       "n": {
@@ -922,7 +922,7 @@
     }
   },
   "bannerTopRarityCountTitle": "Quantidade da raridade mais alta por banner",
-  "bannerTopRarityPullsSinceLast": "{n, plural, =1{1 tiro desde o último {star}} other{{n} tiros desde o último {star}}}",
+  "bannerTopRarityPullsSinceLast": "{n, plural, =1{{n} tiro desde o último {star}} other{{n} tiros desde o último {star}}}",
   "@bannerTopRarityPullsSinceLast": {
     "placeholders": {
       "star": {

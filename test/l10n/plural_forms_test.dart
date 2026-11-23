@@ -61,4 +61,13 @@ void main() {
   test('pt_BR still resolves', () {
     expect(l('pt_BR').timelineLoadMore(1), 'Carregar mais (1 restante)');
   });
+
+  test('pt and pt_BR show 0, not a literal 1, for zero', () {
+    for (final tag in ['pt', 'pt_BR']) {
+      expect(l(tag).relativeSecondsAgo(0), 'Há 0 segundo', reason: tag);
+      expect(l(tag).accountRecordCount(0), startsWith('0 '), reason: tag);
+      expect(l(tag).timelineLoadMore(0), contains('(0 '), reason: tag);
+      expect(l(tag).progressPoolStatus(2, 10, 0), endsWith(', 0 novo'));
+    }
+  });
 }
