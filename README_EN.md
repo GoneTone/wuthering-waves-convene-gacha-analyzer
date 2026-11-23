@@ -14,7 +14,7 @@ The Android version can't intercept network traffic, so it reads the log file th
 
 The first time you press *Update*, the utility loads your full convene history, which may take a while. The data is then stored locally so you don't have to wait again on the next launch. To pull new records, just press *Update*: the utility remembers the previously obtained parameters and reuses them as long as they're still valid, so you don't have to obtain them again every time. If the captured parameters have expired, the utility will ask you to open the convene record page in the game again to get new ones.
 
-Rest assured: this utility does not modify any game file, does not read or modify game memory, and does not affect how the game runs. On Windows it only intercepts and parses that single request to the official convene history API to obtain the query parameters, and all other traffic passes through untouched; on Android it only reads the game's log file. So there is no risk of being banned for using it. If you have been banned, it was likely for a different reason. Please do not blame us, thanks.
+Rest assured: this utility does not modify any game file, does not read or modify game memory, and does not affect how the game runs. On Windows it only intercepts and parses that single request to the official convene history API to obtain the query parameters (all other traffic passes through untouched), and reads the game's log file to find the convene history URL; on Android it only reads the game's log file. So there is no risk of being banned for using it. If you have been banned, it was likely for a different reason. Please do not blame us, thanks.
 
 Posts:
 - 巴哈姆特 (Bahamut): <https://forum.gamer.com.tw/C.php?bsn=74934&snA=17364>
