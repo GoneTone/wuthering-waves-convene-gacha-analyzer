@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' show DateFormat;
 
 import 'package:wuthering_waves_convene_gacha_analyzer/data/app_repo.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
@@ -317,6 +317,7 @@ class _ShareHeader extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 AppRepo.githubUrl,
+                textDirection: TextDirection.ltr,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: tokens.textMuted,
                 ),
@@ -330,6 +331,7 @@ class _ShareHeader extends StatelessWidget {
           children: [
             Text(
               'UID $uidText',
+              textDirection: TextDirection.ltr,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: tokens.textSecondary,
               ),
