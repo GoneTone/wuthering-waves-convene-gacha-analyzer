@@ -114,4 +114,29 @@ void main() {
     });
     expect(bundle.accounts.single.alias, isNull);
   });
+
+  test('alias_updated_at 沒有別名時仍寫出，代表已清空；讀回時保留', () {
+    final account = ExportedAccount(
+      data: _bs('A'),
+      aliasUpdatedAt: DateTime.utc(2026, 11, 24, 1),
+    );
+    final json = account.toJson();
+    expect(json.containsKey('alias'), isFalse);
+    expect(json['alias_updated_at'], '2026-11-24T01:00:00.000Z');
+
+    final back = ExportedAccount.fromJson(json);
+    expect(back.alias, isNull);
+    expect(back.aliasUpdatedAt, DateTime.utc(2026, 11, 24, 1));
+  });
+
+  test('alias_updated_at 型別不對 → 視為沒有時間，帳號照常讀取', () {
+    final back = ExportedAccount.fromJson({
+      ..._bs('A').toJson(),
+      'alias': '主號',
+      'alias_updated_at': 42,
+    });
+    expect(back.data.playerId, 'A');
+    expect(back.alias, '主號');
+    expect(back.aliasUpdatedAt, isNull);
+  });
 }
