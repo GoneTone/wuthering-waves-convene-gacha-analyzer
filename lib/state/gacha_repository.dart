@@ -1525,6 +1525,7 @@ class GachaRepository extends Notifier<GachaState> {
 
     await settingsNotifier.applyImportedPreferences(
       aliases: mergedAliases,
+      aliasUpdatedAt: currentSettings.uidAliasUpdatedAt,
       uidOrder: newOrder,
       lastActiveUid: newActive,
     );
