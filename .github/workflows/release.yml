@@ -363,13 +363,13 @@ jobs:
 
       # === B. Artifacts =============================================
       - name: Download installer
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: windows-installer-${{ env.PUBSPEC_VERSION }}
           path: artifacts/windows
 
       - name: Download bundle
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: android-bundle-${{ env.PUBSPEC_VERSION }}
           path: artifacts/android
