@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -53,6 +54,19 @@ void main() {
 
     expect(_completed, isTrue);
     expect(_result, isA<WuwaTrackerImporter>());
+  });
+
+  testWidgets('shows each platform icon asset', (tester) async {
+    await _open(tester);
+
+    for (final importer in kPlatformImporters) {
+      expect(
+        find.image(AssetImage(importer.iconAsset)),
+        findsOneWidget,
+        reason: importer.id,
+      );
+      expect(await rootBundle.load(importer.iconAsset), isNotNull);
+    }
   });
 
   testWidgets('cancel returns null', (tester) async {

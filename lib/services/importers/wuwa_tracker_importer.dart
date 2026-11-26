@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
@@ -43,9 +42,9 @@ class WuwaTrackerImporter implements PlatformImporter {
   @override
   String? subtitle(AppLocalizations l) => l.platformWuwaTrackerSubtitle;
 
-  /// 平台清單列前置 icon。
+  /// 平台清單列前置的平台圖示（WuWa Tracker 網站圖示）。
   @override
-  IconData get icon => Icons.cloud_sync_outlined;
+  String get iconAsset => 'assets/platforms/wuwa_tracker.png';
 
   /// 可接受副檔名（WuWa Tracker 匯出為 .json）。
   @override
