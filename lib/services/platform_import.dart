@@ -1,5 +1,3 @@
-import 'package:flutter/widgets.dart';
-
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/models/accounts_bundle.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/importers/wuwa_tracker_importer.dart';
@@ -21,8 +19,8 @@ abstract interface class PlatformImporter {
   /// 平台清單列的副標（在地化）；null 表示不顯示。
   String? subtitle(AppLocalizations l);
 
-  /// 平台清單列的前置 icon。
-  IconData get icon;
+  /// 平台清單列前置的平台圖示（asset 路徑）。
+  String get iconAsset;
 
   /// 可接受的副檔名（如 `['json']`）。
   List<String> get fileExtensions;
