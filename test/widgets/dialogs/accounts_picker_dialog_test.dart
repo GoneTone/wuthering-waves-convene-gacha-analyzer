@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wuthering_waves_convene_gacha_analyzer/l10n/generated/app_localizations.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/app_theme.dart';
@@ -38,9 +39,11 @@ Future<void> _open(
   WidgetTester tester, {
   List<AccountPickerEntry>? entries,
   String? secondaryConfirmLabel,
+  bool maskUidInUi = false,
 }) async {
   _result = null;
   _completed = false;
+  SharedPreferences.setMockInitialValues({'pref.maskUidInUi': maskUidInUi});
   await tester.pumpWidget(
     ProviderScope(
       child: MaterialApp(
@@ -160,6 +163,13 @@ void main() {
     expect(find.text('100000001 (主號)'), findsOneWidget); // 有別名
     expect(find.text('100000002'), findsOneWidget); // 無別名（不附括號）
     expect(find.text('100000003 (小號)'), findsOneWidget);
+  });
+
+  testWidgets('masks UIDs when maskUidInUi is on', (tester) async {
+    await _open(tester, maskUidInUi: true);
+    expect(find.text('100•••••• (主號)'), findsOneWidget);
+    expect(find.text('100••••••'), findsOneWidget);
+    expect(find.textContaining('100000001'), findsNothing);
   });
 
   testWidgets('merge badge shown only when entry.badge != null', (

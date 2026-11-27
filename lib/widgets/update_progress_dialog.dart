@@ -6,7 +6,9 @@ import 'package:wuthering_waves_convene_gacha_analyzer/data/gacha_types.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/android/log_access_resolver.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/gacha_repository.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/state/platform.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/state/settings.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/theme/tokens.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/uid_display.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/android_log_wait_body.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialog.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/game_dir_help_dialog.dart';
@@ -43,6 +45,7 @@ class UpdateProgressDialog extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final tokens = Theme.of(context).gacha;
     final android = ref.watch(isAndroidProvider);
+    final maskUid = ref.watch(settingsProvider.select((s) => s.maskUidInUi));
 
     return _CloseIfIdleOnOpen(
       close: closeSelf,
@@ -60,7 +63,12 @@ class UpdateProgressDialog extends ConsumerWidget {
             tokens: tokens,
             android: android,
           ),
-          content: _Body(progress: progress, l: l, android: android),
+          content: _Body(
+            progress: progress,
+            l: l,
+            android: android,
+            maskUid: maskUid,
+          ),
           actions: _actions(context, progress, notifier, l),
         ),
       ),
@@ -221,7 +229,15 @@ class _Title extends StatelessWidget {
 /// Dialog 內容區：依 [progress] 狀態切換進度列、說明文字或結果摘要。
 class _Body extends StatelessWidget {
   /// 建立 [_Body]。
-  const _Body({required this.progress, required this.l, required this.android});
+  const _Body({
+    required this.progress,
+    required this.l,
+    required this.android,
+    required this.maskUid,
+  });
+
+  /// 是否依介面隱私設定遮蔽 UID（`AppSettings.maskUidInUi`）。
+  final bool maskUid;
 
   /// 是否為 Android（等待畫面改用 [AndroidLogWaitBody]）。
   final bool android;
@@ -399,7 +415,9 @@ class _Body extends StatelessWidget {
               const SizedBox(height: AppSpacing.s),
               Text(
                 l.progressPartialImportFailed(
-                  importSummary.failedUids.join(', '),
+                  importSummary.failedUids
+                      .map((u) => displayUid(u, mask: maskUid))
+                      .join(', '),
                 ),
                 style: TextStyle(color: tokens.stateDanger),
               ),
