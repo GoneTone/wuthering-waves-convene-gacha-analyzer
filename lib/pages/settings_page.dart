@@ -39,6 +39,7 @@ import 'package:wuthering_waves_convene_gacha_analyzer/widgets/dialogs/app_dialo
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/format_bytes.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/services/uid_ordering.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/utils/relative_time.dart';
+import 'package:wuthering_waves_convene_gacha_analyzer/utils/uid_display.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/app_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/banner_link.dart';
 import 'package:wuthering_waves_convene_gacha_analyzer/widgets/cards/account_management.dart';
@@ -926,14 +927,14 @@ class _DataManagement extends ConsumerWidget {
       }
     }
 
+    final mask = ref.read(settingsProvider).maskUidInUi;
     final buf = StringBuffer()
       ..writeln(l.settingsImportConfirmIntro(incoming.length, totalRecords));
     for (final a in filteredBundle.accounts) {
       final alias = a.alias;
+      final uid = displayUid(a.data.playerId, mask: mask);
       buf.writeln(
-        alias == null || alias.isEmpty
-            ? '  • ${a.data.playerId}'
-            : '  • ${a.data.playerId} ($alias)',
+        alias == null || alias.isEmpty ? '  • $uid' : '  • $uid ($alias)',
       );
     }
     buf.writeln();
@@ -942,12 +943,16 @@ class _DataManagement extends ConsumerWidget {
     } else {
       buf.writeln(l.settingsImportConfirmMergeHeader);
       for (final uid in conflicts) {
-        buf.writeln('  • $uid');
+        buf.writeln('  • ${displayUid(uid, mask: mask)}');
       }
     }
     if (preserved.isNotEmpty) {
       buf.writeln();
-      buf.writeln(l.settingsImportConfirmPreserveFooter(preserved.join(', ')));
+      buf.writeln(
+        l.settingsImportConfirmPreserveFooter(
+          preserved.map((u) => displayUid(u, mask: mask)).join(', '),
+        ),
+      );
     }
 
     final ok = await showConfirmDialog(
