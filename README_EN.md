@@ -59,7 +59,7 @@ The Windows version may trigger anti-virus software during installation and exec
 - Runs on Windows and Android
 - Gets the convene history URL automatically — no need to paste URLs by hand: on Windows it intercepts the convene-record page request to the official convene history API via a local interception helper and a self-signed root certificate; on Android it reads the game's log file (via root, direct file access, or Wireless debugging)
 - Supports the Global server (CN server not supported yet)
-- Covers all 12 convene types: Featured Resonator Convene, Featured Weapon Convene, Standard Resonator Convene, Standard Weapon Convene, Beginner Convene, Beginner's Choice Convene, New Voyage Resonator Convene, New Voyage Weapon Convene, Collab Resonator Convene, Collab Weapon Convene, Reverb Resonator Convene, Reverb Weapon Convene
+- Covers all convene types: Featured Resonator Convene, Featured Weapon Convene, Standard Resonator Convene, Standard Weapon Convene, Beginner Convene, Beginner's Choice Convene, New Voyage Resonator Convene, New Voyage Weapon Convene, Collab Resonator Convene, Collab Weapon Convene, Reverb Resonator Convene, Reverb Weapon Convene
 - Multi-account (UID) management: custom aliases, drag-to-reorder, one-click switching
 - Incremental updates merge new records without overwriting old ones, so entries that fall off the official history won't disappear
 - Total pulls and 5★ / 4★ / 3★ counts with their share of the total
